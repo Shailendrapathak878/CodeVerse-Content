@@ -1,0 +1,3095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C Function Pointers: Callbacks, Dispatch Tables &amp; Dynamic Invocation | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - C PROGRAMMING CURRICULUM
+       Topic 15: Function Pointers
+       Light & Dark Mode Tokens | Zero External CDNs | Offline First System Fonts
+       ========================================================================== */
+    
+    :root {
+      /* Base Page Colors */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+      
+      /* Text Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Primary Brand / Accent - C Cyan & Deep Indigo */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-green: #059669;
+      --primary-purple: #7C3AED;
+      --primary-amber: #D97706;
+      --primary-rose: #E11D48;
+      --primary-teal: #0D9488;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+      --toc-bg: #F0F9FF;
+      --toc-border: #BAE6FD;
+      --toc-text: #0369A1;
+
+      /* Definition Card */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      /* Syntax Card */
+      --syntax-card-bg: #F8FAFC;
+      --syntax-card-border: #CBD5E1;
+      --syntax-card-title: #475569;
+
+      /* Note / Important Card */
+      --note-card-bg: #FEF3C7;
+      --note-card-border: #FCD34D;
+      --note-card-title: #B45309;
+      --note-card-text: #78350F;
+
+      /* Real-Life Analogy Card */
+      --analogy-card-bg: #F5F3FF;
+      --analogy-card-border: #DDD6FE;
+      --analogy-card-title: #7C3AED;
+      --analogy-card-text: #5B21B6;
+
+      /* Warning / Danger Card */
+      --danger-card-bg: #FFF1F2;
+      --danger-card-border: #FECDD3;
+      --danger-card-title: #E11D48;
+      --danger-card-text: #9F1239;
+
+      /* Success / Tip Card */
+      --success-card-bg: #ECFDF5;
+      --success-card-border: #A7F3D0;
+      --success-card-title: #059669;
+      --success-card-text: #065F46;
+
+      /* Code Block Colors */
+      --code-block-bg: #0F172A;
+      --code-block-text: #F8FAFC;
+      --code-inline-bg: #EEF2F6;
+      --code-inline-text: #0284C7;
+      --code-inline-border: #E2E8F0;
+      
+      /* Output Box */
+      --output-bg: #1E293B;
+      --output-border: #334155;
+      --output-text: #38BDF8;
+
+      /* Table Colors */
+      --th-bg: #F1F5F9;
+      --th-text: #1E293B;
+      --td-border: #E2E8F0;
+
+      /* Borders & Radii */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+    }
+
+    /* Dark Mode Theme */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0B1120;
+        --card-bg: #111827;
+        --card-border: #1F2937;
+        --card-soft-bg: #1E293B;
+        --card-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.3);
+        
+        --text-primary: #F8FAFC;
+        --text-secondary: #CBD5E1;
+        --text-muted: #94A3B8;
+        --heading-color: #F8FAFC;
+        
+        --primary-accent: #38BDF8;
+        --primary-accent-hover: #0EA5E9;
+        --primary-green: #10B981;
+        --primary-purple: #A78BFA;
+        --primary-amber: #F59E0B;
+        --primary-rose: #FB7185;
+        --primary-teal: #14B8A6;
+        --primary-badge-bg: rgba(56, 189, 248, 0.15);
+        --primary-badge-text: #38BDF8;
+        --toc-bg: rgba(14, 165, 233, 0.08);
+        --toc-border: #1E293B;
+        --toc-text: #38BDF8;
+
+        --def-card-bg: #0C2333;
+        --def-card-border: #0369A1;
+        --def-card-title: #38BDF8;
+        --def-card-text: #BAE6FD;
+
+        --syntax-card-bg: #1E293B;
+        --syntax-card-border: #334155;
+        --syntax-card-title: #94A3B8;
+
+        --note-card-bg: #291E09;
+        --note-card-border: #78350F;
+        --note-card-title: #FBBF24;
+        --note-card-text: #FDE68A;
+
+        --analogy-card-bg: #211736;
+        --analogy-card-border: #4C1D95;
+        --analogy-card-title: #C084FC;
+        --analogy-card-text: #E9D5FF;
+
+        --danger-card-bg: #2E121B;
+        --danger-card-border: #881337;
+        --danger-card-title: #FB7185;
+        --danger-card-text: #FECDD3;
+
+        --success-card-bg: #06281E;
+        --success-card-border: #065F46;
+        --success-card-title: #34D399;
+        --success-card-text: #A7F3D0;
+
+        --code-block-bg: #030712;
+        --code-block-text: #F3F4F6;
+        --code-inline-bg: #1F2937;
+        --code-inline-text: #38BDF8;
+        --code-inline-border: #374151;
+
+        --output-bg: #030712;
+        --output-border: #1F2937;
+        --output-text: #7DD3FC;
+
+        --th-bg: #1F2937;
+        --th-text: #F8FAFC;
+        --td-border: #374151;
+      }
+    }
+
+    /* Core Resets */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-secondary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15.5px;
+      line-height: 1.68;
+      padding: 16px 12px;
+      margin: 0 auto;
+      max-width: 900px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 24px 16px;
+      }
+    }
+
+    .content-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Chapter Hero Banner */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 26px 22px;
+      box-shadow: var(--card-shadow);
+      position: relative;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .hero-title {
+      color: var(--heading-color);
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+
+    .hero-desc {
+      color: var(--text-secondary);
+      font-size: 0.96rem;
+      line-height: 1.6;
+      max-width: 800px;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .hero-badge-pill {
+      background: var(--card-soft-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-secondary);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+    }
+
+    .toc-title {
+      color: var(--toc-text);
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 8px 16px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      background: rgba(2, 132, 199, 0.1);
+      color: var(--primary-accent);
+    }
+
+    .toc-num {
+      display: inline-block;
+      width: 22px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: var(--toc-text);
+    }
+
+    /* Content Cards */
+    .content-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 24px 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    @media (min-width: 640px) {
+      .content-card {
+        padding: 28px 24px;
+      }
+    }
+
+    .card-header {
+      margin-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 12px;
+    }
+
+    .card-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary-accent);
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .section-title {
+      color: var(--heading-color);
+      font-size: 1.35rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .section-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    h3 {
+      color: var(--heading-color);
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 22px 0 10px 0;
+    }
+
+    h4 {
+      color: var(--heading-color);
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 16px 0 8px 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    ul, ol {
+      margin: 8px 0 16px 22px;
+      line-height: 1.7;
+    }
+
+    li {
+      margin-bottom: 6px;
+    }
+
+    strong {
+      color: var(--heading-color);
+    }
+
+    /* Inline Code */
+    code {
+      font-family: Consolas, "Fira Code", "Courier New", monospace;
+      font-size: 0.88em;
+      background: var(--code-inline-bg);
+      color: var(--code-inline-text);
+      border: 1px solid var(--code-inline-border);
+      padding: 2px 5px;
+      border-radius: var(--radius-sm);
+    }
+
+    /* Callout Cards */
+    .card-def {
+      background: var(--def-card-bg);
+      border-left: 4px solid var(--def-card-border);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .card-def strong { color: var(--def-card-title); display: block; margin-bottom: 6px; font-size: 0.96rem; }
+
+    .card-analogy {
+      background: var(--analogy-card-bg);
+      border-left: 4px solid var(--analogy-card-border);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .card-analogy strong { color: var(--analogy-card-title); display: block; margin-bottom: 6px; font-size: 0.96rem; }
+
+    .card-note {
+      background: var(--note-card-bg);
+      border-left: 4px solid var(--note-card-border);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .card-note strong { color: var(--note-card-title); display: block; margin-bottom: 6px; font-size: 0.96rem; }
+
+    .card-danger {
+      background: var(--danger-card-bg);
+      border-left: 4px solid var(--danger-card-border);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .card-danger strong { color: var(--danger-card-title); display: block; margin-bottom: 6px; font-size: 0.96rem; }
+
+    .card-success {
+      background: var(--success-card-bg);
+      border-left: 4px solid var(--success-card-border);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 14px 16px;
+      margin: 16px 0;
+      font-size: 0.93rem;
+    }
+    .card-success strong { color: var(--success-card-title); display: block; margin-bottom: 6px; font-size: 0.96rem; }
+
+    /* Code Container & Syntax Styling */
+    .code-container {
+      background: var(--code-block-bg);
+      border: 1px solid #1E293B;
+      border-radius: var(--radius-md);
+      margin: 16px 0 10px 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .code-header {
+      background: #1E293B;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      font-family: Consolas, monospace;
+      font-size: 0.78rem;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+
+    .btn-copy {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #E2E8F0;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-copy:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      font-family: Consolas, "Fira Code", monospace;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      color: var(--code-block-text);
+    }
+
+    pre code {
+      background: none !important;
+      border: none !important;
+      padding: 0 !important;
+      color: inherit !important;
+      font-size: inherit !important;
+    }
+
+    /* Output Box */
+    .output-box {
+      background: var(--output-bg);
+      border: 1px solid var(--output-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: var(--radius-sm);
+      margin: -6px 0 16px 0;
+      padding: 10px 14px;
+    }
+
+    .output-label {
+      font-family: Consolas, monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #94A3B8;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .output-content {
+      font-family: Consolas, monospace;
+      font-size: 0.85rem;
+      color: var(--output-text);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    /* Tables */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 16px 0;
+      border: 1px solid var(--td-border);
+      border-radius: var(--radius-md);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+
+    th {
+      background: var(--th-bg);
+      color: var(--th-text);
+      font-weight: 700;
+      padding: 10px 14px;
+      border-bottom: 2px solid var(--td-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--td-border);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: var(--card-soft-bg);
+    }
+
+    /* Visual Diagrams and Flowcharts */
+    .diagram-card {
+      background: var(--card-soft-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .diagram-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .svg-diagram-wrap {
+      width: 100%;
+      max-width: 750px;
+      margin: 0 auto;
+      overflow-x: auto;
+    }
+
+    .svg-diagram-wrap svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Interactive Details / Question Accordion */
+    details {
+      background: var(--card-soft-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+      margin: 12px 0;
+      transition: all 0.2s ease;
+    }
+
+    details[open] {
+      background: var(--card-bg);
+      border-color: var(--primary-accent);
+      box-shadow: var(--card-shadow);
+    }
+
+    summary {
+      font-weight: 600;
+      color: var(--heading-color);
+      cursor: pointer;
+      font-size: 0.95rem;
+      user-select: none;
+      outline: none;
+    }
+
+    summary:hover {
+      color: var(--primary-accent);
+    }
+
+    .details-body {
+      padding-top: 12px;
+      margin-top: 10px;
+      border-top: 1px dashed var(--card-border);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .ans-tag {
+      display: inline-block;
+      background: var(--success-card-bg);
+      color: var(--success-card-title);
+      border: 1px solid var(--success-card-border);
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 28px 12px 16px 12px;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="content-wrapper">
+
+    <!-- Hero Card -->
+    <header class="hero-card">
+      <span class="hero-tag">C Programming Curriculum &bull; Topic 15</span>
+      <h1 class="hero-title">Function Pointers: Callbacks, Dispatch Tables &amp; Dynamic Invocation</h1>
+      <p class="hero-desc">
+        Unlock high-level architectural patterns in pure C. Master function addresses, declaration syntax, type compatibility, passing functions as arguments, event-driven callbacks, typedef aliases, jump/dispatch tables, and standard library comparators (<code>qsort</code>).
+      </p>
+      <div class="hero-badges">
+        <span class="hero-badge-pill">Function Addresses</span>
+        <span class="hero-badge-pill">void (*funcPtr)(void)</span>
+        <span class="hero-badge-pill">Dynamic Reassignment</span>
+        <span class="hero-badge-pill">Higher-Order Functions</span>
+        <span class="hero-badge-pill">Callbacks in C</span>
+        <span class="hero-badge-pill">typedef Function Aliases</span>
+        <span class="hero-badge-pill">Dispatch Tables</span>
+        <span class="hero-badge-pill">qsort Comparators</span>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card" aria-label="Table of Contents">
+      <div class="toc-title">
+        <span>Table of Contents &mdash; Complete 22 Sections</span>
+      </div>
+      <div class="toc-list">
+        <a class="toc-link" href="#sec-01"><span class="toc-num">01</span> What Is a Function Pointer? (Concept &amp; Rationale)</a>
+        <a class="toc-link" href="#sec-02"><span class="toc-num">02</span> Understanding Function Addresses</a>
+        <a class="toc-link" href="#sec-03"><span class="toc-num">03</span> Declaring Function Pointers (Anatomy &amp; Parsing)</a>
+        <a class="toc-link" href="#sec-04"><span class="toc-num">04</span> Assigning and Calling Functions via Pointers</a>
+        <a class="toc-link" href="#sec-05"><span class="toc-num">05</span> Function Pointer Type Compatibility</a>
+        <a class="toc-link" href="#sec-06"><span class="toc-num">06</span> Dynamic Reassignment: One Pointer, Multiple Functions</a>
+        <a class="toc-link" href="#sec-07"><span class="toc-num">07</span> Passing Functions as Arguments (Higher-Order Functions)</a>
+        <a class="toc-link" href="#sec-08"><span class="toc-num">08</span> Callbacks in C (Array Processing &amp; Custom Action)</a>
+        <a class="toc-link" href="#sec-09"><span class="toc-num">09</span> Function Pointers and typedef Aliases</a>
+        <a class="toc-link" href="#sec-10"><span class="toc-num">10</span> Array of Function Pointers (Dispatch Tables)</a>
+        <a class="toc-link" href="#sec-11"><span class="toc-num">11</span> Real-World Applications of Function Pointers</a>
+        <a class="toc-link" href="#sec-12"><span class="toc-num">12</span> Standard Library Comparators (qsort in Practice)</a>
+        <a class="toc-link" href="#sec-13"><span class="toc-num">13</span> Function Pointers vs. Other Pointer Types</a>
+        <a class="toc-link" href="#sec-14"><span class="toc-num">14</span> Function Pointer Safety &amp; 13 Common Mistakes</a>
+        <a class="toc-link" href="#sec-15"><span class="toc-num">15</span> Visual Architecture &amp; Diagram Gallery (9 Visuals)</a>
+        <a class="toc-link" href="#sec-16"><span class="toc-num">16</span> Step-by-Step Dry Runs &amp; Trace Tables</a>
+        <a class="toc-link" href="#sec-17"><span class="toc-num">17</span> Practice Level 1: Beginner Fundamentals</a>
+        <a class="toc-link" href="#sec-18"><span class="toc-num">18</span> Practice Level 2: Intermediate Concepts</a>
+        <a class="toc-link" href="#sec-19"><span class="toc-num">19</span> Practice Level 3: Advanced &amp; DSA Problems</a>
+        <a class="toc-link" href="#sec-20"><span class="toc-num">20</span> Capstone Mini-Project: Callback Calculator</a>
+        <a class="toc-link" href="#sec-21"><span class="toc-num">21</span> Quick Revision &amp; 12 Technical Viva Questions</a>
+        <a class="toc-link" href="#sec-22"><span class="toc-num">22</span> Checklist of Mastery &amp; Wrap-Up</a>
+      </div>
+    </nav>
+
+    <!-- SECTION 01: WHAT IS A FUNCTION POINTER? -->
+    <section id="sec-01" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Foundational Concept</span>
+        <h2 class="section-title">01. What Is a Function Pointer?</h2>
+      </div>
+
+      <div class="card-def">
+        <strong>Definition:</strong>
+        A <strong>function pointer</strong> is a pointer variable that stores the memory address of executable function code rather than data. It allows programs to invoke functions dynamically at runtime, pass functions as arguments to other functions, and construct modular callback architectures.
+      </div>
+
+      <p>
+        In C, when your program compiles, every function (such as <code>main</code> or <code>printf</code>) is translated into binary CPU machine instructions. These instructions are loaded into a protected memory segment known as the <strong>Code Segment (or Text Segment)</strong>. Just like a variable residing in the Stack or Heap has a numerical memory address, every compiled function has an entry-point memory address in the Code Segment.
+      </p>
+
+      <h3>1.1 Direct Function Calls vs. Dynamic Invocation</h3>
+      <ul>
+        <li><strong>Direct Function Call:</strong> The function name is hardcoded at compile time (e.g., <code>greet();</code>). The compiler writes a fixed jump instruction to that specific location.</li>
+        <li><strong>Function Pointer Call:</strong> The function address is stored in a pointer variable (e.g., <code>funcPtr();</code>). The program decides <em>at runtime</em> which function to jump to.</li>
+        <li><strong>Not a Data Pointer:</strong> Unlike an <code>int *</code> or <code>char *</code> which points to storage cells holding numbers or letters, a function pointer points to executable instructions. It has a strict type defined by the function's <strong>return type</strong> and <strong>parameter list</strong>.</li>
+      </ul>
+
+      <h3>1.2 The Starter Example: An Ordinary Function</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">ordinary_function.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+void greet(void)
+{
+    printf("Hello from a function!\n");
+}
+
+int main(void)
+{
+    /* Direct function call: determined at compile time */
+    greet();
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Hello from a function!</div>
+      </div>
+
+      <p>
+        Now, imagine your application needs to choose between <code>greetEnglish()</code>, <code>greetSpanish()</code>, and <code>greetFrench()</code> based on a user's language setting. Instead of repeating <code>if/else</code> chains everywhere, a single function pointer can point to whichever greeting function is currently active!
+      </p>
+    </section>
+
+    <!-- SECTION 02: UNDERSTANDING FUNCTION ADDRESSES -->
+    <section id="sec-02" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Memory Inspection</span>
+        <h2 class="section-title">02. Understanding Function Addresses</h2>
+      </div>
+
+      <p>
+        In C, the name of a function acts as a <strong>function designator</strong>. When used in an expression, it automatically converts (decays) into a pointer to that function, in a manner very similar to array decay:
+      </p>
+
+      <div class="card-note">
+        <strong>The Function Address Equivalence:</strong>
+        For any function named <code>greet</code>:
+        <p style="margin:4px 0 0 0; font-size:1.05rem;">
+          <code>greet &equiv; &amp;greet</code>
+        </p>
+      </div>
+
+      <p>
+        Both expressions evaluate to a pointer to the function. Using the ampersand <code>&amp;greet</code> makes your intention explicit, but writing just <code>greet</code> is standard idiomatic C.
+      </p>
+
+      <h3>2.1 Why Function Pointers Are Not Ordinary <code>void *</code> Pointers</h3>
+      <p>
+        A vital rule in the ISO C Standard (ISO C11 &sect;6.3.2.3):
+      </p>
+      <ul>
+        <li><strong>Object Pointers:</strong> Point to data in memory (e.g., <code>int *</code>, <code>char *</code>, <code>void *</code>).</li>
+        <li><strong>Function Pointers:</strong> Point to executable instructions in code memory (e.g., <code>void (*)(void)</code>).</li>
+        <li><strong>No Standard Interchangeability:</strong> The ISO C standard does <em>not</em> guarantee that a function pointer can be safely converted to <code>void *</code> or back. On some Harvard architectures, code memory and data memory use physically different buses, word widths, or address registers!</li>
+      </ul>
+
+      <div class="card-danger">
+        <strong>Architectural Rule:</strong>
+        Never treat function pointers as general data pointers. Never perform pointer arithmetic (such as <code>funcPtr++</code>) on a function pointer; functions do not have an array-like byte stride!
+      </div>
+    </section>
+
+    <!-- SECTION 03: DECLARING FUNCTION POINTERS -->
+    <section id="sec-03" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Syntax Anatomy</span>
+        <h2 class="section-title">03. Declaring Function Pointers</h2>
+      </div>
+
+      <p>
+        Declaring a function pointer requires precise syntax because operator precedence rules in C give parentheses higher priority than the asterisk.
+      </p>
+
+      <div class="card-def">
+        <strong>General Function Pointer Declaration Syntax:</strong>
+        <p style="margin:4px 0 0 0; font-size:1.05rem; font-weight:700; color:var(--primary-accent);">
+          <code>return_type (*pointer_name)(parameter_types);</code>
+        </p>
+      </div>
+
+      <h3>3.1 Anatomy Breakdown of <code>void (*funcPtr)(void);</code></h3>
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>Visual Syntax Dissection: void (*funcPtr)(void);</span>
+        </div>
+        <div class="svg-diagram-wrap">
+          <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+            <!-- Box 1: return type -->
+            <rect x="30" y="35" width="130" height="60" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="95" y="60" font-size="14" font-weight="800" fill="#0284C7" text-anchor="middle">void</text>
+            <text x="95" y="80" font-size="10.5" font-weight="600" fill="#64748B" text-anchor="middle">Return Type</text>
+
+            <!-- Box 2: (*funcPtr) -->
+            <rect x="180" y="35" width="170" height="60" rx="6" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+            <text x="265" y="60" font-size="14" font-weight="800" fill="#7C3AED" text-anchor="middle">(*funcPtr)</text>
+            <text x="265" y="80" font-size="10.5" font-weight="600" fill="#5B21B6" text-anchor="middle">Is a Pointer Variable</text>
+
+            <!-- Box 3: (void) -->
+            <rect x="370" y="35" width="160" height="60" rx="6" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+            <text x="450" y="60" font-size="14" font-weight="800" fill="#059669" text-anchor="middle">(void)</text>
+            <text x="450" y="80" font-size="10.5" font-weight="600" fill="#065F46" text-anchor="middle">Parameter Types</text>
+
+            <!-- Description beneath -->
+            <text x="340" y="130" font-size="11.5" font-weight="600" fill="#475569" text-anchor="middle">
+              "funcPtr is a pointer to a function taking (void) and returning void"
+            </text>
+          </svg>
+        </div>
+      </div>
+
+      <h3>3.2 Why the Parentheses Around <code>(*funcPtr)</code> Are Mandatory</h3>
+      <p>
+        Notice what happens if you omit the parentheses:
+      </p>
+      <ul>
+        <li><code>int (*funcPtr)(int, int);</code> &rarr; The parentheses bind <code>*</code> to <code>funcPtr</code> first. This declares a <strong>pointer to a function</strong>.</li>
+        <li><code>int *funcPtr(int, int);</code> &rarr; Without parentheses, function call <code>()</code> takes precedence over <code>*</code>. This declares an ordinary <strong>function that returns an integer pointer (<code>int *</code>)</strong>!</li>
+      </ul>
+
+      <h3>3.3 Declaration Comparison Table</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Declaration</th>
+              <th>Object Category</th>
+              <th>Precise Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>int *ptr;</code></td>
+              <td>Data Pointer</td>
+              <td>Pointer to an integer variable in memory</td>
+            </tr>
+            <tr>
+              <td><code>int (*funcPtr)(int, int);</code></td>
+              <td>Function Pointer</td>
+              <td>Pointer to a function accepting two integers and returning an integer</td>
+            </tr>
+            <tr>
+              <td><code>int *function(int);</code></td>
+              <td>Function Declaration</td>
+              <td>A function accepting an integer and returning an <code>int *</code></td>
+            </tr>
+            <tr>
+              <td><code>int (*array[3])(int, int);</code></td>
+              <td>Array of Function Pointers</td>
+              <td>An array of 3 pointers to functions accepting two ints and returning an int</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 04: ASSIGNING AND CALLING FUNCTIONS VIA POINTERS -->
+    <section id="sec-04" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Invocation Patterns</span>
+        <h2 class="section-title">04. Assigning and Calling Functions via Pointers</h2>
+      </div>
+
+      <p>
+        Once declared, assigning a function address and calling it is straightforward and clean.
+      </p>
+
+      <h3>4.1 Complete Runnable Program</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">assign_and_call.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+void greet(void)
+{
+    printf("Hello from greet!\n");
+}
+
+int main(void)
+{
+    /* 1. Declare and initialize function pointer */
+    void (*funcPtr)(void) = greet;
+
+    /* 2. Call form A: Modern concise syntax */
+    funcPtr();
+
+    /* 3. Call form B: Explicit dereference syntax */
+    (*funcPtr)();
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Hello from greet!
+Hello from greet!</div>
+      </div>
+
+      <h3>4.2 Two Valid Call Forms: <code>funcPtr()</code> vs. <code>(*funcPtr)()</code></h3>
+      <ul>
+        <li><code>funcPtr();</code>: Modern, concise, and widely preferred in modern C. Because <code>funcPtr</code> already holds a function pointer, the function call operator <code>()</code> invokes it directly.</li>
+        <li><code>(*funcPtr)();</code>: Explicitly dereferences the pointer to retrieve the function designator, then calls it. Both forms produce identical machine code in all compliant C compilers.</li>
+      </ul>
+
+      <h3>4.3 Step-by-Step Dry-Run Execution Table</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Code Executed</th>
+              <th>State of <code>funcPtr</code></th>
+              <th>Action Performed by CPU</th>
+              <th>Output Produced</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><code>void (*funcPtr)(void) = greet;</code></td>
+              <td>Holds address of <code>greet</code></td>
+              <td>Function entry address stored in pointer variable.</td>
+              <td><em>None</em></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><code>funcPtr();</code></td>
+              <td>Holds address of <code>greet</code></td>
+              <td>CPU jumps to address of <code>greet</code>, executes code, and returns.</td>
+              <td><code>Hello from greet!</code></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><code>(*funcPtr)();</code></td>
+              <td>Holds address of <code>greet</code></td>
+              <td>Dereferences pointer, jumps to <code>greet</code>, and returns.</td>
+              <td><code>Hello from greet!</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 05: FUNCTION POINTER TYPE COMPATIBILITY -->
+    <section id="sec-05" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Type Safety</span>
+        <h2 class="section-title">05. Function Pointer Type Compatibility</h2>
+      </div>
+
+      <p>
+        In C, function pointers are strictly typed. The compiler verifies that the <strong>return type</strong>, <strong>number of parameters</strong>, and <strong>parameter types</strong> of the function match the declaration of the function pointer exactly.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">type_compatibility.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>int add(int a, int b)
+{
+    return a + b;
+}
+
+/* COMPATIBLE: Return type int, parameters (int, int) */
+int (*operation)(int, int) = add; 
+
+/* INCOMPATIBLE (Compiler Error/Warning): Return type mismatch! */
+/* void (*badPtr)(int, int) = add; */
+
+/* INCOMPATIBLE (Compiler Error/Warning): Parameter count mismatch! */
+/* int (*badPtr2)(int) = add; */</code></pre>
+      </div>
+
+      <h3>5.1 Signatures and Their Corresponding Pointer Types</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Target Function Prototype</th>
+              <th>Compatible Function Pointer Declaration</th>
+              <th>Usage Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>void reset(void);</code></td>
+              <td><code>void (*p)(void);</code></td>
+              <td>Takes no arguments, returns nothing.</td>
+            </tr>
+            <tr>
+              <td><code>int square(int x);</code></td>
+              <td><code>int (*p)(int);</code></td>
+              <td>Takes 1 integer, returns an integer.</td>
+            </tr>
+            <tr>
+              <td><code>int add(int a, int b);</code></td>
+              <td><code>int (*p)(int, int);</code></td>
+              <td>Takes 2 integers, returns an integer.</td>
+            </tr>
+            <tr>
+              <td><code>double compute(double val);</code></td>
+              <td><code>double (*p)(double);</code></td>
+              <td>Takes 1 double-precision float, returns a double.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-danger">
+        <strong>The Danger of Type Punning / Unsafe Casts:</strong>
+        Never use type casting (e.g., <code>(int (*)(int))add</code>) to silence compiler warnings for incompatible function signatures. If the CPU prepares stack registers for two arguments but the function only expects one, the call stack will be corrupted, resulting in hard-to-trace crashes!
+      </div>
+    </section>
+
+    <!-- SECTION 06: DYNAMIC REASSIGNMENT: ONE POINTER, MULTIPLE FUNCTIONS -->
+    <section id="sec-06" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Dynamic Dispatch</span>
+        <h2 class="section-title">06. Dynamic Reassignment: One Pointer, Multiple Functions</h2>
+      </div>
+
+      <p>
+        Because a function pointer is an independent variable, it can be redirected to point to any compatible function during execution. This empowers programs to swap behaviors on the fly:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">reassign_function_pointer.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+int add(int a, int b)
+{
+    return a + b;
+}
+
+int multiply(int a, int b)
+{
+    return a * b;
+}
+
+int main(void)
+{
+    /* 1. Point to add() */
+    int (*operation)(int, int) = add;
+    printf("%d\n", operation(5, 3));
+
+    /* 2. Reassign to multiply() */
+    operation = multiply;
+    printf("%d\n", operation(5, 3));
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">8
+15</div>
+      </div>
+
+      <h3>6.1 Visualizing the Redirection</h3>
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>Function Pointer Redirection Architecture</span>
+        </div>
+        <div class="svg-diagram-wrap">
+          <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+            <!-- Pointer Box -->
+            <rect x="40" y="50" width="180" height="60" rx="8" fill="#F0F9FF" stroke="#0284C7" stroke-width="2"/>
+            <text x="130" y="75" font-size="13" font-weight="700" fill="#0284C7" text-anchor="middle">operation</text>
+            <text x="130" y="95" font-size="11" font-weight="600" fill="#64748B" text-anchor="middle">int (*)(int, int)</text>
+
+            <!-- Arrow 1 to add -->
+            <path d="M 220 65 L 360 45" fill="none" stroke="#059669" stroke-width="2.5"/>
+            <polygon points="365,44 354,41 357,51" fill="#059669"/>
+            <text x="280" y="45" font-size="11" font-weight="700" fill="#059669">Initially (&amp;add)</text>
+
+            <!-- add() box -->
+            <rect x="370" y="20" width="180" height="45" rx="6" fill="#ECFDF5" stroke="#059669" stroke-width="1.5"/>
+            <text x="460" y="47" font-size="13" font-weight="800" fill="#065F46" text-anchor="middle">add(a, b) &rarr; 8</text>
+
+            <!-- Arrow 2 to multiply -->
+            <path d="M 220 95 L 360 115" fill="none" stroke="#7C3AED" stroke-width="2.5" stroke-dasharray="4,3"/>
+            <polygon points="365,116 357,109 354,119" fill="#7C3AED"/>
+            <text x="280" y="125" font-size="11" font-weight="700" fill="#7C3AED">Reassigned (&amp;multiply)</text>
+
+            <!-- multiply() box -->
+            <rect x="370" y="95" width="180" height="45" rx="6" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+            <text x="460" y="122" font-size="13" font-weight="800" fill="#5B21B6" text-anchor="middle">multiply(a, b) &rarr; 15</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 07: PASSING FUNCTIONS AS ARGUMENTS -->
+    <section id="sec-07" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Higher-Order Functions</span>
+        <h2 class="section-title">07. Passing Functions as Arguments</h2>
+      </div>
+
+      <p>
+        In computer science, a function that accepts another function as an argument is called a <strong>Higher-Order Function</strong>. This technique allows a function to be generic and let the caller inject the specific algorithm or calculation to be performed.
+      </p>
+
+      <h3>7.1 The Higher-Order Dispatcher Program</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">higher_order_dispatch.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+int add(int a, int b)
+{
+    return a + b;
+}
+
+int multiply(int a, int b)
+{
+    return a * b;
+}
+
+/* applyOperation accepts a function pointer as its 3rd parameter */
+int applyOperation(int a, int b, int (*operation)(int, int))
+{
+    return operation(a, b);
+}
+
+int main(void)
+{
+    printf("%d\n", applyOperation(4, 3, add));
+    printf("%d\n", applyOperation(4, 3, multiply));
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">7
+12</div>
+      </div>
+
+      <h3>7.2 Execution Trace: How <code>applyOperation</code> Works</h3>
+      <ol style="line-height:1.75;">
+        <li><code>main</code> invokes <code>applyOperation(4, 3, add)</code>. The function name <code>add</code> decays into its function pointer.</li>
+        <li>The parameter <code>operation</code> in <code>applyOperation</code> receives the address of <code>add</code>.</li>
+        <li>Inside <code>applyOperation</code>, <code>operation(a, b)</code> invokes <code>add(4, 3)</code>, returning <code>7</code>.</li>
+        <li><code>main</code> next invokes <code>applyOperation(4, 3, multiply)</code>.</li>
+        <li>The parameter <code>operation</code> now receives the address of <code>multiply</code>, invoking <code>multiply(4, 3)</code>, returning <code>12</code>.</li>
+      </ol>
+    </section>
+
+    <!-- SECTION 08: CALLBACKS IN C -->
+    <section id="sec-08" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Callback Architecture</span>
+        <h2 class="section-title">08. Callbacks in C</h2>
+      </div>
+
+      <div class="card-def">
+        <strong>Definition:</strong>
+        A <strong>callback</strong> is a function passed as an argument to another function, which the receiving function invokes ("calls back") when a specific event occurs or during element-by-element processing.
+      </div>
+
+      <p>
+        Callbacks separate the <em>mechanism of iteration</em> from the <em>policy of what to do with each item</em>.
+      </p>
+
+      <div class="card-analogy">
+        <strong>Real-Life Analogy: The Assembly Line Inspector</strong>
+        <p style="margin-bottom:6px;">
+          Imagine an automated conveyor belt moving 100 boxes. The conveyor motor (the <code>processArray</code> function) only knows how to move boxes forward one by one.
+        </p>
+        <p style="margin:0;">
+          At the workstation, you can plug in different tools (the callback): on Monday, a stamp tool to print the box ID; on Tuesday, a barcode reader to scan the weight. The conveyor belt mechanism never needs to change!
+        </p>
+      </div>
+
+      <h3>8.1 Complete Array Processing Callback Program</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">callback_array_demo.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stddef.h&gt;
+
+/* Callback A: Print value directly */
+void printVal(int x)
+{
+    printf("%d ", x);
+}
+
+/* Callback B: Print square of value */
+void printSquare(int x)
+{
+    printf("%d ", x * x);
+}
+
+/* Generic processing engine */
+void processArray(const int *arr, size_t length, void (*callback)(int))
+{
+    const int *end = arr + length;
+    while (arr &lt; end) {
+        callback(*arr); /* Invoke caller's chosen callback */
+        arr++;
+    }
+    printf("\n");
+}
+
+int main(void)
+{
+    int data[] = {1, 2, 3, 4, 5};
+    size_t count = sizeof(data) / sizeof(data[0]);
+
+    printf("Original values: ");
+    processArray(data, count, printVal);
+
+    printf("Squared values:  ");
+    processArray(data, count, printSquare);
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Original values: 1 2 3 4 5 
+Squared values:  1 4 9 16 25 </div>
+      </div>
+
+      <h3>8.2 Callback Execution Flowchart</h3>
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>Flowchart: Callback Lifecycle (processArray &rarr; callback)</span>
+        </div>
+        <div class="svg-diagram-wrap">
+          <svg viewBox="0 0 540 330" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+            <!-- Start -->
+            <rect x="190" y="10" width="160" height="32" rx="16" fill="#0284C7"/>
+            <text x="270" y="31" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">Start processArray</text>
+            <path d="M 270 42 L 270 65" fill="none" stroke="#64748B" stroke-width="2"/>
+            <polygon points="270,70 265,60 275,60" fill="#64748B"/>
+
+            <!-- Loop Condition -->
+            <polygon points="270,70 380,105 270,140 160,105" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+            <text x="270" y="109" font-size="11.5" font-weight="700" fill="#B45309" text-anchor="middle">arr &lt; end ?</text>
+
+            <!-- Yes branch -->
+            <path d="M 270 140 L 270 170" fill="none" stroke="#059669" stroke-width="2"/>
+            <polygon points="270,175 265,165 275,165" fill="#059669"/>
+            <text x="280" y="158" font-size="11" font-weight="700" fill="#059669">Yes</text>
+
+            <!-- Execute Callback Box -->
+            <rect x="160" y="175" width="220" height="42" rx="6" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+            <text x="270" y="196" font-size="11.5" font-weight="700" fill="#5B21B6" text-anchor="middle">Invoke callback(*arr)</text>
+            <text x="270" y="210" font-size="10.5" font-weight="600" fill="#7C3AED" text-anchor="middle">(Delegated execution)</text>
+            <path d="M 270 217 L 270 240" fill="none" stroke="#64748B" stroke-width="2"/>
+            <polygon points="270,245 265,235 275,235" fill="#64748B"/>
+
+            <!-- Advance arr++ -->
+            <rect x="160" y="245" width="220" height="36" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="270" y="268" font-size="11.5" font-weight="600" fill="#0369A1" text-anchor="middle">arr++ (Next Element)</text>
+
+            <!-- Loopback -->
+            <path d="M 160 263 L 110 263 L 110 105 L 155 105" fill="none" stroke="#059669" stroke-width="2"/>
+            <polygon points="160,105 150,100 150,110" fill="#059669"/>
+
+            <!-- No branch -->
+            <path d="M 380 105 L 440 105 L 440 245" fill="none" stroke="#64748B" stroke-width="2"/>
+            <polygon points="440,250 435,240 445,240" fill="#64748B"/>
+            <text x="395" y="97" font-size="11" font-weight="700" fill="#64748B">No</text>
+
+            <rect x="380" y="250" width="120" height="30" rx="15" fill="#64748B"/>
+            <text x="440" y="270" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Finished</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 09: FUNCTION POINTERS AND TYPEDEF -->
+    <section id="sec-09" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Readability &amp; Abstraction</span>
+        <h2 class="section-title">09. Function Pointers and typedef Aliases</h2>
+      </div>
+
+      <p>
+        Raw function pointer declarations can quickly become cumbersome and difficult to parse when used repeatedly in codebases. In C, the <code>typedef</code> keyword creates a clean, reusable type alias for a function pointer signature.
+      </p>
+
+      <div class="card-def">
+        <strong>The typedef Pattern:</strong>
+        <pre><code>typedef int (*Operation)(int, int);</code></pre>
+        <p style="margin:6px 0 0 0;">
+          This statement defines <code>Operation</code> as a <strong>new type name</strong> representing a pointer to any function that accepts two integers and returns an integer.
+        </p>
+      </div>
+
+      <h3>9.1 Comparing Raw vs. typedef Declarations</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Context</th>
+              <th>Raw Function Pointer Syntax</th>
+              <th>Clean typedef Equivalent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Variable Declaration</td>
+              <td><code>int (*op)(int, int) = add;</code></td>
+              <td><code>Operation op = add;</code></td>
+            </tr>
+            <tr>
+              <td>Function Parameter</td>
+              <td><code>void exec(int (*op)(int, int))</code></td>
+              <td><code>void exec(Operation op)</code></td>
+            </tr>
+            <tr>
+              <td>Array of 4 Pointers</td>
+              <td><code>int (*table[4])(int, int);</code></td>
+              <td><code>Operation table[4];</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>9.2 Complete Calculator Program Using typedef</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">typedef_calculator.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+typedef int (*Operation)(int, int);
+
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+int divide(int a, int b) 
+{ 
+    if (b == 0) return 0; /* Guard against division by zero */
+    return a / b;         /* Discards fractional part (integer division) */
+}
+
+void runCalculation(int x, int y, Operation op, const char *name)
+{
+    printf("%s(%d, %d) = %d\n", name, x, y, op(x, y));
+}
+
+int main(void)
+{
+    runCalculation(10, 5, add, "Add");
+    runCalculation(10, 5, subtract, "Subtract");
+    runCalculation(10, 5, multiply, "Multiply");
+    runCalculation(10, 5, divide, "Divide");
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Add(10, 5) = 15
+Subtract(10, 5) = 5
+Multiply(10, 5) = 50
+Divide(10, 5) = 2</div>
+      </div>
+    </section>
+
+    <!-- SECTION 10: ARRAY OF FUNCTION POINTERS (DISPATCH TABLES) -->
+    <section id="sec-10" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Jump Tables</span>
+        <h2 class="section-title">10. Array of Function Pointers (Dispatch Tables)</h2>
+      </div>
+
+      <p>
+        Just as you can create an array of integers or strings, C allows you to construct an <strong>array of function pointers</strong>. In systems programming, this is known as a <strong>Dispatch Table</strong> or <strong>Jump Table</strong>.
+      </p>
+
+      <h3>10.1 Syntax Breakdown: <code>int (*operations[4])(int, int);</code></h3>
+      <ul>
+        <li><code>operations[4]</code>: An array containing 4 elements.</li>
+        <li><code>*</code>: Each element is a pointer.</li>
+        <li><code>(int, int)</code>: Each pointer references a function accepting two integers.</li>
+        <li><code>int</code>: The pointed-to function returns an integer.</li>
+      </ul>
+
+      <h3>10.2 Complete Dispatch Table Program</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">dispatch_table_demo.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+int maximum(int a, int b) { return (a &gt; b) ? a : b; }
+
+int main(void)
+{
+    /* Array of 4 function pointers */
+    int (*operations[4])(int, int) = {add, subtract, multiply, maximum};
+
+    int a = 12, b = 4;
+    int choice;
+
+    for (choice = 0; choice &lt; 4; choice++) {
+        /* Direct index lookup into dispatch table */
+        int result = operations[choice](a, b);
+        printf("Operation index %d on (%d, %d) yields: %d\n", choice, a, b, result);
+    }
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Operation index 0 on (12, 4) yields: 16
+Operation index 1 on (12, 4) yields: 8
+Operation index 2 on (12, 4) yields: 48
+Operation index 3 on (12, 4) yields: 12</div>
+      </div>
+
+      <h3>10.3 Dispatch Tables vs. Switch Statements</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Dispatch Table (Array of Function Pointers)</th>
+              <th>Switch Statement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Execution Mechanism</strong></td>
+              <td>$O(1)$ constant time indirect jump via index</td>
+              <td>Sequential checks or compiler jump table</td>
+            </tr>
+            <tr>
+              <td><strong>Extensibility</strong></td>
+              <td>Functions can be registered dynamically at runtime</td>
+              <td>Hardcoded at compile time; cannot add cases dynamically</td>
+            </tr>
+            <tr>
+              <td><strong>Readability for Simple Tasks</strong></td>
+              <td>Requires strict matching signatures and careful bounds checking</td>
+              <td>Very simple and familiar for basic branching</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 11: REAL-WORLD APPLICATIONS OF FUNCTION POINTERS -->
+    <section id="sec-11" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Practical Engineering</span>
+        <h2 class="section-title">11. Real-World Applications of Function Pointers</h2>
+      </div>
+
+      <p>
+        Function pointers form the architectural backbone of production C software, operating systems, and game engines:
+      </p>
+
+      <ul>
+        <li>
+          <strong>Operating System Virtual File Systems (VFS):</strong> The Linux kernel defines file operation structures (<code>struct file_operations</code>) filled with function pointers (<code>.read</code>, <code>.write</code>, <code>.open</code>) so that devices like hard drives, keyboards, and network sockets can share a unified API.
+        </li>
+        <li>
+          <strong>GUI &amp; Event Handlers:</strong> Button clicks, mouse moves, and network socket packets trigger registered callback functions dynamically.
+        </li>
+        <li>
+          <strong>Object-Oriented C (Polymorphism):</strong> Structures containing function pointers simulate C++ virtual method tables (vtables), allowing dynamic polymorphism in pure C.
+        </li>
+        <li>
+          <strong>Embedded State Machines:</strong> Finite State Machines (FSM) store states as function pointers, transitioning by simply executing <code>currentState = nextState;</code>.
+        </li>
+      </ul>
+    </section>
+
+    <!-- SECTION 12: STANDARD LIBRARY COMPARATORS (QSORT) -->
+    <section id="sec-12" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Standard Library</span>
+        <h2 class="section-title">12. Standard Library Comparators (qsort in Practice)</h2>
+      </div>
+
+      <p>
+        The most prominent example of a function pointer in the C Standard Library is the quicksort algorithm <code>qsort()</code> in <code>&lt;stdlib.h&gt;</code>:
+      </p>
+
+      <div class="card-def">
+        <strong>The qsort Prototype:</strong>
+        <pre><code>void qsort(void *base, size_t nmemb, size_t size,
+           int (*compar)(const void *, const void *));</code></pre>
+      </div>
+
+      <h3>12.1 Comparator Contract Rules</h3>
+      <p>
+        The comparator callback must return an integer:
+      </p>
+      <ul>
+        <li><strong>Negative (&lt; 0):</strong> If the first element should precede the second element.</li>
+        <li><strong>Zero (== 0):</strong> If both elements are equivalent.</li>
+        <li><strong>Positive (&gt; 0):</strong> If the first element should follow the second element.</li>
+      </ul>
+
+      <h3>12.2 Complete Runnable <code>qsort</code> Program</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">qsort_comparator_demo.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Safe integer comparator: avoids subtraction overflow bug */
+int compareInts(const void *a, const void *b)
+{
+    int valA = *(const int *)a;
+    int valB = *(const int *)b;
+
+    if (valA &lt; valB) return -1;
+    if (valA &gt; valB) return 1;
+    return 0;
+}
+
+int main(void)
+{
+    int numbers[] = {45, 12, 89, 7, 23, 56};
+    size_t count = sizeof(numbers) / sizeof(numbers[0]);
+
+    printf("Before sorting: ");
+    for (size_t i = 0; i &lt; count; i++) printf("%d ", numbers[i]);
+    printf("\n");
+
+    /* Pass compareInts function pointer into qsort */
+    qsort(numbers, count, sizeof(int), compareInts);
+
+    printf("After sorting:  ");
+    for (size_t i = 0; i &lt; count; i++) printf("%d ", numbers[i]);
+    printf("\n");
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <div class="output-content">Before sorting: 45 12 89 7 23 56 
+After sorting:  7 12 23 45 56 89 </div>
+      </div>
+
+      <div class="card-danger">
+        <strong>The Subtraction Overflow Bug:</strong>
+        A common rookie shortcut is writing <code>return (*(int*)a - *(int*)b);</code>. If <code>*a = INT_MIN</code> and <code>*b = 1</code>, subtraction overflows integer limits and returns positive, completely corrupting your sort order! Always use safe three-way comparison (<code>&lt;</code>, <code>&gt;</code>, <code>==</code>).
+      </div>
+    </section>
+
+    <!-- SECTION 13: FUNCTION POINTERS VS OTHER POINTER TYPES -->
+    <section id="sec-13" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Type Comparison</span>
+        <h2 class="section-title">13. Function Pointers vs. Other Pointer Types</h2>
+      </div>
+
+      <p>
+        Pointers in C fall into two fundamentally different categories: <strong>Object Pointers</strong> (which reference data stored in RAM) and <strong>Function Pointers</strong> (which reference executable machine code in the Code/Text segment).
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Declaration</th>
+              <th>Pointer Category</th>
+              <th>Target in Memory</th>
+              <th>Pointer Arithmetic Allowed?</th>
+              <th>Portably Convertible to <code>void *</code>?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>int *ptr;</code></td>
+              <td>Data Pointer</td>
+              <td>Single integer in Stack/Heap/Data segment</td>
+              <td><strong>YES</strong> (scaled by <code>sizeof(int)</code>)</td>
+              <td><strong>YES</strong> (guaranteed by ISO C)</td>
+            </tr>
+            <tr>
+              <td><code>int **ptr;</code></td>
+              <td>Double Data Pointer</td>
+              <td>A pointer variable storing an address</td>
+              <td><strong>YES</strong> (scaled by <code>sizeof(int *)</code>)</td>
+              <td><strong>YES</strong> (guaranteed by ISO C)</td>
+            </tr>
+            <tr>
+              <td><code>int (*ptr)[5];</code></td>
+              <td>Array Pointer</td>
+              <td>An entire contiguous array of 5 integers</td>
+              <td><strong>YES</strong> (scaled by <code>5 * sizeof(int)</code>)</td>
+              <td><strong>YES</strong> (guaranteed by ISO C)</td>
+            </tr>
+            <tr>
+              <td><code>int (*func)(int, int);</code></td>
+              <td>Function Pointer</td>
+              <td>Entry point of a function in Code Segment</td>
+              <td><strong>NO</strong> (illegal in C)</td>
+              <td><strong>NO</strong> (undefined in strict ISO C)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>13.1 Visual Declaration-Parsing Guide (The Clockwise/Spiral Rule)</h3>
+      <p>
+        To read complex C declarations, start at the identifier and spiral outward:
+      </p>
+      <ol style="line-height:1.75;">
+        <li>Find the identifier: <code>func</code></li>
+        <li>Look right: Hit by <code>)</code>, so look left: <code>*</code> &rarr; <em>"func is a pointer to..."</em></li>
+        <li>Move outside parentheses and look right: <code>(int, int)</code> &rarr; <em>"...a function taking two ints..."</em></li>
+        <li>Look left: <code>int</code> &rarr; <em>"...and returning an int."</em></li>
+      </ol>
+    </section>
+
+    <!-- SECTION 14: FUNCTION POINTER SAFETY & 13 COMMON MISTAKES -->
+    <section id="sec-14" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Safety &amp; Diagnostics</span>
+        <h2 class="section-title">14. Function Pointer Safety &amp; 13 Common Mistakes</h2>
+      </div>
+
+      <p>
+        Calling an invalid function pointer causes the CPU instruction pointer to jump to an arbitrary memory address, instantly producing a catastrophic crash. Here are the 13 most common pitfalls and their fixes:
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Mistake Pattern</th>
+              <th>Flawed Code</th>
+              <th>Why It Fails</th>
+              <th>Correct Industry Fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Omitting Parentheses</td>
+              <td><code>int *fp(int);</code></td>
+              <td>Declares a function returning <code>int *</code>, not a function pointer.</td>
+              <td>Use parentheses: <code>int (*fp)(int);</code>.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Mismatched Return Type</td>
+              <td><code>void (*fp)() = add;</code></td>
+              <td><code>add</code> returns <code>int</code>; compiler warns or return register is misread.</td>
+              <td>Match signature: <code>int (*fp)(int, int) = add;</code>.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Mismatched Parameters</td>
+              <td><code>int (*fp)(int) = add;</code></td>
+              <td><code>add</code> requires 2 integers; calling passes too few arguments, corrupting stack.</td>
+              <td>Match exact parameters: <code>int (*fp)(int, int) = add;</code>.</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Calling Uninitialized Pointer</td>
+              <td><code>void (*fp)(); fp();</code></td>
+              <td>Wild function pointer contains garbage; CPU jumps to random address (SIGSEGV).</td>
+              <td>Initialize on declaration or assign before call.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Calling NULL Pointer</td>
+              <td><code>void (*fp)() = NULL; fp();</code></td>
+              <td>Jumping to address 0 causes immediate fatal segmentation fault.</td>
+              <td>Guard: <code>if (fp != NULL) fp();</code>.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>Forgetting Arguments</td>
+              <td><code>op();</code> (where <code>op</code> takes 2 ints)</td>
+              <td>Compiler error; missing required arguments.</td>
+              <td>Pass arguments: <code>op(x, y);</code>.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>Capturing Void Return</td>
+              <td><code>int res = voidFuncPtr();</code></td>
+              <td>A <code>void</code> function returns no value; compiler rejects with type error.</td>
+              <td>Invoke as statement: <code>voidFuncPtr();</code>.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>Callback Signature Mismatch</td>
+              <td><code>void f(void (*cb)(int)); f(printStr);</code></td>
+              <td>Callback takes <code>int</code>, but passed function expects <code>char *</code>.</td>
+              <td>Ensure callback matches parameter type exactly.</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>Out-of-Bounds Dispatch Index</td>
+              <td><code>ops[10](a, b);</code> (size 4)</td>
+              <td>Reads arbitrary memory beyond table as an address, then jumps there (crash!).</td>
+              <td>Validate: <code>if (idx &gt;= 0 &amp;&amp; idx &lt; 4) ops[idx](a, b);</code>.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>Confusing with Object Pointer</td>
+              <td><code>int *p = greet;</code></td>
+              <td>Incompatible pointer assignment; object pointer cannot store function code.</td>
+              <td>Use function pointer: <code>void (*p)(void) = greet;</code>.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>Unsafe Function Cast</td>
+              <td><code>((void(*)())add)();</code></td>
+              <td>Suppresses type checker; stack parameters misaligned during call.</td>
+              <td>Never cast function pointers to incompatible prototypes.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>Unhandled Division by Zero</td>
+              <td><code>divide(10, 0);</code></td>
+              <td>Hardware division by zero generates an unrecoverable SIGFPE signal.</td>
+              <td>Guard denominator: <code>if (b == 0) return 0;</code>.</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>Confusing Pointer with Declaration</td>
+              <td><code>int (*add)(int, int) { ... }</code></td>
+              <td>Syntax error; definitions do not include pointer parens around name.</td>
+              <td>Define normally: <code>int add(int a, int b) { ... }</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 15: VISUAL ARCHITECTURE & DIAGRAM GALLERY -->
+    <section id="sec-15" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Visual Blueprint</span>
+        <h2 class="section-title">15. Visual Architecture &amp; Diagram Gallery</h2>
+      </div>
+
+      <p>
+        The following 9 structural diagrams and flowcharts visually reinforce how function pointers operate in memory:
+      </p>
+
+      <!-- Diagram 1: Function to Pointer Relationship -->
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>1. Function Pointer Reference into the Code (Text) Segment</span>
+        </div>
+        <div class="svg-diagram-wrap">
+          <svg viewBox="0 0 680 150" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+            <!-- Stack Pointer Box -->
+            <rect x="40" y="45" width="200" height="60" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="2"/>
+            <text x="140" y="70" font-size="12" font-weight="700" fill="#0284C7" text-anchor="middle">Stack Variable: funcPtr</text>
+            <text x="140" y="90" font-size="13" font-weight="800" fill="#0F172A" text-anchor="middle">Stores: Entry Addr</text>
+
+            <!-- Arrow to Code Segment -->
+            <path d="M 240 75 L 390 75" fill="none" stroke="#0284C7" stroke-width="3"/>
+            <polygon points="395,75 385,70 385,80" fill="#0284C7"/>
+            <text x="315" y="65" font-size="11" font-weight="700" fill="#0284C7" text-anchor="middle">Points to Entry</text>
+
+            <!-- Code Segment Box -->
+            <rect x="400" y="25" width="240" height="100" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2"/>
+            <text x="520" y="50" font-size="12" font-weight="700" fill="#065F46" text-anchor="middle">Code Segment (Text)</text>
+            <rect x="420" y="60" width="200" height="50" rx="4" fill="#FFFFFF"/>
+            <text x="520" y="82" font-size="11.5" font-weight="700" fill="#0F172A" text-anchor="middle">greet() Instructions</text>
+            <text x="520" y="98" font-size="10.5" font-weight="600" fill="#64748B" text-anchor="middle">push rbp; mov rbp, rsp...</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Diagram 2: Dispatch Table -->
+      <div class="diagram-card">
+        <div class="diagram-title">
+          <span>2. Array-of-Function-Pointers Jump Table Dispatching</span>
+        </div>
+        <div class="svg-diagram-wrap">
+          <svg viewBox="0 0 680 160" xmlns="http://www.w3.org/2000/svg" style="max-width:100%; height:auto;">
+            <!-- Index 0 -->
+            <rect x="30" y="50" width="130" height="55" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="95" y="73" font-size="12" font-weight="700" fill="#0284C7" text-anchor="middle">ops[0] &rarr; add</text>
+            <text x="95" y="92" font-size="11" font-weight="800" fill="#0F172A" text-anchor="middle">a + b</text>
+
+            <!-- Index 1 -->
+            <rect x="180" y="50" width="130" height="55" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="245" y="73" font-size="12" font-weight="700" fill="#0284C7" text-anchor="middle">ops[1] &rarr; sub</text>
+            <text x="245" y="92" font-size="11" font-weight="800" fill="#0F172A" text-anchor="middle">a - b</text>
+
+            <!-- Index 2 -->
+            <rect x="330" y="50" width="130" height="55" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="395" y="73" font-size="12" font-weight="700" fill="#0284C7" text-anchor="middle">ops[2] &rarr; mul</text>
+            <text x="395" y="92" font-size="11" font-weight="800" fill="#0F172A" text-anchor="middle">a * b</text>
+
+            <!-- Index 3 -->
+            <rect x="480" y="50" width="130" height="55" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5"/>
+            <text x="545" y="73" font-size="12" font-weight="700" fill="#0284C7" text-anchor="middle">ops[3] &rarr; max</text>
+            <text x="545" y="92" font-size="11" font-weight="800" fill="#0F172A" text-anchor="middle">(a &gt; b ? a:b)</text>
+
+            <text x="320" y="25" font-size="12" font-weight="700" fill="#64748B" text-anchor="middle">Choice Index selects target in O(1) time</text>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 16: STEP-BY-STEP DRY RUNS & TRACE TABLES -->
+    <section id="sec-16" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Execution Tracing</span>
+        <h2 class="section-title">16. Step-by-Step Dry Runs &amp; Trace Tables</h2>
+      </div>
+
+      <h3>16.1 Trace 1: Function Pointer Invocation &amp; Reassignment</h3>
+      <p>Code: <code>op = add; res1 = op(5, 3); op = multiply; res2 = op(5, 3);</code></p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>Operation Executed</th>
+              <th>Target Pointed To</th>
+              <th>Arguments</th>
+              <th>Evaluated Result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><code>op = add;</code></td>
+              <td><code>add()</code> function entry</td>
+              <td>&mdash;</td>
+              <td>Pointer bound to <code>add</code></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><code>res1 = op(5, 3);</code></td>
+              <td><code>add()</code> function entry</td>
+              <td><code>a=5, b=3</code></td>
+              <td><strong>8</strong></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><code>op = multiply;</code></td>
+              <td><code>multiply()</code> function entry</td>
+              <td>&mdash;</td>
+              <td>Pointer redirected to <code>multiply</code></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><code>res2 = op(5, 3);</code></td>
+              <td><code>multiply()</code> function entry</td>
+              <td><code>a=5, b=3</code></td>
+              <td><strong>15</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>16.2 Trace 2: Array Callback Processing</h3>
+      <p>Array: <code>{10, 20}</code> with callback <code>printSquare(int x)</code>.</p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Iteration</th>
+              <th>Current Element Address</th>
+              <th>Deref Value <code>*arr</code></th>
+              <th>Callback Invoked</th>
+              <th>Output Produced</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><code>&amp;data[0]</code></td>
+              <td>10</td>
+              <td><code>printSquare(10)</code> &rarr; <code>10 * 10</code></td>
+              <td><code>100 </code></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><code>&amp;data[1]</code></td>
+              <td>20</td>
+              <td><code>printSquare(20)</code> &rarr; <code>20 * 20</code></td>
+              <td><code>400 </code></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><code>end</code> sentinel</td>
+              <td><em>Boundary reached</em></td>
+              <td>Loop terminates</td>
+              <td><code>\n</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 17: PRACTICE LEVEL 1: BEGINNER FUNDAMENTALS -->
+    <section id="sec-17" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Practice &bull; Level 1</span>
+        <h2 class="section-title">17. Practice Level 1: Beginner Fundamentals</h2>
+      </div>
+
+      <p>
+        Test your core understanding of function pointer syntax, precedence rules, and direct vs. indirect calls. Click each card to reveal the complete answer and explanation.
+      </p>
+
+      <!-- Q1 -->
+      <details>
+        <summary><strong>Q1:</strong> Which of the following declares a function pointer, and which declares a function returning a pointer? Explain the difference.<br>
+        <code>(A) int *func(int);</code> &nbsp;&nbsp;|&nbsp;&nbsp; <code>(B) int (*func)(int);</code></summary>
+        <div class="details-body">
+          <span class="ans-tag">ANSWER &amp; ANALYSIS</span>
+          <p>
+            <strong>Declaration (B) <code>int (*func)(int);</code> is the function pointer.</strong>
+          </p>
+          <ul>
+            <li>In <code>int *func(int);</code>, the function call operator <code>()</code> binds before the pointer dereference operator <code>*</code> due to operator precedence. Therefore, <code>func</code> is an identifier for a function that accepts an <code>int</code> and returns an <code>int *</code> (a pointer to an integer).</li>
+            <li>In <code>int (*func)(int);</code>, the parentheses around <code>(*func)</code> force the pointer binding first. Therefore, <code>func</code> is a pointer variable capable of holding the memory address of a function that accepts an <code>int</code> and returns an <code>int</code>.</li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- Q2 -->
+      <details>
+        <summary><strong>Q2:</strong> Deconstruct and explain every part of the declaration: <code>int (*ptr)(int);</code></summary>
+        <div class="details-body">
+          <span class="ans-tag">DECLARATION ANATOMY</span>
+          <p>Read from the inside out using the Right-Left Rule:</p>
+          <ol>
+            <li><code>(*ptr)</code>: <code>ptr</code> is a <strong>pointer</strong> variable.</li>
+            <li><code>(int)</code>: Moving to the right, it points to a <strong>function accepting a single parameter of type <code>int</code></strong>.</li>
+            <li><code>int</code>: Moving to the left, that pointed-to function <strong>returns an <code>int</code></strong>.</li>
+          </ol>
+          <p>Summary: <code>ptr</code> is a pointer to a function taking one <code>int</code> parameter and returning an <code>int</code>.</p>
+        </div>
+      </details>
+
+      <!-- Q3 -->
+      <details>
+        <summary><strong>Q3:</strong> What is the exact output of this C program?<br>
+        <pre><code>#include &lt;stdio.h&gt;
+
+int doubleVal(int x) { return x * 2; }
+
+int main(void) {
+    int (*fp)(int) = doubleVal;
+    printf("%d\n", fp(7));
+    return 0;
+}</code></pre></summary>
+        <div class="details-body">
+          <span class="ans-tag">EXACT OUTPUT</span>
+          <div class="output-box">
+            <pre class="output-content">14</pre>
+          </div>
+          <p><strong>Explanation:</strong> <code>fp</code> is initialized with the address of <code>doubleVal</code>. Calling <code>fp(7)</code> invokes <code>doubleVal(7)</code>, which computes <code>7 * 2 = 14</code> and returns it to <code>printf</code>.</p>
+        </div>
+      </details>
+
+      <!-- Q4 -->
+      <details>
+        <summary><strong>Q4:</strong> What is the fundamental difference between writing <code>func</code> and writing <code>func()</code> in a C expression?</summary>
+        <div class="details-body">
+          <span class="ans-tag">EXPLANATION</span>
+          <ul>
+            <li><code>func</code> (without parentheses) is a <strong>function designator</strong>. In value expressions, it automatically decays into a pointer to the function (i.e., its starting address in the code segment).</li>
+            <li><code>func()</code> (with parentheses) is a <strong>function call operator</strong>. It instructs the CPU to prepare stack arguments, jump to the function's entry point, execute its instructions, and return the resulting value.</li>
+          </ul>
+          <p>Writing <code>int (*ptr)(void) = func();</code> is a common beginner error: it attempts to assign the return value of <code>func()</code> instead of the function's address <code>func</code>.</p>
+        </div>
+      </details>
+
+      <!-- Q5 -->
+      <details>
+        <summary><strong>Q5:</strong> Why does ISO C require strict signature matching between a function pointer and the target function?</summary>
+        <div class="details-body">
+          <span class="ans-tag">CALLING CONVENTION &amp; ABI</span>
+          <p>
+            The function's return type and parameter types dictate the CPU Application Binary Interface (ABI) and calling convention:
+          </p>
+          <ul>
+            <li>Which CPU registers or stack offsets hold input arguments.</li>
+            <li>How floating-point numbers (passed in XMM/vector registers) vs. integers (passed in general-purpose registers) are delivered.</li>
+            <li>Whether the caller or the callee cleans up the stack frame.</li>
+          </ul>
+          <p>If you call a function through an incompatible pointer type, the CPU pulls values from the wrong registers or offsets, resulting in stack corruption, garbage calculations, or immediate segmentation faults.</p>
+        </div>
+      </details>
+
+      <!-- Q6 -->
+      <details>
+        <summary><strong>Q6:</strong> Write a valid C code snippet that assigns a function named <code>squareRoot</code> (which accepts a <code>double</code> and returns a <code>double</code>) to a function pointer named <code>fn</code>.</summary>
+        <div class="details-body">
+          <span class="ans-tag">CORRECT C CODE</span>
+          <pre><code>/* 1. Prototype of the target function */
+double squareRoot(double x);
+
+/* 2. Declaration and initialization of the function pointer */
+double (*fn)(double) = squareRoot;
+
+/* Both 'squareRoot' and '&squareRoot' are valid and equivalent */
+double (*fn2)(double) = &squareRoot;</code></pre>
+        </div>
+      </details>
+
+      <!-- Q7 -->
+      <details>
+        <summary><strong>Q7:</strong> Identify the syntax error in this code and explain how to fix it:<br>
+        <code>void *handler(int) = logMessage;</code></summary>
+        <div class="details-body">
+          <span class="ans-tag">ERROR &amp; CORRECTION</span>
+          <p>
+            <strong>The error:</strong> Missing parentheses around <code>*handler</code>. The compiler parses <code>void *handler(int)</code> as a forward declaration of a function named <code>handler</code> that returns a generic data pointer (<code>void *</code>). You cannot initialize a function declaration with <code>= logMessage</code>.
+          </p>
+          <p><strong>Corrected version:</strong></p>
+          <pre><code>void (*handler)(int) = logMessage;</code></pre>
+        </div>
+      </details>
+
+      <!-- Q8 -->
+      <details>
+        <summary><strong>Q8:</strong> Explain the difference between calling <code>ptr()</code> and <code>(*ptr)()</code> when <code>ptr</code> is a function pointer. Are they equivalent?</summary>
+        <div class="details-body">
+          <span class="ans-tag">EQUIVALENCE IN ISO C</span>
+          <p>
+            <strong>Yes, they are 100% semantically equivalent in modern C.</strong>
+          </p>
+          <ul>
+            <li><code>(*ptr)()</code> is the original K&amp;R C style: dereferencing the pointer yields the function designator, and <code>()</code> invokes it.</li>
+            <li><code>ptr()</code> is the modern ANSI/ISO C shorthand: the compiler automatically dereferences the function pointer when it encounters the call operator <code>()</code>.</li>
+          </ul>
+          <p>Modern C code overwhelmingly prefers <code>ptr()</code> for cleanliness and readability.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 18: PRACTICE LEVEL 2: INTERMEDIATE CONCEPTS -->
+    <section id="sec-18" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Practice &bull; Level 2</span>
+        <h2 class="section-title">18. Practice Level 2: Intermediate Concepts</h2>
+      </div>
+
+      <p>
+        Challenge yourself with callbacks, <code>typedef</code> abstractions, signature debugging, and defensive null validation.
+      </p>
+
+      <!-- Q1 -->
+      <details>
+        <summary><strong>Q1:</strong> Write a complete C program where a single function pointer variable selects between <code>add(a, b)</code> and <code>subtract(a, b)</code> based on user choice.</summary>
+        <div class="details-body">
+          <span class="ans-tag">COMPLETE C PROGRAM</span>
+          <div class="code-container">
+            <div class="code-header">
+              <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+              <span class="code-title">calc_selector.c</span>
+              <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+            </div>
+            <pre><code>#include &lt;stdio.h&gt;
+
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+
+int main(void) {
+    int (*action)(int, int) = NULL;
+    int choice = 1; /* Predefined choice: 1 for add, 2 for subtract */
+    int x = 20, y = 8;
+
+    if (choice == 1) {
+        action = add;
+    } else if (choice == 2) {
+        action = subtract;
+    }
+
+    if (action != NULL) {
+        printf("Result: %d\n", action(x, y));
+    }
+    return 0;
+}</code></pre>
+          </div>
+          <div class="output-box">
+            <div class="output-label">Exact Expected Output</div>
+            <pre class="output-content">Result: 28</pre>
+          </div>
+        </div>
+      </details>
+
+      <!-- Q2 -->
+      <details>
+        <summary><strong>Q2:</strong> How do you pass a function pointer to another function? Write the function prototype for <code>executeTwice</code>, which takes an integer and a function that transforms an integer.</summary>
+        <div class="details-body">
+          <span class="ans-tag">PROTOTYPE &amp; IMPLEMENTATION</span>
+          <pre><code>/* Prototype */
+int executeTwice(int initial, int (*transform)(int));
+
+/* Implementation */
+int executeTwice(int initial, int (*transform)(int)) {
+    int firstPass = transform(initial);
+    return transform(firstPass);
+}</code></pre>
+          <p>Example: If <code>square(x) = x * x</code> is passed with <code>initial = 3</code>, <code>firstPass = 9</code>, and the return value is <code>81</code>.</p>
+        </div>
+      </details>
+
+      <!-- Q3 -->
+      <details>
+        <summary><strong>Q3:</strong> Create a <code>typedef</code> named <code>Predicate</code> for a function that takes a <code>const char *</code> and returns a boolean integer (<code>1</code> or <code>0</code>).</summary>
+        <div class="details-body">
+          <span class="ans-tag">TYPEDEF DEFINITION</span>
+          <pre><code>typedef int (*Predicate)(const char *);
+
+/* Usage example: */
+int isAlphaString(const char *str);
+
+Predicate check = isAlphaString;
+if (check("Hello")) {
+    /* String is valid */
+}</code></pre>
+        </div>
+      </details>
+
+      <!-- Q4 -->
+      <details>
+        <summary><strong>Q4:</strong> Write two callback functions conforming to <code>void (*)(int)</code>: one that prints the value as decimal, and one that prints it as hexadecimal prefixed with <code>0x</code>.</summary>
+        <div class="details-body">
+          <span class="ans-tag">CALLBACK IMPLEMENTATION</span>
+          <pre><code>void printDec(int val) {
+    printf("DEC: %d\n", val);
+}
+
+void printHex(int val) {
+    printf("HEX: 0x%X\n", (unsigned int)val);
+}</code></pre>
+        </div>
+      </details>
+
+      <!-- Q5 -->
+      <details>
+        <summary><strong>Q5:</strong> Declare an array of 3 function pointers where each function takes two <code>float</code> arguments and returns a <code>float</code>.</summary>
+        <div class="details-body">
+          <span class="ans-tag">DECLARATION</span>
+          <pre><code>/* Direct declaration */
+float (*table[3])(float, float);
+
+/* Or using typedef for superior clarity */
+typedef float (*FloatMath)(float, float);
+FloatMath table[3];</code></pre>
+        </div>
+      </details>
+
+      <!-- Q6 -->
+      <details>
+        <summary><strong>Q6:</strong> Why will the following code trigger a compiler warning or error? How do you fix it?<br>
+        <pre><code>void logMessage(const char *msg) { printf("%s\n", msg); }
+int (*handler)(const char *) = logMessage;</code></pre></summary>
+        <div class="details-body">
+          <span class="ans-tag">TYPE MISMATCH &amp; FIX</span>
+          <p>
+            <strong>Mismatch:</strong> <code>logMessage</code> returns <code>void</code>, but the function pointer <code>handler</code> is declared to return <code>int</code>. Their return types do not match, violating type compatibility.
+          </p>
+          <p><strong>Correction:</strong></p>
+          <pre><code>void (*handler)(const char *) = logMessage;</code></pre>
+        </div>
+      </details>
+
+      <!-- Q7 -->
+      <details>
+        <summary><strong>Q7:</strong> Perform a trace table of calling an array processor on <code>{5, 10, 15}</code> with a callback <code>sumCallback(int x)</code> that adds each element to a global or accumulator variable.</summary>
+        <div class="details-body">
+          <span class="ans-tag">DRY-RUN TRACE</span>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Step</th>
+                  <th>Index <code>i</code></th>
+                  <th>Element <code>arr[i]</code></th>
+                  <th>Accumulator Before</th>
+                  <th>Operation</th>
+                  <th>Accumulator After</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>1</td>
+                  <td>0</td>
+                  <td>5</td>
+                  <td>0</td>
+                  <td><code>accum += 5</code></td>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <td>2</td>
+                  <td>1</td>
+                  <td>10</td>
+                  <td>5</td>
+                  <td><code>accum += 10</code></td>
+                  <td>15</td>
+                </tr>
+                <tr>
+                  <td>3</td>
+                  <td>2</td>
+                  <td>15</td>
+                  <td>15</td>
+                  <td><code>accum += 15</code></td>
+                  <td>30</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p>Final accumulated sum: <strong>30</strong>.</p>
+        </div>
+      </details>
+
+      <!-- Q8 -->
+      <details>
+        <summary><strong>Q8:</strong> What happens if a program calls a function pointer that contains <code>NULL</code>? How must defensive code prevent this?</summary>
+        <div class="details-body">
+          <span class="ans-tag">DEFENSIVE PROGRAMMING</span>
+          <p>
+            Calling a <code>NULL</code> function pointer causes the CPU to attempt an instruction fetch at virtual address <code>0x0</code>. On modern operating systems (Linux, Windows, macOS), page 0 is guarded, resulting in an immediate <strong>Segmentation Fault (Crash / EXCEPTION_ACCESS_VIOLATION)</strong>.
+          </p>
+          <p><strong>Defensive Guard Pattern:</strong></p>
+          <pre><code>void invokeCallback(void (*cb)(int), int value) {
+    if (cb != NULL) {
+        cb(value); /* Safe invocation */
+    } else {
+        fprintf(stderr, "Warning: Null callback supplied. Skipped.\n");
+    }
+}</code></pre>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 19: PRACTICE LEVEL 3: ADVANCED & DSA PROBLEMS -->
+    <section id="sec-19" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Practice &bull; Level 3</span>
+        <h2 class="section-title">19. Practice Level 3: Advanced &amp; DSA Problems</h2>
+      </div>
+
+      <p>
+        Six complete, runnable C programs and architectural analyses covering real-world systems programming, sorting comparators, command routing, and algorithm abstraction.
+      </p>
+
+      <!-- Problem 1 -->
+      <h3>19.1 Problem 1: Generic In-Place Array Transformer</h3>
+      <p>
+        Implement a higher-order array transformer <code>transformArray</code> that applies any unary transformation function (e.g., doubling, negating, incrementing) to all elements in-place.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">array_transformer.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stddef.h&gt;
+
+typedef int (*Transformer)(int);
+
+void transformArray(int *arr, size_t length, Transformer tf) {
+    if (arr == NULL || tf == NULL) return;
+    for (size_t i = 0; i &lt; length; ++i) {
+        arr[i] = tf(arr[i]);
+    }
+}
+
+int squareVal(int x) { return x * x; }
+int negateVal(int x) { return -x; }
+
+void printArr(const int *arr, size_t length) {
+    for (size_t i = 0; i &lt; length; ++i) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+int main(void) {
+    int numbers[] = {1, 2, 3, 4, 5};
+    size_t n = sizeof(numbers) / sizeof(numbers[0]);
+
+    printf("Original: ");
+    printArr(numbers, n);
+
+    transformArray(numbers, n, squareVal);
+    printf("Squared:  ");
+    printArr(numbers, n);
+
+    transformArray(numbers, n, negateVal);
+    printf("Negated:  ");
+    printArr(numbers, n);
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">Original: 1 2 3 4 5 
+Squared:  1 4 9 16 25 
+Negated:  -1 -4 -9 -16 -25 </pre>
+      </div>
+
+      <!-- Problem 2 -->
+      <h3>19.2 Problem 2: Calculator Jump Table with Bounds Checking</h3>
+      <p>
+        Build a high-performance operation dispatcher using an array of function pointers. It executes addition, subtraction, multiplication, and integer division in \(O(1)\) constant time without conditional branching.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">dispatch_calculator.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+
+int opAdd(int a, int b) { return a + b; }
+int opSub(int a, int b) { return a - b; }
+int opMul(int a, int b) { return a * b; }
+int opDiv(int a, int b) { 
+    if (b == 0) {
+        printf("Error: Division by zero! ");
+        return 0;
+    }
+    return a / b; 
+}
+
+int main(void) {
+    /* Array of 4 function pointers */
+    int (*dispatchTable[4])(int, int) = {opAdd, opSub, opMul, opDiv};
+    const char *names[4] = {"Add", "Subtract", "Multiply", "Divide"};
+
+    int a = 12, b = 4;
+
+    for (int opcode = 0; opcode &lt; 4; ++opcode) {
+        /* Strict bounds check ensures opcode &gt;= 0 and opcode &lt; 4 */
+        if (opcode &gt;= 0 &amp;&amp; opcode &lt; 4) {
+            int result = dispatchTable[opcode](a, b);
+            printf("[%s] %d and %d = %d\n", names[opcode], a, b, result);
+        }
+    }
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">[Add] 12 and 4 = 16
+[Subtract] 12 and 4 = 8
+[Multiply] 12 and 4 = 48
+[Divide] 12 and 4 = 3</pre>
+      </div>
+
+      <!-- Problem 3 -->
+      <h3>19.3 Problem 3: Safe Multi-Criteria Sorting with <code>qsort</code></h3>
+      <p>
+        Demonstrate custom sorting using the standard library <code>qsort</code> with two different comparators: ascending order and descending order. Use the three-way comparison idiom to avoid subtraction arithmetic overflow.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">qsort_custom.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Ascending comparator: returns negative if a &lt; b, positive if a &gt; b */
+int cmpAsc(const void *p1, const void *p2) {
+    int v1 = *(const int *)p1;
+    int v2 = *(const int *)p2;
+    if (v1 &lt; v2) return -1;
+    if (v1 &gt; v2) return 1;
+    return 0;
+}
+
+/* Descending comparator: returns positive if a &lt; b, negative if a &gt; b */
+int cmpDesc(const void *p1, const void *p2) {
+    int v1 = *(const int *)p1;
+    int v2 = *(const int *)p2;
+    if (v1 &gt; v2) return -1;
+    if (v1 &lt; v2) return 1;
+    return 0;
+}
+
+void printData(const int *arr, size_t n) {
+    for (size_t i = 0; i &lt; n; ++i) printf("%d ", arr[i]);
+    printf("\n");
+}
+
+int main(void) {
+    int data[] = {42, 7, -15, 100, 0, 88};
+    size_t count = sizeof(data) / sizeof(data[0]);
+
+    printf("Raw:        ");
+    printData(data, count);
+
+    qsort(data, count, sizeof(int), cmpAsc);
+    printf("Ascending:  ");
+    printData(data, count);
+
+    qsort(data, count, sizeof(int), cmpDesc);
+    printf("Descending: ");
+    printData(data, count);
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">Raw:        42 7 -15 100 0 88 
+Ascending:  -15 0 7 42 88 100 
+Descending: 100 88 42 7 0 -15 </pre>
+      </div>
+
+      <!-- Problem 4 -->
+      <h3>19.4 Problem 4: How Function Pointers Elevate Code Reuse</h3>
+      <p>
+        Consider finding elements in a data structure. Without function pointers, you must write separate search functions: <code>findEven()</code>, <code>findNegative()</code>, <code>findGreaterThanTen()</code>, each duplicating the exact same loop logic.
+      </p>
+      <p>
+        With function pointers, you write <strong>one single search function</strong> that accepts a <code>Predicate</code> callback. The traversal algorithm is written once and reused infinitely.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">generic_search.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stddef.h&gt;
+
+typedef int (*Predicate)(int);
+
+/* Generic search algorithm: returns index of first match, or -1 */
+int findFirst(const int *arr, size_t len, Predicate match) {
+    for (size_t i = 0; i &lt; len; ++i) {
+        if (match(arr[i])) return (int)i;
+    }
+    return -1;
+}
+
+int isNegative(int x) { return x &lt; 0; }
+int isGreaterThanFifty(int x) { return x &gt; 50; }
+
+int main(void) {
+    int nums[] = {12, 24, -5, 68, 90};
+    size_t len = sizeof(nums) / sizeof(nums[0]);
+
+    int idx1 = findFirst(nums, len, isNegative);
+    int idx2 = findFirst(nums, len, isGreaterThanFifty);
+
+    printf("First negative at index: %d (value %d)\n", idx1, nums[idx1]);
+    printf("First > 50 at index:     %d (value %d)\n", idx2, nums[idx2]);
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">First negative at index: 2 (value -5)
+First > 50 at index:     3 (value 68)</pre>
+      </div>
+
+      <!-- Problem 5 -->
+      <h3>19.5 Problem 5: Array Dispatch Table vs. Switch Statement</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Evaluation Metric</th>
+              <th>Switch Statement</th>
+              <th>Function Pointer Dispatch Table</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Time Complexity</strong></td>
+              <td>\(O(1)\) if compiler creates jump table, else \(O(N)\) sequential checks</td>
+              <td>Guaranteed \(O(1)\) direct table lookup</td>
+            </tr>
+            <tr>
+              <td><strong>Code Coupling</strong></td>
+              <td>Tightly coupled: adding an action requires modifying the central <code>switch</code></td>
+              <td>Loosely coupled: new handlers can be registered dynamically at runtime</td>
+            </tr>
+            <tr>
+              <td><strong>Memory Footprint</strong></td>
+              <td>Minimal (embedded in code segment)</td>
+              <td>Small array of pointers (4 or 8 bytes per slot)</td>
+            </tr>
+            <tr>
+              <td><strong>Safety</strong></td>
+              <td>Compile-time type checking and <code>default:</code> fallback</td>
+              <td>Requires runtime bounds check and <code>NULL</code> pointer guard</td>
+            </tr>
+            <tr>
+              <td><strong>Best Used When</strong></td>
+              <td>Fixed, small, unchanging enumeration of states</td>
+              <td>Extensible plugin systems, opcode engines, dynamic state machines</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Problem 6 -->
+      <h3>19.6 Problem 6: Text Command Dispatch System</h3>
+      <p>
+        In embedded systems, network daemons, and shell utilities, incoming string commands (like <code>"start"</code>, <code>"stop"</code>, <code>"status"</code>) are mapped to handler functions via an array of command structs.
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">command_router.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+typedef void (*CommandHandler)(void);
+
+typedef struct {
+    const char *name;
+    CommandHandler handler;
+} Command;
+
+void cmdStart(void)  { printf("System: Engine started.\n"); }
+void cmdStop(void)   { printf("System: Engine stopped.\n"); }
+void cmdStatus(void) { printf("System: All systems nominal.\n"); }
+
+int main(void) {
+    Command cmdTable[] = {
+        {"start",  cmdStart},
+        {"stop",   cmdStop},
+        {"status", cmdStatus}
+    };
+    size_t numCmds = sizeof(cmdTable) / sizeof(cmdTable[0]);
+
+    const char *inputs[] = {"start", "status", "stop", "reboot"};
+
+    for (int i = 0; i &lt; 4; ++i) {
+        const char *userCmd = inputs[i];
+        int handled = 0;
+
+        for (size_t c = 0; c &lt; numCmds; ++c) {
+            if (strcmp(userCmd, cmdTable[c].name) == 0) {
+                cmdTable[c].handler();
+                handled = 1;
+                break;
+            }
+        }
+        if (!handled) {
+            printf("Error: Unknown command '%s'\n", userCmd);
+        }
+    }
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">System: Engine started.
+System: All systems nominal.
+System: Engine stopped.
+Error: Unknown command 'reboot'</pre>
+      </div>
+    </section>
+
+    <!-- SECTION 20: CAPSTONE MINI-PROJECT -->
+    <section id="sec-20" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Capstone Mini-Project</span>
+        <h2 class="section-title">20. Capstone Mini-Project: Callback-Based Calculator</h2>
+      </div>
+
+      <p>
+        This complete, professional mini-project demonstrates the real-world power of function pointers. It features:
+      </p>
+      <ul>
+        <li>Four compatible arithmetic functions: addition, subtraction, multiplication, and integer division.</li>
+        <li>A clean function pointer type alias: <code>typedef int (*CalcOp)(int, int);</code>.</li>
+        <li>A robust higher-order compute engine: <code>executeCalculation(...)</code>.</li>
+        <li>Defensive division-by-zero protection before executing integer division.</li>
+        <li>Both interactive and deterministic execution paths.</li>
+      </ul>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span class="code-title">callback_calculator_project.c</span>
+          <button class="btn-copy" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+/* Step 1: Define the function-pointer type alias */
+typedef int (*CalcOp)(int, int);
+
+/* Step 2: Implement the four compatible operations */
+int add(int a, int b) {
+    return a + b;
+}
+
+int subtract(int a, int b) {
+    return a - b;
+}
+
+int multiply(int a, int b) {
+    return a * b;
+}
+
+int divide(int a, int b) {
+    /* Safe division: check divisor */
+    if (b == 0) {
+        printf("Error: Division by zero is undefined! ");
+        return 0;
+    }
+    return a / b; /* Integer division: truncates fractional part */
+}
+
+/* Step 3: Higher-order evaluation function */
+void executeCalculation(int x, int y, CalcOp op, const char *opName) {
+    if (op == NULL) {
+        printf("Error: Invalid operation handler!\n");
+        return;
+    }
+
+    /* Extra safety guard specifically for division */
+    if (op == divide &amp;&amp; y == 0) {
+        printf("[%s] Cannot compute %d / %d (Zero Divisor Guard)\n", opName, x, y);
+        return;
+    }
+
+    int result = op(x, y);
+    printf("[%s] %d and %d &rarr; Result = %d\n", opName, x, y, result);
+}
+
+int main(void) {
+    printf("==========================================\n");
+    printf("   CODEVERSE CALLBACK CALCULATOR DEMO     \n");
+    printf("==========================================\n\n");
+
+    /* Deterministic test cases with predefined values */
+    int valA = 24;
+    int valB = 6;
+
+    printf("Executing calculations with A = %d, B = %d:\n\n", valA, valB);
+    executeCalculation(valA, valB, add, "ADDITION");
+    executeCalculation(valA, valB, subtract, "SUBTRACTION");
+    executeCalculation(valA, valB, multiply, "MULTIPLICATION");
+    executeCalculation(valA, valB, divide, "INTEGER DIVISION");
+
+    /* Test division by zero safety guard */
+    printf("\nTesting Division-by-Zero Safety Guard with B = 0:\n");
+    executeCalculation(valA, 0, divide, "INTEGER DIVISION");
+
+    return 0;
+}</code></pre>
+      </div>
+
+      <div class="output-box">
+        <div class="output-label">Exact Expected Output</div>
+        <pre class="output-content">==========================================
+   CODEVERSE CALLBACK CALCULATOR DEMO     
+==========================================
+
+Executing calculations with A = 24, B = 6:
+
+[ADDITION] 24 and 6 &rarr; Result = 30
+[SUBTRACTION] 24 and 6 &rarr; Result = 18
+[MULTIPLICATION] 24 and 6 &rarr; Result = 144
+[INTEGER DIVISION] 24 and 6 &rarr; Result = 4
+
+Testing Division-by-Zero Safety Guard with B = 0:
+[INTEGER DIVISION] Cannot compute 24 / 0 (Zero Divisor Guard)</pre>
+      </div>
+
+      <h3>Step-by-Step Program Walkthrough</h3>
+      <ol>
+        <li><strong>Type Definition:</strong> <code>typedef int (*CalcOp)(int, int);</code> defines <code>CalcOp</code> as an alias for any function pointer accepting two integers and returning an integer.</li>
+        <li><strong>Operation Functions:</strong> All four functions (<code>add</code>, <code>subtract</code>, <code>multiply</code>, <code>divide</code>) share the identical signature: <code>(int, int) &rarr; int</code>.</li>
+        <li><strong>Safe Division:</strong> Integer division truncates towards zero. If the denominator is <code>0</code>, the defensive check intercepts execution before the hardware ALU triggers a fatal floating-point / division-by-zero hardware trap.</li>
+        <li><strong>Higher-Order Invocation:</strong> <code>executeCalculation</code> receives the operands, the operation pointer, and a readable label. It delegates the arithmetic calculation directly to the callback via <code>op(x, y)</code>.</li>
+      </ol>
+    </section>
+
+    <!-- SECTION 21: QUICK REVISION & 12 TECHNICAL VIVA QUESTIONS -->
+    <section id="sec-21" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Revision &amp; Viva</span>
+        <h2 class="section-title">21. Quick Revision &amp; 12 Technical Viva Questions</h2>
+      </div>
+
+      <h3>Quick Revision Summary</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Concept</th>
+              <th>Key Syntax / Rule</th>
+              <th>Takeaway Summary</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Function Pointer</strong></td>
+              <td><code>return_type (*ptr)(arg_types);</code></td>
+              <td>Holds the memory address of executable machine instructions in the code segment.</td>
+            </tr>
+            <tr>
+              <td><strong>Precedence Rule</strong></td>
+              <td>Parentheses around <code>(*ptr)</code> are mandatory</td>
+              <td>Without parentheses, <code>*</code> binds to the return type, declaring a function returning a pointer.</td>
+            </tr>
+            <tr>
+              <td><strong>Decay Rule</strong></td>
+              <td><code>fp = func;</code> &equiv; <code>fp = &amp;func;</code></td>
+              <td>Function designators automatically decay to pointers in most value expressions.</td>
+            </tr>
+            <tr>
+              <td><strong>Invocation Rule</strong></td>
+              <td><code>fp(args);</code> &equiv; <code>(*fp)(args);</code></td>
+              <td>Modern C allows direct shorthand call syntax without explicit dereference.</td>
+            </tr>
+            <tr>
+              <td><strong>typedef Alias</strong></td>
+              <td><code>typedef int (*MathFunc)(int, int);</code></td>
+              <td>Creates a readable type name for complex function pointer signatures.</td>
+            </tr>
+            <tr>
+              <td><strong>Dispatch Table</strong></td>
+              <td><code>int (*table[4])(int, int);</code></td>
+              <td>Array of function pointers enabling \(O(1)\) dynamic operation selection.</td>
+            </tr>
+            <tr>
+              <td><strong>Callbacks</strong></td>
+              <td>Passing a function pointer as an argument</td>
+              <td>Decouples general algorithms (sorting, event dispatch) from specific operations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>12 High-Yield Technical Viva Questions</h3>
+
+      <!-- Viva 1 -->
+      <details>
+        <summary><strong>1. What is a function pointer in C?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>A function pointer is a variable that stores the starting memory address of executable instructions belonging to a function located in the Code (or Text) segment of memory, allowing that function to be called dynamically at runtime.</p>
+        </div>
+      </details>
+
+      <!-- Viva 2 -->
+      <details>
+        <summary><strong>2. In which segment of memory does a function pointer point to?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>It points to the <strong>Code Segment (also known as Text Segment)</strong>, which contains compiled machine code instructions and is typically marked as read-only and executable.</p>
+        </div>
+      </details>
+
+      <!-- Viva 3 -->
+      <details>
+        <summary><strong>3. Why are parentheses required around <code>(*funcPtr)</code> in declarations?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>Because the function call operator <code>()</code> has higher precedence than the pointer dereference operator <code>*</code>. Without parentheses, <code>int *func(int)</code> declares a function returning a pointer to an <code>int</code>, rather than a pointer to a function.</p>
+        </div>
+      </details>
+
+      <!-- Viva 4 -->
+      <details>
+        <summary><strong>4. Is there any difference between <code>&amp;func</code> and <code>func</code> in C?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>In standard C, both produce a pointer of the exact same function pointer type. The function designator <code>func</code> automatically decays to a pointer to that function in value expressions. Both <code>fp = func;</code> and <code>fp = &amp;func;</code> are completely valid and equivalent.</p>
+        </div>
+      </details>
+
+      <!-- Viva 5 -->
+      <details>
+        <summary><strong>5. Can a function pointer point to functions with different return types or parameters?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>No. In C, a function pointer is strictly typed based on both its return type and its full parameter list. Pointing to or invoking an incompatible signature leads to undefined behavior and stack corruption.</p>
+        </div>
+      </details>
+
+      <!-- Viva 6 -->
+      <details>
+        <summary><strong>6. What is a callback function?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>A callback function is any function whose reference (pointer) is passed as an argument to another function, enabling the receiving function to call it back at a later point to customize behavior.</p>
+        </div>
+      </details>
+
+      <!-- Viva 7 -->
+      <details>
+        <summary><strong>7. Can you perform pointer arithmetic on a function pointer (e.g., <code>fp++</code>)?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>No. Pointer arithmetic requires knowledge of the size of the pointed-to object via <code>sizeof</code>. Functions do not have a defined object size in ISO C; hence, arithmetic on function pointers is strictly illegal and violates the standard.</p>
+        </div>
+      </details>
+
+      <!-- Viva 8 -->
+      <details>
+        <summary><strong>8. Can you safely cast a function pointer to <code>void *</code> in ISO C?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>No. In strict ISO C, <code>void *</code> is only guaranteed to hold pointers to data objects. Function pointers and object pointers may have different sizes or representations on Harvard architecture microcontrollers. (Note: POSIX requires this compatibility for <code>dlsym</code>, but standard C does not).</p>
+        </div>
+      </details>
+
+      <!-- Viva 9 -->
+      <details>
+        <summary><strong>9. What happens if you invoke a function pointer that holds <code>NULL</code>?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p>It invokes undefined behavior, resulting in an immediate hardware access violation / segmentation fault (crash) on all modern protected-memory operating systems.</p>
+        </div>
+      </details>
+
+      <!-- Viva 10 -->
+      <details>
+        <summary><strong>10. Why is <code>typedef</code> widely used with function pointers?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p><code>typedef</code> creates clean, self-documenting type aliases (e.g., <code>typedef int (*Action)(int);</code>), which makes function signatures readable when declaring variables, parameter lists, or arrays of function pointers.</p>
+        </div>
+      </details>
+
+      <!-- Viva 11 -->
+      <details>
+        <summary><strong>11. How does the standard C library function <code>qsort</code> use function pointers?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p><code>qsort</code> accepts a comparator callback conforming to <code>int (*)(const void *, const void *)</code>. This allows the sorting algorithm (QuickSort) to sort arbitrary data types without knowing their internal layout.</p>
+        </div>
+      </details>
+
+      <!-- Viva 12 -->
+      <details>
+        <summary><strong>12. What is the difference between an array of function pointers and a pointer to a function array?</strong></summary>
+        <div class="details-body">
+          <span class="ans-tag">VIVA ANSWER</span>
+          <p><code>int (*arr[4])(int);</code> is an <strong>array of 4 function pointers</strong> (each slot holds a pointer to a function). In contrast, <code>int (*(*ptr)[4])(int);</code> is a <strong>pointer to an entire array</strong> of 4 function pointers.</p>
+        </div>
+      </details>
+    </section>
+
+    <!-- SECTION 22: CHECKLIST OF MASTERY & WRAP-UP -->
+    <section id="sec-22" class="content-card">
+      <div class="card-header">
+        <span class="card-badge">Wrap-Up</span>
+        <h2 class="section-title">22. Checklist of Mastery &amp; Wrap-Up</h2>
+      </div>
+
+      <p>
+        Verify your learning against this self-assessment checklist before proceeding to advanced C topics like dynamic memory allocation and data structures.
+      </p>
+
+      <div class="checklist">
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Function Address Concept:</strong> I know that functions reside in the code segment and their names decay to pointer addresses.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Declaration Syntax:</strong> I can declare function pointers using <code>return_type (*name)(param_types);</code> without syntax errors.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Precedence Mastery:</strong> I understand why parentheses around <code>(*ptr)</code> are mandatory to override function call operator precedence.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Dynamic Reassignment:</strong> I know how to reassign a function pointer to different functions sharing the exact same signature.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Higher-Order Functions:</strong> I can pass function pointers as arguments to write reusable, modular algorithms.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Callbacks in Practice:</strong> I understand how callbacks decouple traversal algorithms from element processing.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>typedef Aliases:</strong> I can write clean <code>typedef</code> declarations for complex function pointer signatures.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Dispatch Tables:</strong> I can declare and index an array of function pointers with strict boundary checks.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Standard Library qsort:</strong> I can write robust three-way comparison functions for <code>qsort</code> without arithmetic overflow.</div>
+        </div>
+        <div class="checklist-item">
+          <span class="check-box">&#10003;</span>
+          <div><strong>Defensive Safety:</strong> I always validate against <code>NULL</code> and handle edge cases like zero divisors before indirect invocation.</div>
+        </div>
+      </div>
+
+      <div class="tip-card" style="margin-top: 24px;">
+        <div class="card-subtitle">Congratulations on Mastering Function Pointers!</div>
+        <p>
+          You now possess the foundational knowledge required for systems-level architecture in C: building event loops, writing device drivers, implementing object-oriented polymorphism, constructing parser dispatch tables, and leveraging standard library generic algorithms.
+        </p>
+      </div>
+    </section>
+
+    <!-- CLEAN FOOTER (STRICTLY ZERO ADS, ZERO PROMOTIONAL SERVICES, ZERO CONTACT) -->
+    <footer class="footer">
+      <p>&copy; CodeVerse Learning Curriculum &bull; C Programming Series &bull; Topic 15: Function Pointers</p>
+      <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 4px;">
+        Self-contained educational resource designed for seamless offline and mobile WebView rendering.
+      </p>
+    </footer>
+
+  </div> <!-- /content-wrapper -->
+
+  <!-- Interactive JavaScript: Self-Contained Snippet Copy Engine -->
+  <script>
+    function copyCode(btn) {
+      var container = btn.closest('.code-container');
+      if (!container) return;
+      var pre = container.querySelector('pre');
+      if (!pre) return;
+      var codeText = pre.innerText || pre.textContent;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(codeText).then(function() {
+          showCopied(btn);
+        }).catch(function() {
+          fallbackCopy(codeText, btn);
+        });
+      } else {
+        fallbackCopy(codeText, btn);
+      }
+    }
+
+    function fallbackCopy(text, btn) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-999999px';
+      ta.style.top = '-999999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showCopied(btn);
+      } catch (err) {
+        console.error('Fallback copy failed: ', err);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function showCopied(btn) {
+      var origText = btn.innerText;
+      btn.innerText = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.innerText = origText;
+        btn.classList.remove('copied');
+      }, 2000);
+    }
+  </script>
+</body>
+</html>
