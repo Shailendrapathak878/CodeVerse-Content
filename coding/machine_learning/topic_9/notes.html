@@ -1,0 +1,2860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive educational notes on Machine Learning Topic 9: Linear Regression. Master Ordinary Least Squares (OLS), slope and intercept, residual errors, gradient descent, multiple regression, diagnostic plots, and leak-free evaluation.">
+  <title>Machine Learning &bull; Topic 9: Linear Regression</title>
+  <style>
+
+    :root {
+      /* Base Surfaces - Strict Light Mode Only */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+      
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Primary ML Theme: Indigo & Blue */
+      --primary-accent: #4F46E5;
+      --primary-accent-hover: #4338CA;
+      --primary-accent-light: #EEF2FF;
+      --primary-badge-bg: #EEF2FF;
+      --primary-badge-text: #4338CA;
+      --toc-bg: #F5F3FF;
+      --toc-border: #DDD6FE;
+      --toc-text: #4338CA;
+
+      /* Definition Card (Soft Sky Blue) */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0C4A6E;
+
+      /* Analogy Card (Soft Teal / Mint) */
+      --analogy-card-bg: #ECFEFF;
+      --analogy-card-border: #A5F3FC;
+      --analogy-card-title: #0891B2;
+      --analogy-card-text: #164E63;
+
+      /* Concept / Architecture Card (Soft Lavender) */
+      --concept-card-bg: #FAF5FF;
+      --concept-card-border: #E9D5FF;
+      --concept-card-title: #7C3AED;
+      --concept-card-text: #581C87;
+
+      /* Warning / Pitfall Card (Soft Coral) */
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      /* Amber / Highlight Card */
+      --amber-card-bg: #FFFBEB;
+      --amber-card-border: #FDE68A;
+      --amber-card-title: #D97706;
+      --amber-card-text: #92400E;
+
+      /* Success Card (Emerald) */
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #16A34A;
+      --success-card-text: #166534;
+
+      /* Code Block Colors */
+      --code-bg: #0F172A;
+      --code-text: #E2E8F0;
+      --code-header-bg: #1E293B;
+
+      /* Badges */
+      --train-badge-bg: #EEF2FF;
+      --train-badge-text: #4338CA;
+      --val-badge-bg: #FEF3C7;
+      --val-badge-text: #B45309;
+      --test-badge-bg: #DCFCE7;
+      --test-badge-text: #15803D;
+      --leak-badge-bg: #FEE2E2;
+      --leak-badge-text: #B91C1C;
+    }
+
+    /* Reset & Containment */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--heading-color);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    p {
+      margin-bottom: 1.15rem;
+      color: var(--text-secondary);
+      font-size: 1.025rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      font-size: 0.9em;
+      background-color: #F1F5F9;
+      color: #0F172A;
+      padding: 0.2em 0.4em;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    pre code {
+      background-color: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
+    ul, ol {
+      margin-bottom: 1.25rem;
+      padding-left: 1.5rem;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+    }
+
+    /* Hero Header */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.25rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #4F46E5, #06B6D4, #10B981);
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.9rem;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: 2.35rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.025em;
+      color: var(--heading-color);
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #F1F5F9;
+    }
+
+    .meta-pill {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      background: var(--card-soft-bg);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--toc-text);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .toc-item {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: #334155;
+      font-size: 0.925rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .toc-item:hover {
+      background: rgba(79, 70, 229, 0.08);
+      color: var(--primary-accent);
+    }
+
+    .toc-num {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--primary-accent);
+      min-width: 1.8rem;
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2.25rem;
+      margin-bottom: 2.25rem;
+      box-shadow: var(--card-shadow);
+      overflow-x: hidden;
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #F1F5F9;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary-accent);
+      background: var(--primary-accent-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 9999px;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--heading-color);
+      letter-spacing: -0.015em;
+    }
+
+    .section-intro {
+      font-size: 1.05rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Semantic Callout Cards */
+    .card {
+      border-radius: 10px;
+      padding: 1.35rem 1.5rem;
+      margin: 1.5rem 0;
+      border-left: 4px solid transparent;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.65rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-def {
+      background: var(--def-card-bg);
+      border-color: var(--def-card-border);
+      border-left-color: var(--def-card-title);
+      color: var(--def-card-text);
+    }
+    .card-def .card-title { color: var(--def-card-title); }
+
+    .card-analogy {
+      background: var(--analogy-card-bg);
+      border-color: var(--analogy-card-border);
+      border-left-color: var(--analogy-card-title);
+      color: var(--analogy-card-text);
+    }
+    .card-analogy .card-title { color: var(--analogy-card-title); }
+
+    .card-concept {
+      background: var(--concept-card-bg);
+      border-color: var(--concept-card-border);
+      border-left-color: var(--concept-card-title);
+      color: var(--concept-card-text);
+    }
+    .card-concept .card-title { color: var(--concept-card-title); }
+
+    .card-warn {
+      background: var(--warn-card-bg);
+      border-color: var(--warn-card-border);
+      border-left-color: var(--warn-card-title);
+      color: var(--warn-card-text);
+    }
+    .card-warn .card-title { color: var(--warn-card-title); }
+
+    .card-amber {
+      background: var(--amber-card-bg);
+      border-color: var(--amber-card-border);
+      border-left-color: var(--amber-card-title);
+      color: var(--amber-card-text);
+    }
+    .card-amber .card-title { color: var(--amber-card-title); }
+
+    .card-success {
+      background: var(--success-card-bg);
+      border-color: var(--success-card-border);
+      border-left-color: var(--success-card-title);
+      color: var(--success-card-text);
+    }
+    .card-success .card-title { color: var(--success-card-title); }
+
+    /* Formula Cards */
+    .formula-card {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    .formula-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748B;
+      margin-bottom: 0.75rem;
+    }
+
+    .formula-box {
+      font-family: "Cambria Math", "Latin Modern Math", "Times New Roman", serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: #0F172A;
+      padding: 0.85rem;
+      background: #F8FAFC;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .formula-desc {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    /* Diagram Containers */
+    .diagram-container {
+      margin: 2rem 0;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 1rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow-x: hidden;
+    }
+
+    .svg-diagram-wrap {
+      width: 100%;
+      max-width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .svg-diagram-wrap svg {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .diagram-caption {
+      margin-top: 0.85rem;
+      font-size: 0.875rem;
+      color: #64748B;
+      text-align: center;
+      font-style: italic;
+      padding: 0 0.5rem;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #E2E8F0;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.95rem;
+      background: #FFFFFF;
+    }
+
+    th {
+      background-color: #F8FAFC;
+      color: #0F172A;
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid #E2E8F0;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #FCFDFE;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background-color: var(--code-bg);
+      border-radius: 10px;
+      margin: 1.5rem 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+      border: 1px solid #334155;
+    }
+
+    .code-header {
+      background-color: var(--code-header-bg);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-title {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 0.825rem;
+      color: #94A3B8;
+      font-weight: 600;
+    }
+
+    .code-lang {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .code-block pre {
+      padding: 1.25rem 1rem;
+      overflow-x: auto;
+      margin: 0;
+      color: var(--code-text);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Interactive Accordion Details */
+    details {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      margin: 0.85rem 0;
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    details[open] {
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    details summary {
+      padding: 1rem 1.25rem;
+      background: #F8FAFC;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #0F172A;
+      user-select: none;
+      list-style: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary:hover {
+      background: #F1F5F9;
+    }
+
+    .details-content {
+      padding: 1.25rem;
+      border-top: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      font-size: 0.95rem;
+      line-height: 1.65;
+      color: #334155;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .badge-train { background: var(--train-badge-bg); color: var(--train-badge-text); }
+    .badge-val { background: var(--val-badge-bg); color: var(--val-badge-text); }
+    .badge-test { background: var(--test-badge-bg); color: var(--test-badge-text); }
+    .badge-leak { background: var(--leak-badge-bg); color: var(--leak-badge-text); }
+
+    /* Footer */
+    .notes-footer {
+      margin-top: 3.5rem;
+      padding: 2rem 0;
+      border-top: 1px solid #E2E8F0;
+      text-align: center;
+      color: #64748B;
+      font-size: 0.875rem;
+    }
+
+    /* Responsive Media Queries */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.25rem 0.75rem;
+      }
+      .hero-card, .section-card {
+        padding: 1.5rem 1rem;
+      }
+      .hero-title {
+        font-size: 1.85rem;
+      }
+      .section-title {
+        font-size: 1.4rem;
+      }
+      .toc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 1.6rem;
+      }
+      .formula-box {
+        font-size: 1.15rem;
+        padding: 0.6rem;
+      }
+      table {
+        font-size: 0.85rem;
+      }
+      th, td {
+        padding: 0.6rem 0.6rem;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <!-- HERO CARD -->
+  <header class="hero-card">
+    <div class="hero-tag">Machine Learning &bull; Topic 9 &bull; Light Mode</div>
+    <h1 class="hero-title">Linear Regression</h1>
+    <p class="hero-subtitle">
+      Master the foundational supervised learning algorithm for continuous numerical prediction. Understand the geometry of lines, slope and intercept, Ordinary Least Squares (OLS), residual errors, gradient descent, multiple regression, diagnostic plots, and leak-free evaluation.
+    </p>
+    <div class="meta-bar">
+      <span class="meta-pill">&#128218; Level: Absolute Beginner &rarr; Production</span>
+      <span class="meta-pill">&#9874; Mathematics: Arithmetic &amp; Intuitive Calculus</span>
+      <span class="meta-pill">&#128187; Tooling: Scikit-Learn 1.9+ &bull; NumPy &bull; Pandas</span>
+      <span class="meta-pill">&#9728;&#65039; Theme: Strict Light Mode Standard</span>
+    </div>
+  </header>
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="toc-card">
+    <div class="toc-title"><span>&#128209;</span> Chapter Table of Contents</div>
+    <div class="toc-grid">
+      <a href="#sec-01" class="toc-item"><span class="toc-num">01.</span> Introduction to Regression</a>
+      <a href="#sec-02" class="toc-item"><span class="toc-num">02.</span> What Is Linear Regression?</a>
+      <a href="#sec-03" class="toc-item"><span class="toc-num">03.</span> Equation of a Straight Line</a>
+      <a href="#sec-04" class="toc-item"><span class="toc-num">04.</span> Slope and Intercept in Real Life</a>
+      <a href="#sec-05" class="toc-item"><span class="toc-num">05.</span> Finding the Best-Fit Line</a>
+      <a href="#sec-06" class="toc-item"><span class="toc-num">06.</span> Actual, Predicted &amp; Residuals</a>
+      <a href="#sec-07" class="toc-item"><span class="toc-num">07.</span> Loss Functions &amp; Mean Squared Error</a>
+      <a href="#sec-08" class="toc-item"><span class="toc-num">08.</span> Ordinary Least Squares (OLS)</a>
+      <a href="#sec-09" class="toc-item"><span class="toc-num">09.</span> Gradient Descent Optimization</a>
+      <a href="#sec-10" class="toc-item"><span class="toc-num">10.</span> Simple Linear Regression</a>
+      <a href="#sec-11" class="toc-item"><span class="toc-num">11.</span> Multiple Linear Regression</a>
+      <a href="#sec-12" class="toc-item"><span class="toc-num">12.</span> Evaluation Metrics (MAE, MSE, R&#178;)</a>
+      <a href="#sec-13" class="toc-item"><span class="toc-num">13.</span> Visual Learning &amp; Key Graphs</a>
+      <a href="#sec-14" class="toc-item"><span class="toc-num">14.</span> Assumptions &amp; Limitations (LINE)</a>
+      <a href="#sec-15" class="toc-item"><span class="toc-num">15.</span> Underfitting, Overfitting &amp; Bias-Variance</a>
+      <a href="#sec-16" class="toc-item"><span class="toc-num">16.</span> Complete Python Practical Lab</a>
+      <a href="#sec-17" class="toc-item"><span class="toc-num">17.</span> Real-Life Industry Case Studies</a>
+      <a href="#sec-18" class="toc-item"><span class="toc-num">18.</span> 16 Common Beginner Mistakes &amp; Fixes</a>
+      <a href="#sec-19" class="toc-item"><span class="toc-num">19.</span> Glossary, Revision &amp; Capstone Exercise</a>
+    </div>
+  </nav>
+
+  <!-- SECTION 01: INTRODUCTION TO REGRESSION -->
+  <section id="sec-01" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 01</span>
+      <h2 class="section-title">Introduction to Regression</h2>
+    </div>
+    <p class="section-intro">
+      In machine learning, <strong>Supervised Learning</strong> tasks divide into two primary families: <em>Classification</em> and <em>Regression</em>. While classification models predict discrete category labels (such as whether an email is spam or not spam), regression models predict <strong>continuous numerical quantities</strong> along a continuum.
+    </p>
+
+    <!-- FIGURE 9.1: HERO ARCHITECTURE -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 320" width="100%">
+  <rect width="920" height="320" rx="16" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <rect x="20" y="20" width="880" height="42" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="460" y="46" font-family="-apple-system, sans-serif" font-size="16" font-weight="700" fill="#0F172A" text-anchor="middle">SUPERVISED MACHINE LEARNING: CONTINUOUS NUMERICAL PREDICTION</text>
+
+  <!-- Left: Raw Input Feature X -->
+  <rect x="50" y="90" width="220" height="180" rx="12" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="2"/>
+  <rect x="70" y="105" width="180" height="30" rx="6" fill="#4F46E5"/>
+  <text x="160" y="125" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">1. INPUT FEATURE (X)</text>
+  <text x="160" y="160" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#334155" text-anchor="middle">Independent Variable</text>
+  <text x="160" y="185" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">• House Living Area (sq ft)</text>
+  <text x="160" y="205" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">• Student Study Hours</text>
+  <text x="160" y="225" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">• Engine Displacement</text>
+  <rect x="75" y="240" width="170" height="20" rx="4" fill="#E0E7FF"/>
+  <text x="160" y="254" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle">Known Input Signal</text>
+
+  <!-- Arrow 1 -->
+  <line x1="280" y1="180" x2="335" y2="180" stroke="#4F46E5" stroke-width="3" stroke-dasharray="4,4"/>
+  <polygon points="345,180 333,174 333,186" fill="#4F46E5"/>
+  <text x="312" y="170" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5" text-anchor="middle">Maps To</text>
+
+  <!-- Center: Linear Model Hypothesis -->
+  <rect x="350" y="80" width="230" height="200" rx="12" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="2"/>
+  <rect x="370" y="95" width="190" height="30" rx="6" fill="#16A34A"/>
+  <text x="465" y="115" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">2. LINEAR MODEL (f)</text>
+  <rect x="370" y="140" width="190" height="42" rx="6" fill="#DCFCE7" stroke="#86EFAC" stroke-width="1"/>
+  <text x="465" y="166" font-family="Courier New, monospace" font-size="16" font-weight="700" fill="#166534" text-anchor="middle">&#375; = &#946;&#8320; + &#946;&#8321;x</text>
+  <text x="465" y="202" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#166534" text-anchor="middle">&#946;&#8321;: Learned Slope (Weight)</text>
+  <text x="465" y="222" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#166534" text-anchor="middle">&#946;&#8320;: Baseline Intercept (Bias)</text>
+  <rect x="375" y="240" width="180" height="24" rx="4" fill="#BBF7D0"/>
+  <text x="465" y="256" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#14532D" text-anchor="middle">Ordinary Least Squares Fit</text>
+
+  <!-- Arrow 2 -->
+  <line x1="590" y1="180" x2="645" y2="180" stroke="#16A34A" stroke-width="3" stroke-dasharray="4,4"/>
+  <polygon points="655,180 643,174 643,186" fill="#16A34A"/>
+  <text x="622" y="170" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A" text-anchor="middle">Predicts</text>
+
+  <!-- Right: Continuous Target -->
+  <rect x="660" y="90" width="210" height="180" rx="12" fill="#FEF3C7" stroke="#FDE68A" stroke-width="2"/>
+  <rect x="680" y="105" width="170" height="30" rx="6" fill="#D97706"/>
+  <text x="765" y="125" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">3. TARGET (&#375;)</text>
+  <text x="765" y="160" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#92400E" text-anchor="middle">Continuous Quantity</text>
+  <text x="765" y="185" font-family="-apple-system, sans-serif" font-size="12" fill="#B45309" text-anchor="middle">• House Price: $350,000</text>
+  <text x="765" y="205" font-family="-apple-system, sans-serif" font-size="12" fill="#B45309" text-anchor="middle">• Exam Score: 87.5%</text>
+  <text x="765" y="225" font-family="-apple-system, sans-serif" font-size="12" fill="#B45309" text-anchor="middle">• Fuel Econ: 28.4 MPG</text>
+  <rect x="685" y="240" width="160" height="20" rx="4" fill="#FDE68A"/>
+  <text x="765" y="254" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#78350F" text-anchor="middle">Not a Discrete Class</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.1: The Supervised Regression paradigm: Mapping input features through a fitted mathematical function to estimate continuous numerical targets.</div>
+    </div>
+
+    <h3>Foundational Terminology from First Principles</h3>
+    <ul>
+      <li><strong>Machine Learning:</strong> The discipline of developing computer algorithms that automatically detect patterns in data and improve their performance through experience rather than explicit manual programming.</li>
+      <li><strong>Supervised Learning:</strong> Training an algorithm by providing both input features and the corresponding known correct output labels (ground truth).</li>
+      <li><strong>Regression:</strong> A statistical modeling technique that estimates the relationships between one or more independent variables (features) and a continuous dependent variable (target).</li>
+      <li><strong>Input Features (X):</strong> The measurable attributes or explanatory variables used as inputs (e.g., the square footage of a house, years of work experience, engine size).</li>
+      <li><strong>Target or Label (y):</strong> The ground-truth continuous numerical quantity the model attempts to forecast (e.g., house sale price in dollars, annual salary, vehicle miles per gallon).</li>
+      <li><strong>Training Examples:</strong> Historical observations paired as <code>(x&#7522;, y&#7522;)</code> supplied to the learning algorithm during the parameter fitting stage.</li>
+      <li><strong>Prediction (&#375;):</strong> The model's estimated output value for a given input <code>x</code>. We write <code>&#375;</code> (pronounced "y-hat") to distinguish model estimates from true observed values <code>y</code>.</li>
+    </ul>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#127968;</span> Concrete Example: Estimating House Prices from Living Area</div>
+      <p>
+        Imagine a real estate dataset where we want to estimate the price of residential homes. In this scenario:
+      </p>
+      <ul>
+        <li><strong>Input Feature (X):</strong> Finished interior living area measured in square feet (e.g., <code>1,500 sq ft</code>).</li>
+        <li><strong>Target Variable (y):</strong> Market selling price in thousands of dollars (e.g., <code>$280.0k</code>).</li>
+      </ul>
+      <p>
+        Notice that price is a continuous scalar number with an infinite number of possible values along the real number line, not a fixed category. This makes the task a classic <strong>regression problem</strong>.
+      </p>
+    </div>
+
+    <!-- Regression vs Classification Table -->
+    <h3>Regression vs Classification: The Key Differences</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Characteristic</th>
+            <th>Regression</th>
+            <th>Classification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Target Nature</strong></td>
+            <td>Continuous numerical quantity (Real numbers: &reals;)</td>
+            <td>Discrete categories / classes (e.g. 0 or 1, Cat or Dog)</td>
+          </tr>
+          <tr>
+            <td><strong>Example Predictions</strong></td>
+            <td>Temperature (72.4&deg;F), Stock Price ($142.50), Age (28.3 yrs)</td>
+            <td>Spam vs Not Spam, Benign vs Malignant tumor, Credit Default (Yes/No)</td>
+          </tr>
+          <tr>
+            <td><strong>Evaluation Metrics</strong></td>
+            <td>Mean Absolute Error (MAE), Mean Squared Error (MSE), R&#178;</td>
+            <td>Accuracy, Precision, Recall, F1-Score, ROC-AUC</td>
+          </tr>
+          <tr>
+            <td><strong>Mathematical Output</strong></td>
+            <td>Unbounded scalar value: <code>&#375; &isin; (-&infin;, +&infin;)</code></td>
+            <td>Class probabilities: <code>P(y = c) &isin; [0, 1]</code> summing to 1.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> Crucial Caveat: Correlation Does Not Imply Causation!</div>
+      <p>
+        A linear regression model discovers <em>statistical associations</em> present in historical training data. If house price increases linearly with square footage, that does not mean artificially expanding a hallway will guarantee a proportional price hike in every real-world transaction. Unobserved confounders (such as neighborhood prestige, school district quality, and construction year) simultaneously influence both size and price. Always treat regression coefficients as observational correlations, never direct causal mechanisms.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 02: WHAT IS LINEAR REGRESSION? -->
+  <section id="sec-02" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 02</span>
+      <h2 class="section-title">What Is Linear Regression?</h2>
+    </div>
+    <p class="section-intro">
+      <strong>Linear Regression</strong> is the foundational parametric statistical learning technique that models the relationship between one or more independent input features and a numerical target by fitting a straight linear equation to observed data.
+    </p>
+
+    <!-- FIGURE 9.2: SCATTER PLOT -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">SCATTER PLOT: INSPECTING RAW BIVARIATE RELATIONSHIPS</text>
+
+  <!-- Grid lines -->
+  <line x1="80" y1="70" x2="700" y2="70" stroke="#F1F5F9" stroke-width="1"/>
+  <line x1="80" y1="130" x2="700" y2="130" stroke="#F1F5F9" stroke-width="1"/>
+  <line x1="80" y1="190" x2="700" y2="190" stroke="#F1F5F9" stroke-width="1"/>
+  <line x1="80" y1="250" x2="700" y2="250" stroke="#F1F5F9" stroke-width="1"/>
+  <line x1="80" y1="310" x2="700" y2="310" stroke="#E2E8F0" stroke-width="2"/> <!-- X Axis -->
+  <line x1="80" y1="50" x2="80" y2="310" stroke="#E2E8F0" stroke-width="2"/> <!-- Y Axis -->
+
+  <!-- Axis labels -->
+  <text x="80" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">0</text>
+  <text x="204" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">1,000</text>
+  <text x="328" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">1,500</text>
+  <text x="452" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">2,000</text>
+  <text x="576" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">2,500</text>
+  <text x="700" y="332" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">3,000</text>
+
+  <text x="390" y="360" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Input Feature (X): Living Area (sq ft)</text>
+
+  <text x="70" y="314" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="end">$0k</text>
+  <text x="70" y="254" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="end">$150k</text>
+  <text x="70" y="194" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="end">$300k</text>
+  <text x="70" y="134" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="end">$450k</text>
+  <text x="70" y="74" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="end">$600k</text>
+
+  <text transform="rotate(-90 25 180)" x="25" y="180" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Target (y): Sale Price ($k)</text>
+
+  <!-- Data points (scatter) -->
+  <circle cx="160" cy="275" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="210" cy="245" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="240" cy="260" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="290" cy="210" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="340" cy="225" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="370" cy="180" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="430" cy="165" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="460" cy="190" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="510" cy="140" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="560" cy="120" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="610" cy="135" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+  <circle cx="660" cy="90" r="6" fill="#4F46E5" fill-opacity="0.85" stroke="#312E81" stroke-width="1.5"/>
+
+  <!-- Annotation Card -->
+  <rect x="420" y="55" width="270" height="60" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="435" y="77" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#0F172A">&#8226; Positive Linear Association</text>
+  <text x="435" y="98" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">Points scatter naturally due to unobserved</text>
+  <text x="435" y="110" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">factors (location, condition, age).</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.2: Two-dimensional scatter plot of raw observations: Data points exhibit an upward linear trend with natural variance around the underlying signal.</div>
+    </div>
+
+    <h3>Why Don't Real-World Points Fall on a Perfect Line?</h3>
+    <p>
+      In pure high school mathematics, a line <code>y = 2x + 1</code> connects points that align with 100% mathematical perfection. However, real-world data collection is inherently messy:
+    </p>
+    <ul>
+      <li><strong>Measurement Noise:</strong> Inaccuracies in sensor readings, rounding approximations, or subjective reporting errors introduce stochastic scatter.</li>
+      <li><strong>Omitted Latent Variables:</strong> Two houses with the identical <code>2,000 sq ft</code> living area might sell for different prices because one has an updated kitchen or a private swimming pool while the other does not.</li>
+      <li><strong>Inherent Human Randomness:</strong> Individual buyers and sellers negotiate subjectively, creating price dispersion around the baseline trend.</li>
+    </ul>
+
+    <p>
+      Because points do not lie on a single line, linear regression does not seek an impossible equation that intersects every point. Instead, it seeks the <strong>Line of Best Fit</strong>&mdash;the single line that minimizes the total aggregate error across all observations.
+    </p>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> What Does "Linear" Actually Mean in Machine Learning?</div>
+      <p>
+        In machine learning and statistics, "linear" refers to <strong>linearity in the parameters (&beta;)</strong>, not necessarily linearity in the raw input features (X)!
+      </p>
+      <p>
+        For instance, the model <code>&#375; = &beta;&#8320; + &beta;&#8321;x + &beta;&#8322;x&#178;</code> models a curved parabolic trajectory in terms of feature <code>x</code>, yet it remains a mathematically <strong>linear regression model</strong> because the output is a linear combination of the unknown weights <code>&beta;&#8320;, &beta;&#8321;, &beta;&#8322;</code>. This distinction allows linear regression to model surprisingly complex non-linear curves via basis expansion and polynomial feature transformations!
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 03: UNDERSTANDING THE EQUATION OF A STRAIGHT LINE -->
+  <section id="sec-03" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 03</span>
+      <h2 class="section-title">Understanding the Equation of a Straight Line</h2>
+    </div>
+    <p class="section-intro">
+      Every simple linear regression model is built upon the classic algebraic equation for a two-dimensional straight line. Understanding each component of this equation is essential for interpreting machine learning predictions.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Fundamental Geometry: Equation of a Straight Line</div>
+      <div class="formula-box">y = m &times; x + b &nbsp;&nbsp;&hArr;&nbsp;&nbsp; &#375; = &beta;&#8320; + &beta;&#8321; &times; x</div>
+      <div class="formula-desc">
+        Where <strong>x</strong> is the independent input, <strong>&#375;</strong> is the predicted target, <strong>m (or &beta;&#8321;)</strong> is the slope (weight), and <strong>b (or &beta;&#8320;)</strong> is the y-intercept (bias).
+      </div>
+    </div>
+
+    <!-- FIGURE 9.3: LINE OF BEST FIT ANATOMY -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">THE LINE OF BEST FIT: MATHEMATICAL ANATOMY</text>
+
+  <!-- Grid lines -->
+  <line x1="80" y1="310" x2="700" y2="310" stroke="#CBD5E1" stroke-width="2"/> <!-- X Axis -->
+  <line x1="80" y1="50" x2="80" y2="310" stroke="#CBD5E1" stroke-width="2"/> <!-- Y Axis -->
+
+  <!-- Fitted Regression Line: y = mx + b -->
+  <line x1="80" y1="285" x2="680" y2="85" stroke="#16A34A" stroke-width="3"/>
+
+  <!-- Intercept marker -->
+  <circle cx="80" cy="285" r="6" fill="#DC2626" stroke="#FFFFFF" stroke-width="2"/>
+  <rect x="95" y="270" width="140" height="26" rx="4" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1"/>
+  <text x="165" y="287" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626" text-anchor="middle">Intercept (b): Value at x=0</text>
+
+  <!-- Slope triangle -->
+  <line x1="380" y1="185" x2="500" y2="185" stroke="#2563EB" stroke-width="2" stroke-dasharray="3,3"/>
+  <line x1="500" y1="185" x2="500" y2="145" stroke="#DC2626" stroke-width="2" stroke-dasharray="3,3"/>
+  <text x="440" y="202" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#2563EB" text-anchor="middle">Run: &#916;x</text>
+  <text x="545" y="168" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">Rise: &#916;y</text>
+
+  <!-- Formula Callout -->
+  <rect x="360" y="60" width="230" height="40" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="475" y="85" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#166534" text-anchor="middle">Slope (m) = Rise / Run = &#916;y / &#916;x</text>
+
+  <!-- Scatter points -->
+  <circle cx="160" cy="275" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="210" cy="245" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="240" cy="260" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="290" cy="210" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="340" cy="225" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="370" cy="180" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="430" cy="165" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="460" cy="190" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="510" cy="140" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="560" cy="120" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="610" cy="135" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+  <circle cx="660" cy="90" r="5" fill="#4F46E5" fill-opacity="0.8"/>
+
+  <!-- Legend -->
+  <rect x="80" y="335" width="600" height="30" rx="6" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+  <circle cx="120" cy="350" r="5" fill="#4F46E5"/>
+  <text x="135" y="354" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">Observed Data</text>
+  <line x1="260" y1="350" x2="290" y2="350" stroke="#16A34A" stroke-width="3"/>
+  <text x="300" y="354" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">Fitted Model: &#375; = mx + b</text>
+  <circle cx="460" cy="350" r="5" fill="#DC2626"/>
+  <text x="475" y="354" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">Y-Intercept (x = 0)</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.3: Mathematical anatomy of the line of best fit: The intercept b anchors the height at x = 0, while the slope m governs the rate of rise over run.</div>
+    </div>
+
+    <h3>Step-by-Step Numerical Example</h3>
+    <p>
+      Let us compute predictions manually using a concrete fitted equation: <code>&#375; = 2x + 5</code>. Here, the slope is <code>m = 2</code> and the intercept is <code>b = 5</code>:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Input Feature (x)</th>
+            <th>Step-by-Step Arithmetic</th>
+            <th>Predicted Output (&#375;)</th>
+            <th>Geometric Interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>x = 1.0</strong></td>
+            <td><code>&#375; = 2(1.0) + 5 = 2.0 + 5.0</code></td>
+            <td><strong>7.0</strong></td>
+            <td>Line passes through coordinates <code>(1.0, 7.0)</code></td>
+          </tr>
+          <tr>
+            <td><strong>x = 3.0</strong></td>
+            <td><code>&#375; = 2(3.0) + 5 = 6.0 + 5.0</code></td>
+            <td><strong>11.0</strong></td>
+            <td>Line passes through coordinates <code>(3.0, 11.0)</code></td>
+          </tr>
+          <tr>
+            <td><strong>x = 5.0</strong></td>
+            <td><code>&#375; = 2(5.0) + 5 = 10.0 + 5.0</code></td>
+            <td><strong>15.0</strong></td>
+            <td>Line passes through coordinates <code>(5.0, 15.0)</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Notice the constant rate of change: for every <code>+2.0</code> unit jump in <code>x</code> (from 1 to 3, and 3 to 5), the predicted target <code>&#375;</code> jumps by exactly <code>+4.0</code> units (from 7 to 11, and 11 to 15). The ratio <code>&Delta;&#375; / &Delta;x = 4.0 / 2.0 = 2.0</code> exactly matches our slope parameter!
+    </p>
+  </section>
+
+  <!-- SECTION 04: SLOPE AND INTERCEPT IN REAL LIFE -->
+  <section id="sec-04" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 04</span>
+      <h2 class="section-title">Slope and Intercept in Real Life</h2>
+    </div>
+    <p class="section-intro">
+      In pure mathematics, slope and intercept are abstract geometric numbers. In applied machine learning, however, they represent tangible physical rates and baseline quantities anchored in real-world units.
+    </p>
+
+    <!-- FIGURE 9.4: SLOPE AND INTERCEPT VARIATIONS -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 360" width="100%">
+  <rect width="900" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="450" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">HOW SLOPE (m) AND INTERCEPT (b) SHAPE LINE GEOMETRY</text>
+
+  <!-- Panel 1: Positive Slope -->
+  <rect x="30" y="55" width="195" height="240" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="127" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#16A34A" text-anchor="middle">Positive Slope (m &gt; 0)</text>
+  <line x1="50" y1="260" x2="205" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="50" y1="100" x2="50" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="60" y1="240" x2="195" y2="120" stroke="#16A34A" stroke-width="3"/>
+  <text x="127" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#334155" text-anchor="middle">As X increases, Y rises.</text>
+  <text x="127" y="294" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">e.g. Study Time &#8594; Scores</text>
+
+  <!-- Panel 2: Negative Slope -->
+  <rect x="245" y="55" width="195" height="240" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="342" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#DC2626" text-anchor="middle">Negative Slope (m &lt; 0)</text>
+  <line x1="265" y1="260" x2="420" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="265" y1="100" x2="265" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="275" y1="120" x2="410" y2="240" stroke="#DC2626" stroke-width="3"/>
+  <text x="342" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#334155" text-anchor="middle">As X increases, Y falls.</text>
+  <text x="342" y="294" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">e.g. Car Age &#8594; Value</text>
+
+  <!-- Panel 3: Zero Slope -->
+  <rect x="460" y="55" width="195" height="240" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="557" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#64748B" text-anchor="middle">Zero Slope (m = 0)</text>
+  <line x1="480" y1="260" x2="635" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="480" y1="100" x2="480" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="490" y1="180" x2="625" y2="180" stroke="#64748B" stroke-width="3"/>
+  <text x="557" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#334155" text-anchor="middle">X provides no linear info.</text>
+  <text x="557" y="294" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">&#375; = b (Mean baseline)</text>
+
+  <!-- Panel 4: Varying Intercept -->
+  <rect x="675" y="55" width="195" height="240" rx="8" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="772" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#7C3AED" text-anchor="middle">Intercept Shifts (b)</text>
+  <line x1="695" y1="260" x2="850" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="695" y1="100" x2="695" y2="260" stroke="#94A3B8" stroke-width="1.5"/>
+  <line x1="705" y1="180" x2="840" y2="110" stroke="#7C3AED" stroke-width="2"/>
+  <line x1="705" y1="230" x2="840" y2="160" stroke="#A855F7" stroke-width="2" stroke-dasharray="3,3"/>
+  <text x="772" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#334155" text-anchor="middle">Parallel vertical shifts.</text>
+  <text x="772" y="294" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Same slope, different baseline</text>
+
+  <rect x="30" y="310" width="840" height="35" rx="6" fill="#F1F5F9"/>
+  <text x="450" y="332" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#334155" text-anchor="middle">Slope controls the steepness and direction of relationship; Intercept controls the vertical height at x=0.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.4: Geometric effects of slope and intercept variations: Positive slope rises, negative slope falls, zero slope is flat, and intercept shifts height in parallel.</div>
+    </div>
+
+    <h3>Real-World Example: Student Study Hours vs Exam Score</h3>
+    <p>
+      Consider a university classroom where we model final exam score (percentage points, 0&ndash;100) based on weekly study hours. Suppose our ordinary least squares model fits the equation:
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Real-Life Fitted Exam Model</div>
+      <div class="formula-box">Predicted_Score = 48.0 + 7.5 &times; Study_Hours</div>
+    </div>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#127891;</span> Translating Parameters into Plain English</div>
+      <ul>
+        <li>
+          <strong>Slope (&beta;&#8321; = +7.5 points/hour):</strong> For each additional hour a student studies per week, their expected final exam score increases by <strong>7.5 percentage points</strong>, on average across the class.
+        </li>
+        <li>
+          <strong>Intercept (&beta;&#8320; = 48.0 points):</strong> The baseline score expected for a student who studies <strong>zero hours</strong> (<code>x = 0</code>). This represents the baseline score achievable through general classroom attendance and prior knowledge alone.
+        </li>
+      </ul>
+    </div>
+
+    <h3>Does the Intercept Always Make Physical Sense?</h3>
+    <p>
+      In many machine learning applications, the intercept is purely mathematical anchoring and has <strong>no sensible physical interpretation</strong> in the real world:
+    </p>
+    <ul>
+      <li><strong>House Area vs Price:</strong> If our fitted model is <code>Price = $55.9k + $0.14 &times; Area</code>, the intercept claims a house with <code>0 sq ft</code> costs $55,900! A house with zero area cannot exist. The intercept simply anchors the line within the observed domain of real houses (e.g., 800 to 3,500 sq ft).</li>
+      <li><strong>Human Height vs Weight:</strong> An intercept for height = 0 cm might produce a negative weight (e.g. -45 kg). This is mathematically necessary to fit adult heights accurately, but physically meaningless at zero.</li>
+    </ul>
+    <p>
+      <strong>Rule of Thumb:</strong> Only interpret the intercept physically if the value <code>x = 0</code> is realistically possible and contained within your training data range.
+    </p>
+  </section>
+
+  <!-- SECTION 05: HOW DOES LINEAR REGRESSION FIND THE BEST-FIT LINE? -->
+  <section id="sec-05" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 05</span>
+      <h2 class="section-title">How Does Linear Regression Find the Best-Fit Line?</h2>
+    </div>
+    <p class="section-intro">
+      Beginners often wonder: <em>How does the computer choose one specific line out of an infinite number of possible straight lines?</em> The algorithm does not simply connect the first and last points, nor does it guess randomly. It executes an objective mathematical optimization process.
+    </p>
+
+    <!-- FIGURE 9.5: CANDIDATE LINES -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">CANDIDATE LINES: WHY ORDINARY LEAST SQUARES PICKS LINE C</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="310" x2="700" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+  <line x1="80" y1="60" x2="80" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Candidate Line A (Too Flat, High SSE) -->
+  <line x1="80" y1="210" x2="680" y2="210" stroke="#DC2626" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="685" y="214" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">Line A (SSE = 340)</text>
+
+  <!-- Candidate Line B (Too Steep, High SSE) -->
+  <line x1="80" y1="310" x2="520" y2="60" stroke="#D97706" stroke-width="2" stroke-dasharray="6,4"/>
+  <text x="525" y="65" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#D97706">Line B (SSE = 280)</text>
+
+  <!-- Candidate Line C (Optimal OLS Line, Minimum SSE) -->
+  <line x1="80" y1="285" x2="680" y2="85" stroke="#16A34A" stroke-width="3.5"/>
+  <text x="685" y="90" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">&#10003; Line C (Optimal: SSE = 42)</text>
+
+  <!-- Data points -->
+  <circle cx="150" cy="270" r="5" fill="#4F46E5"/>
+  <circle cx="220" cy="235" r="5" fill="#4F46E5"/>
+  <circle cx="280" cy="220" r="5" fill="#4F46E5"/>
+  <circle cx="340" cy="190" r="5" fill="#4F46E5"/>
+  <circle cx="410" cy="175" r="5" fill="#4F46E5"/>
+  <circle cx="480" cy="140" r="5" fill="#4F46E5"/>
+  <circle cx="550" cy="125" r="5" fill="#4F46E5"/>
+  <circle cx="620" cy="100" r="5" fill="#4F46E5"/>
+
+  <!-- Explanation Box -->
+  <rect x="80" y="325" width="600" height="42" rx="6" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="380" y="343" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#0F172A" text-anchor="middle">Every candidate line produces vertical prediction errors. Ordinary Least Squares (OLS)</text>
+  <text x="380" y="359" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B" text-anchor="middle">mathematically calculates the unique slope and intercept that minimizes the sum of squared errors (SSE).</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.5: Evaluating candidate lines: Ordinary Least Squares (OLS) searches the parameter space to identify Line C, which produces the smallest possible sum of squared errors.</div>
+    </div>
+
+    <h3>The 8-Step Machine Learning Optimization Process</h3>
+    <ol>
+      <li><strong>Ingest Historical Data:</strong> Collect paired training observations <code>(x&#7522;, y&#7522;)</code> for <code>i = 1, ..., n</code>.</li>
+      <li><strong>Propose a Candidate Line:</strong> Start with initial parameter values for slope (<code>w</code>) and intercept (<code>b</code>).</li>
+      <li><strong>Generate Predictions:</strong> For each training observation <code>x&#7522;</code>, calculate the predicted target: <code>&#375;&#7522; = w &times; x&#7522; + b</code>.</li>
+      <li><strong>Compare with Actual Labels:</strong> Measure the difference between ground truth <code>y&#7522;</code> and prediction <code>&#375;&#7522;</code>.</li>
+      <li><strong>Calculate Residuals:</strong> Quantify individual vertical prediction errors: <code>e&#7522; = y&#7522; - &#375;&#7522;</code>.</li>
+      <li><strong>Aggregate Total Loss:</strong> Square each residual to eliminate negative signs and sum them into a single scalar loss metric: <code>SSE = &Sigma; e&#7522;&#178;</code>.</li>
+      <li><strong>Adjust Parameters:</strong> Use calculus (Normal Equations or Gradient Descent) to shift slope and intercept in the direction that reduces SSE.</li>
+      <li><strong>Terminate on Optimal Solution:</strong> Stop when no further parameter adjustments can reduce the sum of squared errors.</li>
+    </ol>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#9878;</span> Why Joining the First and Last Point is a Fatal Mistake</div>
+      <p>
+        A common novice misconception is assuming a line of best fit simply connects the first observation <code>(x&#8321;, y&#8321;)</code> to the last observation <code>(x&#8345;, y&#8345;)</code>. If either of those boundary points happens to be an extreme outlier or noisy sensor anomaly, the resulting line will pivot violently and misclassify all intermediate points! A true line of best fit considers <strong>all n training points simultaneously</strong>.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- SECTION 06: ACTUAL VALUES, PREDICTED VALUES AND RESIDUALS -->
+  <section id="sec-06" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 06</span>
+      <h2 class="section-title">Actual Values, Predicted Values and Residuals</h2>
+    </div>
+    <p class="section-intro">
+      At the heart of regression analysis lies the concept of a <strong>residual</strong>&mdash;the difference between what actually occurred in reality and what our mathematical model estimated.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Definition: Individual Sample Residual</div>
+      <div class="formula-box">e&#7522; = y&#7522; - &#375;&#7522;</div>
+      <div class="formula-desc">
+        Where <strong>y&#7522;</strong> is the observed ground-truth value, <strong>&#375;&#7522;</strong> is the model's predicted value, and <strong>e&#7522;</strong> is the signed residual error for sample <em>i</em>.
+      </div>
+    </div>
+
+    <!-- FIGURE 9.6: RESIDUAL LINES -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">RESIDUALS: MEASURING VERTICAL ERRORS e&#7522; = y&#7522; - &#375;&#7522;</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="310" x2="700" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+  <line x1="80" y1="50" x2="80" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Fitted Line -->
+  <line x1="80" y1="280" x2="680" y2="80" stroke="#16A34A" stroke-width="3"/>
+
+  <!-- Vertical Residual Lines & Points -->
+  <!-- Point 1: Positive residual (above line) -->
+  <line x1="180" y1="247" x2="180" y2="200" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="4,3"/>
+  <circle cx="180" cy="200" r="6" fill="#4F46E5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="195" y="225" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">e&#8321; &gt; 0 (Underestimated)</text>
+
+  <!-- Point 2: Negative residual (below line) -->
+  <line x1="300" y1="207" x2="300" y2="250" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="4,3"/>
+  <circle cx="300" cy="250" r="6" fill="#4F46E5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="315" y="235" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">e&#8322; &lt; 0 (Overestimated)</text>
+
+  <!-- Point 3: Zero residual (on line) -->
+  <circle cx="430" cy="163" r="6" fill="#16A34A" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="445" y="160" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A">e&#8323; &#8776; 0 (Perfect)</text>
+
+  <!-- Point 4: Positive residual -->
+  <line x1="560" y1="120" x2="560" y2="80" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="4,3"/>
+  <circle cx="560" cy="80" r="6" fill="#4F46E5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <text x="575" y="105" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">e&#8324; &gt; 0</text>
+
+  <!-- Callout Box -->
+  <rect x="80" y="325" width="600" height="42" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="380" y="343" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#991B1B" text-anchor="middle">Why are residuals VERTICAL differences instead of perpendicular distances?</text>
+  <text x="380" y="359" font-family="-apple-system, sans-serif" font-size="11" fill="#7F1D1D" text-anchor="middle">Because our goal is predicting the target Y from a given X. We only penalize errors in the output axis!</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.6: Visualizing residuals as vertical differences: Dashed red segments show the exact error distance between observed points and the fitted regression model.</div>
+    </div>
+
+    <h3>Interpreting the Sign of the Residual</h3>
+    <ul>
+      <li><strong>Positive Residual (e&#7522; &gt; 0):</strong> The actual observed value lies <em>above</em> the regression line (<code>y&#7522; &gt; &#375;&#7522;</code>). The model <strong>underestimated</strong> reality.</li>
+      <li><strong>Negative Residual (e&#7522; &lt; 0):</strong> The actual observed value lies <em>below</em> the regression line (<code>y&#7522; &lt; &#375;&#7522;</code>). The model <strong>overestimated</strong> reality.</li>
+      <li><strong>Zero Residual (e&#7522; = 0):</strong> The observation lies exactly on the regression line. The prediction was 100% accurate.</li>
+    </ul>
+
+    <h3>Step-by-Step Worked Residual Table (4 Samples)</h3>
+    <p>
+      Consider four observations where the fitted model equation is <code>&#375; = 2.1x + 0.8</code>:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Sample #</th>
+            <th>Input (x)</th>
+            <th>Actual Value (y)</th>
+            <th>Predicted (&#375; = 2.1x + 0.8)</th>
+            <th>Residual (e = y - &#375;)</th>
+            <th>Model Evaluation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sample 1</strong></td>
+            <td><code>x&#8321; = 1.0</code></td>
+            <td><code>y&#8321; = 3.0</code></td>
+            <td><code>&#375;&#8321; = 2.1(1.0) + 0.8 = 2.90</code></td>
+            <td><code>3.0 - 2.90 = +0.10</code></td>
+            <td>Underestimated by 0.10 units</td>
+          </tr>
+          <tr>
+            <td><strong>Sample 2</strong></td>
+            <td><code>x&#8322; = 2.0</code></td>
+            <td><code>y&#8322; = 5.0</code></td>
+            <td><code>&#375;&#8322; = 2.1(2.0) + 0.8 = 5.00</code></td>
+            <td><code>5.0 - 5.00 = 0.00</code></td>
+            <td><strong>Exact perfect hit!</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Sample 3</strong></td>
+            <td><code>x&#8323; = 3.0</code></td>
+            <td><code>y&#8323; = 8.0</code></td>
+            <td><code>&#375;&#8323; = 2.1(3.0) + 0.8 = 7.10</code></td>
+            <td><code>8.0 - 7.10 = +0.90</code></td>
+            <td>Underestimated by 0.90 units</td>
+          </tr>
+          <tr>
+            <td><strong>Sample 4</strong></td>
+            <td><code>x&#8324; = 4.0</code></td>
+            <td><code>y&#8324; = 9.0</code></td>
+            <td><code>&#375;&#8324; = 2.1(4.0) + 0.8 = 9.20</code></td>
+            <td><code>9.0 - 9.20 = -0.20</code></td>
+            <td>Overestimated by 0.20 units</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128207;</span> Why Are Residuals Strictly Vertical in Ordinary Least Squares?</div>
+      <p>
+        In basic geometry, the shortest distance from a point to a line is the perpendicular segment. However, in linear regression, <strong>residuals are strictly vertical</strong> along the y-axis.
+      </p>
+      <p>
+        Why? Because in supervised learning, our objective is to predict target <code>y</code> given a fixed, known feature <code>x</code>. We assume the input <code>x</code> is measured without error; our only uncertainty lies in the output <code>y</code>. Therefore, the algorithm penalizes vertical discrepancy exclusively!
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 07: LOSS FUNCTIONS AND MEAN SQUARED ERROR -->
+  <section id="sec-07" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 07</span>
+      <h2 class="section-title">Loss Functions and Mean Squared Error</h2>
+    </div>
+    <p class="section-intro">
+      To compare millions of candidate lines, an algorithm cannot inspect a list of individual residuals manually. It requires a single mathematical number&mdash;a <strong>Loss Function</strong> (or Cost Function)&mdash;that scores the overall badness of the model's predictions.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Core Regression Loss: Mean Squared Error (MSE)</div>
+      <div class="formula-box">MSE = (1 / n) &times; &Sigma;&#7522;&#61105;&#8321;&#7519; (y&#7522; - &#375;&#7522;)&#178;</div>
+      <div class="formula-desc">
+        Where <strong>n</strong> is the number of samples, <strong>y&#7522;</strong> is actual value, and <strong>&#375;&#7522;</strong> is prediction. MSE computes the average squared vertical error.
+      </div>
+    </div>
+
+    <!-- FIGURE 9.7: LOSS FUNCTION COMPARISON -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" width="100%">
+  <rect width="760" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">LOSS FUNCTIONS: MEAN SQUARED ERROR (MSE) VS MEAN ABSOLUTE ERROR (MAE)</text>
+
+  <!-- Coordinate frame -->
+  <line x1="80" y1="290" x2="680" y2="290" stroke="#CBD5E1" stroke-width="2"/> <!-- X: Error e -->
+  <line x1="380" y1="50" x2="380" y2="290" stroke="#CBD5E1" stroke-width="2"/> <!-- Y: Penalty -->
+
+  <text x="380" y="310" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">Error e = (y - &#375;) = 0</text>
+  <text x="180" y="310" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">-2.0</text>
+  <text x="580" y="310" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B" text-anchor="middle">+2.0</text>
+  <text x="695" y="294" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#334155">Error (e)</text>
+
+  <!-- MAE V-Shape Line (Linear): y = |x| -->
+  <path d="M 180 90 L 380 290 L 580 90" fill="none" stroke="#2563EB" stroke-width="3"/>
+  <text x="600" y="100" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#2563EB">MAE Penalty: |e|</text>
+
+  <!-- MSE Parabola (Quadratic): y = x^2 -->
+  <path d="M 230 65 Q 380 340 530 65" fill="none" stroke="#DC2626" stroke-width="3"/>
+  <text x="545" y="70" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">MSE Penalty: e&#178;</text>
+
+  <!-- Key comparison cards -->
+  <rect x="90" y="60" width="130" height="50" rx="6" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1"/>
+  <text x="155" y="80" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">Small Errors (e &lt; 1)</text>
+  <text x="155" y="98" font-family="-apple-system, sans-serif" font-size="10" fill="#1E3A8A" text-anchor="middle">e&#178; &lt; |e| (Tolerant)</text>
+
+  <rect x="90" y="125" width="130" height="50" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="155" y="145" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Large Errors (e &gt; 2)</text>
+  <text x="155" y="163" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D" text-anchor="middle">e&#178; &gt;&gt; |e| (Punishing)</text>
+
+  <rect x="80" y="325" width="600" height="25" rx="4" fill="#F8FAFC"/>
+  <text x="380" y="342" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">Squaring errors makes MSE differentiable (easy to optimize) but highly sensitive to extreme outliers.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.7: Comparing loss penalties: Mean Squared Error (quadratic) punishes large outlier errors far more aggressively than Mean Absolute Error (linear).</div>
+    </div>
+
+    <h3>Step-by-Step Manual Loss Calculation</h3>
+    <p>
+      Using the 4 observations from Section 6, let us manually calculate the complete error metrics:
+    </p>
+    <ol>
+      <li><strong>Compute individual residuals (e&#7522;):</strong> <code>[+0.10, 0.00, +0.90, -0.20]</code></li>
+      <li><strong>Square each residual (e&#7522;&#178;):</strong>
+        <ul>
+          <li><code>(+0.10)&#178; = 0.0100</code></li>
+          <li><code>(0.00)&#178;  = 0.0000</code></li>
+          <li><code>(+0.90)&#178; = 0.8100</code></li>
+          <li><code>(-0.20)&#178; = 0.0400</code></li>
+        </ul>
+      </li>
+      <li><strong>Sum of Squared Errors (SSE):</strong> <code>0.0100 + 0.0000 + 0.8100 + 0.0400 = 0.8600</code></li>
+      <li><strong>Mean Squared Error (MSE):</strong> <code>SSE / n = 0.8600 / 4 = 0.2150</code></li>
+      <li><strong>Root Mean Squared Error (RMSE):</strong> <code>&radic;MSE = &radic;0.2150 = 0.4637</code></li>
+      <li><strong>Mean Absolute Error (MAE):</strong> <code>(|0.10| + |0.00| + |0.90| + |-0.20|) / 4 = 1.20 / 4 = 0.3000</code></li>
+    </ol>
+
+    <!-- Metrics Table -->
+    <h3>Why Do We Need Both MSE, RMSE, and MAE?</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Formula</th>
+            <th>Units</th>
+            <th>Key Advantage &amp; Limitation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Mean Squared Error (MSE)</strong></td>
+            <td><code>(1/n) &Sigma; e&#7522;&#178;</code></td>
+            <td>Squared Target Units (e.g. <code>$&#178;</code>)</td>
+            <td>Mathematically smooth &amp; differentiable; but units are squared and non-intuitive to explain to non-technical stakeholders.</td>
+          </tr>
+          <tr>
+            <td><strong>Root Mean Squared Error (RMSE)</strong></td>
+            <td><code>&radic;MSE</code></td>
+            <td>Original Target Units (e.g. <code>$</code>)</td>
+            <td>Restores original units for easy business interpretation; still heavily sensitive to extreme outlier errors.</td>
+          </tr>
+          <tr>
+            <td><strong>Mean Absolute Error (MAE)</strong></td>
+            <td><code>(1/n) &Sigma; |e&#7522;|</code></td>
+            <td>Original Target Units (e.g. <code>$</code>)</td>
+            <td>Robust to outliers; measures average absolute distance. Not smooth at e = 0, making calculus optimization slightly harder.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> Why Can't We Just Minimize the Simple Sum of Errors (&Sigma; e&#7522;)?</div>
+      <p>
+        If we don't square or take the absolute value, positive residuals and negative residuals cancel each other out! A model could make a <code>+1,000</code> error on sample 1 and a <code>-1,000</code> error on sample 2. The simple sum would be <code>+1000 + (-1000) = 0</code>, declaring the model "flawless" despite massive errors on every prediction. Squaring ensures that every mistake contributes a positive penalty.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 08: THE ORDINARY LEAST SQUARES OBJECTIVE -->
+  <section id="sec-08" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 08</span>
+      <h2 class="section-title">The Ordinary Least Squares Objective</h2>
+    </div>
+    <p class="section-intro">
+      <strong>Ordinary Least Squares (OLS)</strong> is the standard analytical formulation for fitting a linear regression model. It mathematically determines the optimal slope (<code>&beta;&#8321;</code>) and intercept (<code>&beta;&#8320;</code>) by solving for the exact point where the derivative of the squared error loss is zero.
+    </p>
+
+    <!-- FIGURE 9.8: OLS CALCULATION ENGINE -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 360" width="100%">
+  <rect width="860" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="430" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">ORDINARY LEAST SQUARES (OLS): CLOSED-FORM NORMAL EQUATIONS</text>
+
+  <!-- Left Card: Slope Formula -->
+  <rect x="40" y="55" width="370" height="180" rx="10" fill="#EEF2FF" stroke="#C7D2FE" stroke-width="1.5"/>
+  <rect x="55" y="70" width="340" height="28" rx="6" fill="#4F46E5"/>
+  <text x="225" y="89" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">SLOPE (&#946;&#8321;) FORMULA</text>
+  <rect x="55" y="110" width="340" height="48" rx="6" fill="#FFFFFF" stroke="#C7D2FE" stroke-width="1"/>
+  <text x="225" y="132" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#312E81" text-anchor="middle">&#946;&#8321; = &#931;(x&#7522; - x&#772;)(y&#7522; - y&#772;) / &#931;(x&#7522; - x&#772;)&#178;</text>
+  <text x="225" y="150" font-family="-apple-system, sans-serif" font-size="11" fill="#4338CA" text-anchor="middle">= Covariance(X, Y) / Variance(X)</text>
+  <text x="225" y="180" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#1E1B4B" text-anchor="middle">Worked Example (5 Samples):</text>
+  <text x="225" y="202" font-family="Courier New, monospace" font-size="13" font-weight="700" fill="#4F46E5" text-anchor="middle">&#946;&#8321; = 16.0 / 10.0 = 1.600</text>
+
+  <!-- Right Card: Intercept Formula -->
+  <rect x="450" y="55" width="370" height="180" rx="10" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5"/>
+  <rect x="465" y="70" width="340" height="28" rx="6" fill="#16A34A"/>
+  <text x="635" y="89" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">INTERCEPT (&#946;&#8320;) FORMULA</text>
+  <rect x="465" y="110" width="340" height="48" rx="6" fill="#FFFFFF" stroke="#BBF7D0" stroke-width="1"/>
+  <text x="635" y="132" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#14532D" text-anchor="middle">&#946;&#8320; = y&#772; - &#946;&#8321; × x&#772;</text>
+  <text x="635" y="150" font-family="-apple-system, sans-serif" font-size="11" fill="#15803D" text-anchor="middle">Guarantees line passes through centroid (x&#772;, y&#772;)</text>
+  <text x="635" y="180" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#064E3B" text-anchor="middle">Worked Example (x&#772; = 3.0, y&#772; = 5.0):</text>
+  <text x="635" y="202" font-family="Courier New, monospace" font-size="13" font-weight="700" fill="#16A34A" text-anchor="middle">&#946;&#8320; = 5.0 - (1.600 × 3.0) = 0.200</text>
+
+  <!-- Bottom Result Banner -->
+  <rect x="40" y="255" width="780" height="80" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="430" y="280" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Final Analytical OLS Fitted Model:</text>
+  <text x="430" y="308" font-family="Courier New, monospace" font-size="18" font-weight="700" fill="#4F46E5" text-anchor="middle">&#375; = 0.200 + 1.600 × x</text>
+  <text x="430" y="326" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B" text-anchor="middle">Scikit-Learn LinearRegression calculates these identical coefficients via numerical linear algebra.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.8: The Ordinary Least Squares calculation engine: Closed-form Normal Equations solve directly for the optimal slope and intercept using covariance and variance.</div>
+    </div>
+
+    <div class="formula-card">
+      <div class="formula-title">Analytical Closed-Form Formulas for Simple Linear Regression</div>
+      <div class="formula-box">&beta;&#8321; = &Sigma;(x&#7522; - x&#772;)(y&#7522; - y&#772;) / &Sigma;(x&#7522; - x&#772;)&#178; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &beta;&#8320; = y&#772; - &beta;&#8321; &times; x&#772;</div>
+      <div class="formula-desc">
+        Where <strong>x&#772;</strong> and <strong>y&#772;</strong> are the sample arithmetic means of feature X and target Y.
+      </div>
+    </div>
+
+    <h3>Complete Worked Numerical Example from First Principles</h3>
+    <p>
+      Consider a small dataset with <code>n = 5</code> observations:
+      <br><code>X = [1.0, 2.0, 3.0, 4.0, 5.0]</code>
+      <br><code>Y = [2.0, 3.0, 5.0, 7.0, 8.0]</code>
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>i</th>
+            <th>x&#7522;</th>
+            <th>y&#7522;</th>
+            <th>(x&#7522; - x&#772;)</th>
+            <th>(y&#7522; - y&#772;)</th>
+            <th>(x&#7522; - x&#772;)(y&#7522; - y&#772;)</th>
+            <th>(x&#7522; - x&#772;)&#178;</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>1.0</td>
+            <td>2.0</td>
+            <td>1.0 - 3.0 = -2.0</td>
+            <td>2.0 - 5.0 = -3.0</td>
+            <td>(-2.0)(-3.0) = +6.0</td>
+            <td>(-2.0)&#178; = 4.0</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>2.0</td>
+            <td>3.0</td>
+            <td>2.0 - 3.0 = -1.0</td>
+            <td>3.0 - 5.0 = -2.0</td>
+            <td>(-1.0)(-2.0) = +2.0</td>
+            <td>(-1.0)&#178; = 1.0</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>3.0</td>
+            <td>5.0</td>
+            <td>3.0 - 3.0 = 0.0</td>
+            <td>5.0 - 5.0 = 0.0</td>
+            <td>(0.0)(0.0) = 0.0</td>
+            <td>(0.0)&#178; = 0.0</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>4.0</td>
+            <td>7.0</td>
+            <td>4.0 - 3.0 = +1.0</td>
+            <td>7.0 - 5.0 = +2.0</td>
+            <td>(+1.0)(+2.0) = +2.0</td>
+            <td>(+1.0)&#178; = 1.0</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>5.0</td>
+            <td>8.0</td>
+            <td>5.0 - 3.0 = +2.0</td>
+            <td>8.0 - 5.0 = +3.0</td>
+            <td>(+2.0)(+3.0) = +6.0</td>
+            <td>(+2.0)&#178; = 4.0</td>
+          </tr>
+          <tr>
+            <td><strong>Sum</strong></td>
+            <td><strong>&Sigma;x = 15.0</strong></td>
+            <td><strong>&Sigma;y = 25.0</strong></td>
+            <td>x&#772; = 15.0/5 = <strong>3.0</strong></td>
+            <td>y&#772; = 25.0/5 = <strong>5.0</strong></td>
+            <td><strong>&Sigma; = +16.0 (Numerator)</strong></td>
+            <td><strong>&Sigma; = 10.0 (Denominator)</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>
+      Now calculate the parameters:
+      <br>1. <strong>Optimal Slope (&beta;&#8321;):</strong> <code>16.0 / 10.0 = 1.600</code>
+      <br>2. <strong>Optimal Intercept (&beta;&#8320;):</strong> <code>y&#772; - &beta;&#8321;x&#772; = 5.0 - (1.600 &times; 3.0) = 5.0 - 4.8 = 0.200</code>
+      <br>3. <strong>Final Fitted Equation:</strong> <code>&#375; = 0.200 + 1.600 &times; x</code>
+    </p>
+    <p>
+      Executing <code>LinearRegression().fit(X, y)</code> in Python produces the exact same values: <code>coef_ = 1.6000</code> and <code>intercept_ = 0.2000</code>.
+    </p>
+  </section>
+
+  <!-- SECTION 09: GRADIENT DESCENT: HOW PARAMETERS CAN BE LEARNED -->
+  <section id="sec-09" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 09</span>
+      <h2 class="section-title">Gradient Descent: How Parameters Can Be Learned</h2>
+    </div>
+    <p class="section-intro">
+      While Ordinary Least Squares solves linear regression analytically in one step using matrix inversion, this formula becomes computationally prohibitive when datasets contain millions of rows or hundreds of thousands of features. <strong>Gradient Descent</strong> provides an iterative optimization alternative that powers modern large-scale machine learning and deep neural networks.
+    </p>
+
+    <!-- FIGURE 9.9: GRADIENT DESCENT -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 360" width="100%">
+  <rect width="860" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="430" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">GRADIENT DESCENT: CONVERGENCE TOWARD GLOBAL MINIMUM</text>
+
+  <!-- Left: Convex Bowl Concept -->
+  <rect x="40" y="55" width="370" height="280" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="225" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Convex MSE Loss Bowl J(w, b)</text>
+  <path d="M 80 120 Q 225 310 370 120" fill="none" stroke="#4F46E5" stroke-width="3"/>
+  <!-- Steps descending -->
+  <circle cx="100" cy="140" r="6" fill="#DC2626"/>
+  <line x1="100" y1="140" x2="140" y2="190" stroke="#DC2626" stroke-width="2" stroke-dasharray="3,3"/>
+  <circle cx="140" cy="190" r="5" fill="#D97706"/>
+  <line x1="140" y1="190" x2="185" y2="225" stroke="#D97706" stroke-width="2" stroke-dasharray="3,3"/>
+  <circle cx="185" cy="225" r="5" fill="#D97706"/>
+  <line x1="185" y1="225" x2="225" y2="238" stroke="#16A34A" stroke-width="2"/>
+  <circle cx="225" cy="238" r="7" fill="#16A34A"/>
+  <text x="225" y="265" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A" text-anchor="middle">&#10003; Global Minimum (Loss &#8776; 0.08)</text>
+  <text x="225" y="305" font-family="Courier New, monospace" font-size="12" font-weight="700" fill="#312E81" text-anchor="middle">w_new = w - &#945; × (&#8706;J / &#8706;w)</text>
+
+  <!-- Right: Iteration Curve -->
+  <rect x="450" y="55" width="370" height="280" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="635" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">MSE Loss vs Training Epochs</text>
+  <line x1="480" y1="280" x2="790" y2="280" stroke="#94A3B8" stroke-width="1.5"/> <!-- Epochs -->
+  <line x1="480" y1="100" x2="480" y2="280" stroke="#94A3B8" stroke-width="1.5"/> <!-- Loss -->
+
+  <!-- Actual decay curve -->
+  <path d="M 485 110 Q 520 260 780 272" fill="none" stroke="#DC2626" stroke-width="3"/>
+  <circle cx="485" cy="110" r="5" fill="#DC2626"/>
+  <text x="515" y="115" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">Epoch 0: Loss = 12.0</text>
+  <circle cx="780" cy="272" r="5" fill="#16A34A"/>
+  <text x="730" y="260" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A">Epoch 100: Loss = 0.08</text>
+
+  <text x="635" y="302" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B" text-anchor="middle">Iterations / Epochs (0 &#8594; 100)</text>
+  <text transform="rotate(-90 470 190)" x="470" y="190" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B" text-anchor="middle">Loss (MSE)</text>
+  <text x="635" y="325" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#4338CA" text-anchor="middle">Smooth exponential decay proves convergence</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.9: Gradient Descent optimization: Iteratively walking down the convex MSE loss surface along the negative gradient until converging at the global minimum.</div>
+    </div>
+
+    <h3>The Mountain Hiker Analogy</h3>
+    <p>
+      Imagine you are hiking down a foggy mountain shrouded in thick mist. You cannot see the village at the bottom of the valley, but under your hiking boots, you can feel the slope of the ground:
+    </p>
+    <ul>
+      <li><strong>Gradient:</strong> The steepness and direction of the slope under your feet.</li>
+      <li><strong>Negative Gradient:</strong> The direction of steepest descent (downhill).</li>
+      <li><strong>Learning Rate (&alpha;):</strong> The size of the stride you take on each step.</li>
+      <li><strong>Convergence:</strong> Arriving at flat ground in the valley basin where slope = 0.</li>
+    </ul>
+
+    <div class="formula-card">
+      <div class="formula-title">Gradient Descent Parameter Update Equations</div>
+      <div class="formula-box">w_new = w_old - &alpha; &times; (&part;J / &part;w) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; b_new = b_old - &alpha; &times; (&part;J / &part;b)</div>
+      <div class="formula-desc">
+        Where <strong>J</strong> is the MSE loss function, <strong>&alpha;</strong> is the learning rate (step size), and <strong>&part;J/&part;w</strong> is the partial derivative of loss with respect to weight.
+      </div>
+    </div>
+
+    <h3>Partial Derivatives for Mean Squared Error</h3>
+    <p>
+      Using simple calculus (the power rule and chain rule), the gradients of MSE with respect to <code>w</code> and <code>b</code> are:
+    </p>
+    <ul>
+      <li><code>&part;J / &part;w = - (2 / n) &Sigma; x&#7522; &times; (y&#7522; - &#375;&#7522;)</code></li>
+      <li><code>&part;J / &part;b = - (2 / n) &Sigma; (y&#7522; - &#375;&#7522;)</code></li>
+    </ul>
+
+    <h3>The Critical Role of Learning Rate (&alpha;)</h3>
+    <ul>
+      <li><strong>Learning Rate Too Small (&alpha; = 0.0001):</strong> Optimization moves at a snail's pace, requiring hundreds of thousands of epochs to converge.</li>
+      <li><strong>Learning Rate Too Large (&alpha; = 2.5):</strong> Steps overshoot the valley bottom completely, causing the loss to diverge toward infinity (NaN explosion).</li>
+      <li><strong>Just Right (&alpha; = 0.05):</strong> The model smoothly and rapidly descends the bowl, converging to within <code>0.01</code> of the analytical OLS solution in under 100 epochs.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 10: SIMPLE LINEAR REGRESSION -->
+  <section id="sec-10" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 10</span>
+      <h2 class="section-title">Simple Linear Regression</h2>
+    </div>
+    <p class="section-intro">
+      <strong>Simple Linear Regression</strong> models the direct bivariate relationship between a single numerical input feature and a continuous target variable.
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128202;</span> Python Implementation with Scikit-Learn</div>
+      <p>
+        In Scikit-Learn, simple linear regression is performed using the <code>LinearRegression</code> estimator:
+      </p>
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-title">simple_linear_regression.py</span>
+          <span class="code-lang">python</span>
+        </div>
+        <pre><code>from sklearn.linear_model import LinearRegression
+
+# Instantiate estimator
+model = LinearRegression()
+
+# X must be a 2D matrix (samples x features), y is a 1D vector
+model.fit(X_train[['Area_SqFt']], y_train)
+
+# Inspect learned parameters
+slope = model.coef_[0]       # +0.1430 kUSD per sq ft
+intercept = model.intercept_ # +55.93 kUSD
+
+print(f"Fitted Model: Price = {intercept:.2f} + {slope:.4f} * Area")
+# Predict on unseen test sample (2,000 sq ft house)
+pred_price = model.predict([[2000]])[0] # $341.93k USD</code></pre>
+      </div>
+    </div>
+
+    <h3>Limitations of Simple Linear Regression</h3>
+    <p>
+      While simple linear regression provides unmatched human interpretability, it suffers from a fundamental limitation: <strong>omitted variable bias</strong>. In the real world, house price is rarely dictated by square footage alone. A 2,000 sq ft home in a deteriorating condition 30 miles from the city center will sell for far less than an identical 2,000 sq ft renovated home in a prime downtown district. To capture real-world phenomena accurately, we must expand our model to accommodate multiple features simultaneously.
+    </p>
+  </section>
+
+
+  <!-- SECTION 11: MULTIPLE LINEAR REGRESSION -->
+  <section id="sec-11" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 11</span>
+      <h2 class="section-title">Multiple Linear Regression</h2>
+    </div>
+    <p class="section-intro">
+      In real-world applications, a target outcome is almost never determined by a single isolated factor. <strong>Multiple Linear Regression</strong> extends simple regression by modeling the target as a linear combination of two or more explanatory input features simultaneously.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formula: Multiple Linear Regression</div>
+      <div class="formula-box">&#375; = &beta;&#8320; + &beta;&#8321;x&#8321; + &beta;&#8322;x&#8322; + &beta;&#8323;x&#8323; + ... + &beta;&#7522;x&#7522;</div>
+      <div class="formula-desc">
+        Where <strong>p</strong> is the number of features, <strong>x&#119895;</strong> is the <em>j</em>-th feature value, <strong>&beta;&#119895;</strong> is its partial regression coefficient, and <strong>&beta;&#8320;</strong> is the baseline intercept.
+      </div>
+    </div>
+
+    <!-- FIGURE 9.10: SIMPLE VS MULTIPLE REGRESSION -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 360" width="100%">
+  <rect width="860" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="430" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">GEOMETRIC DIMENSIONALITY: 2D LINE VS MULTI-FEATURE HYPERPLANE</text>
+
+  <!-- Left: 2D Simple Linear Regression -->
+  <rect x="40" y="55" width="370" height="280" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="225" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Simple Regression: 1 Feature (2D)</text>
+  <line x1="70" y1="260" x2="380" y2="260" stroke="#94A3B8" stroke-width="1.5"/> <!-- X1 -->
+  <line x1="70" y1="90" x2="70" y2="260" stroke="#94A3B8" stroke-width="1.5"/> <!-- Y -->
+  <line x1="80" y1="240" x2="370" y2="110" stroke="#4F46E5" stroke-width="3"/>
+  <circle cx="150" cy="220" r="4.5" fill="#4F46E5"/>
+  <circle cx="230" cy="180" r="4.5" fill="#4F46E5"/>
+  <circle cx="310" cy="130" r="4.5" fill="#4F46E5"/>
+  <text x="225" y="280" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5" text-anchor="middle">Decision Surface: 1-Dimensional Line</text>
+  <text x="225" y="300" font-family="Courier New, monospace" font-size="13" fill="#1E1B4B" text-anchor="middle">&#375; = &#946;&#8320; + &#946;&#8321;x&#8321;</text>
+
+  <!-- Right: 3D Multiple Linear Regression (Plane) -->
+  <rect x="450" y="55" width="370" height="280" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="635" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#334155" text-anchor="middle">Multiple Regression: 2+ Features (3D+)</text>
+  <!-- Isometric 3D axes -->
+  <line x1="490" y1="260" x2="780" y2="260" stroke="#94A3B8" stroke-width="1.5"/> <!-- X1 -->
+  <line x1="490" y1="260" x2="490" y2="90" stroke="#94A3B8" stroke-width="1.5"/> <!-- Y -->
+  <line x1="490" y1="260" x2="420" y2="300" stroke="#94A3B8" stroke-width="1.5"/> <!-- X2 -->
+  <!-- 2D Plane representing 2 features -->
+  <polygon points="520,220 740,160 700,100 480,160" fill="#EEF2FF" fill-opacity="0.8" stroke="#4F46E5" stroke-width="2"/>
+  <circle cx="560" cy="170" r="4.5" fill="#16A34A"/>
+  <circle cx="620" cy="140" r="4.5" fill="#16A34A"/>
+  <circle cx="680" cy="120" r="4.5" fill="#16A34A"/>
+  <text x="635" y="280" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A" text-anchor="middle">Decision Surface: 2D Plane (or Hyperplane in P-dim)</text>
+  <text x="635" y="300" font-family="Courier New, monospace" font-size="13" fill="#064E3B" text-anchor="middle">&#375; = &#946;&#8320; + &#946;&#8321;x&#8321; + &#946;&#8322;x&#8322; + ... + &#946;&#7522;x&#7522;</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.10: Geometric dimensionality: Simple linear regression fits a 1D line in 2D space; multiple regression fits a 2D plane in 3D space, or a multi-dimensional hyperplane in higher dimensions.</div>
+    </div>
+
+    <h3>Interpreting Partial Regression Coefficients: The "Ceteris Paribus" Rule</h3>
+    <p>
+      In simple regression, the slope represents the total rate of change. In multiple regression, each coefficient <code>&beta;&#119895;</code> has a far more precise meaning:
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#9878;</span> Definition: Partial Regression Coefficient</div>
+      <p>
+        The coefficient <code>&beta;&#119895;</code> represents the expected change in target <code>y</code> for a one-unit increase in feature <code>x&#119895;</code>, <strong>holding all other features in the model completely constant</strong> (<em>ceteris paribus</em>).
+      </p>
+      <p>
+        For example, in our fitted house price model:
+        <br><code>Price = 59.42 + 0.1376(Area) + 20.44(Bedrooms) - 1.43(Age) - 2.38(Distance)</code>
+      </p>
+      <ul>
+        <li><strong>Bedrooms (+20.44 kUSD):</strong> Adding one additional bedroom is associated with a <code>+$20,440</code> price increase, <em>assuming living area, age, and distance to center remain strictly unchanged</em>.</li>
+        <li><strong>Age (-1.43 kUSD/yr):</strong> For each year a house ages, price drops by <code>$1,430</code>, holding size, room count, and location fixed.</li>
+      </ul>
+    </div>
+
+    <h3>Multicollinearity: When Input Features Collide</h3>
+    <p>
+      When two or more input features are strongly correlated with each other (e.g. Living Area in sq ft and Total Rooms, or Vehicle Curb Weight and Engine Displacement), <strong>multicollinearity</strong> occurs.
+    </p>
+    <ul>
+      <li><strong>The Problem:</strong> When features move in lockstep, the algorithm cannot isolate the unique mathematical effect of one feature while holding the other constant.</li>
+      <li><strong>The Symptom:</strong> The model's overall prediction accuracy and R&#178; score remain high, but individual coefficient estimates become wildly unstable, showing huge standard errors or even nonsensical signs (e.g. positive features flipping negative).</li>
+      <li><strong>The Remedy:</strong> Check the correlation matrix (<code>df.corr()</code>), remove redundant duplicate features, or compute Variance Inflation Factors (VIF &lt; 5.0 is healthy).</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 12: EVALUATION METRICS FOR REGRESSION -->
+  <section id="sec-12" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 12</span>
+      <h2 class="section-title">Evaluation Metrics for Regression</h2>
+    </div>
+    <p class="section-intro">
+      Because regression predicts continuous numbers, we cannot calculate "accuracy" in the classification sense (e.g., whether a prediction was 100% correct or wrong). Instead, we quantify the <strong>magnitude of error</strong> and the <strong>proportion of variance explained</strong>.
+    </p>
+
+    <!-- FIGURE 9.11: ACTUAL VS PREDICTED PLOT -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">ACTUAL VS PREDICTED PLOT: EVALUATING PREDICTION ACCURACY</text>
+
+  <!-- Axes -->
+  <line x1="100" y1="310" x2="680" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+  <line x1="100" y1="60" x2="100" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Ideal 45-degree Reference Line (y = y_hat) -->
+  <line x1="100" y1="310" x2="660" y2="70" stroke="#94A3B8" stroke-width="2.5" stroke-dasharray="6,4"/>
+  <text x="600" y="60" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#64748B">Ideal Fit: y = &#375;</text>
+
+  <!-- Tightly clustered test predictions around 45-deg line (R2 = 0.97) -->
+  <circle cx="170" cy="275" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="210" cy="265" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="260" cy="235" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="310" cy="220" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="340" cy="210" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="390" cy="180" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="430" cy="170" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="480" cy="145" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="530" cy="120" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="570" cy="115" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+  <circle cx="620" cy="85" r="5.5" fill="#4F46E5" fill-opacity="0.85"/>
+
+  <!-- Axis labels -->
+  <text x="390" y="340" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">Actual Values: y ($k)</text>
+  <text transform="rotate(-90 40 185)" x="40" y="185" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">Predicted Values: &#375; ($k)</text>
+
+  <!-- Score card -->
+  <rect x="440" y="210" width="220" height="75" rx="8" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="455" y="232" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#166534">High Agreement (R&#178; = 0.970)</text>
+  <text x="455" y="252" font-family="-apple-system, sans-serif" font-size="11" fill="#15803D">&#8226; Points hug 45&#176; line closely</text>
+  <text x="455" y="270" font-family="-apple-system, sans-serif" font-size="11" fill="#15803D">&#8226; Test MAE = $15.98k (tight bounds)</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.11: Actual vs Predicted evaluation plot: When a model generalizes well (R&#178; = 0.970), test predictions cluster tightly along the diagonal 45-degree identity line (y = &#375;).</div>
+    </div>
+
+    <h3>The 4 Essential Regression Evaluation Metrics</h3>
+
+    <div class="formula-card">
+      <div class="formula-title">1. Mean Absolute Error (MAE)</div>
+      <div class="formula-box">MAE = (1 / n) &times; &Sigma; |y&#7522; - &#375;&#7522;|</div>
+      <div class="formula-desc">
+        Average absolute distance between predictions and actual values. Measured in identical units to the target. Highly intuitive and robust to outliers.
+      </div>
+    </div>
+
+    <div class="formula-card">
+      <div class="formula-title">2. Mean Squared Error (MSE)</div>
+      <div class="formula-box">MSE = (1 / n) &times; &Sigma; (y&#7522; - &#375;&#7522;)&#178;</div>
+      <div class="formula-desc">
+        Average squared difference. Penalizes large errors quadratically. Measured in squared target units (e.g. dollars squared).
+      </div>
+    </div>
+
+    <div class="formula-card">
+      <div class="formula-title">3. Root Mean Squared Error (RMSE)</div>
+      <div class="formula-box">RMSE = &radic;MSE = &radic;[(1 / n) &times; &Sigma; (y&#7522; - &#375;&#7522;)&#178;]</div>
+      <div class="formula-desc">
+        Square root of MSE, restoring original target units while retaining the heavy penalty on large outlier mistakes.
+      </div>
+    </div>
+
+    <div class="formula-card">
+      <div class="formula-title">4. Coefficient of Determination (R&#178;)</div>
+      <div class="formula-box">R&#178; = 1 - [ &Sigma;(y&#7522; - &#375;&#7522;)&#178; / &Sigma;(y&#7522; - y&#772;)&#178; ] = 1 - [ SS_res / SS_tot ]</div>
+      <div class="formula-desc">
+        The proportion of total target variance explained by the model compared to a naive baseline that simply predicts the mean y&#772;.
+      </div>
+    </div>
+
+    <h3>Understanding R&#178; (R-Squared) Values</h3>
+    <ul>
+      <li><strong>R&#178; = 1.0 (100%):</strong> Perfect fit. Residual sum of squares <code>SS_res = 0</code>. Every prediction matches reality exactly.</li>
+      <li><strong>R&#178; = 0.85 (85%):</strong> Strong fit. The model accounts for 85% of the variance in target <code>y</code>; 15% remains unexplained noise.</li>
+      <li><strong>R&#178; = 0.0 (0%):</strong> Baseline fit. The model performs no better than predicting the flat average <code>y&#772;</code> for every observation.</li>
+      <li><strong>R&#178; &lt; 0 (Negative R&#178;):</strong> Catastrophic failure! On holdout test data, a model can produce negative R&#178; if its predictions have larger total squared errors than simply guessing the training mean!</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 13: IMPORTANT GRAPHS AND VISUAL LEARNING -->
+  <section id="sec-13" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 13</span>
+      <h2 class="section-title">Important Graphs and Visual Learning</h2>
+    </div>
+    <p class="section-intro">
+      In machine learning engineering, summary numbers (such as R&#178; or MAE) can easily mask critical model defects. Visualizing data and model behavior is mandatory for reliable diagnostics. Below are the key graphs every regression practitioner must master.
+    </p>
+
+    <!-- FIGURE 9.12: RESIDUAL PLOT -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 360" width="100%">
+  <rect width="860" height="360" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="430" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">RESIDUAL PLOTS: DIAGNOSING HOMOSCEDASTICITY VS PATTERNS</text>
+
+  <!-- Panel 1: Ideal Homoscedastic Scatter -->
+  <rect x="35" y="55" width="380" height="280" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <text x="225" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#16A34A" text-anchor="middle">&#10003; Ideal: Constant Variance (Homoscedastic)</text>
+  <!-- Horizontal zero line -->
+  <line x1="55" y1="180" x2="395" y2="180" stroke="#16A34A" stroke-width="2"/>
+  <text x="390" y="175" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#16A34A">e = 0</text>
+  <!-- Random uniform scatter -->
+  <circle cx="85" cy="165" r="4.5" fill="#4F46E5"/>
+  <circle cx="115" cy="200" r="4.5" fill="#4F46E5"/>
+  <circle cx="145" cy="170" r="4.5" fill="#4F46E5"/>
+  <circle cx="175" cy="155" r="4.5" fill="#4F46E5"/>
+  <circle cx="205" cy="210" r="4.5" fill="#4F46E5"/>
+  <circle cx="235" cy="175" r="4.5" fill="#4F46E5"/>
+  <circle cx="265" cy="190" r="4.5" fill="#4F46E5"/>
+  <circle cx="295" cy="160" r="4.5" fill="#4F46E5"/>
+  <circle cx="325" cy="205" r="4.5" fill="#4F46E5"/>
+  <circle cx="355" cy="170" r="4.5" fill="#4F46E5"/>
+  <text x="225" y="300" font-family="-apple-system, sans-serif" font-size="11" fill="#334155" text-anchor="middle">Even bounce above/below zero; no pattern.</text>
+  <text x="225" y="318" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#166534" text-anchor="middle">Assumptions Satisfied!</text>
+
+  <!-- Panel 2: Flawed Funnel / Non-linear Pattern -->
+  <rect x="445" y="55" width="380" height="280" rx="10" fill="#FEF2F2" stroke="#FECACA" stroke-width="1"/>
+  <text x="635" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#DC2626" text-anchor="middle">&#10007; Flawed: Heteroscedastic Funnel</text>
+  <!-- Horizontal zero line -->
+  <line x1="465" y1="180" x2="805" y2="180" stroke="#DC2626" stroke-width="2"/>
+  <text x="800" y="175" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#DC2626">e = 0</text>
+  <!-- Funnel widening scatter -->
+  <circle cx="495" cy="178" r="4.5" fill="#DC2626"/>
+  <circle cx="525" cy="182" r="4.5" fill="#DC2626"/>
+  <circle cx="555" cy="172" r="4.5" fill="#DC2626"/>
+  <circle cx="585" cy="192" r="4.5" fill="#DC2626"/>
+  <circle cx="615" cy="160" r="4.5" fill="#DC2626"/>
+  <circle cx="645" cy="215" r="4.5" fill="#DC2626"/>
+  <circle cx="675" cy="140" r="4.5" fill="#DC2626"/>
+  <circle cx="705" cy="235" r="4.5" fill="#DC2626"/>
+  <circle cx="735" cy="120" r="4.5" fill="#DC2626"/>
+  <circle cx="765" cy="255" r="4.5" fill="#DC2626"/>
+  <text x="635" y="300" font-family="-apple-system, sans-serif" font-size="11" fill="#991B1B" text-anchor="middle">Error spread expands as predictions grow.</text>
+  <text x="635" y="318" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B91C1C" text-anchor="middle">Requires Log Transform or Robust Errors</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.12: Residual diagnostic plot: Contrasting an ideal homoscedastic random scatter (left) against an invalid heteroscedastic funnel pattern (right).</div>
+    </div>
+
+    <!-- FIGURE 9.13: OUTLIER INFLUENCE -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 380" width="100%">
+  <rect width="760" height="380" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="380" y="32" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">HIGH-LEVERAGE OUTLIERS: HOW A SINGLE POINT ROTATES OLS</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="310" x2="700" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+  <line x1="80" y1="60" x2="80" y2="310" stroke="#CBD5E1" stroke-width="2"/>
+
+  <!-- Clean regression line (slope = 1.98) -->
+  <line x1="90" y1="290" x2="620" y2="70" stroke="#16A34A" stroke-width="3"/>
+  <text x="625" y="75" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">Clean Line (Slope &#8776; 1.98)</text>
+
+  <!-- Outlier-corrupted regression line (slope = 0.59) -->
+  <line x1="90" y1="260" x2="700" y2="160" stroke="#DC2626" stroke-width="3" stroke-dasharray="6,4"/>
+  <text x="705" y="165" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">Rotated Line (Slope &#8776; 0.59)</text>
+
+  <!-- Normal points -->
+  <circle cx="140" cy="270" r="5" fill="#4F46E5"/>
+  <circle cx="210" cy="240" r="5" fill="#4F46E5"/>
+  <circle cx="280" cy="210" r="5" fill="#4F46E5"/>
+  <circle cx="350" cy="180" r="5" fill="#4F46E5"/>
+  <circle cx="420" cy="140" r="5" fill="#4F46E5"/>
+  <circle cx="490" cy="110" r="5" fill="#4F46E5"/>
+
+  <!-- Extreme Outlier with High Leverage (far out in X, aberrant in Y) -->
+  <circle cx="670" cy="285" r="9" fill="#DC2626" stroke="#991B1B" stroke-width="2"/>
+  <rect x="520" y="300" width="180" height="30" rx="4" fill="#FEF2F2" stroke="#F87171" stroke-width="1"/>
+  <text x="610" y="320" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626" text-anchor="middle">&#9888; High-Leverage Outlier (7, 1)</text>
+
+  <!-- Explanation banner -->
+  <rect x="80" y="340" width="600" height="28" rx="4" fill="#F8FAFC"/>
+  <text x="380" y="358" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">Because squared error penalizes distance quadratically, an extreme high-leverage point exerts massive torque on OLS.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.13: Outlier leverage and influence: A single anomalous observation with high leverage pulls and rotates the OLS regression line downward.</div>
+    </div>
+
+    <h3>The 12 Mandatory Visual Learning Graphs Summary</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Diagnostic Graph</th>
+            <th>X-Axis / Y-Axis</th>
+            <th>Primary Engineering Insight</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>01</strong></td>
+            <td>Scatter Plot of Observations</td>
+            <td>Feature X vs Target Y</td>
+            <td>Inspects linearity, spread, and natural correlation before modeling.</td>
+          </tr>
+          <tr>
+            <td><strong>02</strong></td>
+            <td>Line of Best Fit</td>
+            <td>Feature X vs Target Y</td>
+            <td>Visualizes the fitted trajectory, slope steepness, and intercept baseline.</td>
+          </tr>
+          <tr>
+            <td><strong>03</strong></td>
+            <td>Comparing Candidate Lines</td>
+            <td>Feature X vs Target Y</td>
+            <td>Demonstrates why least squares selects the minimum SSE line over arbitrary alternatives.</td>
+          </tr>
+          <tr>
+            <td><strong>04</strong></td>
+            <td>Slope and Intercept Shifts</td>
+            <td>Feature X vs Target Y</td>
+            <td>Demonstrates geometric effects of positive, negative, zero slopes and parallel height shifts.</td>
+          </tr>
+          <tr>
+            <td><strong>05</strong></td>
+            <td>Vertical Residual Segments</td>
+            <td>Feature X vs Target Y</td>
+            <td>Shows individual prediction errors e&#7522; connecting points to the fitted line.</td>
+          </tr>
+          <tr>
+            <td><strong>06</strong></td>
+            <td>Actual vs Predicted Plot</td>
+            <td>Actual Y vs Predicted &#375;</td>
+            <td>Assesses calibration along the 45-degree identity line (y = &#375;).</td>
+          </tr>
+          <tr>
+            <td><strong>07</strong></td>
+            <td>Residual Plot</td>
+            <td>Predicted &#375; vs Residual e</td>
+            <td>Detects heteroscedasticity (funnel shape) and non-linear curvature patterns.</td>
+          </tr>
+          <tr>
+            <td><strong>08</strong></td>
+            <td>Loss Function Curves</td>
+            <td>Error e vs Loss Penalty</td>
+            <td>Contrasts quadratic penalty of MSE against linear penalty of MAE.</td>
+          </tr>
+          <tr>
+            <td><strong>09</strong></td>
+            <td>Gradient Descent Convergence</td>
+            <td>Epochs vs MSE Loss</td>
+            <td>Confirms smooth exponential decay toward the global minimum basin.</td>
+          </tr>
+          <tr>
+            <td><strong>10</strong></td>
+            <td>Outlier Influence Plot</td>
+            <td>Feature X vs Target Y</td>
+            <td>Identifies high-leverage points that torque or distort parameter estimates.</td>
+          </tr>
+          <tr>
+            <td><strong>11</strong></td>
+            <td>2D Line vs 3D Hyperplane</td>
+            <td>X&#8321;, X&#8322; vs Target Y</td>
+            <td>Visualizes multi-dimensional feature combination and planar decision boundaries.</td>
+          </tr>
+          <tr>
+            <td><strong>12</strong></td>
+            <td>Evaluation Scorecard</td>
+            <td>Model Variant vs Metrics</td>
+            <td>Quantitative benchmark comparing Simple vs Multiple regression performance.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 14: REGRESSION ASSUMPTIONS AND LIMITATIONS -->
+  <section id="sec-14" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 14</span>
+      <h2 class="section-title">Regression Assumptions and Limitations (LINE)</h2>
+    </div>
+    <p class="section-intro">
+      Ordinary Least Squares linear regression rests upon four classical statistical assumptions, remembered by the acronym <strong>LINE</strong>, plus three critical practical constraints.
+    </p>
+
+    <!-- LINE Framework Cards -->
+    <div class="card card-def">
+      <div class="card-title"><span>&#128207;</span> L &mdash; Linearity of the Relationship</div>
+      <p>
+        The true underlying relationship between features and target must be reasonably linear. If the true data follows an exponential curve or a U-shaped parabola, a straight line will systematically underfit.
+        <br><strong>Diagnostic Check:</strong> Inspect the scatter plot and residual plot. If residuals show a curved U-shape, linearity is violated.
+      </p>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#128065;</span> I &mdash; Independence of Residuals</div>
+      <p>
+        Individual observation errors must be statistically independent of one another. Autocorrelation (common in time-series data where yesterday's temperature correlates with today's) or clustered groupings (multiple hospital visits by the same patient) violate independence.
+        <br><strong>Diagnostic Check:</strong> Durbin-Watson test statistic (ideal value &approx; 2.0).
+      </p>
+    </div>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#128200;</span> N &mdash; Normality of Residuals</div>
+      <p>
+        The residuals should be approximately normally distributed with mean zero: <code>e &sim; N(0, &sigma;&#178;)</code>. While minor non-normality does not destroy prediction accuracy in large sample sizes (via the Central Limit Theorem), it is required for valid hypothesis tests, p-values, and confidence intervals.
+        <br><strong>Diagnostic Check:</strong> Q-Q (Quantile-Quantile) plot or Shapiro-Wilk test.
+      </p>
+    </div>
+
+    <div class="card card-amber">
+      <div class="card-title"><span>&#9878;</span> E &mdash; Equal Variance (Homoscedasticity)</div>
+      <p>
+        The variance of the residuals must remain constant across all predicted values. If error spread widens like a megaphone (funnel shape) as predictions grow, the model suffers from <em>heteroscedasticity</em>.
+        <br><strong>Remedy:</strong> Apply a logarithmic transformation <code>np.log1p(y)</code> to stabilize variance.
+      </p>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The Danger of Extrapolation Beyond the Training Domain</div>
+      <p>
+        Linear regression models are only valid <strong>within the numerical range of observed training data</strong>. If your model trained on houses between 800 and 3,500 sq ft, predicting the price of an 18,000 sq ft mega-mansion is pure reckless speculation. The linear assumption almost certainly breaks down at extreme scales!
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 15: UNDERFITTING, OVERFITTING AND GENERALIZATION -->
+  <section id="sec-15" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 15</span>
+      <h2 class="section-title">Underfitting, Overfitting and Generalization</h2>
+    </div>
+    <p class="section-intro">
+      Connecting directly to the principles established in Topic 8 (Train, Validation &amp; Test Sets), every linear model must navigate the fundamental trade-off between <strong>Bias</strong> (underfitting) and <strong>Variance</strong> (overfitting).
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Model State</th>
+            <th>Root Cause</th>
+            <th>Training Error</th>
+            <th>Test Error</th>
+            <th>Practical Engineering Remedy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Underfitting (High Bias)</strong></td>
+            <td>Model is too simplistic to capture the true phenomenon (e.g. fitting a straight line through complex non-linear data).</td>
+            <td>High Error (Poor)</td>
+            <td>High Error (Poor)</td>
+            <td>Add polynomial features (<code>x&#178;, x&#179;</code>), engineer interaction terms, or adopt non-linear models (Decision Trees, Random Forests).</td>
+          </tr>
+          <tr>
+            <td><strong>Optimal Balance</strong></td>
+            <td>Model captures genuine underlying relationships while ignoring random measurement noise.</td>
+            <td>Low Error (Good)</td>
+            <td>Low Error (Good)</td>
+            <td>Deploy and monitor model performance on live inference data.</td>
+          </tr>
+          <tr>
+            <td><strong>Overfitting (High Variance)</strong></td>
+            <td>Model is excessively flexible (e.g. 15th-degree polynomial), memorizing training noise and specific sample quirks.</td>
+            <td>Near-Zero Error</td>
+            <td>Massive Error (Catastrophic)</td>
+            <td>Prune unnecessary features, collect more training samples, or apply regularization (Ridge L2 or Lasso L1 penalties).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-success">
+      <div class="card-title"><span>&#9745;</span> The Golden Rule of Model Evaluation</div>
+      <p>
+        Always evaluate your final regression model on a <strong>strictly quarantined holdout test set</strong> that was never seen during training or hyperparameter selection. A model that achieves <code>R&#178; = 0.99</code> on training data but drops to <code>R&#178; = 0.45</code> on test data is an overfitted failure that cannot be trusted in production.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- SECTION 16: COMPLETE PYTHON PRACTICAL LAB -->
+  <section id="sec-16" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 16</span>
+      <h2 class="section-title">Complete Python Practical Lab</h2>
+    </div>
+    <p class="section-intro">
+      In this hands-on laboratory, we build an end-to-end, reproducible linear regression workflow using a 100-sample residential property dataset. We perform an 80/20 train/test split, fit both Simple and Multiple Linear Regression models using Scikit-Learn, evaluate performance using MAE, MSE, RMSE, and R&#178;, inspect coefficients, and assert zero data leakage.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">topic9_complete_practical_lab.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+
+print("=== STEP 1: CREATE SYNTHETIC RESIDENTIAL PROPERTY DATASET ===")
+# Deterministic seed for reproducible evaluation
+np.random.seed(42)
+n_houses = 100
+
+# Feature generation with realistic ranges
+area = np.random.uniform(800, 3200, n_houses)
+bedrooms = np.random.choice([1, 2, 3, 4, 5], size=n_houses, p=[0.1, 0.25, 0.35, 0.2, 0.1])
+age = np.random.uniform(1, 35, n_houses)
+distance = np.random.uniform(2, 20, n_houses)
+noise = np.random.normal(0, 20, n_houses)
+
+# Ground truth underlying price formula (with stochastic noise)
+price = 50.0 + 0.14 * area + 22.0 * bedrooms - 1.2 * age - 2.8 * distance + noise
+
+df = pd.DataFrame({
+    'House_ID': [f'HSE-{i:04d}' for i in range(1, n_houses + 1)],
+    'Area_SqFt': np.round(area, 0),
+    'Bedrooms': bedrooms,
+    'Age_Years': np.round(age, 1),
+    'Distance_Miles': np.round(distance, 1),
+    'Price_kUSD': np.round(price, 1)
+})
+
+print(f"Dataset generated. Shape: {df.shape}")
+print(df.head(3))
+
+print("\n=== STEP 2: LEAK-FREE 80/20 TRAIN/TEST SPLIT ===")
+train_df, test_df = train_test_split(df, test_size=0.20, random_state=42)
+
+print(f"Training Set: {len(train_df)} samples (80%)")
+print(f"Testing Set:  {len(test_df)} samples (20%)")
+
+# Verify zero ID leakage between splits
+overlap = set(train_df['House_ID']).intersection(set(test_df['House_ID']))
+assert len(overlap) == 0, f"Data Leakage detected! Shared IDs: {overlap}"
+print("&#10003; Zero ID Overlap Verified across Train and Test sets!")
+
+print("\n=== STEP 3: FIT SIMPLE LINEAR REGRESSION (AREA ONLY) ===")
+X_train_simple = train_df[['Area_SqFt']]
+y_train = train_df['Price_kUSD']
+X_test_simple = test_df[['Area_SqFt']]
+y_test = test_df['Price_kUSD']
+
+slr = LinearRegression()
+slr.fit(X_train_simple, y_train)
+
+y_pred_train_slr = slr.predict(X_train_simple)
+y_pred_test_slr = slr.predict(X_test_simple)
+
+slr_test_r2 = r2_score(y_test, y_pred_test_slr)
+slr_test_mae = mean_absolute_error(y_test, y_pred_test_slr)
+slr_test_rmse = np.sqrt(mean_squared_error(y_test, y_pred_test_slr))
+
+print(f"SLR Fitted Intercept: {slr.intercept_:.2f} kUSD")
+print(f"SLR Fitted Slope:     {slr.coef_[0]:.4f} kUSD / sq ft")
+print(f"SLR Test R&#178; Score:     {slr_test_r2:.4f}")
+print(f"SLR Test MAE:         ${slr_test_mae:.2f}k USD")
+print(f"SLR Test RMSE:        ${slr_test_rmse:.2f}k USD")
+
+print("\n=== STEP 4: FIT MULTIPLE LINEAR REGRESSION (4 FEATURES) ===")
+feature_cols = ['Area_SqFt', 'Bedrooms', 'Age_Years', 'Distance_Miles']
+X_train_multi = train_df[feature_cols]
+X_test_multi = test_df[feature_cols]
+
+mlr = LinearRegression()
+mlr.fit(X_train_multi, y_train)
+
+y_pred_train_mlr = mlr.predict(X_train_multi)
+y_pred_test_mlr = mlr.predict(X_test_multi)
+
+mlr_test_r2 = r2_score(y_test, y_pred_test_mlr)
+mlr_test_mae = mean_absolute_error(y_test, y_pred_test_mlr)
+mlr_test_rmse = np.sqrt(mean_squared_error(y_test, y_pred_test_mlr))
+
+print(f"MLR Fitted Intercept: {mlr.intercept_:.2f}")
+for col, coef in zip(feature_cols, mlr.coef_):
+    print(f"  {col:15s}: {coef:+.4f}")
+
+print(f"MLR Test R&#178; Score:     {mlr_test_r2:.4f}")
+print(f"MLR Test MAE:         ${mlr_test_mae:.2f}k USD")
+print(f"MLR Test RMSE:        ${mlr_test_rmse:.2f}k USD")
+
+print("\n=== STEP 5: VERIFICATION ASSERTIONS ===")
+assert mlr_test_r2 &gt; slr_test_r2, "Multiple regression must outperform simple regression!"
+assert mlr_test_rmse &lt; slr_test_rmse, "Multiple regression must reduce test RMSE!"
+assert np.all(np.isfinite(y_pred_test_mlr)), "Predictions must be finite numbers!"
+assert y_pred_test_mlr.shape == (20,), "Predictions must match test set shape!"
+print("&#10003; All Model Assertions &amp; Benchmarks Passed Successfully!")</code></pre>
+    </div>
+
+    <!-- FIGURE 9.14: LAB EVALUATION SUMMARY -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 340" width="100%">
+  <rect width="880" height="340" rx="14" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5"/>
+  <text x="440" y="30" font-family="-apple-system, sans-serif" font-size="15" font-weight="700" fill="#0F172A" text-anchor="middle">PYTHON PRACTICAL LAB EVALUATION SCORECARD</text>
+
+  <!-- Left: Simple Linear Regression (1 Feature) -->
+  <rect x="35" y="55" width="385" height="260" rx="10" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.5"/>
+  <rect x="50" y="70" width="355" height="28" rx="6" fill="#64748B"/>
+  <text x="227" y="89" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">SIMPLE LINEAR REGRESSION (AREA ONLY)</text>
+  
+  <text x="60" y="125" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#334155">Test R&#178; Score:</text>
+  <text x="380" y="125" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#4F46E5" text-anchor="end">0.8583 (85.8%)</text>
+
+  <text x="60" y="155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#334155">Test MAE:</text>
+  <text x="380" y="155" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#334155" text-anchor="end">$35.04k USD</text>
+
+  <text x="60" y="185" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#334155">Test RMSE:</text>
+  <text x="380" y="185" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#334155" text-anchor="end">$42.71k USD</text>
+
+  <text x="60" y="215" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#334155">Fitted Slope (Area):</text>
+  <text x="380" y="215" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#0284C7" text-anchor="end">+$143.0 / sq ft</text>
+
+  <rect x="50" y="240" width="355" height="60" rx="6" fill="#F1F5F9"/>
+  <text x="227" y="260" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#475569" text-anchor="middle">Interpretation:</text>
+  <text x="227" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">Solid baseline fit, but omits bedrooms, age, and location.</text>
+
+  <!-- Right: Multiple Linear Regression (4 Features) -->
+  <rect x="460" y="55" width="385" height="260" rx="10" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5"/>
+  <rect x="475" y="70" width="355" height="28" rx="6" fill="#16A34A"/>
+  <text x="652" y="89" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF" text-anchor="middle">MULTIPLE LINEAR REGRESSION (4 FEATURES)</text>
+
+  <text x="485" y="125" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#166534">Test R&#178; Score:</text>
+  <text x="805" y="125" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#16A34A" text-anchor="end">0.9700 (97.0%) &#10003;</text>
+
+  <text x="485" y="155" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#166534">Test MAE:</text>
+  <text x="805" y="155" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#166534" text-anchor="end">$15.98k USD (-54%)</text>
+
+  <text x="485" y="185" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#166534">Test RMSE:</text>
+  <text x="805" y="185" font-family="Courier New, monospace" font-size="14" font-weight="700" fill="#166534" text-anchor="end">$19.67k USD (-54%)</text>
+
+  <text x="485" y="215" font-family="-apple-system, sans-serif" font-size="13" font-weight="600" fill="#166534">Key Coefficients:</text>
+  <text x="805" y="215" font-family="Courier New, monospace" font-size="12" font-weight="700" fill="#14532D" text-anchor="end">Bed: +$20.4k | Age: -$1.4k/yr</text>
+
+  <rect x="475" y="240" width="355" height="60" rx="6" fill="#DCFCE7"/>
+  <text x="652" y="260" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">Superior Generalization:</text>
+  <text x="652" y="280" font-family="-apple-system, sans-serif" font-size="11" fill="#166534" text-anchor="middle">Error halved by incorporating multi-dimensional feature context.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 9.14: Python Practical Lab evaluation scorecard: Multiple linear regression cuts test error by 54% and boosts explained variance to 97.0%.</div>
+    </div>
+
+    <h3>Quantitative Execution Benchmark Results</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Model Architecture</th>
+            <th>Features Used</th>
+            <th>Test R&#178; Score</th>
+            <th>Test MAE</th>
+            <th>Test RMSE</th>
+            <th>Engineering Assessment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Simple Linear Regression</strong></td>
+            <td>1 Feature (Living Area)</td>
+            <td><strong>0.8583 (85.8%)</strong></td>
+            <td>$35.04k USD</td>
+            <td>$42.71k USD</td>
+            <td>Solid baseline, but limited by omitted features.</td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Linear Regression</strong></td>
+            <td>4 Features (Area, Bed, Age, Dist)</td>
+            <td><strong>0.9700 (97.0%)</strong></td>
+            <td><strong>$15.98k USD</strong></td>
+            <td><strong>$19.67k USD</strong></td>
+            <td><strong>Champion Model:</strong> Errors halved (-54%) by capturing multi-factor context.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 17: REAL-LIFE CASE STUDIES -->
+  <section id="sec-17" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 17</span>
+      <h2 class="section-title">Real-Life Industry Case Studies</h2>
+    </div>
+    <p class="section-intro">
+      Examine four detailed real-world engineering case studies showing how linear regression is deployed in enterprise production systems.
+    </p>
+
+    <!-- Case Study A -->
+    <div class="card card-def">
+      <div class="card-title"><span>&#127968;</span> Case Study A: Real Estate Property Valuation (PropTech)</div>
+      <p><strong>The Business Problem:</strong> An automated online mortgage platform estimates home appraisal values to pre-approve property loans without waiting 3 weeks for an in-person appraiser.</p>
+      <p><strong>Input Features:</strong> Interior Square Footage, Bedroom Count, Bathroom Count, Construction Year, Lot Size.</p>
+      <p><strong>Numerical Target:</strong> Fair Market Value in US Dollars (continuous).</p>
+      <p><strong>Why Regression is Appropriate:</strong> The objective is estimating an exact financial price point rather than a broad price tier.</p>
+      <p><strong>Model Limitations:</strong> The linear model cannot capture hyper-local neighborhood prestige (e.g., homes on the north side of the street having ocean views) unless explicitly encoded as spatial coordinates or neighborhood indicator variables.</p>
+      <p><strong>Key Metrics &amp; Diagnostics:</strong> RMSE in US Dollars, Residual Plots to check for heteroscedasticity across luxury homes.</p>
+    </div>
+
+    <!-- Case Study B -->
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#127891;</span> Case Study B: Student Study Habits &amp; Academic Outcomes (EdTech)</div>
+      <p><strong>The Business Problem:</strong> A university learning analytics department models student exam performance to detect at-risk students who need tutoring intervention early in the semester.</p>
+      <p><strong>Input Features:</strong> Online Lecture Hours Watched, Practice Problems Completed, Assignment Submission Timeliness.</p>
+      <p><strong>Numerical Target:</strong> Final Course Percentage Score (0.0&ndash;100.0).</p>
+      <p><strong>Why Regression is Appropriate:</strong> Continuous grading scale allows fine-grained tracking of improvement.</p>
+      <p><strong>Model Limitations:</strong> <em>Diminishing Marginal Returns</em>: Moving from 2 hours of study to 4 hours yields huge gains, but studying from 28 hours to 30 hours yields near-zero gains (or even exhaustion). A pure straight line fails to capture this non-linear saturation curve unless a logarithmic transform is applied.</p>
+      <p><strong>Key Metrics &amp; Diagnostics:</strong> Mean Absolute Error (MAE) in percentage points.</p>
+    </div>
+
+    <!-- Case Study C -->
+    <div class="card card-concept">
+      <div class="card-title"><span>&#128200;</span> Case Study C: Retail Supply Chain Demand Forecasting (E-Commerce)</div>
+      <p><strong>The Business Problem:</strong> A retail chain forecasts next-week unit sales across 500 grocery stores to optimize warehouse replenishment and minimize perishable food waste.</p>
+      <p><strong>Input Features:</strong> Promotional Discount Depth (%), Marketing Ad Spend, Local Foot Traffic Count, Average Competitor Price.</p>
+      <p><strong>Numerical Target:</strong> Total Weekly Unit Sales (continuous count).</p>
+      <p><strong>Why Regression is Appropriate:</strong> Warehouse inventory planning requires exact order quantities.</p>
+      <p><strong>Model Limitations:</strong> Simple linear regression ignores calendar seasonality (e.g. huge spikes during Thanksgiving and Christmas) and inventory stockout bounds (sales cannot fall below zero).</p>
+      <p><strong>Key Metrics &amp; Diagnostics:</strong> Root Mean Squared Error (RMSE) to heavily penalize stockouts.</p>
+    </div>
+
+    <!-- Case Study D -->
+    <div class="card card-success">
+      <div class="card-title"><span>&#9889;</span> Case Study D: Municipal Electric Power Grid Load Forecasting (Energy)</div>
+      <p><strong>The Business Problem:</strong> A regional electrical utility forecasts hourly megawatt (MW) load to dispatch natural gas peaker plants economically and prevent grid blackouts.</p>
+      <p><strong>Input Features:</strong> Ambient Outside Temperature (&deg;F), Humidity, Solar Irradiance, Industrial Factory Operating Index.</p>
+      <p><strong>Numerical Target:</strong> Grid Demand in Megawatts (MW).</p>
+      <p><strong>Why Regression is Appropriate:</strong> Continuous power generation must match instantaneous consumer load.</p>
+      <p><strong>Model Limitations:</strong> <em>The U-Shaped Temperature Curve</em>: Power demand is high at 20&deg;F (electric heating) and high at 95&deg;F (air conditioning), but lowest at a comfortable 68&deg;F. Fitting a single straight line through temperature fails completely! Engineers must use piecewise linear splines or polynomial terms <code>Temp&#178;</code> to model heating and cooling regimes.</p>
+      <p><strong>Key Metrics &amp; Diagnostics:</strong> Mean Absolute Percentage Error (MAPE) and Durbin-Watson tests for time-series autocorrelation.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 18: COMMON BEGINNER MISTAKES -->
+  <section id="sec-18" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 18</span>
+      <h2 class="section-title">16 Common Beginner Mistakes &amp; Fixes</h2>
+    </div>
+    <p class="section-intro">
+      Learn to recognize and prevent the 16 most frequent mistakes made by junior machine learning practitioners when developing and evaluating linear regression models.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Common Beginner Mistake</th>
+            <th>Why It Causes Serious Failures</th>
+            <th>Defensive Safe Engineering Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>01</strong></td>
+            <td>Confusing Regression with Classification</td>
+            <td>Applying linear regression to predict binary categories (0 or 1) produces unbounded outputs like -1.4 or +2.8, violating probability laws.</td>
+            <td>Use <strong>Logistic Regression</strong> for discrete categories; reserve <strong>Linear Regression</strong> for continuous quantities.</td>
+          </tr>
+          <tr>
+            <td><strong>02</strong></td>
+            <td>Assuming all data must fit a straight line</td>
+            <td>Forcing a straight line onto curved or periodic data creates massive, systematic underfitting (high bias).</td>
+            <td>Always plot a scatter plot and residual plot first. If U-shaped patterns appear, engineer polynomial terms.</td>
+          </tr>
+          <tr>
+            <td><strong>03</strong></td>
+            <td>Confusing Slope (&beta;&#8321;) with Intercept (&beta;&#8320;)</td>
+            <td>Misinterpreting the baseline offset as the rate of change leads to absurd business conclusions.</td>
+            <td>Remember: Slope is the <em>rate of change</em> (&Delta;y/&Delta;x); Intercept is the <em>height at x = 0</em>.</td>
+          </tr>
+          <tr>
+            <td><strong>04</strong></td>
+            <td>Confusing Actual (y) with Predicted (&#375;)</td>
+            <td>Using predictions in place of ground truth corrupts residual calculations and invalidates offline evaluations.</td>
+            <td>Strictly maintain notation: <code>y</code> = measured ground truth, <code>&#375;</code> = model output.</td>
+          </tr>
+          <tr>
+            <td><strong>05</strong></td>
+            <td>Calculating Residuals with Inverted Sign</td>
+            <td>Writing <code>e = &#375; - y</code> inverts the meaning of overestimation and underestimation.</td>
+            <td>Always use the standard statistical definition: <code>e&#7522; = y&#7522; - &#375;&#7522;</code> (Actual minus Predicted).</td>
+          </tr>
+          <tr>
+            <td><strong>06</strong></td>
+            <td>Interpreting High R&#178; as Proof of Causation</td>
+            <td>High R&#178; only indicates observational correlation. Confounders or reverse causality may be at play.</td>
+            <td>Never claim feature X "causes" target Y without randomized controlled experimental trials (A/B tests).</td>
+          </tr>
+          <tr>
+            <td><strong>07</strong></td>
+            <td>Evaluating Exclusively on Training Data</td>
+            <td>Training error measures memorization. A complex model can achieve low training error while failing on unseen data.</td>
+            <td>Always split data into independent train and holdout test sets (Topic 8).</td>
+          </tr>
+          <tr>
+            <td><strong>08</strong></td>
+            <td>Using the Test Set for Feature Selection</td>
+            <td>Repeatedly tweaking model features after checking test R&#178; causes test-set overfitting and evaluation bias.</td>
+            <td>Use a validation set or K-Fold Cross-Validation for tuning; evaluate on the test set strictly once at the end.</td>
+          </tr>
+          <tr>
+            <td><strong>09</strong></td>
+            <td>Assuming Low Training Error Guarantees Test Success</td>
+            <td>A model may have memorized training outliers or noise, leading to catastrophic test generalization error.</td>
+            <td>Compare training R&#178; and test R&#178;. If a large gap (&gt; 0.15) exists, the model is overfitting.</td>
+          </tr>
+          <tr>
+            <td><strong>10</strong></td>
+            <td>Ignoring Residual Plot Patterns</td>
+            <td>Summary metrics like R&#178; = 0.90 can hide extreme non-linearity or heteroscedasticity.</td>
+            <td>Always plot residuals against predicted values. Look for uniform horizontal scatter around zero.</td>
+          </tr>
+          <tr>
+            <td><strong>11</strong></td>
+            <td>Believing Feature Scaling is Mandatory for OLS</td>
+            <td>Ordinary Least Squares calculates analytical closed-form coefficients that are scale-invariant.</td>
+            <td>Scaling is optional for unregularized OLS; it is mandatory when using Gradient Descent or Ridge/Lasso penalties.</td>
+          </tr>
+          <tr>
+            <td><strong>12</strong></td>
+            <td>Ignoring Influential Outliers</td>
+            <td>Because MSE squares errors, a single high-leverage anomaly can torque the entire regression line.</td>
+            <td>Use scatter plots, Cook's distance, or <code>RobustScaler</code> to detect and inspect high-leverage outliers.</td>
+          </tr>
+          <tr>
+            <td><strong>13</strong></td>
+            <td>Extrapolating Far Beyond Training Domain</td>
+            <td>Linear models have no concept of physical boundaries and will output negative prices or impossible physics.</td>
+            <td>Never use a model to predict inputs far outside the min/max bounds of the observed training dataset.</td>
+          </tr>
+          <tr>
+            <td><strong>14</strong></td>
+            <td>Interpreting Coefficients with Multicollinearity</td>
+            <td>When features are strongly correlated, individual coefficients become noisy, unstable, and uninterpretable.</td>
+            <td>Inspect feature correlation matrices (<code>df.corr()</code>); prune redundant features with VIF &gt; 5.0.</td>
+          </tr>
+          <tr>
+            <td><strong>15</strong></td>
+            <td>Reporting MSE Without Stating Squared Units</td>
+            <td>Reporting "an error of 450" when the target is dollars leads stakeholders to think the error is $450 instead of $450&#178;.</td>
+            <td>Always report <strong>RMSE</strong> or <strong>MAE</strong> alongside MSE so stakeholders understand real dollar units.</td>
+          </tr>
+          <tr>
+            <td><strong>16</strong></td>
+            <td>Relying on a Single Evaluation Metric</td>
+            <td>R&#178; tells you explained variance; MAE tells you typical error; RMSE penalizes big mistakes. None is complete alone.</td>
+            <td>Always report a holistic metric suite: <code>MAE</code>, <code>RMSE</code>, and <code>R&#178;</code> together.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 19: GLOSSARY, REVISION AND FINAL EXERCISE -->
+  <section id="sec-19" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 19</span>
+      <h2 class="section-title">Glossary, Revision &amp; Hands-On Exercise</h2>
+    </div>
+    <p class="section-intro">
+      Consolidate your mastery of Linear Regression with a production workflow checklist, comprehensive glossary, interactive revision questions, and a capstone practical assignment.
+    </p>
+
+    <!-- Production Checklist -->
+    <div class="card card-success">
+      <div class="card-title"><span>&#9745;</span> Production Linear Regression Workflow Checklist</div>
+      <ul>
+        <li><strong>Step 1:</strong> Plot a scatter plot of features vs target to verify approximate linearity.</li>
+        <li><strong>Step 2:</strong> Check feature correlation matrix to identify and eliminate severe multicollinearity.</li>
+        <li><strong>Step 3:</strong> Partition data into independent train and holdout test sets using a fixed <code>random_state</code>.</li>
+        <li><strong>Step 4:</strong> Fit <code>LinearRegression</code> strictly on the training partition (never touch test data).</li>
+        <li><strong>Step 5:</strong> Inspect fitted intercept and coefficients; confirm that parameter signs align with domain intuition.</li>
+        <li><strong>Step 6:</strong> Generate predictions and compute MAE, MSE, RMSE, and R&#178; across training and testing sets.</li>
+        <li><strong>Step 7:</strong> Plot residuals against predicted values; verify homoscedasticity and absence of curved patterns.</li>
+        <li><strong>Step 8:</strong> Plot actual vs predicted values along the 45-degree identity line to confirm calibration.</li>
+      </ul>
+    </div>
+
+    <h3>Comprehensive Glossary of Essential Terms</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Technical Term</th>
+            <th>Formal Engineering Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Linear Regression</strong></td>
+            <td>A supervised learning model that predicts a continuous target as a linear combination of input features and parameters.</td>
+          </tr>
+          <tr>
+            <td><strong>Ordinary Least Squares (OLS)</strong></td>
+            <td>An estimation method that calculates model parameters by minimizing the sum of squared vertical residuals (SSE).</td>
+          </tr>
+          <tr>
+            <td><strong>Slope (&beta;&#8321;)</strong></td>
+            <td>The rate of change in predicted target per unit increase in input feature (rise over run: &Delta;y / &Delta;x).</td>
+          </tr>
+          <tr>
+            <td><strong>Intercept (&beta;&#8320;)</strong></td>
+            <td>The expected value of the target when all input features equal zero (y-axis crossing point).</td>
+          </tr>
+          <tr>
+            <td><strong>Residual (e&#7522;)</strong></td>
+            <td>The vertical difference between actual observed value and predicted model value: <code>e&#7522; = y&#7522; - &#375;&#7522;</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Sum of Squared Errors (SSE)</strong></td>
+            <td>The aggregated sum of squared residuals across all training observations: <code>&Sigma; (y&#7522; - &#375;&#7522;)&#178;</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Mean Squared Error (MSE)</strong></td>
+            <td>The arithmetic mean of squared residuals: <code>SSE / n</code>. The primary loss function for regression.</td>
+          </tr>
+          <tr>
+            <td><strong>Root Mean Squared Error (RMSE)</strong></td>
+            <td>The square root of MSE. Restores original target units while maintaining quadratic penalty on large errors.</td>
+          </tr>
+          <tr>
+            <td><strong>Mean Absolute Error (MAE)</strong></td>
+            <td>The average magnitude of absolute errors: <code>(1/n) &Sigma; |y&#7522; - &#375;&#7522;|</code>. Robust against extreme outliers.</td>
+          </tr>
+          <tr>
+            <td><strong>R-Squared (R&#178;)</strong></td>
+            <td>Coefficient of determination. Measures the proportion of target variance explained by the regression model.</td>
+          </tr>
+          <tr>
+            <td><strong>Gradient Descent</strong></td>
+            <td>An iterative optimization algorithm that updates parameters in the direction of the negative gradient of the loss surface.</td>
+          </tr>
+          <tr>
+            <td><strong>Learning Rate (&alpha;)</strong></td>
+            <td>A hyperparameter controlling the step size taken along the gradient during optimization.</td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Regression</strong></td>
+            <td>A linear model incorporating two or more independent input features, forming a multi-dimensional hyperplane.</td>
+          </tr>
+          <tr>
+            <td><strong>Multicollinearity</strong></td>
+            <td>A condition where two or more predictor features are highly linearly correlated, causing unstable coefficient estimates.</td>
+          </tr>
+          <tr>
+            <td><strong>Homoscedasticity</strong></td>
+            <td>The statistical assumption that residual variance remains constant across all levels of predicted target values.</td>
+          </tr>
+          <tr>
+            <td><strong>Heteroscedasticity</strong></td>
+            <td>The violation of equal error variance, typically displaying a megaphone or funnel pattern on a residual plot.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>12 Interactive Revision Questions &amp; Detailed Explanations</h3>
+
+    <details>
+      <summary><span>&#10067;</span> Question 1: What is the primary difference between regression and classification?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> <strong>Classification</strong> predicts discrete categorical labels (e.g. Spam vs Not Spam, Cat vs Dog, 0 or 1). <strong>Regression</strong> predicts continuous numerical values along a real-number continuum (e.g. house price in dollars, temperature in degrees, vehicle fuel efficiency in MPG).
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 2: In the equation &#375; = 3.5x + 12, calculate &#375; when x = 4.0.</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Step-by-step arithmetic:
+        <br><code>&#375; = 3.5(4.0) + 12 = 14.0 + 12 = 26.0</code>.
+        <br>The model predicts an output value of <strong>26.0</strong>.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 3: An observed data point is (x = 3, y = 18). If the model predicts &#375; = 20, what is the residual?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Using the standard formula <code>e&#7522; = y&#7522; - &#375;&#7522;</code>:
+        <br><code>e = 18 - 20 = -2.0</code>.
+        <br>The residual is <strong>-2.0</strong>, meaning the model <em>overestimated</em> the true target by 2.0 units.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 4: Why are residuals measured vertically instead of perpendicularly to the line?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Because our predictive task is strictly asymmetric: we are given the input feature <code>x</code> as a fixed, error-free quantity, and our sole objective is predicting the target <code>y</code>. Therefore, the error we want to penalize and minimize is strictly the vertical discrepancy along the target dimension.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 5: Why does Mean Squared Error (MSE) square the residuals instead of taking a simple sum?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> In Ordinary Least Squares, positive errors (underestimates) and negative errors (overestimates) naturally sum to exact zero. If we didn't square or take absolute values, large positive and negative mistakes would cancel each other out, making a terrible model appear flawless. Squaring ensures all errors contribute positive penalties and creates a smooth, differentiable parabola for optimization.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 6: What does an R&#178; score of 0.82 mean in plain English?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> An R&#178; score of 0.82 means that <strong>82% of the variance</strong> in the target variable is successfully explained and accounted for by the linear model. The remaining 18% of variance is due to unobserved factors, measurement noise, or non-linear effects.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 7: Can R&#178; ever be negative? If so, when?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> <strong>Yes!</strong> On independent holdout test data, R&#178; can become negative. The R&#178; baseline is 0.0, which corresponds to predicting the flat average of the training data. If your model makes wildly inaccurate predictions on unseen test data, its residual sum of squares (<code>SS_res</code>) will be larger than the total variance (<code>SS_tot</code>), resulting in a negative R&#178; score.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 8: How do you interpret a multiple regression coefficient &beta;&#8321; = +35.0 for feature x&#8321;?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> For each one-unit increase in feature <code>x&#8321;</code>, the expected target value increases by <strong>35.0 units</strong>, <em>holding all other features in the model completely constant</em> (the ceteris paribus condition).
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 9: What is multicollinearity and how does it affect linear regression?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Multicollinearity occurs when two or more input features are strongly correlated with each other (e.g. square feet and room count). While it does not reduce the model's overall predictive power or R&#178;, it makes individual coefficient estimates wildly unstable, inflating their standard errors and making it impossible to interpret the unique contribution of each feature.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 10: What does a funnel-shaped pattern on a residual plot indicate?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> A funnel (or megaphone) shape indicates <strong>heteroscedasticity</strong>&mdash;meaning the variance of prediction errors is not constant, but expands as predictions grow. This violates the equal-variance assumption of OLS and requires transforming the target (e.g., using <code>np.log1p(y)</code>) or using robust standard errors.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 11: Why does a single extreme outlier have so much power to rotate an OLS regression line?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Because Ordinary Least Squares minimizes the <em>squared</em> residuals: <code>SSE = &Sigma; e&#7522;&#178;</code>. An outlier that is far away from the line produces a massive error; squaring that error (e.g., <code>100&#178; = 10,000</code>) creates an immense penalty that dominates all other points, forcing the line to pivot toward the outlier to reduce that single huge squared penalty.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 12: Why is extrapolating far beyond the observed training range dangerous?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Linear regression assumes a constant straight-line relationship across the entire universe. In reality, physical and economic relationships are only approximately linear within the observed range. Extrapolating to extreme values ignores physical limits, diminishing returns, and non-linear regime shifts, leading to wildly invalid predictions (e.g., negative prices or infinite speeds).
+      </div>
+    </details>
+
+    <h3>Scenario-Based Engineering Challenges</h3>
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 1: The Non-Linear Commute Time Model</div>
+      <p>
+        <strong>Scenario:</strong> You fit a simple linear regression model predicting morning vehicle commute time (minutes) from distance to office (miles). Your model achieves <code>R&#178; = 0.88</code>. However, when inspecting the residual plot, you observe a clear U-shaped curved pattern: residuals are positive for 1&ndash;5 miles, negative for 6&ndash;15 miles, and positive again for &gt;20 miles.
+      </p>
+      <p>
+        <strong>Challenge:</strong> What does this diagnostic pattern mean, and how should you upgrade your model?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> The U-shaped residual pattern proves that the underlying relationship is <strong>non-linear</strong> (violating the Linearity assumption). Highway speeds and congestion create non-linear travel dynamics.
+        <br><strong>Fix:</strong> Upgrade the feature matrix by adding a quadratic polynomial feature <code>Distance&#178;</code> or fitting a spline model. This absorbs the curvature and restores random, zero-centered residuals.
+      </p>
+    </div>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 2: The Expanding Luxury Home Residual Funnel</div>
+      <p>
+        <strong>Scenario:</strong> A real estate regression model predicts home prices. For starter homes ($150k&ndash;$300k), residuals are small (&plusmn;$15k). For luxury homes ($1.5M&ndash;$3.0M), residuals explode to &plusmn;$400k, creating a distinct megaphone funnel on the residual plot.
+      </p>
+      <p>
+        <strong>Challenge:</strong> Which classical regression assumption is violated, and what mathematical transformation fixes it?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> This is a classic violation of <strong>Homoscedasticity</strong> (equal error variance). Price variance naturally scales proportionally with asset value.
+        <br><strong>Fix:</strong> Fit the model on the natural logarithm of price: <code>y_log = np.log(Price)</code>. Log transformation converts multiplicative percentage errors into additive constant errors, compressing luxury variance and restoring constant homoscedastic error spread.
+      </p>
+    </div>
+
+    <h3>Final Hands-On Practical Assignment</h3>
+    <div class="card card-success">
+      <div class="card-title"><span>&#9997;</span> Capstone Assignment: Vehicle Fuel Efficiency Modeling</div>
+      <p>
+        Given a new automotive dataset with 500 vehicles containing:
+        <br>&bull; <code>Curb_Weight_lbs</code>: Vehicle weight in pounds (1,800 to 5,200 lbs)
+        <br>&bull; <code>Engine_Displacement_L</code>: Engine size in liters (1.2 to 6.2 L)
+        <br>&bull; <code>Horsepower</code>: Engine power output (75 to 450 hp)
+        <br>&bull; <code>Fuel_Economy_MPG</code>: Highway miles per gallon (continuous target, 12 to 52 MPG)
+      </p>
+      <p>
+        <strong>Your Engineering Assignment:</strong>
+        <br>1. Perform an 80/20 train/test split using <code>random_state=42</code>.
+        <br>2. Fit a Simple Linear Regression model using <code>Curb_Weight_lbs</code> alone to predict <code>Fuel_Economy_MPG</code>.
+        <br>3. Fit a Multiple Linear Regression model using all three engine and weight features.
+        <br>4. Compute and compare Test R&#178;, MAE, and RMSE between both models.
+        <br>5. Generate an Actual vs Predicted plot for the test set and plot residuals against predicted MPG.
+        <br>6. Confirm that the slope for vehicle weight is negative (heavier vehicles consume more fuel / achieve lower MPG).
+      </p>
+    </div>
+
+    <div class="notes-footer">
+      <p>CodeVerse Machine Learning Educational Notes &bull; Topic 9: Linear Regression</p>
+      <p>Strict Light Mode Standard &bull; Validated for Web and Mobile Viewports &bull; Powered by Scikit-Learn 1.9+</p>
+    </div>
+  </section>
+
+  </div>
+</body>
+</html>

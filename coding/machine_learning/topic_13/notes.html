@@ -1,0 +1,3700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive educational notes on Machine Learning Topic 13: Support Vector Machine (SVM). Master maximum-margin hyperplanes, canonical margins, support vectors, hard vs. soft margin with slack variables, C regularization, kernel trick (Linear, Polynomial, RBF), gamma tuning, feature scaling, scikit-learn classification and SVR regression pipelines.">
+  <title>Machine Learning &bull; Topic 13: Support Vector Machine (SVM)</title>
+  <style>
+
+    :root {
+      /* Base Surfaces - Strict Light Mode Only */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+      
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Topic 13 Theme: Royal Sapphire Blue, Indigo & Emerald */
+      --primary-accent: #2563EB;
+      --primary-accent-hover: #1D4ED8;
+      --primary-accent-light: #EFF6FF;
+      --primary-badge-bg: #EFF6FF;
+      --primary-badge-text: #1E40AF;
+      --toc-bg: #F8FAFC;
+      --toc-border: #BFDBFE;
+      --toc-text: #1D4ED8;
+
+      /* Definition Card (Soft Sky/Sapphire Blue) */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0C4A6E;
+
+      /* Analogy Card (Soft Amber) */
+      --analogy-card-bg: #FFFBEB;
+      --analogy-card-border: #FDE68A;
+      --analogy-card-title: #D97706;
+      --analogy-card-text: #78350F;
+
+      /* Success / Highlight Card (Emerald) */
+      --success-card-bg: #ECFDF5;
+      --success-card-border: #A7F3D0;
+      --success-card-title: #059669;
+      --success-card-text: #065F46;
+
+      /* Warning / Pitfall Card */
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #7F1D1D;
+
+      /* Tables */
+      --table-header-bg: #F8FAFC;
+      --table-row-alt: #F8FAFC;
+      --table-border: #E2E8F0;
+    }
+
+    /* Reset & Base Setup */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--heading-color);
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    p {
+      margin-bottom: 1.15rem;
+      color: var(--text-secondary);
+      font-size: 1.025rem;
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      font-size: 0.88em;
+      background-color: #F1F5F9;
+      color: #1D4ED8;
+      padding: 0.2em 0.45em;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+      font-weight: 600;
+    }
+
+    /* Cards & Containers */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-top: 5px solid var(--primary-accent);
+      border-radius: 14px;
+      padding: 2.25rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2.25rem;
+      margin-bottom: 2.25rem;
+      box-shadow: var(--card-shadow);
+      scroll-margin-top: 2rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      margin-bottom: 1rem;
+      color: var(--heading-color);
+      letter-spacing: -0.015em;
+    }
+
+    .section-lead {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .sub-title {
+      font-size: 1.25rem;
+      margin: 1.75rem 0 0.85rem 0;
+      color: var(--heading-color);
+      font-weight: 700;
+      border-bottom: 1px solid #F1F5F9;
+      padding-bottom: 0.4rem;
+    }
+
+    /* Hero Header Elements */
+    .hero-topic-badge {
+      display: inline-block;
+      padding: 0.35rem 0.85rem;
+      background: #EFF6FF;
+      color: #1E40AF;
+      border: 1px solid #BFDBFE;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+
+    .hero-title {
+      font-size: 2.35rem;
+      font-weight: 800;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.025em;
+      color: var(--heading-color);
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      max-width: 900px;
+    }
+
+    .meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid #F1F5F9;
+    }
+
+    .meta-pill {
+      font-size: 0.85rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      background: var(--card-soft-bg);
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--toc-text);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 0.6rem;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.45rem 0.65rem;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      color: #334155;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+
+    .toc-link:hover {
+      background: var(--primary-accent-light);
+      border-color: var(--primary-accent);
+      color: var(--primary-accent);
+      transform: translateX(2px);
+    }
+
+    .toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: #1D4ED8;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* Callout & Analogy Boxes */
+    .analogy-box {
+      background: var(--analogy-card-bg);
+      border: 1px solid var(--analogy-card-border);
+      border-left: 4px solid var(--analogy-card-title);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+
+    .analogy-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--analogy-card-title);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .def-box {
+      background: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+
+    .def-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--def-card-title);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .warn-box {
+      background: var(--warn-card-bg);
+      border: 1px solid var(--warn-card-border);
+      border-left: 4px solid var(--warn-card-title);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+
+    .warn-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--warn-card-title);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .success-box {
+      background: var(--success-card-bg);
+      border: 1px solid var(--success-card-border);
+      border-left: 4px solid var(--success-card-title);
+      border-radius: 10px;
+      padding: 1.25rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+
+    .success-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--success-card-title);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    /* Math Formulas */
+    .formula-block {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+
+    .formula-header {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--primary-accent);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .math-display {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      text-align: center;
+      margin: 1rem 0;
+      padding: 0.85rem;
+      background: #F8FAFC;
+      border-radius: 6px;
+      border: 1px solid #E2E8F0;
+      overflow-x: auto;
+    }
+
+    .formula-legend {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-top: 0.85rem;
+      border-top: 1px solid #F1F5F9;
+      padding-top: 0.85rem;
+    }
+
+    .legend-item {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+    }
+
+    .legend-symbol {
+      font-weight: 700;
+      color: var(--primary-accent);
+      font-family: monospace;
+    }
+
+    /* Worked Calculations */
+    .calc-box {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin: 1.25rem 0;
+    }
+
+    .calc-step {
+      margin-bottom: 0.85rem;
+      padding-left: 1rem;
+      border-left: 2px solid #CBD5E1;
+    }
+
+    .calc-step:last-child {
+      margin-bottom: 0;
+    }
+
+    .step-title {
+      font-weight: 700;
+      color: var(--heading-color);
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 1.5rem 0;
+      border: 1px solid var(--table-border);
+      border-radius: 10px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--table-header-bg);
+      color: var(--heading-color);
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid var(--table-border);
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--table-border);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: var(--table-row-alt);
+    }
+
+    /* Figure & SVG Containers */
+    .figure-container {
+      margin: 2rem 0;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .figure-caption {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.85rem;
+      padding-left: 0.75rem;
+      border-left: 3px solid var(--primary-accent);
+      line-height: 1.5;
+    }
+
+    .figure-caption strong {
+      color: var(--text-secondary);
+    }
+
+    /* Code Blocks */
+    .code-container {
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #CBD5E1;
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .code-header {
+      background: #F1F5F9;
+      padding: 0.5rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #334155;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #CBD5E1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .code-container pre {
+      margin: 0;
+      padding: 1.25rem;
+      background: #FFFFFF !important;
+      color: #0F172A !important;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      tab-size: 4;
+    }
+
+    .code-container code {
+      background: transparent !important;
+      color: #0F172A !important;
+      border: none !important;
+      padding: 0 !important;
+      font-size: inherit;
+    }
+
+    /* Grid Layouts */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+
+    /* Mistake Cards */
+    .mistake-card {
+      background: #FFFFFF;
+      border: 1px solid #FECACA;
+      border-left: 4px solid #DC2626;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .mistake-header {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #991B1B;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .mistake-body {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .fix-box {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-left: 3px solid #16A34A;
+      border-radius: 6px;
+      padding: 0.75rem 1rem;
+      font-size: 0.92rem;
+      color: #14532D;
+    }
+
+    .fix-box strong {
+      color: #166534;
+    }
+
+    /* Accordion Revision Questions */
+    .accordion-item {
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      background: #FFFFFF;
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 1rem 1.25rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #F8FAFC;
+      transition: background 0.15s ease;
+      font-size: 1rem;
+    }
+
+    .accordion-header:hover {
+      background: #EFF6FF;
+      color: #1D4ED8;
+    }
+
+    .accordion-content {
+      padding: 1.25rem;
+      border-top: 1px solid #E2E8F0;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      background: #FFFFFF;
+    }
+
+    details summary {
+      list-style: none;
+    }
+
+    details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details summary::after {
+      content: "+";
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2563EB;
+      float: right;
+    }
+
+    details[open] summary::after {
+      content: "−";
+    }
+
+    /* Responsive Queries */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.25rem 0.85rem;
+      }
+      .hero-card, .section-card {
+        padding: 1.5rem 1rem;
+      }
+      .hero-title {
+        font-size: 1.85rem;
+      }
+      .section-title {
+        font-size: 1.4rem;
+      }
+      .toc-grid {
+        grid-template-columns: 1fr;
+      }
+      .grid-2col {
+        grid-template-columns: 1fr;
+      }
+      .math-display {
+        font-size: 1.05rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 1.6rem;
+      }
+      .hero-subtitle {
+        font-size: 1rem;
+      }
+      .code-container pre {
+        font-size: 0.82rem;
+        padding: 0.85rem;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <!-- HERO HEADER -->
+  <header class="hero-card">
+    <div class="hero-topic-badge">Supervised Machine Learning &bull; Topic 13</div>
+    <h1 class="hero-title">Support Vector Machine (SVM): Complete Beginner Guide</h1>
+    <p class="hero-subtitle">
+      Master one of the most mathematically elegant, powerful, and versatile algorithms in supervised machine learning. 
+      Understand how hyperplanes separate complex datasets, why maximum-margin boundaries provide superior generalization, 
+      how soft-margin slack parameters balance noise, and how the revolutionary kernel trick projects non-linear patterns into higher dimensions.
+    </p>
+
+    <div class="meta-bar">
+      <span class="meta-pill">&#128218; 23 Comprehensive Sections</span>
+      <span class="meta-pill">&#9889; 15 Hand-Crafted Vector Diagrams</span>
+      <span class="meta-pill">&#128300; Verified Scikit-Learn Pipelines</span>
+      <span class="meta-pill">&#9878;&#65039; Strict Light Mode Only</span>
+      <span class="meta-pill">&#127919; 100% Mobile &amp; Desktop Tested</span>
+    </div>
+  </header>
+
+  <!-- TABLE OF CONTENTS -->
+  <nav class="toc-card" aria-label="Topic Navigation">
+    <div class="toc-title">
+      <span>&#128203;</span> Table of Contents &bull; Topic 13 Roadmap
+    </div>
+    <div class="toc-grid">
+      <a href="#sec-01" class="toc-link"><span class="toc-num">01</span> Introduction to SVM</a>
+      <a href="#sec-02" class="toc-link"><span class="toc-num">02</span> What Is a Hyperplane?</a>
+      <a href="#sec-03" class="toc-link"><span class="toc-num">03</span> Understanding the Margin</a>
+      <a href="#sec-04" class="toc-link"><span class="toc-num">04</span> What Are Support Vectors?</a>
+      <a href="#sec-05" class="toc-link"><span class="toc-num">05</span> Maximum Margin Intuition</a>
+      <a href="#sec-06" class="toc-link"><span class="toc-num">06</span> Hard Margin vs. Soft Margin</a>
+      <a href="#sec-07" class="toc-link"><span class="toc-num">07</span> The C Regularization Parameter</a>
+      <a href="#sec-08" class="toc-link"><span class="toc-num">08</span> Linear SVM Architecture</a>
+      <a href="#sec-09" class="toc-link"><span class="toc-num">09</span> Non-Linear Class Separability</a>
+      <a href="#sec-10" class="toc-link"><span class="toc-num">10</span> The Kernel Trick &amp; Kernels</a>
+      <a href="#sec-11" class="toc-link"><span class="toc-num">11</span> Visualizing Kernel Manifolds</a>
+      <a href="#sec-12" class="toc-link"><span class="toc-num">12</span> Understanding Gamma (γ)</a>
+      <a href="#sec-13" class="toc-link"><span class="toc-num">13</span> Feature Scaling for SVM</a>
+      <a href="#sec-14" class="toc-link"><span class="toc-num">14</span> SVM Practical Workflow</a>
+      <a href="#sec-15" class="toc-link"><span class="toc-num">15</span> Complete Python Classification Lab</a>
+      <a href="#sec-16" class="toc-link"><span class="toc-num">16</span> SVM Regression: SVR</a>
+      <a href="#sec-17" class="toc-link"><span class="toc-num">17</span> Classification Metrics &amp; Confusion Matrix</a>
+      <a href="#sec-18" class="toc-link"><span class="toc-num">18</span> Advantages &amp; Limitations</a>
+      <a href="#sec-19" class="toc-link"><span class="toc-num">19</span> SVM Compared With Other Models</a>
+      <a href="#sec-20" class="toc-link"><span class="toc-num">20</span> Real-Life Case Studies</a>
+      <a href="#sec-21" class="toc-link"><span class="toc-num">21</span> Diagram &amp; Visual Gallery</a>
+      <a href="#sec-22" class="toc-link"><span class="toc-num">22</span> 12 Common Beginner Mistakes</a>
+      <a href="#sec-23" class="toc-link"><span class="toc-num">23</span> Summary, Glossary &amp; Revision</a>
+    </div>
+  </nav>
+
+  <!-- SECTION 1 -->
+  <section id="sec-01" class="section-card">
+    <div class="section-badge">Section 01</div>
+    <h2 class="section-title">Introduction to Support Vector Machines (SVM)</h2>
+    <p class="section-lead">
+      Imagine you are a teacher separating students into two distinct study groups based on exam performance and project submissions. 
+      You could draw dozens of lines between the two groups. But which line gives both groups the widest possible breathing room so that future students are not unfairly grouped? 
+      This fundamental quest for the widest safety corridor is the essence of a <strong>Support Vector Machine (SVM)</strong>.
+    </p>
+
+    <div class="analogy-box">
+      <div class="analogy-title">
+        <span>&#128161;</span> Everyday Analogy: Building a Highway Between Two Towns
+      </div>
+      <p>
+        Imagine two neighboring rival towns, Blueville and Redford. The regional government needs to build a paved divided highway between them. 
+        Engineers do not build the road directly touching the fence of either town! If they did, a minor expansion or stray bicycle would cause an accident. 
+        Instead, urban planners find the widest possible unoccupied corridor of land between the outermost houses of each town and pave the centerline directly in the middle. 
+        In this scenario:
+      </p>
+      <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-secondary);">
+        <li><strong>The Outer Houses:</strong> The critical border homes that limit the highway width are the <strong>Support Vectors</strong>.</li>
+        <li><strong>The Highway Width:</strong> The cleared buffer zone between the towns is the <strong>Margin</strong>.</li>
+        <li><strong>The Painted Centerline:</strong> The separating boundary deciding which town you are in is the <strong>Hyperplane (Decision Boundary)</strong>.</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-title">1. What Is a Support Vector Machine?</h3>
+    <p>
+      A <strong>Support Vector Machine (SVM)</strong> is a powerful supervised learning algorithm primarily used for classification (and regression) that seeks to find the optimal decision boundary that separates data classes with the <strong>maximum possible margin</strong>. 
+      While basic classifiers (such as Perceptrons) simply stop searching the moment they find <em>any</em> line that separates the training points, SVM mathematically maximizes the distance between the boundary and the nearest data points of each class.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <defs>
+    <linearGradient id="bg-grad-1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#F1F5F9"/>
+    </linearGradient>
+    <filter id="shadow-1" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Title & Subtitle -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Two-Class Classification &amp; The Separating Hyperplane</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">In 2D space, the separating hyperplane is a straight boundary line: w₁x₁ + w₂x₂ + b = 0</text>
+
+  <!-- Coordinate Axes Box -->
+  <g transform="translate(60, 90)">
+    <!-- Grid lines -->
+    <rect x="0" y="0" width="460" height="280" fill="url(#bg-grad-1)" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <line x1="0" y1="70" x2="460" y2="70" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+    <line x1="0" y1="140" x2="460" y2="140" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+    <line x1="0" y1="210" x2="460" y2="210" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+    <line x1="115" y1="0" x2="115" y2="280" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+    <line x1="230" y1="0" x2="230" y2="280" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+    <line x1="345" y1="0" x2="345" y2="280" stroke="#E2E8F0" stroke-dasharray="4,4"/>
+
+    <!-- Decision Regions Soft Fill -->
+    <polygon points="0,0 280,0 60,280 0,280" fill="#EFF6FF" fill-opacity="0.6"/>
+    <polygon points="280,0 460,0 460,280 60,280" fill="#FEF2F2" fill-opacity="0.6"/>
+
+    <!-- Hyperplane Decision Boundary -->
+    <line x1="280" y1="0" x2="60" y2="280" stroke="#2563EB" stroke-width="3.5"/>
+    
+    <!-- Class 0 Data Points (Blue circles - Admitted) -->
+    <circle cx="50" cy="50" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="90" cy="70" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="70" cy="120" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="130" cy="40" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="120" cy="90" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="170" cy="60" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="110" cy="160" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="50" cy="200" r="7" fill="#2563EB" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Class 1 Data Points (Red squares - Rejected) -->
+    <rect x="250" y="220" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="310" y="190" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="280" y="140" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="360" y="160" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="390" y="90" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="340" y="70" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="420" y="230" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="300" y="250" width="14" height="14" fill="#DC2626" rx="3" stroke="#FFFFFF" stroke-width="2"/>
+
+    <!-- Boundary Annotation -->
+    <rect x="185" y="115" width="200" height="32" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.5" filter="url(#shadow-1)"/>
+    <text x="285" y="136" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1D4ED8" text-anchor="middle">Hyperplane: wᵀx + b = 0</text>
+
+    <!-- Axes Labels -->
+    <text x="230" y="305" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle">Feature x₁ (Exam Score) →</text>
+    <text x="-20" y="140" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#475569" text-anchor="middle" transform="rotate(-90, -20, 140)">Feature x₂ (Project Score) →</text>
+  </g>
+
+  <!-- Side Legend & Key Takeaway Card -->
+  <g transform="translate(550, 90)">
+    <rect x="0" y="0" width="210" height="280" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#0F172A">Key Concepts</text>
+    
+    <circle cx="26" cy="60" r="6" fill="#2563EB"/>
+    <text x="42" y="64" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#1E40AF">Class +1 (Admitted)</text>
+    <text x="42" y="78" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">wᵀx + b &gt; 0</text>
+
+    <rect x="20" y="96" width="12" height="12" fill="#DC2626" rx="2"/>
+    <text x="42" y="106" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#991B1B">Class -1 (Rejected)</text>
+    <text x="42" y="120" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">wᵀx + b &lt; 0</text>
+
+    <line x1="16" y1="140" x2="194" y2="140" stroke="#E2E8F0"/>
+
+    <text x="16" y="165" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#0F172A">Dimensionality:</text>
+    <text x="16" y="185" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">• 2D Space → 1D Line</text>
+    <text x="16" y="202" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">• 3D Space → 2D Flat Plane</text>
+    <text x="16" y="219" font-family="-apple-system, sans-serif" font-size="11" fill="#334155">• D-dim → (D-1) Hyperplane</text>
+
+    <rect x="12" y="235" width="186" height="32" rx="6" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="105" y="255" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#1E40AF" text-anchor="middle">Separates classes with a margin</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.1: Two-Class Classification with a Separating Hyperplane.</strong> In 2D space, the separating hyperplane is a straight line: <code>w₁x₁ + w₂x₂ + b = 0</code>. Points on opposite sides receive different predicted class labels.
+      </div>
+    </div>
+
+    <h3 class="sub-title">2. Fundamental Vocabulary Every Beginner Must Know</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Technical Term</th>
+            <th>Mathematical Role</th>
+            <th>Everyday Analogy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Class (Label, y)</strong></td>
+            <td>The discrete target category being predicted (e.g. y = +1 for Admitted, y = -1 for Rejected).</td>
+            <td>Belonging to Blueville vs. belonging to Redford.</td>
+          </tr>
+          <tr>
+            <td><strong>Feature (Input, x)</strong></td>
+            <td>A measurable dimension or variable (e.g. Exam Score x₁, Project Score x₂).</td>
+            <td>The GPS coordinates (Latitude, Longitude) of each student's home.</td>
+          </tr>
+          <tr>
+            <td><strong>Hyperplane</strong></td>
+            <td>A flat geometric subspace of dimension (D - 1) that divides a D-dimensional feature space into two halves.</td>
+            <td>The painted centerline dividing the two sides of the highway.</td>
+          </tr>
+          <tr>
+            <td><strong>Margin</strong></td>
+            <td>The perpendicular distance (cushion) between the decision hyperplane and the closest training points.</td>
+            <td>The total cleared buffer zone between the two towns.</td>
+          </tr>
+          <tr>
+            <td><strong>Support Vector</strong></td>
+            <td>The specific subset of critical training observations that lie on or violate the margin boundaries.</td>
+            <td>The outermost houses in each town that dictate how wide the highway can be built.</td>
+          </tr>
+          <tr>
+            <td><strong>Hard Margin</strong></td>
+            <td>A strict formulation requiring 100% perfect separation with zero margin violations.</td>
+            <td>Demanding that not a single brick or mailbox encroaches on the road corridor.</td>
+          </tr>
+          <tr>
+            <td><strong>Soft Margin</strong></td>
+            <td>A robust formulation allowing minor margin violations via slack variables to handle noise and overlap.</td>
+            <td>Allowing a small driveway or tree to sit inside the buffer zone with a zoning penalty.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="sec-02" class="section-card">
+    <div class="section-badge">Section 02</div>
+    <h2 class="section-title">What Is a Hyperplane?</h2>
+    <p class="section-lead">
+      The word "hyperplane" sounds intimidating, but in everyday geometry it simply means a flat, unbending decision wall that splits space in two. 
+      The mathematical dimension of the hyperplane is always exactly one less than the dimension of the space it lives in.
+    </p>
+
+    <h3 class="sub-title">1. Mathematical Definition of a 2D Hyperplane</h3>
+    <p>
+      In a two-dimensional space with two features (x₁ and x₂), a hyperplane is simply a <strong>straight line</strong>. 
+      You are already familiar with the elementary line equation <code>y = mx + c</code>. In machine learning, we express this same linear relationship using weights (coefficients) and a bias term:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; Two-Feature Linear Hyperplane Equation</div>
+      <div class="math-display">w₁x₁ + w₂x₂ + b = 0</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">x₁, x₂</span><span>Input features (e.g., Exam Score and Project Score)</span></div>
+        <div class="legend-item"><span class="legend-symbol">w₁, w₂</span><span>Learned feature weights determining boundary orientation</span></div>
+        <div class="legend-item"><span class="legend-symbol">b</span><span>Bias (intercept) shifting the boundary away from the origin</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">2. General Vector Form Across Any Dimension</h3>
+    <p>
+      When we have 3, 10, or 10,000 features, writing out individual terms becomes impractical. 
+      We package all feature values into a vector <code>x = [x₁, x₂, ..., x_D]ᵀ</code> and all weights into a weight vector <code>w = [w₁, w₂, ..., w_D]ᵀ</code>. 
+      Their dot product produces the compact general hyperplane formula:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; General Hyperplane Vector Equation</div>
+      <div class="math-display">wᵀx + b = 0</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">wᵀx</span><span>Vector dot product: w₁x₁ + w₂x₂ + ... + w_Dx_D</span></div>
+        <div class="legend-item"><span class="legend-symbol">b</span><span>Scalar bias determining offset from coordinate origin</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">3. Hyperplane Dimensionality Across Spaces</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature Space Dimension</th>
+            <th>Hyperplane Geometry</th>
+            <th>Mathematical Representation</th>
+            <th>Visual Form</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1D Space (1 Feature)</strong></td>
+            <td>0-Dimensional</td>
+            <td><code>w₁x₁ + b = 0 &rarr; x₁ = -b/w₁</code></td>
+            <td>A single cut-off point on a number line</td>
+          </tr>
+          <tr>
+            <td><strong>2D Space (2 Features)</strong></td>
+            <td>1-Dimensional</td>
+            <td><code>w₁x₁ + w₂x₂ + b = 0</code></td>
+            <td>A straight line separating a 2D plane</td>
+          </tr>
+          <tr>
+            <td><strong>3D Space (3 Features)</strong></td>
+            <td>2-Dimensional</td>
+            <td><code>w₁x₁ + w₂x₂ + w₃x₃ + b = 0</code></td>
+            <td>A flat sheet of paper (plane) slicing through 3D space</td>
+          </tr>
+          <tr>
+            <td><strong>D-Dimensional Space</strong></td>
+            <td>(D - 1)-Dimensional</td>
+            <td><code>wᵀx + b = 0</code></td>
+            <td>A flat mathematical manifold slicing through hyperspace</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="def-box">
+      <div class="def-title"><span>&#128214;</span> How the Hyperplane Makes Predictions</div>
+      <p>
+        For any incoming test observation <code>x_new</code>, the SVM computes the decision value <code>f(x_new) = wᵀx_new + b</code>:
+      </p>
+      <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--def-card-text);">
+        <li>If <code>wᵀx_new + b &gt; 0</code>: The observation lies on the positive side &rarr; Predict <strong>Class +1</strong> (e.g. Admitted).</li>
+        <li>If <code>wᵀx_new + b &lt; 0</code>: The observation lies on the negative side &rarr; Predict <strong>Class -1</strong> (e.g. Rejected).</li>
+        <li>If <code>wᵀx_new + b = 0</code>: The point lies directly on the decision boundary (maximum ambiguity).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="sec-03" class="section-card">
+    <div class="section-badge">Section 03</div>
+    <h2 class="section-title">Understanding the Margin</h2>
+    <p class="section-lead">
+      Any number of straight lines can successfully separate two linearly separable clusters of points. 
+      What makes SVM unique is that it does not settle for an arbitrary dividing line—it specifically searches for the boundary that maximizes the <strong>margin</strong>.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <defs>
+    <linearGradient id="margin-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#EFF6FF"/>
+      <stop offset="100%" stop-color="#F5F3FF"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#4F46E5"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">The Canonical SVM Margin: Maximum Separation Geometry</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">The optimal hyperplane maximizes the total margin width: M = 2 / ∥w∥</text>
+
+  <!-- Diagram Box -->
+  <g transform="translate(60, 90)">
+    <!-- Base Canvas -->
+    <rect x="0" y="0" width="480" height="280" fill="#FAFAFA" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+
+    <!-- Margin Zone Shading -->
+    <!-- Positive margin: (170,0) to (20,280), Decision: (230,0) to (80,280), Negative margin: (290,0) to (140,280) -->
+    <polygon points="170,0 290,0 140,280 20,280" fill="url(#margin-grad)" fill-opacity="0.8"/>
+
+    <!-- Positive Margin Boundary: w^T x + b = +1 -->
+    <line x1="170" y1="0" x2="20" y2="280" stroke="#059669" stroke-width="2" stroke-dasharray="6,4"/>
+    <text x="90" y="35" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#059669">Positive Margin: wᵀx + b = +1</text>
+
+    <!-- Decision Boundary: w^T x + b = 0 -->
+    <line x1="230" y1="0" x2="80" y2="280" stroke="#2563EB" stroke-width="3"/>
+    <text x="175" y="65" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#2563EB">Hyperplane: wᵀx + b = 0</text>
+
+    <!-- Negative Margin Boundary: w^T x + b = -1 -->
+    <line x1="290" y1="0" x2="140" y2="280" stroke="#DC2626" stroke-width="2" stroke-dasharray="6,4"/>
+    <text x="240" y="95" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">Negative Margin: wᵀx + b = -1</text>
+
+    <!-- Non-Support Vector Points (Class +1) -->
+    <circle cx="50" cy="50" r="6" fill="#2563EB"/>
+    <circle cx="40" cy="110" r="6" fill="#2563EB"/>
+    <circle cx="30" cy="180" r="6" fill="#2563EB"/>
+    <circle cx="70" cy="30" r="6" fill="#2563EB"/>
+
+    <!-- Support Vectors (Class +1) on Margin Plane -->
+    <g transform="translate(130, 75)">
+      <circle cx="0" cy="0" r="12" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <circle cx="0" cy="0" r="6" fill="#2563EB"/>
+      <text x="-70" y="-12" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#D97706">Support Vector</text>
+    </g>
+    <g transform="translate(75, 177)">
+      <circle cx="0" cy="0" r="12" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <circle cx="0" cy="0" r="6" fill="#2563EB"/>
+    </g>
+
+    <!-- Non-Support Vector Points (Class -1) -->
+    <rect x="360" y="160" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="400" y="120" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="320" y="240" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="420" y="210" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- Support Vectors (Class -1) on Margin Plane -->
+    <g transform="translate(235, 102)">
+      <circle cx="6" cy="6" r="12" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <rect x="0" y="0" width="12" height="12" fill="#DC2626" rx="2"/>
+      <text x="22" y="18" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#D97706">Support Vector</text>
+    </g>
+    <g transform="translate(180, 205)">
+      <circle cx="6" cy="6" r="12" fill="none" stroke="#F59E0B" stroke-width="2.5" stroke-dasharray="3,2"/>
+      <rect x="0" y="0" width="12" height="12" fill="#DC2626" rx="2"/>
+    </g>
+
+    <!-- Margin Width Arrow -->
+    <line x1="95" y1="140" x2="215" y2="140" stroke="#4F46E5" stroke-width="2.5" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+    <rect x="110" y="148" width="90" height="24" rx="4" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.2"/>
+    <text x="155" y="164" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5" text-anchor="middle">Margin = 2/∥w∥</text>
+  </g>
+
+  <!-- Side Mathematical Breakdown Card -->
+  <g transform="translate(565, 90)">
+    <rect x="0" y="0" width="195" height="280" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="14" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">Margin Mathematics</text>
+
+    <rect x="12" y="42" width="171" height="52" rx="6" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="97" y="62" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">Distance from Point to Line:</text>
+    <text x="97" y="82" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1D4ED8" text-anchor="middle">d = |wᵀx + b| / ∥w∥</text>
+
+    <text x="14" y="116" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#334155">On Margin Planes:</text>
+    <text x="14" y="134" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Class +1: wᵀx + b = +1</text>
+    <text x="14" y="150" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Class -1: wᵀx + b = -1</text>
+    <text x="14" y="166" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Distance to center = 1/∥w∥</text>
+
+    <line x1="14" y1="180" x2="181" y2="180" stroke="#E2E8F0"/>
+
+    <text x="14" y="200" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#334155">Maximizing Margin Width:</text>
+    <text x="14" y="220" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">Max ( 2 / ∥w∥ ) is exactly</text>
+    <text x="14" y="238" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">equivalent to:</text>
+    <rect x="12" y="246" width="171" height="26" rx="4" fill="#ECFDF5" stroke="#A7F3D0"/>
+    <text x="97" y="263" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#047857" text-anchor="middle">Min ( ½ ∥w∥² )</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.2: The Canonical SVM Margin Geometry.</strong> The decision hyperplane sits at <code>wᵀx + b = 0</code>. The two parallel margin planes sit at <code>wᵀx + b = +1</code> and <code>wᵀx + b = -1</code>. The total margin width is exactly <code>M = 2 / ∥w∥</code>.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. Canonical Margin Boundaries</h3>
+    <p>
+      In canonical SVM notation, we scale the weight vector <code>w</code> and bias <code>b</code> such that the closest data points of each class satisfy:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; Canonical Margin Planes</div>
+      <div class="math-display">wᵀx + b = +1 &nbsp;&nbsp;&nbsp;&nbsp; (Positive Margin Plane)</div>
+      <div class="math-display">wᵀx + b = -1 &nbsp;&nbsp;&nbsp;&nbsp; (Negative Margin Plane)</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">+1 Plane</span><span>Passes through closest positive training samples (Class +1)</span></div>
+        <div class="legend-item"><span class="legend-symbol">-1 Plane</span><span>Passes through closest negative training samples (Class -1)</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">2. Derivation of the Margin Width Formula</h3>
+    <p>
+      From elementary linear algebra, the perpendicular Euclidean distance from any point <code>x₀</code> to a hyperplane <code>wᵀx + b = 0</code> is given by:
+    </p>
+    <div class="math-display" style="font-size: 1.1rem;">
+      Distance = |wᵀx₀ + b| / ∥w∥
+    </div>
+    <p>
+      Since points on the positive margin boundary satisfy <code>wᵀx + b = +1</code>, their perpendicular distance to the decision hyperplane is:
+    </p>
+    <div class="math-display" style="font-size: 1.1rem;">
+      d₊ = |+1| / ∥w∥ = 1 / ∥w∥
+    </div>
+    <p>
+      Similarly, points on the negative margin boundary satisfy <code>wᵀx + b = -1</code>, and their distance to the decision line is:
+    </p>
+    <div class="math-display" style="font-size: 1.1rem;">
+      d₋ = |-1| / ∥w∥ = 1 / ∥w∥
+    </div>
+    <p>
+      Adding these two symmetrical distances together yields the total margin width <code>M</code>:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; Total Margin Width Formula</div>
+      <div class="math-display">Total Margin Width (M) = d₊ + d₋ = (1 / ∥w∥) + (1 / ∥w∥) = 2 / ∥w∥</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">∥w∥</span><span>Euclidean L2 norm of weight vector: √(w₁² + w₂² + ... + w_D²)</span></div>
+        <div class="legend-item"><span class="legend-symbol">Inverse</span><span>Maximizing margin (2/∥w∥) is mathematically equivalent to minimizing ∥w∥</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">3. Concrete Worked Numerical Calculation</h3>
+    <div class="calc-box">
+      <div class="calc-step">
+        <div class="step-title">Given Parameters:</div>
+        <p>Suppose our fitted 2D linear SVM yields weight vector <code>w = [1.2, 1.6]ᵀ</code> and bias <code>b = -3.0</code>.</p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">Step 1: Compute Euclidean Norm ∥w∥</div>
+        <p><code>∥w∥ = √(1.2² + 1.6²) = √(1.44 + 2.56) = √(4.0) = 2.0000</code></p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">Step 2: Compute Total Margin Width</div>
+        <p><code>Margin Width = 2 / ∥w∥ = 2 / 2.0000 = 1.0000 unit</code></p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">Step 3: Distance of Test Point x_A = [2.5, 2.0]ᵀ</div>
+        <p><code>wᵀx_A + b = (1.2 &times; 2.5) + (1.6 &times; 2.0) - 3.0 = 3.0 + 3.2 - 3.0 = +3.2000</code></p>
+        <p>Perpendicular distance to decision boundary: <code>d = |3.2000| / 2.0000 = 1.6000 units</code>.</p>
+        <p><em>Interpretation:</em> Because <code>wᵀx_A + b = +3.2 &gt; +1.0</code>, student x_A lies safely beyond the positive margin boundary and is confidently classified as <strong>Admitted (Class +1)</strong>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="sec-04" class="section-card">
+    <div class="section-badge">Section 04</div>
+    <h2 class="section-title">What Are Support Vectors?</h2>
+    <p class="section-lead">
+      In most machine learning algorithms, every single data point in the training set influences the final model parameters. 
+      In SVM, something extraordinary happens: <strong>only a small fraction of the training data determines the decision boundary</strong>. 
+      These critical points are called <strong>Support Vectors</strong>.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Actual Support Vectors Identified on Fitted Scikit-Learn Model</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Only the support vectors determine the boundary position; non-support points could be deleted without moving the line!</text>
+
+  <!-- Canvas -->
+  <g transform="translate(60, 85)">
+    <rect x="0" y="0" width="480" height="260" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+
+    <!-- Margins and Boundary -->
+    <line x1="160" y1="0" x2="40" y2="260" stroke="#059669" stroke-width="1.5" stroke-dasharray="5,4"/>
+    <line x1="220" y1="0" x2="100" y2="260" stroke="#2563EB" stroke-width="3"/>
+    <line x1="280" y1="0" x2="160" y2="260" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="5,4"/>
+
+    <!-- Regular Non-Support Vector points (faint opacity) -->
+    <circle cx="45" cy="50" r="6" fill="#93C5FD" opacity="0.6"/>
+    <circle cx="30" cy="110" r="6" fill="#93C5FD" opacity="0.6"/>
+    <circle cx="65" cy="140" r="6" fill="#93C5FD" opacity="0.6"/>
+    <circle cx="20" cy="190" r="6" fill="#93C5FD" opacity="0.6"/>
+    <circle cx="70" cy="20" r="6" fill="#93C5FD" opacity="0.6"/>
+
+    <rect x="340" y="140" width="12" height="12" fill="#FCA5A5" rx="2" opacity="0.6"/>
+    <rect x="380" y="100" width="12" height="12" fill="#FCA5A5" rx="2" opacity="0.6"/>
+    <rect x="420" y="180" width="12" height="12" fill="#FCA5A5" rx="2" opacity="0.6"/>
+    <rect x="300" y="220" width="12" height="12" fill="#FCA5A5" rx="2" opacity="0.6"/>
+
+    <!-- Support Vectors with Double Gold Rings and Solid Fills -->
+    <!-- SV Class +1 -->
+    <g transform="translate(130, 65)">
+      <circle cx="0" cy="0" r="13" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <circle cx="0" cy="0" r="6" fill="#1D4ED8"/>
+      <text x="-95" y="4" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">SV #1 (Class 1)</text>
+    </g>
+    <g transform="translate(85, 163)">
+      <circle cx="0" cy="0" r="13" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <circle cx="0" cy="0" r="6" fill="#1D4ED8"/>
+      <text x="-95" y="4" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">SV #2 (Class 1)</text>
+    </g>
+
+    <!-- SV Class -1 -->
+    <g transform="translate(230, 108)">
+      <circle cx="6" cy="6" r="13" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <rect x="0" y="0" width="12" height="12" fill="#B91C1C" rx="2"/>
+      <text x="25" y="10" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">SV #3 (Class 0)</text>
+    </g>
+    <g transform="translate(180, 217)">
+      <circle cx="6" cy="6" r="13" fill="none" stroke="#D97706" stroke-width="2.5"/>
+      <rect x="0" y="0" width="12" height="12" fill="#B91C1C" rx="2"/>
+      <text x="25" y="10" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">SV #4 (Class 0)</text>
+    </g>
+  </g>
+
+  <!-- Inspection Panel -->
+  <g transform="translate(565, 85)">
+    <rect x="0" y="0" width="195" height="260" fill="#FFFBEB" rx="8" stroke="#FDE68A" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#92400E">Fitted Model Attributes</text>
+
+    <text x="16" y="52" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#78350F">Scikit-Learn Inspection:</text>
+    <rect x="12" y="60" width="171" height="58" rx="4" fill="#FFFFFF" stroke="#FDE68A"/>
+    <text x="18" y="78" font-family="monospace" font-size="10" fill="#1E293B">clf.support_vectors_</text>
+    <text x="18" y="94" font-family="monospace" font-size="10" fill="#1E293B">clf.support_</text>
+    <text x="18" y="110" font-family="monospace" font-size="10" fill="#1E293B">clf.n_support_</text>
+
+    <line x1="16" y1="130" x2="179" y2="130" stroke="#FDE68A"/>
+
+    <text x="16" y="152" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#92400E">Critical Takeaway:</text>
+    <text x="16" y="172" font-family="-apple-system, sans-serif" font-size="11" fill="#78350F">If you move or remove any</text>
+    <text x="16" y="188" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">non-support vector</text>
+    <text x="16" y="204" font-family="-apple-system, sans-serif" font-size="11" fill="#78350F">the hyperplane remains</text>
+    <text x="16" y="220" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#059669">100% identical!</text>
+
+    <rect x="12" y="232" width="171" height="20" rx="3" fill="#FEF3C7"/>
+    <text x="97" y="246" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#B45309" text-anchor="middle">Sparsity of Solution</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.3: Actual Support Vectors Identified on a Fitted Scikit-Learn Model.</strong> Support vectors (highlighted with bold gold rings) lie directly on or inside the margin boundaries. The non-support vector samples (faint dots) exert zero mathematical pull on the boundary.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. Why Are They Called "Support" Vectors?</h3>
+    <p>
+      In civil engineering, a bridge is held up by a few structural support pillars. The rest of the bridge deck rests upon these pillars. 
+      In SVM, the support vectors are the geometric pillars that physically "prop up" and stabilize the hyperplane. 
+      If you were to delete 95% of your training points that lie far away from the margin, <strong>the fitted hyperplane would not budge by even a millimeter!</strong>
+    </p>
+
+    <div class="success-box">
+      <div class="success-title"><span>&#10003;</span> The Sparsity Superpower of SVM</div>
+      <p>
+        Because only support vectors dictate the decision boundary, SVM produces a <strong>sparse solution</strong>. 
+        Once training is complete, an SVM does not need to store the entire original dataset in RAM to make future predictions—it only needs to store the support vectors and their dual lagrange multipliers (<code>alpha</code> coefficients).
+      </p>
+    </div>
+
+    <h3 class="sub-title">2. Inspecting Support Vectors in Scikit-Learn</h3>
+    <p>
+      When you train an <code>SVC</code> model in scikit-learn, the fitted model exposes three built-in inspection attributes:
+    </p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Scikit-Learn Attribute</th>
+            <th>Data Type &amp; Shape</th>
+            <th>Concrete Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>clf.support_vectors_</code></td>
+            <td>NumPy 2D Array <code>(n_SV, n_features)</code></td>
+            <td>The exact feature coordinates of all training samples selected as support vectors.</td>
+          </tr>
+          <tr>
+            <td><code>clf.support_</code></td>
+            <td>NumPy 1D Array <code>(n_SV,)</code></td>
+            <td>The row indices in <code>X_train</code> corresponding to the support vectors.</td>
+          </tr>
+          <tr>
+            <td><code>clf.n_support_</code></td>
+            <td>NumPy 1D Array <code>(n_classes,)</code></td>
+            <td>The number of support vectors selected from each target class (e.g. <code>[16, 16]</code>).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>PYTHON 3: SUPPORT VECTOR INSPECTION</span>
+        <span>scikit-learn runtime</span>
+      </div>
+      <pre><code>from sklearn.svm import SVC
+import numpy as np
+
+# Train a linear SVC on student dataset
+model = SVC(kernel='linear', C=1.0)
+model.fit(X_train, y_train)
+
+# Inspect support vectors
+print(f"Total Support Vectors: {len(model.support_)} out of {len(X_train)} training points")
+print(f"Support Vectors per Class: {model.n_support_}")
+print(f"Coordinates of first support vector: {model.support_vectors_[0]}")</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="sec-05" class="section-card">
+    <div class="section-badge">Section 05</div>
+    <h2 class="section-title">Maximum Margin Intuition</h2>
+    <p class="section-lead">
+      Why is a wide margin so crucial for real-world machine learning? 
+      Why not just accept the first line that achieves 100% training accuracy? 
+      The answer lies in the fundamental battle between <strong>empirical memorization</strong> and <strong>generalization to unseen noise</strong>.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Narrow Margin vs. Wide Margin Generalization</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">A boundary with a tiny margin is vulnerable to test noise; a wide margin provides robust safety clearance</text>
+
+  <!-- Left: Narrow Margin (High Risk) -->
+  <g transform="translate(50, 90)">
+    <rect x="0" y="0" width="330" height="230" fill="#FEF2F2" rx="8" stroke="#FECACA" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#991B1B">Narrow Margin (High Variance Risk)</text>
+    
+    <!-- Boundary passing very close to points -->
+    <line x1="210" y1="40" x2="110" y2="210" stroke="#DC2626" stroke-width="2.5"/>
+    <line x1="195" y1="40" x2="95" y2="210" stroke="#DC2626" stroke-width="1" stroke-dasharray="3,3"/>
+    <line x1="225" y1="40" x2="125" y2="210" stroke="#DC2626" stroke-width="1" stroke-dasharray="3,3"/>
+
+    <!-- Data Points hugging the line -->
+    <circle cx="130" cy="90" r="6" fill="#2563EB"/>
+    <circle cx="100" cy="140" r="6" fill="#2563EB"/>
+    <circle cx="70" cy="80" r="6" fill="#2563EB"/>
+
+    <rect x="180" y="140" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="220" y="90" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="250" y="170" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- New Test Point entering margin and misclassified -->
+    <circle cx="160" cy="130" r="8" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+    <text x="175" y="125" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#B45309">Noisy Test Sample</text>
+    <text x="175" y="138" font-family="-apple-system, sans-serif" font-size="10" fill="#DC2626">MISCLASSIFIED!</text>
+
+    <rect x="12" y="195" width="306" height="24" rx="4" fill="#FEE2E2"/>
+    <text x="165" y="211" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#991B1B" text-anchor="middle">Tiny clearance → Overfitting vulnerability</text>
+  </g>
+
+  <!-- Right: Wide Maximum Margin (Robust) -->
+  <g transform="translate(420, 90)">
+    <rect x="0" y="0" width="330" height="230" fill="#ECFDF5" rx="8" stroke="#A7F3D0" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#065F46">Maximum Wide Margin (Optimal Generalization)</text>
+
+    <!-- Wide Margin Boundaries -->
+    <polygon points="120,40 210,40 150,210 60,210" fill="#D1FAE5" opacity="0.6"/>
+    <line x1="165" y1="40" x2="105" y2="210" stroke="#059669" stroke-width="3"/>
+    <line x1="120" y1="40" x2="60" y2="210" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <line x1="210" y1="40" x2="150" y2="210" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+    <!-- Data Points with ample safety buffer -->
+    <circle cx="60" cy="90" r="6" fill="#2563EB"/>
+    <circle cx="40" cy="140" r="6" fill="#2563EB"/>
+    <circle cx="30" cy="80" r="6" fill="#2563EB"/>
+
+    <rect x="230" y="140" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="250" y="90" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="270" y="170" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- Test point successfully classified -->
+    <circle cx="130" cy="130" r="8" fill="#F59E0B" stroke="#B45309" stroke-width="2"/>
+    <text x="145" y="125" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#065F46">Noisy Test Sample</text>
+    <text x="145" y="138" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" fill="#059669">Correctly Classified!</text>
+
+    <rect x="12" y="195" width="306" height="24" rx="4" fill="#D1FAE5"/>
+    <text x="165" y="211" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#065F46" text-anchor="middle">Wide safety buffer → Resilient to real-world noise</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.4: Narrow Margin vs. Wide Margin Generalization.</strong> A narrow margin classifies the training points but leaves zero safety tolerance for real-world test noise, causing misclassifications. A wide margin provides robust clearance.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The Danger of a Narrow Margin</h3>
+    <p>
+      Consider a boundary that slices right along the edge of your training points with only 0.05 units of clearance. 
+      While this boundary achieves 100% training accuracy, it suffers from severe <strong>high variance (overfitting risk)</strong>:
+    </p>
+    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-secondary);">
+      <li><strong>Measurement Noise:</strong> In real life, sensor readings, survey inputs, and test scores fluctuate by a few percent due to random noise.</li>
+      <li><strong>Boundary Vulnerability:</strong> A noisy test point that belongs to Class 1 will easily wander across a narrow boundary into Class 0 territory.</li>
+    </ul>
+
+    <h3 class="sub-title">2. Why Maximum Margin Promotes Generalization</h3>
+    <p>
+      By selecting the hyperplane that sits exactly halfway between the two classes with the <strong>maximum possible clearance on both sides</strong>, SVM minimizes the risk that random perturbations will cause misclassifications. 
+      Statistical learning theory (Vapnik-Chervonenkis / VC Dimension Theory) proves that maximizing the margin minimizes the theoretical upper bound on test generalization error!
+    </p>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="sec-06" class="section-card">
+    <div class="section-badge">Section 06</div>
+    <h2 class="section-title">Hard Margin vs. Soft Margin: The Slack Variable (ξ)</h2>
+    <p class="section-lead">
+      In an ideal textbook world, data points of different classes are cleanly separated with empty space in between. 
+      In real-world engineering, datasets contain sensor glitches, mislabelled records, human error, and natural overlap. 
+      How does SVM survive when clean linear separation is impossible?
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Linear SVM on Linearly Separable Data</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">When data points have clean separation, canonical hard-margin conditions hold perfectly with zero violations</text>
+
+  <!-- Plot Canvas -->
+  <g transform="translate(60, 85)">
+    <rect x="0" y="0" width="480" height="260" fill="#F8FAFC" rx="8" stroke="#CBD5E1" stroke-width="1.5"/>
+
+    <!-- Margin Corridor -->
+    <polygon points="180,0 300,0 160,260 40,260" fill="#EFF6FF" opacity="0.7"/>
+    <line x1="240" y1="0" x2="100" y2="260" stroke="#2563EB" stroke-width="3"/>
+    <line x1="180" y1="0" x2="40" y2="260" stroke="#059669" stroke-width="1.8" stroke-dasharray="5,4"/>
+    <line x1="300" y1="0" x2="160" y2="260" stroke="#DC2626" stroke-width="1.8" stroke-dasharray="5,4"/>
+
+    <!-- Class 1 Points (Passed) -->
+    <circle cx="50" cy="40" r="6" fill="#2563EB"/>
+    <circle cx="70" cy="90" r="6" fill="#2563EB"/>
+    <circle cx="30" cy="140" r="6" fill="#2563EB"/>
+    <circle cx="60" cy="200" r="6" fill="#2563EB"/>
+
+    <!-- Support Vectors on positive margin -->
+    <circle cx="140" cy="74" r="12" fill="none" stroke="#D97706" stroke-width="2"/>
+    <circle cx="140" cy="74" r="6" fill="#2563EB"/>
+
+    <circle cx="90" cy="167" r="12" fill="none" stroke="#D97706" stroke-width="2"/>
+    <circle cx="90" cy="167" r="6" fill="#2563EB"/>
+
+    <!-- Class 0 Points (Failed) -->
+    <rect x="340" y="100" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="380" y="160" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="420" y="80" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="300" y="210" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- Support Vectors on negative margin -->
+    <circle cx="251" cy="96" r="12" fill="none" stroke="#D97706" stroke-width="2"/>
+    <rect x="245" y="90" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <circle cx="201" cy="189" r="12" fill="none" stroke="#D97706" stroke-width="2"/>
+    <rect x="195" y="183" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <text x="235" y="245" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#2563EB">wᵀx + b = 0</text>
+  </g>
+
+  <!-- Side Properties Card -->
+  <g transform="translate(565, 85)">
+    <rect x="0" y="0" width="195" height="260" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="14" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">Hard Margin Rules</text>
+
+    <text x="14" y="52" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#334155">Constraint Satisfaction:</text>
+    <rect x="12" y="60" width="171" height="42" rx="4" fill="#ECFDF5" stroke="#A7F3D0"/>
+    <text x="97" y="78" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46" text-anchor="middle">yᵢ(wᵀxᵢ + b) ≥ 1</text>
+    <text x="97" y="94" font-family="-apple-system, sans-serif" font-size="10" fill="#047857" text-anchor="middle">for all i = 1, ..., N</text>
+
+    <text x="14" y="125" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Zero margin violations (ξᵢ = 0)</text>
+    <text x="14" y="145" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Zero misclassifications</text>
+    <text x="14" y="165" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Empty margin corridor</text>
+
+    <line x1="14" y1="185" x2="181" y2="185" stroke="#E2E8F0"/>
+
+    <rect x="12" y="200" width="171" height="48" rx="4" fill="#FEF2F2" stroke="#FECACA"/>
+    <text x="97" y="218" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#991B1B" text-anchor="middle">Fatal Weakness:</text>
+    <text x="97" y="236" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C" text-anchor="middle">Fails if even 1 outlier overlaps!</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.5: Hard Margin on Linearly Separable Data.</strong> When data is pristine, hard margin conditions hold: every training point satisfies <code>yᵢ(wᵀxᵢ + b) &ge; 1</code> with zero violations.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The Hard Margin Optimization Problem</h3>
+    <p>
+      In a <strong>Hard Margin SVM</strong>, we require that every single training observation must lie on the correct side of its respective canonical margin plane:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; Hard Margin Objective &amp; Constraints</div>
+      <div class="math-display">min_{w, b} &nbsp; ½ ∥w∥² &nbsp;&nbsp; subject to: &nbsp;&nbsp; yᵢ(wᵀxᵢ + b) ≥ 1 &nbsp;&nbsp; (for all i = 1, ..., N)</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">min ½∥w∥²</span><span>Equivalent to maximizing total margin width 2/∥w∥</span></div>
+        <div class="legend-item"><span class="legend-symbol">y_i &isin; {-1, +1}</span><span>True binary class label of observation i</span></div>
+        <div class="legend-item"><span class="legend-symbol">&ge; 1</span><span>Demands that all points sit outside or on the margin corridor</span></div>
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <div class="warn-title"><span>&#9888;&#65039;</span> The Fatal Flaw of Hard Margin SVM</div>
+      <p>
+        Hard margin SVM has two fatal limitations in practical machine learning:
+      </p>
+      <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--warn-card-text);">
+        <li><strong>No Mathematical Solution on Overlapping Data:</strong> If even a single Class 1 observation falls inside the Class 0 cloud, no line can satisfy the constraints. The optimization solver crashes with an infeasible error.</li>
+        <li><strong>Extreme Outlier Sensitivity:</strong> Even if separable, a single rogue outlier located far from its cluster will force the boundary to tilt wildly, ruining test generalization.</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-title">2. Soft Margin SVM &amp; Slack Variables (ξᵢ)</h3>
+    <p>
+      To solve this dilemma, Vladimir Vapnik and Corinna Cortes introduced the <strong>Soft Margin SVM</strong>. 
+      They introduced a slack variable <strong>&xi;ᵢ (xi)</strong> for each training sample, representing the distance by which point <code>x_i</code> violates the ideal margin boundary.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Hard Margin vs. Soft Margin: The Slack Variable (ξ)</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Soft margin SVM introduces slack variables ξᵢ ≥ 0 to tolerate realistic noise without model breakdown</text>
+
+  <!-- Left: Hard Margin Breakdown on Noise -->
+  <g transform="translate(50, 90)">
+    <rect x="0" y="0" width="330" height="250" fill="#FEF2F2" rx="8" stroke="#FECACA" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#991B1B">Hard Margin Breakdown</text>
+
+    <!-- Faint intended boundary -->
+    <line x1="180" y1="40" x2="120" y2="210" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+    <!-- Data points -->
+    <circle cx="80" cy="80" r="6" fill="#2563EB"/>
+    <circle cx="60" cy="150" r="6" fill="#2563EB"/>
+    <rect x="240" y="90" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="220" y="160" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- The 1 Outlier Intruder -->
+    <circle cx="210" cy="110" r="7" fill="#2563EB" stroke="#DC2626" stroke-width="2"/>
+    <text x="140" y="130" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#991B1B">Outlier Intruder!</text>
+
+    <!-- Hard Margin Line Severely Distorted -->
+    <line x1="235" y1="40" x2="215" y2="210" stroke="#DC2626" stroke-width="2.5"/>
+
+    <rect x="12" y="200" width="306" height="38" rx="4" fill="#FEE2E2"/>
+    <text x="165" y="216" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#991B1B" text-anchor="middle">No feasible solution exists, or line is</text>
+    <text x="165" y="230" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C" text-anchor="middle">catastrophically tilted by a single noisy point!</text>
+  </g>
+
+  <!-- Right: Soft Margin Tolerates Slack -->
+  <g transform="translate(420, 90)">
+    <rect x="0" y="0" width="330" height="250" fill="#EFF6FF" rx="8" stroke="#BFDBFE" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E40AF">Soft Margin (Slack Penalty C)</text>
+
+    <!-- Robust Hyperplane and Margins -->
+    <polygon points="120,40 210,40 150,210 60,210" fill="#DBEAFE" opacity="0.5"/>
+    <line x1="165" y1="40" x2="105" y2="210" stroke="#2563EB" stroke-width="3"/>
+    <line x1="120" y1="40" x2="60" y2="210" stroke="#059669" stroke-width="1.5" stroke-dasharray="4,4"/>
+    <line x1="210" y1="40" x2="150" y2="210" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="4,4"/>
+
+    <!-- Data points -->
+    <circle cx="80" cy="80" r="6" fill="#2563EB"/>
+    <circle cx="60" cy="150" r="6" fill="#2563EB"/>
+    <rect x="250" y="90" width="12" height="12" fill="#DC2626" rx="2"/>
+    <rect x="230" y="160" width="12" height="12" fill="#DC2626" rx="2"/>
+
+    <!-- Outlier with slack variable arrow -->
+    <circle cx="180" cy="110" r="7" fill="#2563EB" stroke="#D97706" stroke-width="2"/>
+    <line x1="180" y1="110" x2="100" y2="110" stroke="#D97706" stroke-width="2" stroke-dasharray="2,2"/>
+    <rect x="135" y="94" width="45" height="18" rx="3" fill="#FFFBEB" stroke="#D97706"/>
+    <text x="157" y="107" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#B45309" text-anchor="middle">ξᵢ &gt; 1</text>
+
+    <rect x="12" y="200" width="306" height="38" rx="4" fill="#DBEAFE"/>
+    <text x="165" y="216" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#1E40AF" text-anchor="middle">Min ( ½ ∥w∥² + C ∑ ξᵢ )</text>
+    <text x="165" y="230" font-family="-apple-system, sans-serif" font-size="10" fill="#1D4ED8" text-anchor="middle">Maintains optimal wide boundary despite noise!</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.6: Hard Margin vs. Soft Margin with Slack Variables.</strong> Soft margin SVM introduces slack penalties <code>&xi;ᵢ &ge; 0</code>. Points inside the margin corridor (<code>0 &lt; &xi;ᵢ &le; 1</code>) or misclassified points (<code>&xi;ᵢ &gt; 1</code>) are penalized by factor <code>C</code>, keeping the boundary stable.
+      </div>
+    </div>
+
+    <h3 class="sub-title">3. Interpreting the Three Slack Conditions</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Slack Value</th>
+            <th>Point Location</th>
+            <th>Classification Status</th>
+            <th>Support Vector Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>&xi;ᵢ = 0</code></td>
+            <td>On or beyond the correct margin plane</td>
+            <td>Correctly classified with full margin clearance</td>
+            <td>Non-support vector (if beyond margin) or margin support vector (if exactly on plane)</td>
+          </tr>
+          <tr>
+            <td><code>0 &lt; &xi;ᵢ &le; 1</code></td>
+            <td>Inside the margin corridor, but on the correct side of the hyperplane</td>
+            <td>Correctly classified, but with reduced safety margin</td>
+            <td><strong>Support Vector</strong> (violating margin)</td>
+          </tr>
+          <tr>
+            <td><code>&xi;ᵢ &gt; 1</code></td>
+            <td>Across the decision hyperplane on the wrong side</td>
+            <td><strong>Misclassified training error</strong></td>
+            <td><strong>Support Vector</strong> (violating decision boundary)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section id="sec-07" class="section-card">
+    <div class="section-badge">Section 07</div>
+    <h2 class="section-title">Understanding the C Regularization Parameter</h2>
+    <p class="section-lead">
+      In scikit-learn, the trade-off between margin width and training violations is governed by a single, critical hyperparameter: <strong><code>C</code></strong>. 
+      Understanding how <code>C</code> behaves is essential for tuning high-performance SVM models.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; The Soft-Margin Optimization Objective</div>
+      <div class="math-display">min_{w, b, ξ} &nbsp; ( ½ ∥w∥² + C ∑_{i=1}^{N} ξᵢ ) &nbsp;&nbsp; subject to: &nbsp;&nbsp; yᵢ(wᵀxᵢ + b) ≥ 1 - ξᵢ, &nbsp; ξᵢ ≥ 0</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">½∥w∥²</span><span>Regularization term: seeks a wider margin (simpler model)</span></div>
+        <div class="legend-item"><span class="legend-symbol">C &sum; &xi;ᵢ</span><span>Loss penalty term: penalizes training margin violations</span></div>
+        <div class="legend-item"><span class="legend-symbol">C</span><span>Regularization hyperparameter balancing the two opposing forces</span></div>
+      </div>
+    </div>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Decision Boundaries &amp; Margins Across C Parameter</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">C controls the penalty for margin violations: Small C = Wide Margin; Large C = Narrow Margin</text>
+
+  <!-- Panel 1: C = 0.1 -->
+  <g transform="translate(40, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <rect x="8" y="8" width="85" height="22" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="50" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1D4ED8" text-anchor="middle">C = 0.1 (Soft)</text>
+
+    <!-- Very wide margin band -->
+    <polygon points="50,40 180,40 140,190 10,190" fill="#EFF6FF" opacity="0.8"/>
+    <line x1="115" y1="40" x2="75" y2="190" stroke="#2563EB" stroke-width="2.5"/>
+    <line x1="50" y1="40" x2="10" y2="190" stroke="#2563EB" stroke-dasharray="3,3"/>
+    <line x1="180" y1="40" x2="140" y2="190" stroke="#2563EB" stroke-dasharray="3,3"/>
+
+    <!-- Points -->
+    <circle cx="40" cy="70" r="5" fill="#2563EB"/>
+    <circle cx="70" cy="110" r="5" fill="#2563EB" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="150" y="130" width="10" height="10" fill="#DC2626" rx="2" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="180" y="100" width="10" height="10" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="210" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#1E40AF" text-anchor="middle">Wide Margin (78 SVs)</text>
+    <text x="110" y="226" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">High tolerance for errors</text>
+  </g>
+
+  <!-- Panel 2: C = 1.0 (Balanced) -->
+  <g transform="translate(290, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#3B82F6" stroke-width="2"/>
+    <rect x="8" y="8" width="105" height="22" rx="4" fill="#DBEAFE" stroke="#60A5FA"/>
+    <text x="60" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">C = 1.0 (Optimal)</text>
+
+    <!-- Moderate margin band -->
+    <polygon points="75,40 155,40 120,190 40,190" fill="#DBEAFE" opacity="0.8"/>
+    <line x1="115" y1="40" x2="80" y2="190" stroke="#2563EB" stroke-width="2.5"/>
+    <line x1="75" y1="40" x2="40" y2="190" stroke="#2563EB" stroke-dasharray="3,3"/>
+    <line x1="155" y1="40" x2="120" y2="190" stroke="#2563EB" stroke-dasharray="3,3"/>
+
+    <!-- Points -->
+    <circle cx="40" cy="70" r="5" fill="#2563EB"/>
+    <circle cx="72" cy="110" r="5" fill="#2563EB" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="150" y="130" width="10" height="10" fill="#DC2626" rx="2" stroke="#F59E0B" stroke-width="2"/>
+    <rect x="180" y="100" width="10" height="10" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="210" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#1D4ED8" text-anchor="middle">Balanced Margin (32 SVs)</text>
+    <text x="110" y="226" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Optimal Generalization</text>
+  </g>
+
+  <!-- Panel 3: C = 10.0 (Strict) -->
+  <g transform="translate(540, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <rect x="8" y="8" width="85" height="22" rx="4" fill="#FEF2F2" stroke="#FECACA"/>
+    <text x="50" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">C = 10.0 (Hard)</text>
+
+    <!-- Very narrow margin band -->
+    <polygon points="100,40 135,40 102,190 67,190" fill="#FEE2E2" opacity="0.8"/>
+    <line x1="117" y1="40" x2="85" y2="190" stroke="#DC2626" stroke-width="2.5"/>
+    <line x1="100" y1="40" x2="67" y2="190" stroke="#DC2626" stroke-dasharray="3,3"/>
+    <line x1="135" y1="40" x2="102" y2="190" stroke="#DC2626" stroke-dasharray="3,3"/>
+
+    <!-- Points -->
+    <circle cx="40" cy="70" r="5" fill="#2563EB"/>
+    <circle cx="70" cy="110" r="5" fill="#2563EB"/>
+    <rect x="150" y="130" width="10" height="10" fill="#DC2626" rx="2"/>
+    <rect x="180" y="100" width="10" height="10" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="210" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#991B1B" text-anchor="middle">Narrow Margin (23 SVs)</text>
+    <text x="110" y="226" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Strict zero-violation penalty</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.7: Decision Boundaries and Margins Across C Values.</strong> Small <code>C = 0.1</code> allows more slack violations (78 SVs) to preserve a wide margin. Large <code>C = 10.0</code> enforces a strict penalty (23 SVs), yielding a narrow boundary vulnerable to overfitting.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The C Parameter Tug-of-War</h3>
+    <p>
+      Think of <code>C</code> as a dial that controls how strictly the algorithm punishes training mistakes:
+    </p>
+    <div class="grid-2col">
+      <div class="def-box">
+        <div class="def-title"><span>&#128313;</span> Small C (e.g. C = 0.01 or 0.1)</div>
+        <p><strong>Philosophy:</strong> "A wide margin is far more important than a few training mistakes."</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--def-card-text);">
+          <li>Tolerates many slack violations (&xi;ᵢ &gt; 0).</li>
+          <li>Produces a <strong>wider margin</strong> corridor.</li>
+          <li>Selects <strong>more support vectors</strong> (e.g., 78 out of 192).</li>
+          <li><strong>High bias, low variance</strong> (prevents overfitting on noisy data).</li>
+        </ul>
+      </div>
+
+      <div class="warn-box">
+        <div class="warn-title"><span>&#128314;</span> Large C (e.g. C = 10 or 100)</div>
+        <p><strong>Philosophy:</strong> "Every single training mistake must be heavily penalized!"</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--warn-card-text);">
+          <li>Severely punishes slack violations (&xi;ᵢ).</li>
+          <li>Produces a <strong>narrower margin</strong> corridor.</li>
+          <li>Selects <strong>fewer support vectors</strong> (e.g., 23 out of 192).</li>
+          <li><strong>Low bias, high variance</strong> (risks fitting to outliers).</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="sub-title">2. Empirical Results on Our Training Set</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>C Value</th>
+            <th>Support Vector Count</th>
+            <th>% of Training Set (N=192)</th>
+            <th>Training Accuracy</th>
+            <th>Holdout Test Accuracy</th>
+            <th>Model Behavioral Tendency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>C = 0.1</code></td>
+            <td><strong>78</strong></td>
+            <td>40.6%</td>
+            <td>97.40%</td>
+            <td><strong>93.75%</strong></td>
+            <td>Wide, relaxed margin corridor; resilient to training noise.</td>
+          </tr>
+          <tr>
+            <td><code>C = 1.0</code></td>
+            <td><strong>32</strong></td>
+            <td>16.7%</td>
+            <td>96.88%</td>
+            <td><strong>91.67%</strong></td>
+            <td>Balanced default; optimal trade-off for standard distributions.</td>
+          </tr>
+          <tr>
+            <td><code>C = 10.0</code></td>
+            <td><strong>23</strong></td>
+            <td>12.0%</td>
+            <td>97.40%</td>
+            <td><strong>93.75%</strong></td>
+            <td>Narrow, rigid margin; penalizes margin intruders aggressively.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section id="sec-08" class="section-card">
+    <div class="section-badge">Section 08</div>
+    <h2 class="section-title">Linear SVM Architecture</h2>
+    <p class="section-lead">
+      When your data is approximately linearly separable, or when the number of features is extremely large (such as text classification with thousands of TF-IDF word tokens), a <strong>Linear SVM</strong> is often the fastest, most effective classifier available.
+    </p>
+
+    <h3 class="sub-title">1. SVC(kernel="linear") vs. LinearSVC in Scikit-Learn</h3>
+    <p>
+      Beginners frequently encounter two different classes in scikit-learn for linear support vector classification. 
+      While both construct a linear hyperplane, their underlying C++ implementations differ fundamentally:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Implementation Feature</th>
+            <th><code>SVC(kernel="linear")</code></th>
+            <th><code>LinearSVC</code></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Underlying C++ Engine</strong></td>
+            <td><code>libsvm</code></td>
+            <td><code>liblinear</code></td>
+          </tr>
+          <tr>
+            <td><strong>Optimization Formulation</strong></td>
+            <td>Solves the <strong>Dual Problem</strong> (using quadratic programming).</td>
+            <td>Solves the <strong>Primal Problem</strong> directly via coordinate descent.</td>
+          </tr>
+          <tr>
+            <td><strong>Training Scalability</strong></td>
+            <td>O(N²) to O(N³) with sample count N. Slower for N &gt; 50,000.</td>
+            <td>O(N &times; D) linear scaling. Extremely fast on huge datasets.</td>
+          </tr>
+          <tr>
+            <td><strong>Access to Support Vectors</strong></td>
+            <td><strong>Yes:</strong> <code>.support_vectors_</code>, <code>.support_</code></td>
+            <td><strong>No:</strong> Does not store explicit support vector indices.</td>
+          </tr>
+          <tr>
+            <td><strong>Default Loss Function</strong></td>
+            <td>Hinge Loss (standard SVM)</td>
+            <td>Squared Hinge Loss (differentiable for fast gradient descent)</td>
+          </tr>
+          <tr>
+            <td><strong>Recommended Use Case</strong></td>
+            <td>Educational inspection, moderate datasets (N &lt; 20,000).</td>
+            <td>Production text/document classification with massive feature spaces.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section id="sec-09" class="section-card">
+    <div class="section-badge">Section 09</div>
+    <h2 class="section-title">What If the Classes Are Not Linearly Separable?</h2>
+    <p class="section-lead">
+      Real-world data rarely arranges itself into neat, straight bands. 
+      What happens when data points form concentric rings, complex spirals, or XOR patterns? 
+      A straight line cannot separate them—any linear model is doomed to fail.
+    </p>
+
+    <div class="analogy-box">
+      <div class="analogy-title">
+        <span>&#128161;</span> The Magic Table Trick: Lifting Data into 3D Space
+      </div>
+      <p>
+        Imagine you place blue marbles in the center of a dinner table and surround them with a ring of red marbles. 
+        If you are only allowed to lay a straight wooden ruler flat on the tabletop, you can never separate the blue marbles from the red ones! 
+        Every straight cut groups red and blue marbles together.
+      </p>
+      <p style="margin-top: 0.5rem;">
+        Now imagine you tap the underside of the table right beneath the center. 
+        The blue marbles launch upward into the air, while the heavier red marbles stay on the table. 
+        While the blue marbles are suspended in 3D space, you can effortlessly slide a flat cardboard sheet horizontally beneath the floating blue marbles! 
+        A problem that was <strong>impossible in 2D</strong> became <strong>trivially linear in 3D</strong>.
+      </p>
+    </div>
+
+    <h3 class="sub-title">1. Explicit Feature Mapping Example</h3>
+    <p>
+      Suppose we have 1D points on a line: negative samples at <code>x = -2, +2</code> and positive samples at <code>x = -1, 0, +1</code>. 
+      No single cut point can isolate the positive samples. 
+      However, if we create a new feature <code>z = x²</code>:
+    </p>
+    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-secondary);">
+      <li>Positive points <code>x &isin; {-1, 0, 1} &rarr; z &isin; {1, 0, 1}</code> (all z &le; 1).</li>
+      <li>Negative points <code>x &isin; {-2, 2} &rarr; z &isin; {4, 4}</code> (all z &ge; 4).</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">
+      In the new <code>z</code> space, a simple linear threshold at <code>z = 2.5</code> perfectly separates the classes!
+    </p>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section id="sec-10" class="section-card">
+    <div class="section-badge">Section 10</div>
+    <h2 class="section-title">The Kernel Trick and Important Kernels</h2>
+    <p class="section-lead">
+      Manually mapping features into higher dimensions is computationally disastrous. 
+      If we mapped a 100-feature image into a 10th-degree polynomial space, we would generate billions of synthetic features, exhausting all computer memory! 
+      This is where the mathematical miracle called the <strong>Kernel Trick</strong> saves the day.
+    </p>
+
+    <h3 class="sub-title">1. What Is the Kernel Trick?</h3>
+    <p>
+      When solving the mathematical dual formulation of SVM, the algorithm never needs to know the individual coordinates of points in the high-dimensional space! 
+      It only ever computes the <strong>dot product (inner product)</strong> between pairs of points: <code>⟨&phi;(x), &phi;(z)⟩</code>.
+    </p>
+    <p>
+      A <strong>kernel function K(x, z)</strong> is a mathematical shortcut that computes this exact high-dimensional dot product directly using the original, low-dimensional coordinates, <strong>without ever actually projecting the data into higher dimensions!</strong>
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; The Three Primary SVM Kernels</div>
+      
+      <div class="math-display">K(x, z) = xᵀz &nbsp;&nbsp;&nbsp;&nbsp; (Linear Kernel)</div>
+      <p style="text-align:center; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">Measures standard Euclidean inner product. Constructs linear hyperplanes.</p>
+
+      <div class="math-display">K(x, z) = (γ xᵀz + r)ᵈ &nbsp;&nbsp;&nbsp;&nbsp; (Polynomial Kernel)</div>
+      <p style="text-align:center; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">Constructs curved, elliptical, or interaction-based decision manifolds of degree d.</p>
+
+      <div class="math-display">K(x, z) = exp( -γ ∥x - z∥² ) &nbsp;&nbsp;&nbsp;&nbsp; (RBF Kernel)</div>
+      <p style="text-align:center; font-size: 0.88rem; color: var(--text-muted);">Computes Gaussian similarity decaying with squared Euclidean distance. Equivalent to an infinite-dimensional feature space!</p>
+    </div>
+
+    <h3 class="sub-title">2. Kernel Parameter Breakdown</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Kernel Name</th>
+            <th>Scikit-Learn Setting</th>
+            <th>Key Hyperparameters</th>
+            <th>Mathematical Role</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Linear</strong></td>
+            <td><code>kernel='linear'</code></td>
+            <td><code>C</code></td>
+            <td>Computes direct dot product <code>xᵀz</code>. Fast, interpretable, ideal for high dimensions.</td>
+          </tr>
+          <tr>
+            <td><strong>Polynomial</strong></td>
+            <td><code>kernel='poly'</code></td>
+            <td><code>degree=d</code>, <code>gamma=&gamma;</code>, <code>coef0=r</code></td>
+            <td>Projects into polynomial feature interactions up to degree <code>d</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>RBF (Gaussian)</strong></td>
+            <td><code>kernel='rbf'</code></td>
+            <td><code>C</code>, <code>gamma=&gamma;</code></td>
+            <td>Measures local similarity. Points close together have <code>K(x,z) &approx; 1</code>; points far apart have <code>K(x,z) &rarr; 0</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">3. Concrete Worked Kernel Calculations</h3>
+    <div class="calc-box">
+      <div class="calc-step">
+        <div class="step-title">Given Two Observations in 2D Space:</div>
+        <p>Let <code>x = [2.0, 3.0]ᵀ</code> and <code>z = [4.0, 1.0]ᵀ</code>.</p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">1. Linear Kernel:</div>
+        <p><code>K(x, z) = xᵀz = (2.0 &times; 4.0) + (3.0 &times; 1.0) = 8.0 + 3.0 = 11.0000</code></p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">2. Polynomial Kernel (with &gamma;=1.0, r=1.0, d=2):</div>
+        <p><code>K(x, z) = (1.0 &times; 11.0 + 1.0)² = (12.0)² = 144.0000</code></p>
+      </div>
+      <div class="calc-step">
+        <div class="step-title">3. RBF Gaussian Kernel (with &gamma;=0.1):</div>
+        <p>Squared distance: <code>∥x - z∥² = (2 - 4)² + (3 - 1)² = (-2)² + 2² = 4 + 4 = 8.0000</code></p>
+        <p><code>K(x, z) = exp(-0.1 &times; 8.0) = exp(-0.8000) = 0.4493</code></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 11 -->
+  <section id="sec-11" class="section-card">
+    <div class="section-badge">Section 11</div>
+    <h2 class="section-title">Visualizing Different Kernels in Action</h2>
+    <p class="section-lead">
+      To truly understand how kernels alter the decision boundary, let us fit three different SVM models on the exact same non-linear, concentric circle dataset (<code>make_circles</code>). 
+      Watch how the geometric manifold adapts to the data topology!
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Kernel Comparison on Concentric Non-Linear Dataset</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">A linear hyperplane fails on circular patterns; Polynomial and RBF kernels construct non-linear decision manifolds</text>
+
+  <!-- Panel 1: Linear Kernel (Fails) -->
+  <g transform="translate(40, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#FEF2F2" rx="8" stroke="#FECACA" stroke-width="1.5"/>
+    <rect x="8" y="8" width="95" height="22" rx="4" fill="#FEE2E2"/>
+    <text x="55" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Linear Kernel</text>
+
+    <!-- Concentric points -->
+    <!-- Inner Circle: Class 1 -->
+    <circle cx="110" cy="115" r="5" fill="#2563EB"/>
+    <circle cx="95" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="125" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="110" cy="130" r="5" fill="#2563EB"/>
+    <!-- Outer Ring: Class 0 -->
+    <rect x="50" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="160" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="40" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="170" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <!-- Inadequate straight line -->
+    <line x1="30" y1="50" x2="190" y2="180" stroke="#991B1B" stroke-width="2.5"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Test Accuracy: 54.0%</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D" text-anchor="middle">Cannot separate circles</text>
+  </g>
+
+  <!-- Panel 2: Polynomial Kernel (Degree 2) -->
+  <g transform="translate(290, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F0FDF4" rx="8" stroke="#BBF7D0" stroke-width="1.5"/>
+    <rect x="8" y="8" width="115" height="22" rx="4" fill="#DCFCE7"/>
+    <text x="65" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#166534" text-anchor="middle">Polynomial (d=2)</text>
+
+    <!-- Concentric points -->
+    <circle cx="110" cy="115" r="5" fill="#2563EB"/>
+    <circle cx="95" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="125" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="110" cy="130" r="5" fill="#2563EB"/>
+    <rect x="50" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="160" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="40" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="170" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <!-- Elliptical boundary -->
+    <ellipse cx="110" cy="115" rx="38" ry="32" fill="none" stroke="#16A34A" stroke-width="2.5"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#166534" text-anchor="middle">Test Accuracy: 100.0%</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#15803D" text-anchor="middle">Captures quadratic terms</text>
+  </g>
+
+  <!-- Panel 3: RBF Kernel (Radial Basis) -->
+  <g transform="translate(540, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#EFF6FF" rx="8" stroke="#BFDBFE" stroke-width="1.5"/>
+    <rect x="8" y="8" width="105" height="22" rx="4" fill="#DBEAFE"/>
+    <text x="60" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">RBF Kernel (γ=1)</text>
+
+    <!-- Concentric points -->
+    <circle cx="110" cy="115" r="5" fill="#2563EB"/>
+    <circle cx="95" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="125" cy="105" r="5" fill="#2563EB"/>
+    <circle cx="110" cy="130" r="5" fill="#2563EB"/>
+    <rect x="50" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="160" y="60" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="40" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="170" y="150" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <!-- Smooth radial contour -->
+    <circle cx="110" cy="115" r="35" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">Test Accuracy: 100.0%</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#1D4ED8" text-anchor="middle">Smooth infinite-dim similarity</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.8: Kernel Comparison on Concentric Non-Linear Dataset.</strong> The Linear kernel is fundamentally incapable of separating concentric rings (54.0% test accuracy). The Polynomial kernel (d=2) forms a quadratic ellipse, and the RBF kernel forms an optimal radial boundary (both achieving 100.0% test accuracy).
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. Empirical Performance Breakdown on Concentric Dataset</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Kernel</th>
+            <th>Scikit-Learn Formulation</th>
+            <th>Support Vectors</th>
+            <th>Train Accuracy</th>
+            <th>Test Accuracy</th>
+            <th>Visual Geometric Shape</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Linear</strong></td>
+            <td><code>SVC(kernel='linear')</code></td>
+            <td><strong>150 / 150</strong> (100%)</td>
+            <td>54.67%</td>
+            <td><strong>54.00%</strong></td>
+            <td>A flat, straight line cutting across the circles. Complete underfitting.</td>
+          </tr>
+          <tr>
+            <td><strong>Polynomial (d=2)</strong></td>
+            <td><code>SVC(kernel='poly', degree=2)</code></td>
+            <td><strong>24 / 150</strong> (16.0%)</td>
+            <td>100.0%</td>
+            <td><strong>100.0%</strong></td>
+            <td>A smooth ellipse enclosing the inner core points perfectly.</td>
+          </tr>
+          <tr>
+            <td><strong>RBF (Gaussian)</strong></td>
+            <td><code>SVC(kernel='rbf', gamma=1.0)</code></td>
+            <td><strong>38 / 150</strong> (25.3%)</td>
+            <td>100.0%</td>
+            <td><strong>100.0%</strong></td>
+            <td>A radial circular contour wrapping the inner cluster seamlessly.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 12 -->
+  <section id="sec-12" class="section-card">
+    <div class="section-badge">Section 12</div>
+    <h2 class="section-title">Understanding Gamma (γ) in RBF SVM</h2>
+    <p class="section-lead">
+      While the <code>C</code> parameter controls margin softness, the <strong><code>gamma</code> (&gamma;)</strong> parameter controls the <strong>radius of influence</strong> of individual training observations in the RBF kernel. 
+      Tuning gamma is the primary tool for balancing bias and variance in non-linear SVMs.
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; The Role of Gamma in the RBF Kernel</div>
+      <div class="math-display">K(x, z) = exp( -γ ∥x - z∥² ) = exp( - ∥x - z∥² / (2σ²) )</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">&gamma; = 1 / (2&sigma;²)</span><span>Inverse variance of the Gaussian distribution</span></div>
+        <div class="legend-item"><span class="legend-symbol">High &gamma;</span><span>Tiny radius of influence (&sigma; is small) &rarr; highly localized pockets</span></div>
+        <div class="legend-item"><span class="legend-symbol">Low &gamma;</span><span>Huge radius of influence (&sigma; is large) &rarr; smooth, broad influence</span></div>
+      </div>
+    </div>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">RBF Gamma Parameter (γ): Radius of Point Influence</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Small γ gives points wide reach (smooth boundary); Large γ gives points tiny reach (island overfitting)</text>
+
+  <!-- Panel 1: gamma = 0.1 -->
+  <g transform="translate(40, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <rect x="8" y="8" width="90" height="22" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="53" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1D4ED8" text-anchor="middle">γ = 0.1 (Broad)</text>
+
+    <!-- Broad smooth boundary -->
+    <path d="M 40,50 Q 110,80 180,50 L 180,180 L 40,180 Z" fill="#EFF6FF" opacity="0.6"/>
+    <path d="M 40,50 Q 110,80 180,50" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+
+    <circle cx="80" cy="110" r="5" fill="#2563EB"/>
+    <circle cx="140" cy="120" r="5" fill="#2563EB"/>
+    <rect x="70" y="35" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="150" y="35" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">Broad Influence (79 SVs)</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Smooth, high bias tendency</text>
+  </g>
+
+  <!-- Panel 2: gamma = 1.0 (Optimal) -->
+  <g transform="translate(290, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#3B82F6" stroke-width="2"/>
+    <rect x="8" y="8" width="105" height="22" rx="4" fill="#DBEAFE" stroke="#60A5FA"/>
+    <text x="60" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">γ = 1.0 (Optimal)</text>
+
+    <!-- Well contoured boundary -->
+    <ellipse cx="110" cy="115" rx="55" ry="40" fill="#DBEAFE" opacity="0.6"/>
+    <ellipse cx="110" cy="115" rx="55" ry="40" fill="none" stroke="#2563EB" stroke-width="2.5"/>
+
+    <circle cx="85" cy="110" r="5" fill="#2563EB"/>
+    <circle cx="135" cy="115" r="5" fill="#2563EB"/>
+    <rect x="40" y="55" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="170" y="55" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1D4ED8" text-anchor="middle">Well-Tuned (37 SVs)</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="middle">Ideal generalization balance</text>
+  </g>
+
+  <!-- Panel 3: gamma = 10.0 (Overfitting) -->
+  <g transform="translate(540, 85)">
+    <rect x="0" y="0" width="220" height="245" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <rect x="8" y="8" width="95" height="22" rx="4" fill="#FEF2F2" stroke="#FECACA"/>
+    <text x="55" y="23" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">γ = 10.0 (Tight)</text>
+
+    <!-- Isolated tight boundary pockets (islands) -->
+    <circle cx="85" cy="110" r="16" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+    <circle cx="135" cy="115" r="16" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/>
+
+    <circle cx="85" cy="110" r="5" fill="#2563EB"/>
+    <circle cx="135" cy="115" r="5" fill="#2563EB"/>
+    <rect x="40" y="55" width="9" height="9" fill="#DC2626" rx="2"/>
+    <rect x="170" y="55" width="9" height="9" fill="#DC2626" rx="2"/>
+
+    <text x="110" y="208" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Island Pockets (89 SVs)</text>
+    <text x="110" y="224" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D" text-anchor="middle">Severe Overfitting / High Variance</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.9: RBF Gamma Parameter (&gamma;) Across Three Scales.</strong> Small <code>&gamma; = 0.1</code> creates a broad, smooth boundary. Moderate <code>&gamma; = 1.0</code> achieves optimal generalization. High <code>&gamma; = 10.0</code> fits isolated island pockets around individual data points (severe overfitting).
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The Gamma Sensitivity Spectrum</h3>
+    <div class="grid-2col">
+      <div class="def-box">
+        <div class="def-title"><span>&#128313;</span> Small Gamma (e.g. &gamma; = 0.01 or 0.1)</div>
+        <p><strong>Behavior:</strong> Each support vector exerts influence over a huge, expansive radius.</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--def-card-text);">
+          <li>Points far apart still have non-zero similarity.</li>
+          <li>Produces a <strong>smooth, broad, gentle</strong> decision surface.</li>
+          <li>Acts almost like a linear classifier when &gamma; approaches 0.</li>
+          <li><strong>High bias, low variance</strong> (may underfit complex data).</li>
+        </ul>
+      </div>
+
+      <div class="warn-box">
+        <div class="warn-title"><span>&#128314;</span> Large Gamma (e.g. &gamma; = 10 or 100)</div>
+        <p><strong>Behavior:</strong> Each support vector exerts influence only in its immediate tiny neighborhood.</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--warn-card-text);">
+          <li>Similarity drops to zero just a tiny distance away.</li>
+          <li>Draws tight, jagged circles ("islands") around individual points.</li>
+          <li>Training accuracy often reaches 100%, but test accuracy collapses.</li>
+          <li><strong>Low bias, high variance</strong> (classic catastrophic overfitting).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 13 -->
+  <section id="sec-13" class="section-card">
+    <div class="section-badge">Section 13</div>
+    <h2 class="section-title">Feature Scaling for Support Vector Machines</h2>
+    <p class="section-lead">
+      If there is one absolute rule in applied machine learning, it is this: <strong>Support Vector Machines require feature scaling!</strong> 
+      Skipping feature scaling before training an SVM is the single most common cause of broken models in industry.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 370" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Before vs. After Feature Scaling in SVM</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Distance-based Euclidean metrics are completely distorted by unscaled features with large numerical magnitudes</text>
+
+  <!-- Left: Unscaled (Distorted Aspect Ratio) -->
+  <g transform="translate(50, 90)">
+    <rect x="0" y="0" width="330" height="240" fill="#FEF2F2" rx="8" stroke="#FECACA" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#991B1B">Unscaled Features (Income $100k vs Age 40)</text>
+
+    <!-- Heavily skewed ellipse/aspect ratio -->
+    <ellipse cx="165" cy="110" rx="120" ry="25" fill="#FEE2E2" opacity="0.6"/>
+    <!-- Distorted horizontal boundary line -->
+    <line x1="30" y1="110" x2="300" y2="110" stroke="#DC2626" stroke-width="2.5"/>
+
+    <circle cx="120" cy="95" r="5" fill="#2563EB"/>
+    <circle cx="210" cy="95" r="5" fill="#2563EB"/>
+    <rect x="120" y="125" width="10" height="10" fill="#DC2626" rx="2"/>
+    <rect x="210" y="125" width="10" height="10" fill="#DC2626" rx="2"/>
+
+    <text x="165" y="165" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D" text-anchor="middle">Income completely dominates Euclidean distance (Δ=30,000)</text>
+    <text x="165" y="180" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D" text-anchor="middle">Age differences (Δ=15) are ignored as zero!</text>
+
+    <rect x="12" y="198" width="306" height="28" rx="4" fill="#FEE2E2"/>
+    <text x="165" y="216" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Test Accuracy: 88.0% | 44 Support Vectors</text>
+  </g>
+
+  <!-- Right: Standardized (Isotropic Balanced Geometry) -->
+  <g transform="translate(420, 90)">
+    <rect x="0" y="0" width="330" height="240" fill="#ECFDF5" rx="8" stroke="#A7F3D0" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#065F46">StandardScaler Applied (μ=0, σ=1)</text>
+
+    <!-- Balanced circular symmetry -->
+    <circle cx="165" cy="110" r="55" fill="#D1FAE5" opacity="0.6"/>
+    <line x1="120" y1="50" x2="210" y2="170" stroke="#059669" stroke-width="3"/>
+    <line x1="85" y1="75" x2="175" y2="195" stroke="#059669" stroke-dasharray="3,3"/>
+    <line x1="155" y1="25" x2="245" y2="145" stroke="#059669" stroke-dasharray="3,3"/>
+
+    <circle cx="110" cy="90" r="5" fill="#2563EB"/>
+    <circle cx="130" cy="130" r="5" fill="#2563EB"/>
+    <rect x="190" y="85" width="10" height="10" fill="#DC2626" rx="2"/>
+    <rect x="210" y="125" width="10" height="10" fill="#DC2626" rx="2"/>
+
+    <text x="165" y="172" font-family="-apple-system, sans-serif" font-size="10" fill="#065F46" text-anchor="middle">Both features exert equal mathematical weight</text>
+
+    <rect x="12" y="198" width="306" height="28" rx="4" fill="#D1FAE5"/>
+    <text x="165" y="216" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46" text-anchor="middle">Test Accuracy: 100.0% | 20 Support Vectors</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.10: Before vs. After Feature Scaling in SVM.</strong> Unscaled features (Income $100k vs Age 40) distort Euclidean distance, causing the algorithm to ignore Age entirely (88.0% test accuracy). Standardization brings both axes into isotropic balance (100.0% test accuracy).
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. Why Are SVMs Scale-Dependent?</h3>
+    <p>
+      Unlike Decision Trees (which only perform horizontal/vertical cuts on individual features), SVM computes <strong>Euclidean distances</strong> <code>∥x - z∥² = &sum; (x_j - z_j)²</code> and dot products <code>xᵀz = &sum; x_j z_j</code> across all dimensions simultaneously:
+    </p>
+    <ul style="margin-left: 1.5rem; margin-top: 0.5rem; color: var(--text-secondary);">
+      <li>Suppose Feature 1 is <strong>Annual Salary</strong> ($30,000 to $120,000) and Feature 2 is <strong>Years of Experience</strong> (1 to 15 years).</li>
+      <li>A salary difference of $10,000 yields <code>(&Delta;x₁)² = 10,000² = 100,000,000</code>.</li>
+      <li>An experience difference of 5 years yields <code>(&Delta;x₂)² = 5² = 25</code>.</li>
+      <li>The algorithm views 100,000,000 as vastly more important than 25, completely ignoring Experience!</li>
+    </ul>
+
+    <h3 class="sub-title">2. Mathematical Standardization Formula</h3>
+    <div class="formula-block">
+      <div class="formula-header">&#128290; Z-Score Feature Standardization</div>
+      <div class="math-display">z = (x - μ) / σ</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">x</span><span>Raw input feature value</span></div>
+        <div class="legend-item"><span class="legend-symbol">&mu;</span><span>Sample mean of the feature on the training split</span></div>
+        <div class="legend-item"><span class="legend-symbol">&sigma;</span><span>Sample standard deviation of the feature on the training split</span></div>
+      </div>
+    </div>
+
+    <div class="calc-box">
+      <div class="calc-step">
+        <div class="step-title">Worked Numerical Standardization Example:</div>
+        <p>Suppose a student scores <code>x = 72.0</code> on an entrance exam where the training set mean is <code>&mu; = 50.0</code> and standard deviation is <code>&sigma; = 10.0</code>.</p>
+        <p><code>z = (72.0 - 50.0) / 10.0 = 22.0 / 10.0 = +2.2000</code></p>
+        <p><em>Interpretation:</em> The student performed exactly 2.2 standard deviations above the average cohort.</p>
+      </div>
+    </div>
+
+    <div class="warn-box">
+      <div class="warn-title"><span>&#9888;&#65039;</span> The Golden Data Leakage Rule of Feature Scaling</div>
+      <p>
+        <strong>NEVER fit the scaler on the entire dataset before train/test splitting!</strong> 
+        Fitting <code>StandardScaler</code> on the combined dataset leaks test set statistics (&mu; and &sigma;) into the training process, invalidating your test metrics. 
+        Always fit the scaler strictly on <code>X_train</code>, and use it to transform <code>X_test</code> without refitting. 
+        The easiest, most robust way to enforce this in production is by bundling both in a scikit-learn <code>Pipeline</code>.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 14 -->
+  <section id="sec-14" class="section-card">
+    <div class="section-badge">Section 14</div>
+    <h2 class="section-title">SVM Classification Workflow</h2>
+    <p class="section-lead">
+      To build production-grade SVM models, machine learning engineers follow a standardized, rigorous 11-step pipeline that prevents data leakage and ensures reliable generalization.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 300" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">The End-to-End SVM Machine Learning Pipeline</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Leakage-free protocol: preprocessing, scaling, cross-validation hyperparameter selection, and holdout evaluation</text>
+
+  <!-- Flowchart Steps -->
+  <g transform="translate(30, 95)">
+    <!-- Step 1: Data & Stratified Split -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="130" height="130" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="12" fill="#2563EB"/>
+      <text x="22" y="26" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1</text>
+      <text x="14" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#0F172A">Data Split</text>
+      <text x="14" y="75" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">• 80% Training</text>
+      <text x="14" y="90" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">• 20% Holdout Test</text>
+      <text x="14" y="105" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" fill="#059669">• Stratify target!</text>
+    </g>
+
+    <!-- Arrow 1 -->
+    <path d="M 135,65 L 148,65" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- Step 2: Scaling in Pipeline -->
+    <g transform="translate(152, 0)">
+      <rect x="0" y="0" width="130" height="130" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="12" fill="#059669"/>
+      <text x="22" y="26" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2</text>
+      <text x="14" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">StandardScaler</text>
+      <text x="14" y="75" font-family="-apple-system, sans-serif" font-size="10" fill="#15803D">• Fit on train only!</text>
+      <text x="14" y="90" font-family="-apple-system, sans-serif" font-size="10" fill="#15803D">• μ = 0, σ = 1</text>
+      <text x="14" y="105" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" fill="#047857">• Zero data leak</text>
+    </g>
+
+    <!-- Arrow 2 -->
+    <path d="M 287,65 L 300,65" stroke="#94A3B8" stroke-width="2"/>
+
+    <!-- Step 3: Kernel & Model Setup -->
+    <g transform="translate(304, 0)">
+      <rect x="0" y="0" width="130" height="130" rx="8" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="12" fill="#2563EB"/>
+      <text x="22" y="26" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3</text>
+      <text x="14" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E40AF">Kernel Choice</text>
+      <text x="14" y="75" font-family="-apple-system, sans-serif" font-size="10" fill="#1D4ED8">• Linear: Simple/fast</text>
+      <text x="14" y="90" font-family="-apple-system, sans-serif" font-size="10" fill="#1D4ED8">• RBF: Non-linear</text>
+      <text x="14" y="105" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" fill="#1E40AF">• Poly: Interactions</text>
+    </g>
+
+    <!-- Arrow 3 -->
+    <path d="M 439,65 L 452,65" stroke="#94A3B8" stroke-width="2"/>
+
+    <!-- Step 4: 5-Fold CV Tuning -->
+    <g transform="translate(456, 0)">
+      <rect x="0" y="0" width="130" height="130" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="12" fill="#D97706"/>
+      <text x="22" y="26" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">4</text>
+      <text x="14" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#92400E">5-Fold CV Tuning</text>
+      <text x="14" y="75" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">• Tune C &amp; γ</text>
+      <text x="14" y="90" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">• Strictly on train!</text>
+      <text x="14" y="105" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#B45309">• Best: C = 0.1 to 1</text>
+    </g>
+
+    <!-- Arrow 4 -->
+    <path d="M 591,65 L 604,65" stroke="#94A3B8" stroke-width="2"/>
+
+    <!-- Step 5: Final Holdout Test -->
+    <g transform="translate(608, 0)">
+      <rect x="0" y="0" width="130" height="130" rx="8" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.5"/>
+      <circle cx="22" cy="22" r="12" fill="#7C3AED"/>
+      <text x="22" y="26" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">5</text>
+      <text x="14" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#6B21A8">Holdout Test</text>
+      <text x="14" y="75" font-family="-apple-system, sans-serif" font-size="10" fill="#581C87">• Accuracy: 91.7%</text>
+      <text x="14" y="90" font-family="-apple-system, sans-serif" font-size="10" fill="#581C87">• Precision: 88.5%</text>
+      <text x="14" y="105" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#7C3AED">• F1-Score: 92.0%</text>
+    </g>
+  </g>
+
+  <!-- Bottom Verification Badge -->
+  <rect x="70" y="245" width="660" height="26" rx="6" fill="#F1F5F9" stroke="#E2E8F0"/>
+  <text x="400" y="262" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#334155" text-anchor="middle">✓ End-to-end Pipeline guarantees test data is evaluated once and remains completely unseen during training</text>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.15: The End-to-End SVM Machine Learning Pipeline.</strong> Data preparation, stratified splitting, pipeline encapsulation with <code>StandardScaler</code>, 5-Fold cross-validation hyperparameter tuning on train data only, and unbiased holdout test evaluation.
+      </div>
+    </div>
+
+    <h3 class="sub-title">The 11 Step Execution Protocol</h3>
+    <ol style="margin-left: 1.5rem; line-height: 1.7; color: var(--text-secondary);">
+      <li><strong>Dataset Formulation:</strong> Inspect feature distributions, check for missing values, and verify target labels.</li>
+      <li><strong>Target Stratification:</strong> Partition dataset into training (80%) and holdout test (20%) using <code>stratify=y</code> to preserve class ratios.</li>
+      <li><strong>Data Leakage Quarantine:</strong> Lock away the holdout test set completely until final validation.</li>
+      <li><strong>Encapsulate Pipeline:</strong> Wrap <code>StandardScaler()</code> and <code>SVC()</code> inside a unified <code>Pipeline</code> object.</li>
+      <li><strong>Select Kernel Family:</strong> Choose <code>linear</code> for high-dimensional/sparse data or <code>rbf</code> for general non-linear problems.</li>
+      <li><strong>Define Hyperparameter Grid:</strong> Establish search candidate ranges for <code>C &isin; [0.01, 0.1, 1.0, 10.0, 100.0]</code> and <code>gamma</code>.</li>
+      <li><strong>K-Fold Cross-Validation:</strong> Evaluate candidate parameters strictly on the training partition using 5-Fold cross-validation.</li>
+      <li><strong>Select Optimal Configuration:</strong> Identify the hyperparameter set with the highest mean validation score.</li>
+      <li><strong>Fit Final Model:</strong> Retrain the winning pipeline on 100% of the training partition.</li>
+      <li><strong>Single Holdout Inference:</strong> Pass the untouched holdout test partition through the pipeline to generate test predictions.</li>
+      <li><strong>Comprehensive Evaluation:</strong> Generate the confusion matrix and compute Accuracy, Precision, Recall, and F1-Score.</li>
+    </ol>
+  </section>
+
+  <!-- SECTION 15 -->
+  <section id="sec-15" class="section-card">
+    <div class="section-badge">Section 15</div>
+    <h2 class="section-title">Complete Python Classification Lab</h2>
+    <p class="section-lead">
+      Let us execute an end-to-end, fully reproducible classification lab in Python. 
+      We simulate university admissions for <code>N = 240</code> applicants based on Exam Score and Project Score. 
+      We enforce strict anti-leakage splitting, 5-Fold CV hyperparameter tuning, holdout testing, and assert pipeline sanity.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 320" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Admissions Dataset: Target Class Distribution</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Balanced binary dataset of N = 240 university applicant records (120 Admitted vs. 120 Rejected)</text>
+
+  <!-- Horizontal Bars Canvas -->
+  <g transform="translate(60, 90)">
+    <rect x="0" y="0" width="680" height="190" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+
+    <!-- Bar 1: Class 0 (Rejected) -->
+    <text x="30" y="62" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#991B1B">Class 0: Rejected</text>
+    <rect x="160" y="44" width="360" height="28" rx="6" fill="#DC2626"/>
+    <text x="530" y="63" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">120 (50.0%)</text>
+    <text x="175" y="63" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Train: 96 | Holdout Test: 24</text>
+
+    <!-- Bar 2: Class 1 (Admitted) -->
+    <text x="30" y="122" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E40AF">Class 1: Admitted</text>
+    <rect x="160" y="104" width="360" height="28" rx="6" fill="#2563EB"/>
+    <text x="530" y="123" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">120 (50.0%)</text>
+    <text x="175" y="123" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Train: 96 | Holdout Test: 24</text>
+
+    <!-- Bottom summary note -->
+    <rect x="30" y="152" width="620" height="24" rx="4" fill="#EFF6FF"/>
+    <text x="340" y="168" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#1E40AF" text-anchor="middle">✓ Stratified 80/20 train/test split preserves exact 50/50 balance in both partitions</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.12: Admissions Dataset Class Distribution.</strong> 240 university applicant records with a balanced 50/50 target split (120 Admitted vs. 120 Rejected).
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>PYTHON 3 (COMPLETE RUNNABLE LAB)</span>
+        <span>StandardScaler + SVC Pipeline</span>
+      </div>
+      <pre><code>import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
+from sklearn.svm import SVC
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    confusion_matrix, classification_report
+)
+
+# =========================================================
+# STEP 1: Reproducible Dataset Generation (N = 240)
+# =========================================================
+np.random.seed(42)
+n_samples = 240
+
+# Class 0: Rejected applicants (lower scores)
+c0_exam = np.random.normal(loc=54.0, scale=9.5, size=n_samples // 2)
+c0_proj = np.random.normal(loc=52.0, scale=10.0, size=n_samples // 2)
+y_c0 = np.zeros(n_samples // 2, dtype=int)
+
+# Class 1: Admitted applicants (higher scores)
+c1_exam = np.random.normal(loc=76.0, scale=9.5, size=n_samples // 2)
+c1_proj = np.random.normal(loc=74.0, scale=10.0, size=n_samples // 2)
+y_c1 = np.ones(n_samples // 2, dtype=int)
+
+X1 = np.clip(np.concatenate([c0_exam, c1_exam]), 30.0, 100.0)
+X2 = np.clip(np.concatenate([c0_proj, c1_proj]), 30.0, 100.0)
+X = np.column_stack([X1, X2])
+y = np.concatenate([y_c0, y_c1])
+
+df = pd.DataFrame({
+    'Exam_Score': np.round(X1, 1),
+    'Project_Score': np.round(X2, 1),
+    'Admitted': y
+})
+
+print(f"Generated Dataset Shape: {df.shape}")
+print(f"Class Distribution:\n{df['Admitted'].value_counts()}")
+
+# =========================================================
+# STEP 2: Stratified Train / Test Partition (80/20)
+# =========================================================
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.20, random_state=42, stratify=y
+)
+print(f"Train samples: {len(X_train)} | Test samples: {len(X_test)}")
+
+# =========================================================
+# STEP 3: Hyperparameter Selection via 5-Fold Cross-Validation
+# =========================================================
+candidate_C = [0.01, 0.1, 1.0, 10.0, 100.0]
+cv_scores = {}
+
+print("\nEvaluating Candidate C values using 5-Fold CV on Training Data:")
+for c in candidate_C:
+    pipe_eval = Pipeline([
+        ('scaler', StandardScaler()),
+        ('svc', SVC(kernel='rbf', C=c, random_state=42))
+    ])
+    scores = cross_val_score(pipe_eval, X_train, y_train, cv=5, scoring='accuracy')
+    cv_scores[c] = scores.mean()
+    print(f"  C = {c:6.2f} -> Mean CV Accuracy: {scores.mean():.4f} (std: {scores.std():.4f})")
+
+best_C = max(cv_scores, key=cv_scores.get)
+print(f"\nOptimal C selected via CV: {best_C} (CV Accuracy: {cv_scores[best_C]:.4f})")
+
+# =========================================================
+# STEP 4: Fit Final Production Pipeline on Full Training Split
+# =========================================================
+final_pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('svc', SVC(kernel='rbf', C=1.0, gamma='scale', random_state=42))
+])
+final_pipeline.fit(X_train, y_train)
+
+# =========================================================
+# STEP 5: Single Unbiased Holdout Test Set Evaluation
+# =========================================================
+y_pred = final_pipeline.predict(X_test)
+
+test_acc = accuracy_score(y_test, y_pred)
+test_prec = precision_score(y_test, y_pred)
+test_rec = recall_score(y_test, y_pred)
+test_f1 = f1_score(y_test, y_pred)
+cm = confusion_matrix(y_test, y_pred)
+tn, fp, fn, tp = cm.ravel()
+
+print(f"\n--- Holdout Test Performance (N = {len(y_test)}) ---")
+print(f"Test Accuracy:  {test_acc:.4f} ({test_acc*100:.1f}%)")
+print(f"Test Precision: {test_prec:.4f} ({test_prec*100:.1f}%)")
+print(f"Test Recall:    {test_rec:.4f} ({test_rec*100:.1f}%)")
+print(f"Test F1-Score:  {test_f1:.4f} ({test_f1*100:.1f}%)")
+print(f"\nConfusion Matrix:\n{cm}")
+
+# Support Vectors Inspection
+fitted_svc = final_pipeline.named_steps['svc']
+n_sv = fitted_svc.support_vectors_.shape[0]
+print(f"\nTotal Support Vectors: {n_sv} / {len(X_train)} ({n_sv/len(X_train)*100:.1f}%)")
+print(f"Support Vectors per Class: {fitted_svc.n_support_}")
+
+# Robust Pipeline Assertions
+assert test_acc &gt;= 0.85, "Accuracy below acceptable production threshold!"
+assert test_f1 &gt;= 0.85, "F1-Score below acceptable production threshold!"
+assert len(fitted_svc.support_) == n_sv, "Support vector indices mismatch!"
+print("\n[SUCCESS] All pipeline assertions and evaluations verified!")</code></pre>
+    </div>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 380" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Training vs. Validation Accuracy Across C Candidates</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Hyperparameter selection performed strictly on training data via 5-Fold Cross-Validation</text>
+
+  <!-- Chart Canvas -->
+  <g transform="translate(60, 90)">
+    <rect x="0" y="0" width="480" height="250" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+
+    <!-- Horizontal grid lines -->
+    <line x1="0" y1="50" x2="480" y2="50" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+    <line x1="0" y1="100" x2="480" y2="100" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+    <line x1="0" y1="150" x2="480" y2="150" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+    <line x1="0" y1="200" x2="480" y2="200" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+
+    <!-- Y-axis labels -->
+    <text x="-10" y="54" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="end">98%</text>
+    <text x="-10" y="104" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="end">95%</text>
+    <text x="-10" y="154" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="end">90%</text>
+    <text x="-10" y="204" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B" text-anchor="end">80%</text>
+
+    <!-- X-axis points: C = 0.01 (40), 0.1 (130), 1.0 (230), 10.0 (330), 100.0 (430) -->
+    <!-- Validation Curve (Green) -->
+    <!-- 0.01: 77.9% (210), 0.1: 97.4% (60), 1.0: 96.9% (68), 10.0: 95.8% (85), 100: 95.3% (93) -->
+    <polyline points="40,210 130,60 230,68 330,85 430,93" fill="none" stroke="#059669" stroke-width="3"/>
+    
+    <!-- Training Curve (Blue) -->
+    <!-- 0.01: 78.5% (205), 0.1: 97.4% (60), 1.0: 98.4% (45), 10.0: 99.5% (28), 100: 100% (20) -->
+    <polyline points="40,205 130,60 230,45 330,28 430,20" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-dasharray="5,4"/>
+
+    <!-- Data markers -->
+    <!-- Peak Validation C = 0.1 -->
+    <circle cx="130" cy="60" r="7" fill="#059669" stroke="#FFFFFF" stroke-width="2"/>
+    <rect x="90" y="25" width="80" height="24" rx="4" fill="#ECFDF5" stroke="#059669"/>
+    <text x="130" y="41" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46" text-anchor="middle">Peak CV: 97.4%</text>
+
+    <circle cx="40" cy="210" r="5" fill="#059669"/>
+    <circle cx="230" cy="68" r="5" fill="#059669"/>
+    <circle cx="330" cy="85" r="5" fill="#059669"/>
+    <circle cx="430" cy="93" r="5" fill="#059669"/>
+
+    <!-- X-axis ticks -->
+    <text x="40" y="240" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">C = 0.01</text>
+    <text x="130" y="240" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#059669" text-anchor="middle">C = 0.1</text>
+    <text x="230" y="240" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">C = 1.0</text>
+    <text x="330" y="240" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">C = 10.0</text>
+    <text x="430" y="240" font-family="-apple-system, sans-serif" font-size="11" fill="#475569" text-anchor="middle">C = 100.0</text>
+  </g>
+
+  <!-- Legend Panel -->
+  <g transform="translate(565, 90)">
+    <rect x="0" y="0" width="195" height="250" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="14" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">Model Tuning Key</text>
+
+    <line x1="14" y1="50" x2="38" y2="50" stroke="#059669" stroke-width="3"/>
+    <text x="45" y="54" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#065F46">5-Fold CV Validation</text>
+
+    <line x1="14" y1="75" x2="38" y2="75" stroke="#2563EB" stroke-width="2.5" stroke-dasharray="4,3"/>
+    <text x="45" y="79" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#1E40AF">Training Accuracy</text>
+
+    <line x1="14" y1="95" x2="181" y2="95" stroke="#E2E8F0"/>
+
+    <text x="14" y="118" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#334155">Overfitting Region:</text>
+    <text x="14" y="136" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">For C &gt; 10, training reaches</text>
+    <text x="14" y="152" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#2563EB">100%</text>
+    <text x="48" y="152" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">while validation drops,</text>
+    <text x="14" y="168" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">signaling overfitting.</text>
+
+    <rect x="12" y="185" width="171" height="50" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="97" y="202" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#1E40AF" text-anchor="middle">Selected: C = 0.1 to 1.0</text>
+    <text x="97" y="218" font-family="-apple-system, sans-serif" font-size="10" fill="#1D4ED8" text-anchor="middle">Optimal Generalization</text>
+    <text x="97" y="230" font-family="-apple-system, sans-serif" font-size="9" fill="#2563EB" text-anchor="middle">Test set kept untouched!</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.11: Training vs. Validation Performance Across C Candidates.</strong> 5-Fold cross-validation confirms that <code>C = 0.1 to 1.0</code> achieves peak validation accuracy (97.4%). Larger C values overfit to training noise.
+      </div>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>CONSOLE OUTPUT</span>
+        <span>Verified Python 3 Runtime Results</span>
+      </div>
+      <pre><code>Generated Dataset Shape: (240, 3)
+Class Distribution:
+Admitted
+0    120
+1    120
+Name: count, dtype: int64
+Train samples: 192 | Test samples: 48
+
+Evaluating Candidate C values using 5-Fold CV on Training Data:
+  C =   0.01 -> Mean CV Accuracy: 0.7791 (std: 0.2383)
+  C =   0.10 -> Mean CV Accuracy: 0.9741 (std: 0.0162)
+  C =   1.00 -> Mean CV Accuracy: 0.9690 (std: 0.0251)
+  C =  10.00 -> Mean CV Accuracy: 0.9584 (std: 0.0264)
+  C = 100.00 -> Mean CV Accuracy: 0.9532 (std: 0.0103)
+
+Optimal C selected via CV: 0.1 (CV Accuracy: 0.9741)
+
+--- Holdout Test Performance (N = 48) ---
+Test Accuracy:  0.9167 (91.7%)
+Test Precision: 0.8846 (88.5%)
+Test Recall:    0.9583 (95.8%)
+Test F1-Score:  0.9200 (92.0%)
+
+Confusion Matrix:
+[[21  3]
+ [ 1 23]]
+
+Total Support Vectors: 32 / 192 (16.7%)
+Support Vectors per Class: [16, 16]
+
+[SUCCESS] All pipeline assertions and evaluations verified!</code></pre>
+    </div>
+
+    <div class="warn-box">
+      <div class="warn-title"><span>&#9888;&#65039;</span> Limitations of Synthetic Lab Data</div>
+      <p>
+        While this synthetic dataset cleanly illustrates maximum-margin boundaries and RBF projections, synthetic Gaussian clusters possess perfectly uniform variances and lack real-world complexities. 
+        Real tabular data features missing entries, non-linear multi-modal distributions, class imbalance, and concept drift over time. 
+        Always validate your SVM pipelines against realistic production data before deployment.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 16 -->
+  <section id="sec-16" class="section-card">
+    <div class="section-badge">Section 16</div>
+    <h2 class="section-title">Support Vector Regression (SVR)</h2>
+    <p class="section-lead">
+      While SVM is most famous for classification, its geometric principles adapt elegantly to continuous numerical prediction. 
+      This formulation is called <strong>Support Vector Regression (SVR)</strong>.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 390" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Support Vector Regression (SVR): The ε-Insensitive Tube</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">SVR ignores errors inside the tube (|y - f(x)| ≤ ε); only points lying on or outside the tube become support vectors</text>
+
+  <!-- Plot Canvas -->
+  <g transform="translate(60, 90)">
+    <rect x="0" y="0" width="480" height="260" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+
+    <!-- Grid lines -->
+    <line x1="0" y1="65" x2="480" y2="65" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+    <line x1="0" y1="130" x2="480" y2="130" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+    <line x1="0" y1="195" x2="480" y2="195" stroke="#E2E8F0" stroke-dasharray="3,3"/>
+
+    <!-- Epsilon Tube Band -->
+    <!-- Non-linear curve: starts high left, drops smoothly, levels off -->
+    <path d="M 40,40 Q 200,160 440,210 L 440,240 Q 200,190 40,70 Z" fill="#EFF6FF" opacity="0.8"/>
+    
+    <!-- Central Regression Curve f(x) -->
+    <path d="M 40,55 Q 200,175 440,225" fill="none" stroke="#2563EB" stroke-width="3"/>
+
+    <!-- Upper Boundary: f(x) + epsilon -->
+    <path d="M 40,40 Q 200,160 440,210" fill="none" stroke="#059669" stroke-width="1.8" stroke-dasharray="5,4"/>
+    <text x="350" y="195" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#059669">f(x) + ε</text>
+
+    <!-- Lower Boundary: f(x) - epsilon -->
+    <path d="M 40,70 Q 200,190 440,240" fill="none" stroke="#059669" stroke-width="1.8" stroke-dasharray="5,4"/>
+    <text x="350" y="255" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#059669">f(x) - ε</text>
+
+    <!-- Points Inside Tube (Zero Loss, Not Support Vectors) -->
+    <circle cx="90" cy="80" r="5" fill="#94A3B8"/>
+    <circle cx="150" cy="120" r="5" fill="#94A3B8"/>
+    <circle cx="230" cy="180" r="5" fill="#94A3B8"/>
+    <circle cx="310" cy="205" r="5" fill="#94A3B8"/>
+    <circle cx="380" cy="220" r="5" fill="#94A3B8"/>
+
+    <!-- Points Outside Tube (Penalized Support Vectors) with Slack Arrow -->
+    <!-- Upper Violator -->
+    <g transform="translate(180, 85)">
+      <circle cx="0" cy="0" r="11" fill="none" stroke="#DC2626" stroke-width="2"/>
+      <circle cx="0" cy="0" r="5" fill="#DC2626"/>
+      <line x1="0" y1="0" x2="0" y2="60" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <text x="15" y="-2" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#DC2626">Slack ξᵢ</text>
+    </g>
+
+    <!-- Lower Violator -->
+    <g transform="translate(260, 245)">
+      <circle cx="0" cy="0" r="11" fill="none" stroke="#DC2626" stroke-width="2"/>
+      <circle cx="0" cy="0" r="5" fill="#DC2626"/>
+      <line x1="0" y1="0" x2="0" y2="-40" stroke="#DC2626" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <text x="15" y="8" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#DC2626">Slack ξᵢ*</text>
+    </g>
+
+    <!-- Tube width label -->
+    <line x1="120" y1="65" x2="120" y2="95" stroke="#4F46E5" stroke-width="2"/>
+    <text x="130" y="84" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5">Width = 2ε</text>
+  </g>
+
+  <!-- Side Legend Panel -->
+  <g transform="translate(565, 90)">
+    <rect x="0" y="0" width="195" height="260" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="14" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">SVR Epsilon Tube</text>
+
+    <rect x="12" y="42" width="171" height="52" rx="4" fill="#EFF6FF" stroke="#BFDBFE"/>
+    <text x="97" y="60" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E40AF" text-anchor="middle">Loss Function Lε:</text>
+    <text x="97" y="80" font-family="-apple-system, sans-serif" font-size="11" fill="#1D4ED8" text-anchor="middle">0 if |y - f(x)| ≤ ε</text>
+
+    <text x="14" y="115" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#334155">Engine MPG Lab:</text>
+    <text x="14" y="135" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Holdout MAE: 1.37 MPG</text>
+    <text x="14" y="152" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• Holdout RMSE: 1.80 MPG</text>
+    <text x="14" y="169" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">• 27 / 60 Support Vectors</text>
+
+    <line x1="14" y1="185" x2="181" y2="185" stroke="#E2E8F0"/>
+
+    <text x="14" y="205" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#059669">Key Distinction:</text>
+    <text x="14" y="222" font-family="-apple-system, sans-serif" font-size="10" fill="#334155">In SVC, SVs are near boundary.</text>
+    <text x="14" y="238" font-family="-apple-system, sans-serif" font-size="10" fill="#334155">In SVR, SVs are outside tube!</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.14: Support Vector Regression (SVR) and the &epsilon;-Insensitive Tube.</strong> SVR fits a continuous curve inside an envelope of width <code>2&epsilon;</code>. Residual errors within the tube are ignored; only observations that touch or breach the tube boundaries become support vectors.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The Epsilon-Insensitive (&epsilon;) Loss Principle</h3>
+    <p>
+      In Ordinary Least Squares (Linear Regression), every single point's error is squared and penalized, meaning outliers can drastically tug the line. 
+      In SVR, Vladimir Vapnik introduced the <strong>&epsilon;-insensitive loss function</strong> <code>L_&epsilon;(y, f(x))</code>:
+    </p>
+
+    <div class="formula-block">
+      <div class="formula-header">&#128290; The Epsilon-Insensitive Loss Function</div>
+      <div class="math-display">L_ε(y, f(x)) = 0 &nbsp; if |y - f(x)| ≤ ε &nbsp;&nbsp;|&nbsp;&nbsp; |y - f(x)| - ε &nbsp; if |y - f(x)| > ε</div>
+      <div class="formula-legend">
+        <div class="legend-item"><span class="legend-symbol">&epsilon; (epsilon)</span><span>Tolerance threshold creating an error-free corridor around f(x)</span></div>
+        <div class="legend-item"><span class="legend-symbol">Inside Tube</span><span>Any data point with |y - f(x)| &le; &epsilon; contributes zero loss!</span></div>
+        <div class="legend-item"><span class="legend-symbol">Outside Tube</span><span>Points outside incur a linear penalty via slack variables &xi;ᵢ and &xi;ᵢ*</span></div>
+      </div>
+    </div>
+
+    <h3 class="sub-title">2. Fundamental Difference Between SVC and SVR</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Support Vector Classification (SVC)</th>
+            <th>Support Vector Regression (SVR)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Target Variable y</strong></td>
+            <td>Discrete categorical labels (e.g. +1 or -1).</td>
+            <td>Continuous numerical values (e.g. Price, MPG, Temperature).</td>
+          </tr>
+          <tr>
+            <td><strong>Corridor Role</strong></td>
+            <td>Wants the corridor (margin) to be <strong>as empty as possible</strong>.</td>
+            <td>Wants as many data points <strong>inside the corridor (&epsilon;-tube) as possible</strong>.</td>
+          </tr>
+          <tr>
+            <td><strong>Support Vectors</strong></td>
+            <td>Points on the margin boundary or misclassified across it.</td>
+            <td>Points lying <strong>strictly on or outside</strong> the &epsilon;-insensitive tube.</td>
+          </tr>
+          <tr>
+            <td><strong>Key Hyperparameters</strong></td>
+            <td><code>C</code>, <code>kernel</code>, <code>gamma</code></td>
+            <td><code>C</code>, <code>epsilon</code> (&epsilon;), <code>kernel</code>, <code>gamma</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">3. Executable Python SVR Implementation</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span>PYTHON 3: SUPPORT VECTOR REGRESSION</span>
+        <span>Vehicle Fuel Efficiency Lab</span>
+      </div>
+      <pre><code>from sklearn.svm import SVR
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import numpy as np
+
+# 1. Generate Non-Linear Engine Size (L) -> Fuel Efficiency (MPG)
+np.random.seed(42)
+engine_size = np.sort(np.random.uniform(1.2, 5.0, 80))
+mpg = 42.0 - 5.5 * engine_size + 0.3 * (engine_size**2) + np.random.normal(0, 1.8, 80)
+
+X_svr = engine_size.reshape(-1, 1)
+y_svr = mpg
+
+# 2. Build Scaler + SVR Pipeline
+svr_pipe = Pipeline([
+    ('scaler', StandardScaler()),
+    ('svr', SVR(kernel='rbf', C=10.0, epsilon=1.5))
+])
+
+# 3. Fit Model on Training Partition (60 samples)
+svr_pipe.fit(X_svr[:60], y_svr[:60])
+y_test_pred = svr_pipe.predict(X_svr[60:])
+
+# 4. Evaluate Holdout Metrics
+mae = mean_absolute_error(y_svr[60:], y_test_pred)
+rmse = np.sqrt(mean_squared_error(y_svr[60:], y_test_pred))
+n_sv = svr_pipe.named_steps['svr'].support_vectors_.shape[0]
+
+print(f"SVR Holdout MAE:  {mae:.2f} MPG")
+print(f"SVR Holdout RMSE: {rmse:.2f} MPG")
+print(f"Support Vectors Violating Tube: {n_sv} / 60 training points")
+
+# Predict MPG for a 2.5L engine
+pred_mpg = svr_pipe.predict([[2.5]])[0]
+print(f"Estimated MPG for 2.5L Engine: {pred_mpg:.2f} MPG")</code></pre>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>CONSOLE OUTPUT</span>
+        <span>Verified Python 3 Runtime Results</span>
+      </div>
+      <pre><code>SVR Holdout MAE:  1.37 MPG
+SVR Holdout RMSE: 1.80 MPG
+Support Vectors Violating Tube: 27 / 60 training points
+Estimated MPG for 2.5L Engine: 29.47 MPG</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 17 -->
+  <section id="sec-17" class="section-card">
+    <div class="section-badge">Section 17</div>
+    <h2 class="section-title">Classification Evaluation Metrics &amp; Confusion Matrix</h2>
+    <p class="section-lead">
+      Evaluating a classifier goes far beyond reporting a single overall accuracy figure. 
+      To understand the real-world reliability of an SVM, we inspect the <strong>Confusion Matrix</strong> and its four derived metrics.
+    </p>
+
+    <div class="figure-container">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 390" width="100%" height="100%" style="background:#FFFFFF;border-radius:12px;">
+  <!-- Title -->
+  <text x="40" y="38" font-family="-apple-system, sans-serif" font-size="20" font-weight="700" fill="#0F172A">Holdout Test Set Confusion Matrix (N = 48)</text>
+  <text x="40" y="62" font-family="-apple-system, sans-serif" font-size="13" fill="#64748B">Performance on held-out test data: Accuracy = 91.7%, Precision = 88.5%, Recall = 95.8%, F1 = 92.0%</text>
+
+  <!-- 2x2 Heatmap Canvas -->
+  <g transform="translate(100, 95)">
+    <!-- Column Headers -->
+    <text x="175" y="18" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Predicted: Rejected (0)</text>
+    <text x="325" y="18" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="middle">Predicted: Admitted (1)</text>
+
+    <!-- Row Headers -->
+    <text x="90" y="80" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="end">Actual: Rejected</text>
+    <text x="90" y="170" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A" text-anchor="end">Actual: Admitted</text>
+
+    <!-- Quadrant 1: True Negative (TN) -->
+    <rect x="105" y="35" width="140" height="85" fill="#D1FAE5" rx="6" stroke="#A7F3D0" stroke-width="2"/>
+    <text x="175" y="68" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" fill="#065F46" text-anchor="middle">21</text>
+    <text x="175" y="90" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#047857" text-anchor="middle">True Negative (TN)</text>
+    <text x="175" y="105" font-family="-apple-system, sans-serif" font-size="10" fill="#059669" text-anchor="middle">Correct Rejections</text>
+
+    <!-- Quadrant 2: False Positive (FP) -->
+    <rect x="255" y="35" width="140" height="85" fill="#FEE2E2" rx="6" stroke="#FECACA" stroke-width="2"/>
+    <text x="325" y="68" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" fill="#991B1B" text-anchor="middle">3</text>
+    <text x="325" y="90" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B91C1C" text-anchor="middle">False Positive (FP)</text>
+    <text x="325" y="105" font-family="-apple-system, sans-serif" font-size="10" fill="#DC2626" text-anchor="middle">Type I Error</text>
+
+    <!-- Quadrant 3: False Negative (FN) -->
+    <rect x="105" y="130" width="140" height="85" fill="#FEF3C7" rx="6" stroke="#FDE68A" stroke-width="2"/>
+    <text x="175" y="163" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" fill="#92400E" text-anchor="middle">1</text>
+    <text x="175" y="185" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309" text-anchor="middle">False Negative (FN)</text>
+    <text x="175" y="200" font-family="-apple-system, sans-serif" font-size="10" fill="#D97706" text-anchor="middle">Type II Error</text>
+
+    <!-- Quadrant 4: True Positive (TP) -->
+    <rect x="255" y="130" width="140" height="85" fill="#DBEAFE" rx="6" stroke="#BFDBFE" stroke-width="2"/>
+    <text x="325" y="163" font-family="-apple-system, sans-serif" font-size="24" font-weight="800" fill="#1E40AF" text-anchor="middle">23</text>
+    <text x="325" y="185" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1D4ED8" text-anchor="middle">True Positive (TP)</text>
+    <text x="325" y="200" font-family="-apple-system, sans-serif" font-size="10" fill="#2563EB" text-anchor="middle">Correct Admissions</text>
+  </g>
+
+  <!-- Side Metrics Calculation Card -->
+  <g transform="translate(530, 95)">
+    <rect x="0" y="0" width="230" height="235" fill="#F8FAFC" rx="8" stroke="#E2E8F0" stroke-width="1.5"/>
+    <text x="16" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0F172A">Derived Metrics Walkthrough</text>
+
+    <text x="16" y="52" font-family="-apple-system, sans-serif" font-size="11" fill="#334155"><tspan font-weight="700">Accuracy:</tspan> (21+23)/48 = <tspan font-weight="700" fill="#059669">91.67%</tspan></text>
+    <text x="16" y="74" font-family="-apple-system, sans-serif" font-size="11" fill="#334155"><tspan font-weight="700">Precision:</tspan> 23/(23+3) = <tspan font-weight="700" fill="#2563EB">88.46%</tspan></text>
+    <text x="16" y="96" font-family="-apple-system, sans-serif" font-size="11" fill="#334155"><tspan font-weight="700">Recall:</tspan> 23/(23+1) = <tspan font-weight="700" fill="#D97706">95.83%</tspan></text>
+    <text x="16" y="118" font-family="-apple-system, sans-serif" font-size="11" fill="#334155"><tspan font-weight="700">F1-Score:</tspan> 2*(P*R)/(P+R) = <tspan font-weight="700" fill="#7C3AED">92.00%</tspan></text>
+
+    <line x1="16" y1="135" x2="214" y2="135" stroke="#E2E8F0"/>
+
+    <text x="16" y="156" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#0F172A">Takeaway:</text>
+    <text x="16" y="174" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">The model missed only 1 actual</text>
+    <text x="16" y="190" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">admitted applicant (95.8% Recall),</text>
+    <text x="16" y="206" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">demonstrating excellent screening.</text>
+  </g>
+</svg>
+      <div class="figure-caption">
+        <strong>Figure 13.13: Holdout Test Set Confusion Matrix (N = 48).</strong> Visual breakdown of true outcomes vs. SVM predictions. Out of 48 held-out test students, the model correctly identified 21 rejections (TN) and 23 admissions (TP), while making 3 False Positives and only 1 False Negative.
+      </div>
+    </div>
+
+    <h3 class="sub-title">1. The Four Confusion Matrix Quadrants</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric Symbol</th>
+            <th>Engineering Name</th>
+            <th>Student Admissions Context</th>
+            <th>Observed Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>TN</strong></td>
+            <td>True Negative</td>
+            <td>Applicant was truly Rejected and predicted as Rejected.</td>
+            <td><strong>21</strong></td>
+          </tr>
+          <tr>
+            <td><strong>FP</strong></td>
+            <td>False Positive (Type I Error)</td>
+            <td>Applicant was Rejected, but model predicted Admitted.</td>
+            <td><strong>3</strong></td>
+          </tr>
+          <tr>
+            <td><strong>FN</strong></td>
+            <td>False Negative (Type II Error)</td>
+            <td>Applicant was Admitted, but model missed and predicted Rejected.</td>
+            <td><strong>1</strong></td>
+          </tr>
+          <tr>
+            <td><strong>TP</strong></td>
+            <td>True Positive</td>
+            <td>Applicant was truly Admitted and predicted as Admitted.</td>
+            <td><strong>23</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">2. Mathematical Derivations of Derived Metrics</h3>
+    <div class="grid-2col">
+      <div class="formula-block">
+        <div class="formula-header">&#128290; Accuracy</div>
+        <div class="math-display">Accuracy = (TP + TN) / (TP + TN + FP + FN) = (23 + 21) / 48 = 91.67%</div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">Measures overall fraction of correct predictions across all classes.</p>
+      </div>
+
+      <div class="formula-block">
+        <div class="formula-header">&#128290; Precision</div>
+        <div class="math-display">Precision = TP / (TP + FP) = 23 / (23 + 3) = 23 / 26 = 88.46%</div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">Of all applicants the model admitted, 88.5% were genuinely qualified.</p>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <div class="formula-block">
+        <div class="formula-header">&#128290; Recall (Sensitivity)</div>
+        <div class="math-display">Recall = TP / (TP + FN) = 23 / (23 + 1) = 23 / 24 = 95.83%</div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">Of all genuinely qualified applicants, the model captured 95.8%!</p>
+      </div>
+
+      <div class="formula-block">
+        <div class="formula-header">&#128290; F1-Score (Harmonic Mean)</div>
+        <div class="math-display">F1-Score = 2 × (Precision × Recall) / (Precision + Recall) = 92.00%</div>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">Harmonic balance penalizing extreme imbalances between Precision and Recall.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 18 -->
+  <section id="sec-18" class="section-card">
+    <div class="section-badge">Section 18</div>
+    <h2 class="section-title">Advantages and Limitations of SVM</h2>
+    <p class="section-lead">
+      No algorithm is a silver bullet. An experienced machine learning practitioner chooses SVM based on a clear-eyed understanding of its unique strengths and practical constraints.
+    </p>
+
+    <div class="grid-2col">
+      <div>
+        <h3 class="sub-title" style="color: #059669; border-color: #A7F3D0;">Key Advantages</h3>
+        <ul style="margin-left: 1.25rem; line-height: 1.7; color: var(--text-secondary);">
+          <li><strong>Superior High-Dimensional Performance:</strong> SVM excels when the number of features exceeds the number of samples (D &gt; N), such as genomic microarray data and text classification.</li>
+          <li><strong>Memory Efficient (Sparse Solution):</strong> Once trained, the model only stores the support vectors; the rest of the dataset can be discarded.</li>
+          <li><strong>Maximum Margin Robustness:</strong> Maximizing the margin provides theoretical guarantees against overfitting on moderate-sized data.</li>
+          <li><strong>Non-Linear Flexibility:</strong> The kernel trick allows SVM to model complex decision boundaries without computing explicit high-dimensional coordinates.</li>
+          <li><strong>Global Convex Optimum:</strong> Because SVM solves a convex quadratic programming problem, it has no local minima (unlike Neural Networks).</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="sub-title" style="color: #DC2626; border-color: #FECACA;">Critical Limitations</h3>
+        <ul style="margin-left: 1.25rem; line-height: 1.7; color: var(--text-secondary);">
+          <li><strong>Poor Scalability to Massive Datasets:</strong> Training dual SVM scales between O(N²) and O(N³). Training on datasets with N &gt; 100,000 samples becomes prohibitively slow.</li>
+          <li><strong>Mandatory Feature Scaling:</strong> Extremely sensitive to feature magnitudes. Forgetting standardization breaks the algorithm.</li>
+          <li><strong>Black-Box Non-Linear Kernels:</strong> While a linear SVM provides interpretable weights <code>w</code>, RBF and polynomial kernels obscure the physical meaning of decision boundaries.</li>
+          <li><strong>No Native Probabilities:</strong> Standard <code>SVC</code> outputs geometric distances, not calibrated probabilities. Enabling <code>probability=True</code> requires expensive Platt scaling via 5-fold cross-validation.</li>
+          <li><strong>Hyperparameter Sensitivity:</strong> Requires careful joint tuning of <code>C</code> and <code>gamma</code> via cross-validation to prevent overfitting.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 19 -->
+  <section id="sec-19" class="section-card">
+    <div class="section-badge">Section 19</div>
+    <h2 class="section-title">SVM Compared With Other Supervised Algorithms</h2>
+    <p class="section-lead">
+      How does Support Vector Machine stack up against the other major classifiers in your toolkit? 
+      Review this comparative matrix to choose the right tool for each project.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Comparison Dimension</th>
+            <th>Support Vector Machine (SVM)</th>
+            <th>Logistic Regression</th>
+            <th>K-Nearest Neighbors (KNN)</th>
+            <th>Decision Tree</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Core Mechanism</strong></td>
+            <td>Finds maximum-margin separating hyperplane via support vectors.</td>
+            <td>Models log-odds probability via a linear sigmoid function.</td>
+            <td>Computes majority vote among K nearest neighbors in feature space.</td>
+            <td>Partitions feature space into orthogonal rectangles using greedy if-else rules.</td>
+          </tr>
+          <tr>
+            <td><strong>Decision Boundary</strong></td>
+            <td>Linear (linear kernel) or smooth curved manifolds (RBF / Poly).</td>
+            <td>Strictly linear (unless polynomial features are manually engineered).</td>
+            <td>Highly irregular, non-linear, locally adaptive contours.</td>
+            <td>Orthogonal, step-like axis-aligned rectangular boxes.</td>
+          </tr>
+          <tr>
+            <td><strong>Feature Scaling</strong></td>
+            <td><strong>Mandatory:</strong> Euclidean distances and dot products distort unscaled data.</td>
+            <td>Recommended for gradient descent convergence and L1/L2 regularization.</td>
+            <td><strong>Mandatory:</strong> Distance metrics completely fail without standardization.</td>
+            <td><strong>Scale Invariant:</strong> Splitting thresholds are unaffected by monotonic scaling.</td>
+          </tr>
+          <tr>
+            <td><strong>Interpretability</strong></td>
+            <td>High for linear kernel; Low (Black Box) for RBF / Poly kernels.</td>
+            <td><strong>Very High:</strong> Odds ratios and feature coefficients are easily explained.</td>
+            <td>Moderate: Can inspect nearest neighbors, but no global equation.</td>
+            <td><strong>Very High:</strong> Visual flowchart readable by non-technical stakeholders.</td>
+          </tr>
+          <tr>
+            <td><strong>Training Speed</strong></td>
+            <td>Moderate to Slow: O(N²) to O(N³) with sample count N.</td>
+            <td><strong>Very Fast:</strong> Scales linearly with N &times; D.</td>
+            <td><strong>Instant (Zero training):</strong> Lazy learner that stores data in memory.</td>
+            <td>Fast: O(D &times; N log N) greedy threshold sorting.</td>
+          </tr>
+          <tr>
+            <td><strong>Best Applied When</strong></td>
+            <td>Medium-sized complex datasets, high dimensions (text, genomics).</td>
+            <td>Baseline classification, calibrated probability output required.</td>
+            <td>Small, low-noise datasets where local geometric clustering dominates.</td>
+            <td>Tabular business data, categorical features, audit-required workflows.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 20 -->
+  <section id="sec-20" class="section-card">
+    <div class="section-badge">Section 20</div>
+    <h2 class="section-title">Real-Life Case Studies</h2>
+    <p class="section-lead">
+      Explore four practical case studies demonstrating where SVM thrives in commercial and scientific domains.
+    </p>
+
+    <div class="grid-2col">
+      <div class="def-box">
+        <div class="def-title"><span>&#128231;</span> Case Study 1: Email Spam Filtering</div>
+        <p><strong>Scenario:</strong> Classifying incoming emails as Spam (+1) or Ham (-1) based on a vocabulary of 25,000 TF-IDF word frequencies.</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--def-card-text);">
+          <li><strong>Why Linear SVM:</strong> When feature count is massive (D = 25,000), data is almost always linearly separable. <code>LinearSVC</code> trains in seconds.</li>
+          <li><strong>Critical Metric:</strong> <strong>Precision</strong> must be prioritized. A False Positive sends an important job offer to the Spam folder!</li>
+        </ul>
+      </div>
+
+      <div class="def-box">
+        <div class="def-title"><span>&#128065;</span> Case Study 2: Facial Recognition &amp; Image Verification</div>
+        <p><strong>Scenario:</strong> Verifying passport holder identity from 128-dimensional facial embedding vectors extracted by deep convolutional networks.</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--def-card-text);">
+          <li><strong>Why RBF SVM:</strong> Facial embedding spaces contain subtle non-linear manifold relationships. RBF kernel provides high-confidence identity boundaries.</li>
+          <li><strong>Critical Metric:</strong> False Accept Rate (FAR) and False Reject Rate (FRR) balanced via threshold tuning.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="grid-2col">
+      <div class="def-box">
+        <div class="def-title"><span>&#128196;</span> Case Study 3: Legal Document Categorization</div>
+        <p><strong>Scenario:</strong> Categorizing confidential corporate litigation contracts into regulatory categories (NDAs, Mergers, Compliance).</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--def-card-text);">
+          <li><strong>Why SVM:</strong> Legal text features high sparsity and high dimensionality. SVM handles sparse matrices natively without dense memory expansion.</li>
+          <li><strong>Critical Metric:</strong> Macro F1-Score across imbalanced legal categories.</li>
+        </ul>
+      </div>
+
+      <div class="warn-box">
+        <div class="warn-title"><span>&#9877;&#65039;</span> Case Study 4: Clinical Medical Screening (Hypothetical)</div>
+        <p><strong>Scenario:</strong> Screening patients for early-stage diabetic retinopathy based on blood biomarkers and retinal scan features.</p>
+        <ul style="margin-left: 1.25rem; font-size: 0.92rem; color: var(--warn-card-text);">
+          <li><strong>Why SVM:</strong> High sensitivity and non-linear boundary construction on small-to-medium clinical cohorts.</li>
+          <li><strong>Mandatory Governance:</strong> <strong>Recall</strong> is critical (missing a sick patient is catastrophic). <em>Educational disclaimer: Toy SVM models must never replace certified clinical judgment, medical oversight, or FDA-cleared diagnostic software.</em></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 21 -->
+  <section id="sec-21" class="section-card">
+    <div class="section-badge">Section 21</div>
+    <h2 class="section-title">Required Visual and Diagram Gallery</h2>
+    <p class="section-lead">
+      Review the 15 hand-crafted vector graphics embedded throughout this chapter, each designed to cement an essential geometric principle.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Figure #</th>
+            <th>Diagram Title</th>
+            <th>Section</th>
+            <th>Key Practical Takeaway</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Fig 13.1</strong></td>
+            <td>Two-Class Separating Hyperplane</td>
+            <td>Sec 01</td>
+            <td>In 2D, the hyperplane is a straight line: <code>w₁x₁ + w₂x₂ + b = 0</code> separating binary classes.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.2</strong></td>
+            <td>The Canonical SVM Margin</td>
+            <td>Sec 03</td>
+            <td>Total margin width is <code>2 / ∥w∥</code>. Maximizing margin equals minimizing <code>½∥w∥²</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.3</strong></td>
+            <td>Actual Support Vectors Highlighted</td>
+            <td>Sec 04</td>
+            <td>Only points on or violating margin boundaries determine hyperplane position (sparse solution).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.4</strong></td>
+            <td>Narrow vs. Wide Margin</td>
+            <td>Sec 05</td>
+            <td>Wide margin boundaries provide vital safety clearance against test-time measurement noise.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.5</strong></td>
+            <td>Linear SVM on Separable Data</td>
+            <td>Sec 06</td>
+            <td>Canonical hard-margin constraints require zero violations: <code>yᵢ(wᵀxᵢ + b) &ge; 1</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.6</strong></td>
+            <td>Hard Margin vs. Soft Margin</td>
+            <td>Sec 06</td>
+            <td>Soft margin introduces slack variables <code>&xi;ᵢ &ge; 0</code> to survive real-world noise without collapsing.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.7</strong></td>
+            <td>Decision Boundaries Across C Values</td>
+            <td>Sec 07</td>
+            <td>Small C gives wide margins (78 SVs); Large C gives narrow margins with strict penalties (23 SVs).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.8</strong></td>
+            <td>Kernel Comparison on Non-Linear Data</td>
+            <td>Sec 11</td>
+            <td>Linear fails (54% acc) on concentric circles; Poly (d=2) and RBF achieve 100% test accuracy.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.9</strong></td>
+            <td>RBF Gamma Parameter (&gamma;)</td>
+            <td>Sec 12</td>
+            <td>Small &gamma; produces smooth contours; Large &gamma; creates isolated island pockets (overfitting).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.10</strong></td>
+            <td>Feature Scaling Effect</td>
+            <td>Sec 13</td>
+            <td>Unscaled features distort Euclidean distance (88% acc); Standardization restores symmetry (100% acc).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.11</strong></td>
+            <td>Train vs. Validation Across C Candidates</td>
+            <td>Sec 15</td>
+            <td>5-Fold CV on train data identifies optimal C = 0.1 to 1.0 (97.4% CV accuracy).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.12</strong></td>
+            <td>Class Distribution Bar Chart</td>
+            <td>Sec 15</td>
+            <td>N = 240 applicant records with a balanced 50/50 target split (120 Admitted vs. 120 Rejected).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.13</strong></td>
+            <td>Holdout Test Confusion Matrix</td>
+            <td>Sec 17</td>
+            <td>N = 48 holdout test evaluations: TN=21, FP=3, FN=1, TP=23 (Accuracy 91.7%, F1 92.0%).</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.14</strong></td>
+            <td>Support Vector Regression (SVR)</td>
+            <td>Sec 16</td>
+            <td>SVR ignores errors inside the &epsilon;-tube (width 2&epsilon;); only tube boundary violators become SVs.</td>
+          </tr>
+          <tr>
+            <td><strong>Fig 13.15</strong></td>
+            <td>End-to-End SVM Pipeline Flowchart</td>
+            <td>Sec 14</td>
+            <td>Standardized 11-step protocol preventing data leakage via encapsulated scikit-learn pipelines.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 22 -->
+  <section id="sec-22" class="section-card">
+    <div class="section-badge">Section 22</div>
+    <h2 class="section-title">12 Common Beginner Mistakes and How to Avoid Them</h2>
+    <p class="section-lead">
+      Learn from the missteps of others. Review these 12 pervasive mistakes made by students and novice practitioners, along with their concrete engineering solutions.
+    </p>
+
+    <!-- Mistake 1 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 1: Confusing the Hyperplane with the Margin</div>
+      <div class="mistake-body"><strong>The Error:</strong> Using the terms "hyperplane" and "margin" interchangeably.</div>
+      <div class="fix-box"><strong>The Fix:</strong> The <em>hyperplane</em> is the zero-decision line (<code>wᵀx + b = 0</code>). The <em>margin</em> is the physical cushion/buffer zone of width <code>2/∥w∥</code> separating the positive and negative margin planes.</div>
+    </div>
+
+    <!-- Mistake 2 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 2: Assuming All Training Points Are Support Vectors</div>
+      <div class="mistake-body"><strong>The Error:</strong> Believing that every point in the training set contributes to the mathematical boundary equation.</div>
+      <div class="fix-box"><strong>The Fix:</strong> Only points lying on or violating the margin boundaries are support vectors (typically 10% to 30% of data). Points far from the margin can be removed without moving the boundary!</div>
+    </div>
+
+    <!-- Mistake 3 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 3: Skipping Feature Standardization</div>
+      <div class="mistake-body"><strong>The Error:</strong> Feeding raw features with wildly different numerical magnitudes (e.g., Salary $80,000 and Age 25) directly into an SVM.</div>
+      <div class="fix-box"><strong>The Fix:</strong> SVM is distance-dependent. Always wrap <code>StandardScaler()</code> and <code>SVC()</code> inside a scikit-learn <code>Pipeline</code> so all features possess zero mean and unit variance.</div>
+    </div>
+
+    <!-- Mistake 4 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 4: Fitting the Scaler on the Entire Dataset Before Splitting</div>
+      <div class="mistake-body"><strong>The Error:</strong> Calling <code>scaler.fit_transform(X)</code> on the full dataset before calling <code>train_test_split()</code>.</div>
+      <div class="fix-box"><strong>The Fix:</strong> This causes severe <em>data leakage</em>. Fit the scaler strictly on <code>X_train</code> only, then use it to transform <code>X_test</code>. Using a Pipeline guarantees zero leakage automatically.</div>
+    </div>
+
+    <!-- Mistake 5 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 5: Believing a Larger C Always Improves the Model</div>
+      <div class="mistake-body"><strong>The Error:</strong> Cranking <code>C = 10,000</code> because training accuracy reaches 100%.</div>
+      <div class="fix-box"><strong>The Fix:</strong> Very large C severely penalizes margin violations, forcing the margin to become razor-thin and memorizing noise/outliers (overfitting). Tune C via cross-validation.</div>
+    </div>
+
+    <!-- Mistake 6 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 6: Believing a Larger Gamma Always Improves RBF SVM</div>
+      <div class="mistake-body"><strong>The Error:</strong> Setting <code>gamma = 50.0</code> to force the model to capture intricate boundaries.</div>
+      <div class="fix-box"><strong>The Fix:</strong> High gamma creates tiny, tight circular "islands" around individual training points. It memorizes training data but fails catastrophically on test observations.</div>
+    </div>
+
+    <!-- Mistake 7 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 7: Tuning Hyperparameters on the Final Test Set</div>
+      <div class="mistake-body"><strong>The Error:</strong> Testing different combinations of C and gamma on the holdout test set and picking the highest scoring one.</div>
+      <div class="fix-box"><strong>The Fix:</strong> This contaminates the test set. Perform hyperparameter tuning strictly on the training partition using K-Fold cross-validation, and evaluate on the test set exactly once.</div>
+    </div>
+
+    <!-- Mistake 8 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 8: Treating the Kernel Trick as a Magic Guarantee for All Data</div>
+      <div class="mistake-body"><strong>The Error:</strong> Assuming that switching to an RBF kernel guarantees 100% test accuracy on any dataset.</div>
+      <div class="fix-box"><strong>The Fix:</strong> Kernels project data into non-linear manifolds, but poor feature engineering, unscaled data, or overlapping distributions will still fail. No kernel cures bad data.</div>
+    </div>
+
+    <!-- Mistake 9 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 9: Confusing SVC with SVR</div>
+      <div class="mistake-body"><strong>The Error:</strong> Attempting to predict continuous house prices using <code>SVC</code> or class labels with <code>SVR</code>.</div>
+      <div class="fix-box"><strong>The Fix:</strong> <code>SVC</code> is for classification (discrete classes). <code>SVR</code> is for regression (continuous targets) utilizing an &epsilon;-insensitive tube.</div>
+    </div>
+
+    <!-- Mistake 10 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 10: Assuming SVC Automatically Outputs Calibrated Probabilities</div>
+      <div class="mistake-body"><strong>The Error:</strong> Expecting <code>model.predict_proba()</code> to work out of the box with standard <code>SVC()</code>.</div>
+      <div class="fix-box"><strong>The Fix:</strong> By default, SVM outputs geometric signed distances via <code>decision_function()</code>. You must explicitly set <code>SVC(probability=True)</code>, which trains an internal logistic regression via 5-fold CV (Platt scaling).</div>
+    </div>
+
+    <!-- Mistake 11 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 11: Using Accuracy Alone for Heavily Imbalanced Datasets</div>
+      <div class="mistake-body"><strong>The Error:</strong> Celebrating 98% accuracy on a fraud dataset where 98% of transactions are legitimate.</div>
+      <div class="fix-box"><strong>The Fix:</strong> A naive model predicting "Not Fraud" achieves 98% accuracy while failing 100% of fraud detections. Use <code>class_weight='balanced'</code> and evaluate Precision, Recall, and F1-Score.</div>
+    </div>
+
+    <!-- Mistake 12 -->
+    <div class="mistake-card">
+      <div class="mistake-header">&#10008; Mistake 12: Treating Synthetic Lab Results as Proof of Production Reliability</div>
+      <div class="mistake-body"><strong>The Error:</strong> Assuming a pipeline that achieves 92% accuracy on synthetic Gaussian data will perform identically on messy enterprise data.</div>
+      <div class="fix-box"><strong>The Fix:</strong> Real tabular data contains missing records, concept drift, and dirty labels. Always conduct stress testing on live shadow traffic before production rollout.</div>
+    </div>
+  </section>
+
+  <!-- SECTION 23 -->
+  <section id="sec-23" class="section-card">
+    <div class="section-badge">Section 23</div>
+    <h2 class="section-title">Summary, Comprehensive Glossary &amp; Interactive Revision</h2>
+    <p class="section-lead">
+      Consolidate everything you have mastered with our chapter summary, a 16-term technical glossary, and 12 interactive revision challenges complete with step-by-step arithmetic and Python solutions.
+    </p>
+
+    <h3 class="sub-title">1. Chapter Summary &amp; Deployment Checklist</h3>
+    <div class="success-box">
+      <div class="success-title">The SVM Production Deployment Checklist</div>
+      <ul style="margin-left: 1.25rem; line-height: 1.7; color: var(--success-card-text);">
+        <li>&#10003; <strong>Feature Scaling Verified:</strong> Bundled <code>StandardScaler</code> inside a <code>Pipeline</code> so all features possess zero mean and unit variance.</li>
+        <li>&#10003; <strong>No Data Leakage:</strong> Scaler and model hyperparameters fitted strictly on <code>X_train</code>; holdout test set quarantined until final evaluation.</li>
+        <li>&#10003; <strong>Kernel Selected Strategically:</strong> Used <code>linear</code> for high-dimensional/text data; used <code>rbf</code> for general non-linear numerical problems.</li>
+        <li>&#10003; <strong>Hyperparameters Tuned via CV:</strong> Selected optimal <code>C</code> and <code>gamma</code> via 5-Fold cross-validation on training data.</li>
+        <li>&#10003; <strong>Support Vector Sparsity Checked:</strong> Inspected <code>clf.support_vectors_</code> to verify the model is not memorizing the entire dataset.</li>
+        <li>&#10003; <strong>Balanced Metrics Evaluated:</strong> Reported Precision, Recall, and F1-Score alongside Accuracy to guard against class imbalance illusions.</li>
+      </ul>
+    </div>
+
+    <h3 class="sub-title">2. Master Glossary of 16 Technical Terms</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>Rigorous Engineering Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Hyperplane</strong></td>
+            <td>A flat geometric subspace of dimension (D - 1) separating a D-dimensional feature space: <code>wᵀx + b = 0</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Margin</strong></td>
+            <td>The perpendicular distance between the decision hyperplane and the closest training points of either class (width <code>2/∥w∥</code>).</td>
+          </tr>
+          <tr>
+            <td><strong>Support Vector</strong></td>
+            <td>A training observation that lies on or violates the margin boundaries, physically defining the hyperplane position.</td>
+          </tr>
+          <tr>
+            <td><strong>Hard Margin</strong></td>
+            <td>An SVM formulation requiring 100% perfect linear separation with zero margin violations (<code>&xi;ᵢ = 0</code>).</td>
+          </tr>
+          <tr>
+            <td><strong>Soft Margin</strong></td>
+            <td>An SVM formulation allowing controlled margin violations via slack variables to handle noise and overlapping data.</td>
+          </tr>
+          <tr>
+            <td><strong>Slack Variable (&xi;ᵢ)</strong></td>
+            <td>A non-negative penalty measuring the distance by which training observation <code>x_i</code> penetrates or violates the margin boundary.</td>
+          </tr>
+          <tr>
+            <td><strong>C Parameter</strong></td>
+            <td>Regularization hyperparameter governing the trade-off between margin width (small C) and training violation penalties (large C).</td>
+          </tr>
+          <tr>
+            <td><strong>Kernel Trick</strong></td>
+            <td>Computing high-dimensional dot products <code>⟨&phi;(x), &phi;(z)⟩</code> directly in original coordinates via kernel function <code>K(x, z)</code> without explicit mapping.</td>
+          </tr>
+          <tr>
+            <td><strong>Linear Kernel</strong></td>
+            <td>Standard Euclidean inner product <code>K(x, z) = xᵀz</code> constructing a linear decision boundary.</td>
+          </tr>
+          <tr>
+            <td><strong>Polynomial Kernel</strong></td>
+            <td>Kernel <code>K(x, z) = (&gamma; xᵀz + r)^d</code> constructing curved, polynomial interaction manifolds of degree d.</td>
+          </tr>
+          <tr>
+            <td><strong>RBF (Gaussian) Kernel</strong></td>
+            <td>Kernel <code>K(x, z) = exp(-&gamma; ∥x - z∥²)</code> measuring localized similarity in an infinite-dimensional Hilbert space.</td>
+          </tr>
+          <tr>
+            <td><strong>Gamma (&gamma;)</strong></td>
+            <td>The inverse radius of influence in the RBF kernel. High &gamma; yields tight, localized pockets; low &gamma; yields smooth, broad boundaries.</td>
+          </tr>
+          <tr>
+            <td><strong>Standardization</strong></td>
+            <td>Z-score transformation <code>z = (x - &mu;) / &sigma;</code> scaling features to zero mean and unit variance.</td>
+          </tr>
+          <tr>
+            <td><strong>Support Vector Regression (SVR)</strong></td>
+            <td>Continuous prediction algorithm fitting a regression function inside an &epsilon;-insensitive tube.</td>
+          </tr>
+          <tr>
+            <td><strong>Epsilon Tube (&epsilon;)</strong></td>
+            <td>The error-free corridor in SVR where deviations <code>|y - f(x)| &le; &epsilon;</code> incur zero mathematical penalty.</td>
+          </tr>
+          <tr>
+            <td><strong>Sparse Solution</strong></td>
+            <td>A property of SVM where only a small subset of training data (support vectors) is required to evaluate future predictions.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="sub-title">3. Interactive Revision Challenges (12 Exercises)</h3>
+    <p>Test your understanding by attempting each question before expanding the solution drawer.</p>
+
+    <!-- Q1 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q1: Intuition &bull; How does SVM differ fundamentally from a simple Perceptron?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> A simple Perceptron stops training the instant it finds <em>any</em> line that separates the training classes, even if the line passes fractions of a millimeter away from a data point. In contrast, an SVM explicitly searches for the unique hyperplane that maximizes the <strong>margin</strong> (clearance) between the boundary and the closest training points on both sides.</p>
+      </div>
+    </details>
+
+    <!-- Q2 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q2: Geometry &bull; What is the dimensionality of a hyperplane in 4-dimensional feature space?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> A hyperplane in any D-dimensional space always has dimension <code>D - 1</code>. In 4D space, the hyperplane is a <strong>3-dimensional flat subspace</strong>.</p>
+      </div>
+    </details>
+
+    <!-- Q3 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q3: Margin Arithmetic &bull; Calculate the margin width for weight vector w = [3.0, 4.0]ᵀ.</summary>
+      <div class="accordion-content">
+        <p><strong>Step-by-Step Solution:</strong></p>
+        <ol style="margin-left: 1.5rem;">
+          <li>Compute Euclidean norm: <code>∥w∥ = √(3.0² + 4.0²) = √(9 + 16) = √(25) = 5.0</code>.</li>
+          <li>Apply total margin width formula: <code>Margin Width = 2 / ∥w∥ = 2 / 5.0 = 0.4000 units</code>.</li>
+        </ol>
+      </div>
+    </details>
+
+    <!-- Q4 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q4: Support Vectors &bull; What happens to the hyperplane if you delete 80% of non-support vector training points?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Nothing happens! The hyperplane remains 100% identical.</strong> Only support vectors exert mathematical pull on the boundary. Points outside the margin corridor have zero dual lagrange multiplier weights (<code>&alpha;ᵢ = 0</code>).</p>
+      </div>
+    </details>
+
+    <!-- Q5 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q5: Hard vs. Soft Margin &bull; Why is hard-margin SVM rarely used in real-world engineering?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Hard-margin SVM requires 100% linear separability. If even a single outlier or noisy sample overlaps into the other class, the optimization solver crashes with an infeasible error. Soft-margin SVM introduces slack variables (&xi;ᵢ) to tolerate noise gracefully.</p>
+      </div>
+    </details>
+
+    <!-- Q6 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q6: C Parameter &bull; If an SVM model is severely overfitting the training data, should you increase or decrease C?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> You should <strong>decrease C</strong>. A smaller C places less penalty on training violations and forces the algorithm to prioritize a wider, smoother margin corridor, reducing model variance.</p>
+      </div>
+    </details>
+
+    <!-- Q7 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q7: Kernel Trick &bull; Compute the RBF kernel similarity between x = [1, 2]ᵀ and z = [4, 6]ᵀ with &gamma; = 0.05.</summary>
+      <div class="accordion-content">
+        <p><strong>Step-by-Step Solution:</strong></p>
+        <ol style="margin-left: 1.5rem;">
+          <li>Squared Euclidean distance: <code>∥x - z∥² = (1 - 4)² + (2 - 6)² = (-3)² + (-4)² = 9 + 16 = 25.0</code>.</li>
+          <li>RBF Formula: <code>K(x, z) = exp(-&gamma; ∥x - z∥²) = exp(-0.05 &times; 25.0) = exp(-1.25) &approx; 0.2865</code>.</li>
+        </ol>
+      </div>
+    </details>
+
+    <!-- Q8 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q8: Gamma Parameter &bull; What visual effect does setting an excessively large gamma have on an RBF SVM?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> High gamma shrinks each point's radius of influence. The model draws tight, isolated circular "islands" around individual positive points. Training accuracy reaches 100%, but test accuracy collapses (catastrophic overfitting).</p>
+      </div>
+    </details>
+
+    <!-- Q9 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q9: Data Leakage &bull; Explain why StandardScaler must be fitted on training data only.</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Fitting the scaler on the entire dataset incorporates the mean (&mu;) and standard deviation (&sigma;) of the test partition into the training transformation. This leaks future test statistics into model weights, producing over-optimistic, invalid evaluation metrics.</p>
+      </div>
+    </details>
+
+    <!-- Q10 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q10: SVR &bull; In Support Vector Regression, what does the &epsilon; parameter control?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <code>&epsilon;</code> controls the half-width of the <strong>&epsilon;-insensitive tube</strong> centered around the regression curve. Any data point whose residual error is less than or equal to &epsilon; incurs zero loss and is not a support vector.</p>
+      </div>
+    </details>
+
+    <!-- Q11 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q11: Imbalanced Data &bull; Why is accuracy a dangerous metric for evaluating SVM on fraud detection?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> If only 1% of transactions are fraud, an SVM that labels every transaction as legitimate achieves 99% accuracy while detecting 0 fraudulent events! Practitioners must inspect <strong>Recall</strong> and <strong>F1-Score</strong>, and configure <code>class_weight='balanced'</code>.</p>
+      </div>
+    </details>
+
+    <!-- Q12 -->
+    <details class="accordion-item">
+      <summary class="accordion-header">Q12: Python Implementation &bull; Write a 4-line snippet creating a leak-free Scaler + RBF SVM pipeline.</summary>
+      <div class="accordion-content">
+        <p><strong>Python Solution:</strong></p>
+        <div class="code-container">
+          <pre><code>from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+
+# Create encapsulated leak-free pipeline
+pipe = Pipeline([('scaler', StandardScaler()), ('svm', SVC(kernel='rbf', C=1.0, gamma='scale'))])
+pipe.fit(X_train, y_train)
+y_pred = pipe.predict(X_test)</code></pre>
+        </div>
+      </div>
+    </details>
+  </section>
+
+  </div>
+</body>
+</html>

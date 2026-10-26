@@ -1,0 +1,2867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive educational notes on Machine Learning Topic 8: Train, Validation &amp; Test Sets. Master dataset partitioning, generalization, stratified splitting, group splitting, time-series splitting, and data leakage prevention.">
+  <title>Machine Learning &bull; Topic 8: Train, Validation &amp; Test Sets</title>
+  <style>
+
+    :root {
+      /* Base Surfaces - Strict Light Mode Only */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+      
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Primary ML Theme: Indigo & Blue */
+      --primary-accent: #4F46E5;
+      --primary-accent-hover: #4338CA;
+      --primary-accent-light: #EEF2FF;
+      --primary-badge-bg: #EEF2FF;
+      --primary-badge-text: #4338CA;
+      --toc-bg: #F5F3FF;
+      --toc-border: #DDD6FE;
+      --toc-text: #4338CA;
+
+      /* Definition Card (Soft Sky Blue) */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0C4A6E;
+
+      /* Analogy Card (Soft Teal / Mint) */
+      --analogy-card-bg: #ECFEFF;
+      --analogy-card-border: #A5F3FC;
+      --analogy-card-title: #0891B2;
+      --analogy-card-text: #164E63;
+
+      /* Concept / Architecture Card (Soft Lavender) */
+      --concept-card-bg: #FAF5FF;
+      --concept-card-border: #E9D5FF;
+      --concept-card-title: #7C3AED;
+      --concept-card-text: #581C87;
+
+      /* Warning / Pitfall Card (Soft Coral) */
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      /* Amber / Highlight Card */
+      --amber-card-bg: #FFFBEB;
+      --amber-card-border: #FDE68A;
+      --amber-card-title: #D97706;
+      --amber-card-text: #92400E;
+
+      /* Success Card (Emerald) */
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #16A34A;
+      --success-card-text: #166534;
+
+      /* Code Block Colors */
+      --code-bg: #0F172A;
+      --code-text: #E2E8F0;
+      --code-header-bg: #1E293B;
+
+      /* Subset Badge Colors */
+      --train-badge-bg: #EEF2FF;
+      --train-badge-text: #4338CA;
+      --val-badge-bg: #FEF3C7;
+      --val-badge-text: #B45309;
+      --test-badge-bg: #DCFCE7;
+      --test-badge-text: #15803D;
+      --leak-badge-bg: #FEE2E2;
+      --leak-badge-text: #B91C1C;
+    }
+
+    /* Reset & Containment */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem 1.25rem;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.25rem 0.85rem 3rem 0.85rem;
+      }
+    }
+
+    /* Hero Card */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #4F46E5, #F59E0B, #10B981, #06B6D4);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--heading-color);
+      line-height: 1.2;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.02em;
+    }
+
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .hero-subtitle {
+      font-size: 1.12rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.25rem;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--card-soft-bg);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* Table of Contents */
+    .toc-container {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--toc-text);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item {
+      margin-bottom: 0.5rem;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .toc-item a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      transition: color 0.15s ease;
+    }
+
+    .toc-item a:hover {
+      color: var(--primary-accent);
+      font-weight: 600;
+    }
+
+    .toc-number {
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--primary-accent);
+      min-width: 1.8rem;
+    }
+
+    /* Section Containers */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2.25rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--card-shadow);
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .section-card {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 1rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary-accent);
+      background: var(--primary-accent-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      line-height: 1.3;
+    }
+
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 1.75rem 0 0.85rem 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 1.25rem 0 0.5rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Educational Cards */
+    .card {
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      border-left: 4px solid;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-def {
+      background: var(--def-card-bg);
+      border-color: var(--def-card-title);
+      color: var(--def-card-text);
+    }
+    .card-def .card-title { color: var(--def-card-title); }
+
+    .card-analogy {
+      background: var(--analogy-card-bg);
+      border-color: var(--analogy-card-title);
+      color: var(--analogy-card-text);
+    }
+    .card-analogy .card-title { color: var(--analogy-card-title); }
+
+    .card-concept {
+      background: var(--concept-card-bg);
+      border-color: var(--concept-card-title);
+      color: var(--concept-card-text);
+    }
+    .card-concept .card-title { color: var(--concept-card-title); }
+
+    .card-warn {
+      background: var(--warn-card-bg);
+      border-color: var(--warn-card-title);
+      color: var(--warn-card-text);
+    }
+    .card-warn .card-title { color: var(--warn-card-title); }
+
+    .card-amber {
+      background: var(--amber-card-bg);
+      border-color: var(--amber-card-title);
+      color: var(--amber-card-text);
+    }
+    .card-amber .card-title { color: var(--amber-card-title); }
+
+    .card-success {
+      background: var(--success-card-bg);
+      border-color: var(--success-card-title);
+      color: var(--success-card-text);
+    }
+    .card-success .card-title { color: var(--success-card-title); }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+
+    /* Inline Code and Badges */
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88em;
+      background: var(--card-soft-bg);
+      color: #D946EF;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .key-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin: 0.1rem 0;
+    }
+    .badge-train { background: var(--train-badge-bg); color: var(--train-badge-text); border: 1px solid #C7D2FE; }
+    .badge-val { background: var(--val-badge-bg); color: var(--val-badge-text); border: 1px solid #FDE68A; }
+    .badge-test { background: var(--test-badge-bg); color: var(--test-badge-text); border: 1px solid #BBF7D0; }
+    .badge-leak { background: var(--leak-badge-bg); color: var(--leak-badge-text); border: 1px solid #FECACA; }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #FAFAFA;
+    }
+
+    /* Diagram Containers */
+    .diagram-container {
+      margin: 2rem 0;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .svg-diagram-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+
+    .svg-diagram-wrap svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .diagram-caption {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
+    .how-to-read {
+      background: #F8FAFC;
+      border-left: 3px solid var(--primary-accent);
+      padding: 0.85rem 1.15rem;
+      margin-top: 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #334155;
+    }
+
+    .how-to-read-title {
+      font-weight: 700;
+      color: var(--primary-accent);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .diagram-takeaway {
+      background: #F0FDF4;
+      border-left: 3px solid #16A34A;
+      padding: 0.85rem 1.15rem;
+      margin-top: 0.75rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #166534;
+    }
+
+    /* Formula Cards */
+    .formula-card {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+
+    .formula-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .formula-box {
+      font-size: 1.35rem;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-weight: 600;
+      color: #1E293B;
+      padding: 0.85rem 1.5rem;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 0.5rem 0;
+    }
+
+    .formula-desc {
+      font-size: 0.88rem;
+      color: #64748B;
+      margin-top: 0.75rem;
+      text-align: left;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 10px;
+      margin: 1.5rem 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+
+    .code-header {
+      background: var(--code-header-bg);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 0.8rem;
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .code-lang {
+      background: #334155;
+      color: #38BDF8;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    pre {
+      padding: 1.25rem 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--code-text);
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: 1em;
+    }
+
+    /* Accordions (<details>) */
+    details {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 0.85rem;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    details[open] {
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    summary {
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      color: #1E293B;
+      cursor: pointer;
+      user-select: none;
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s ease;
+    }
+
+    summary:hover {
+      background: #F1F5F9;
+      color: var(--primary-accent);
+    }
+
+    .details-content {
+      padding: 1.25rem;
+      border-top: 1px solid var(--card-border);
+      background: #FFFFFF;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* Footer */
+    .notes-footer {
+      text-align: center;
+      padding: 2.5rem 0 1rem 0;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <!-- HERO CARD -->
+  <div class="hero-card">
+    <div class="hero-badge">Machine Learning &bull; Topic 8 &bull; Light Mode</div>
+    <h1 class="hero-title">Train, Validation &amp; Test Sets</h1>
+    <p class="hero-subtitle">
+      Master the fundamental principles of dataset partitioning. Learn why models must never be evaluated on their training data, how to divide datasets into independent subsets, how to perform stratified and group-aware splits, how to eliminate data leakage during model selection, and how to conduct true unbiased evaluations.
+    </p>
+    <div class="hero-meta">
+      <span class="meta-tag"><strong>Difficulty:</strong> Beginner &rarr; Production</span>
+      <span class="meta-tag"><strong>Focus:</strong> Experimental Design &amp; MLOps</span>
+      <span class="meta-tag"><strong>Tooling:</strong> Scikit-Learn 1.9+ &bull; Pandas 2.3+ &bull; NumPy 2.5+</span>
+      <span class="meta-tag"><strong>Theme:</strong> Strict Light Mode</span>
+    </div>
+  </div>
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc-container">
+    <div class="toc-title">
+      <span>&#128218;</span> Chapter Table of Contents
+    </div>
+    <div class="toc-grid">
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-01"><span class="toc-number">01</span> Introduction: Why Split a Dataset?</a></li>
+        <li class="toc-item"><a href="#sec-02"><span class="toc-number">02</span> The Training Set: Learning Parameters</a></li>
+        <li class="toc-item"><a href="#sec-03"><span class="toc-number">03</span> The Validation Set: Model Selection</a></li>
+        <li class="toc-item"><a href="#sec-04"><span class="toc-number">04</span> The Test Set: Final Unbiased Audit</a></li>
+        <li class="toc-item"><a href="#sec-05"><span class="toc-number">05</span> Training vs Validation vs Test</a></li>
+        <li class="toc-item"><a href="#sec-06"><span class="toc-number">06</span> Understanding Dataset Split Ratios</a></li>
+        <li class="toc-item"><a href="#sec-07"><span class="toc-number">07</span> Calculating Number of Samples</a></li>
+        <li class="toc-item"><a href="#sec-08"><span class="toc-number">08</span> Random Splitting &amp; Reproducibility</a></li>
+        <li class="toc-item"><a href="#sec-09"><span class="toc-number">09</span> Stratified Splitting for Imbalanced Data</a></li>
+      </ul>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-10"><span class="toc-number">10</span> Splitting Strategies by Data Type</a></li>
+        <li class="toc-item"><a href="#sec-11"><span class="toc-number">11</span> Data Leakage During Splitting</a></li>
+        <li class="toc-item"><a href="#sec-12"><span class="toc-number">12</span> Complete Preprocessing Workflow</a></li>
+        <li class="toc-item"><a href="#sec-13"><span class="toc-number">13</span> Cross-Validation: How It Fits In</a></li>
+        <li class="toc-item"><a href="#sec-14"><span class="toc-number">14</span> Complete Hands-On Python Lab</a></li>
+        <li class="toc-item"><a href="#sec-15"><span class="toc-number">15</span> Real-Life Industry Case Studies</a></li>
+        <li class="toc-item"><a href="#sec-16"><span class="toc-number">16</span> 14 Common Beginner Mistakes &amp; Fixes</a></li>
+        <li class="toc-item"><a href="#sec-17"><span class="toc-number">17</span> Checklist, Glossary, Q&amp;A &amp; Final Challenge</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 1: INTRODUCTION: WHY SPLIT A DATASET? -->
+  <section id="sec-01" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 01</span>
+      <h2 class="section-title">Introduction: Why Split a Dataset?</h2>
+    </div>
+    <p class="section-intro">
+      The ultimate objective of any machine learning model is <strong>generalization</strong>&mdash;the ability to make accurate, reliable predictions on completely new, unseen observations that were never encountered during training.
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> Core Concept: Memorization vs Generalization</div>
+      <p>
+        <strong>Memorization (Rote Learning):</strong> A model simply stores the exact training examples in memory. When presented with an identical input, it produces the stored answer with 100% accuracy. However, when presented with a slightly modified input, it fails completely.
+      </p>
+      <p>
+        <strong>Generalization:</strong> A model discovers the true underlying patterns, mathematical relationships, and decision boundaries governing the phenomenon. When presented with unseen data, it correctly deduces the target value.
+      </p>
+    </div>
+
+    <h3>The Exam Analogy: Why Evaluating on Training Data Fails</h3>
+    <p>
+      To understand why evaluating an algorithm on the data it trained on produces a false sense of competence, consider a high-school student preparing for a national mathematics examination:
+    </p>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#128161;</span> The High-School Mathematics Exam Analogy</div>
+      <ul>
+        <li><strong>Practice Homework Problems (Training Set):</strong> The student solves 500 practice algebra questions from the textbook. The student has access to both the questions and the answers in the back of the book, studying the formulas until they can answer all 500 questions with 100% accuracy.</li>
+        <li><strong>Mock Practice Tests (Validation Set):</strong> Before the real exam, the student takes 3 simulated practice tests to decide which strategy works best (e.g. solving equations algebraically vs graphing). The teacher gives feedback on which approach works better.</li>
+        <li><strong>The Official Final Exam (Test Set):</strong> On exam day, the student sits in a proctored room and receives brand-new questions that have never been seen before. This exam provides an <em>unbiased measure</em> of whether the student truly understands algebra or simply memorized the textbook questions!</li>
+      </ul>
+      <p>
+        <strong>The Machine Learning Moral:</strong> If the teacher tested the student using the exact same 500 homework problems, a student who merely memorized the answer keys would score 100%, masking their total inability to solve new math problems! In machine learning, evaluating a model on its training data produces this exact delusion.
+      </p>
+    </div>
+
+    <!-- FIGURE 8.1: HERO SPLIT OVERVIEW -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <defs>
+    <linearGradient id="grad-total" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3730A3" />
+    </linearGradient>
+    <filter id="shadow8" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Title Banner -->
+  <rect x="30" y="15" width="820" height="36" rx="8" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="440" y="38" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E293B">THE GOLDEN TRIAD OF DATASET SPLITTING: INDEPENDENT DATA ROLES</text>
+
+  <!-- Total Dataset Bar (Top) -->
+  <g transform="translate(40, 65)" filter="url(#shadow8)">
+    <rect width="800" height="42" rx="8" fill="url(#grad-total)" />
+    <text x="400" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#FFFFFF">COMPLETE RAW DATASET (100% • N Samples)</text>
+  </g>
+
+  <!-- Splitting Arrows -->
+  <path d="M 320 110 L 220 145" stroke="#4F46E5" stroke-width="2" stroke-dasharray="3,3" />
+  <polygon points="220,145 228,140 226,149" fill="#4F46E5" />
+
+  <path d="M 440 110 L 440 145" stroke="#F59E0B" stroke-width="2" stroke-dasharray="3,3" />
+  <polygon points="440,145 436,137 444,137" fill="#F59E0B" />
+
+  <path d="M 560 110 L 660 145" stroke="#10B981" stroke-width="2" stroke-dasharray="3,3" />
+  <polygon points="660,145 654,149 652,140" fill="#10B981" />
+
+  <!-- Partition 1: Training Set (70%) -->
+  <g transform="translate(40, 150)" filter="url(#shadow8)">
+    <rect width="440" height="90" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2" />
+    <rect x="0" y="0" width="440" height="26" rx="8" fill="#4F46E5" />
+    <text x="220" y="18" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">1. TRAINING SET (70% • Learn Parameters)</text>
+    <text x="20" y="48" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">Role: Model Fitting &amp; Weight Optimization</text>
+    <text x="20" y="65" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">• Calculates model weights (w), biases (b), and tree splits.</text>
+    <text x="20" y="80" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">• Fits scalers, imputers, and encoders (Fit ONLY here!).</text>
+  </g>
+
+  <!-- Partition 2: Validation Set (15%) -->
+  <g transform="translate(500, 150)" filter="url(#shadow8)">
+    <rect width="160" height="90" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2" />
+    <rect x="0" y="0" width="160" height="26" rx="8" fill="#F59E0B" />
+    <text x="80" y="18" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">2. VAL SET (15%)</text>
+    <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#92400E">Model Selection</text>
+    <text x="12" y="63" font-family="-apple-system, sans-serif" font-size="9" fill="#78350F">• Tune hyperparameters (k, α).</text>
+    <text x="12" y="77" font-family="-apple-system, sans-serif" font-size="9" fill="#78350F">• Early stopping &amp; comparison.</text>
+  </g>
+
+  <!-- Partition 3: Test Set (15%) -->
+  <g transform="translate(680, 150)" filter="url(#shadow8)">
+    <rect width="160" height="90" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="2" />
+    <rect x="0" y="0" width="160" height="26" rx="8" fill="#10B981" />
+    <text x="80" y="18" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">3. TEST SET (15%)</text>
+    <text x="12" y="48" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#065F46">Final Unbiased Audit</text>
+    <text x="12" y="63" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">• Evaluated ONLY ONCE at end.</text>
+    <text x="12" y="77" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">• Estimates future production.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.1: The Golden Triad of Dataset Partitioning: Dividing raw data into independent Training (70%), Validation (15%), and Test (15%) subsets.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> How to Read This Architectural Diagram:</div>
+        <ul>
+          <li><strong>Top Bar:</strong> The full collected dataset (100% of samples) contains all available observations.</li>
+          <li><strong>Training Partition (70%):</strong> Dedicated exclusively to fitting internal model parameters (weights, biases, tree splits) and fitting preprocessing scalers/encoders.</li>
+          <li><strong>Validation Partition (15%):</strong> Dedicated to comparing candidate models, tuning hyperparameters, and deciding model complexity.</li>
+          <li><strong>Test Partition (15%):</strong> Kept in a strictly sealed vault until all development decisions are finalized, providing the single unbiased audit of production readiness.</li>
+        </ul>
+      </div>
+      <div class="diagram-takeaway">
+        <strong>Key Takeaway:</strong> Dataset splitting enforces a strict wall of separation between <em>learning</em>, <em>decision-making</em>, and <em>evaluation</em>.
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: THE TRAINING SET -->
+  <section id="sec-02" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 02</span>
+      <h2 class="section-title">The Training Set: Learning Parameters</h2>
+    </div>
+    <p class="section-intro">
+      The <strong>training set</strong> is the portion of the dataset directly ingested by the machine learning algorithm during the fitting process. It constitutes the primary knowledge base from which the model constructs its mathematical mapping from features (X) to targets (y).
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> What Are Model Parameters?</div>
+      <p>
+        <strong>Model Parameters</strong> are the internal numerical variables that the algorithm learns directly from the training data during optimization:
+      </p>
+      <ul>
+        <li>In <strong>Linear &amp; Logistic Regression:</strong> The weights (coefficients) <code>w<sub>1</sub>, w<sub>2</sub>, ...</code> and intercept (bias) <code>b</code>.</li>
+        <li>In <strong>Neural Networks:</strong> The connection weights and node biases across all hidden layers.</li>
+        <li>In <strong>Decision Trees:</strong> The exact feature thresholds selected at each split node (e.g. <code>Age &le; 35.5</code>).</li>
+      </ul>
+      <p>
+        These parameters are adjusted iteratively to minimize the training loss function (such as Mean Squared Error or Cross-Entropy).
+      </p>
+    </div>
+
+    <h3>A Concrete Tabular Example</h3>
+    <p>
+      Consider 5 sample records from a real-estate dataset predicting home selling prices:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Sample ID</th>
+            <th>Square Footage (X<sub>1</sub>)</th>
+            <th>Bedrooms (X<sub>2</sub>)</th>
+            <th>Sale Price (y)</th>
+            <th>Assigned Partition</th>
+            <th>How It Is Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>REC-001</code></td>
+            <td>1,450</td>
+            <td>3</td>
+            <td>$285,000</td>
+            <td><span class="key-badge badge-train">Training Set</span></td>
+            <td>Model views X and y to compute weight updates.</td>
+          </tr>
+          <tr>
+            <td><code>REC-002</code></td>
+            <td>2,100</td>
+            <td>4</td>
+            <td>$395,000</td>
+            <td><span class="key-badge badge-train">Training Set</span></td>
+            <td>Model views X and y to compute weight updates.</td>
+          </tr>
+          <tr>
+            <td><code>REC-003</code></td>
+            <td>1,200</td>
+            <td>2</td>
+            <td>$230,000</td>
+            <td><span class="key-badge badge-val">Validation Set</span></td>
+            <td>Used to compare model architectures; weights never updated on this.</td>
+          </tr>
+          <tr>
+            <td><code>REC-004</code></td>
+            <td>2,800</td>
+            <td>5</td>
+            <td>$510,000</td>
+            <td><span class="key-badge badge-train">Training Set</span></td>
+            <td>Model views X and y to compute weight updates.</td>
+          </tr>
+          <tr>
+            <td><code>REC-005</code></td>
+            <td>1,750</td>
+            <td>3</td>
+            <td>$320,000</td>
+            <td><span class="key-badge badge-test">Test Set</span></td>
+            <td>Locked in vault until final audit. Never seen during training!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> Why Training Accuracy Can Be a Complete Lie</div>
+      <p>
+        A 1-Nearest Neighbor classifier (KNN with <code>k=1</code>) or an unconstrained Decision Tree with infinite depth will achieve <strong>100.0% training accuracy</strong> on almost any classification problem!
+      </p>
+      <p>
+        Does this mean the model is a genius? No! It simply means the model memorized every training row. If the training data contains noise, typos, or outliers, the model memorized the noise as well (<em>overfitting</em>). Training performance indicates how well the model fit historical samples; it provides <strong>zero statistical evidence</strong> of whether the model will succeed on future samples.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: THE VALIDATION SET -->
+  <section id="sec-03" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 03</span>
+      <h2 class="section-title">The Validation Set: Model Selection</h2>
+    </div>
+    <p class="section-intro">
+      The <strong>validation set</strong> (sometimes called the <em>development set</em> or <em>dev set</em>) is an independent subset used exclusively during the development phase to evaluate competing model architectures, tune hyperparameters, and prevent overfitting.
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> Parameters vs Hyperparameters: The Core Distinction</div>
+      <p>
+        Beginners often confuse parameters with hyperparameters. Here is the definitive distinction:
+      </p>
+      <ul>
+        <li><strong>Parameters:</strong> Learned <em>automatically</em> by the algorithm from the training data (e.g. weights <code>w</code>, intercept <code>b</code>). The engineer does not set these manually.</li>
+        <li><strong>Hyperparameters:</strong> Configured <em>manually</em> by the machine learning engineer <strong>before</strong> training begins. They control the learning process, model capacity, and regularization strength (e.g. <code>k</code> in KNN, tree <code>max_depth</code>, learning rate <code>&alpha;</code>, regularization penalty <code>&lambda;</code>).</li>
+      </ul>
+    </div>
+
+    <h3>How the Validation Set Guides Engineering Decisions</h3>
+    <p>
+      Suppose you are building a customer churn predictor and want to determine the optimal neighbor count <code>k</code> for a KNN model:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate Model</th>
+            <th>Hyperparameter Setting</th>
+            <th>Training Accuracy</th>
+            <th>Validation Accuracy</th>
+            <th>Engineering Conclusion</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Model A</strong></td>
+            <td><code>k = 1</code> (High Complexity)</td>
+            <td><strong>100.0%</strong></td>
+            <td>71.4%</td>
+            <td><span class="key-badge badge-leak">Severely Overfitted</span> (Memorized noise)</td>
+          </tr>
+          <tr>
+            <td><strong>Model B</strong></td>
+            <td><code>k = 7</code> (Balanced Complexity)</td>
+            <td>86.5%</td>
+            <td><strong>83.3%</strong></td>
+            <td><span class="key-badge badge-test">&check; Optimal Winner</span> (Best generalization)</td>
+          </tr>
+          <tr>
+            <td><strong>Model C</strong></td>
+            <td><code>k = 45</code> (Low Complexity)</td>
+            <td>74.0%</td>
+            <td>73.1%</td>
+            <td><span class="key-badge badge-val">Underfitted</span> (Oversmoothed boundary)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> The Subtle Feedback Loop: Validation "Snoop" Leakage</div>
+      <p>
+        Notice what happened in the table above: we tried three different values of <code>k</code> and selected <strong>Model B</strong> because it had the highest score on the validation set.
+      </p>
+      <p>
+        Because our human decisions were guided by the validation score, information from the validation set indirectly influenced the final model selection! If an engineer tries 500 different hyperparameter combinations, they will eventually find one that performs exceptionally well on that specific validation set purely by random chance.
+      </p>
+      <p>
+        This is why <strong>a validation set cannot serve as the final unbiased test set</strong>. We need a completely separate, pristine dataset that was never involved in any training or tuning decisions whatsoever.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 4: THE TEST SET -->
+  <section id="sec-04" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 04</span>
+      <h2 class="section-title">The Test Set: Final Unbiased Audit</h2>
+    </div>
+    <p class="section-intro">
+      The <strong>test set</strong> (often called the <em>holdout set</em> or <em>golden evaluation set</em>) is the final, untouched partition of data. Its sole purpose is to provide a realistic, statistically valid estimate of how the final selected model will perform in the live production environment.
+    </p>
+
+    <!-- FIGURE 8.6: EXAM ANALOGY -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">THE EXAM ANALOGY: ROLES OF TRAIN, VALIDATION, AND TEST SETS</text>
+
+  <!-- 3 Stages -->
+  <!-- Stage 1: Train -->
+  <g transform="translate(30, 48)">
+    <rect width="250" height="180" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#4F46E5" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">1. TRAINING: TEXTBOOK &amp; LECTURES</text>
+
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">Role: Parameter Learning</text>
+    <text x="20" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">Student studies textbook examples with solutions visible (X and y).</text>
+    <text x="20" y="95" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">Gradient descent updates internal weights.</text>
+    
+    <rect x="15" y="125" width="220" height="36" rx="4" fill="#FFFFFF" stroke="#C7D2FE" />
+    <text x="125" y="147" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#4F46E5">Fits Model Weights (w, b)</text>
+  </g>
+
+  <!-- Stage 2: Val -->
+  <g transform="translate(315, 48)">
+    <rect width="250" height="180" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#F59E0B" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">2. VAL: PRACTICE MOCK EXAMS</text>
+
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#78350F">Role: Hyperparameter Tuning</text>
+    <text x="20" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">Student takes mock tests to compare study strategies (e.g. k=3 vs k=7).</text>
+    <text x="20" y="95" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">Triggers early stopping if score drops.</text>
+
+    <rect x="15" y="125" width="220" height="36" rx="4" fill="#FFFFFF" stroke="#FDE68A" />
+    <text x="125" y="147" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#D97706">Selects Best Model Settings</text>
+  </g>
+
+  <!-- Stage 3: Test -->
+  <g transform="translate(600, 48)">
+    <rect width="250" height="180" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#10B981" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">3. TEST: THE FINAL UNSEEN EXAM</text>
+
+    <text x="20" y="52" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">Role: Final Generalization Audit</text>
+    <text x="20" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">The official final certification exam taken in a proctored room.</text>
+    <text x="20" y="95" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">NO tuning allowed! Evaluated once.</text>
+
+    <rect x="15" y="125" width="220" height="36" rx="4" fill="#FFFFFF" stroke="#A7F3D0" />
+    <text x="125" y="147" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#10B981">Unbiased Performance Estimate</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.2: The distinct functional roles of Training (parameter learning), Validation (hyperparameter selection), and Test (final unbiased audit).</div>
+    </div>
+
+    <h3>The Cardinal Rules of the Test Set</h3>
+    <ol>
+      <li><strong>Rule 1: Evaluate ONLY ONCE.</strong> The test set should only be evaluated after all model architectures, feature choices, and hyperparameters have been finalized.</li>
+      <li><strong>Rule 2: NEVER Tune Based on Test Scores.</strong> If a model achieves 82% on the test set, you must NOT go back, adjust your learning rate or tree depth, and test again! The moment you tune hyperparameters based on test results, your test set becomes a validation set, and its unbiased integrity is permanently destroyed.</li>
+      <li><strong>Rule 3: NEVER Fit Preprocessing on Test Data.</strong> Imputers, scalers, and categorical encoders must be fitted on training data only. Test features are transformed using the parameters learned from the training set.</li>
+      <li><strong>Rule 4: Test Scores are Estimates, Not Absolute Guarantees.</strong> A test score is a point estimate of expected performance. If live production data experiences concept drift (changes in user behavior, seasonal shifts, macroeconomic shocks), real-world performance will diverge from test metrics.</li>
+    </ol>
+  </section>
+
+  <!-- SECTION 5: TRAINING VS VALIDATION VS TEST -->
+  <section id="sec-05" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 05</span>
+      <h2 class="section-title">Training vs Validation vs Test: The Definitive Comparison</h2>
+    </div>
+    <p class="section-intro">
+      Below is the comprehensive comparison matrix contrasting the three fundamental dataset subsets.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Attribute</th>
+            <th>Training Set</th>
+            <th>Validation Set</th>
+            <th>Test Set</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Main Purpose</strong></td>
+            <td>Learn model parameters (weights, biases, tree splits).</td>
+            <td>Guide model selection, hyperparameter tuning, and early stopping.</td>
+            <td>Provide an unbiased evaluation of the final selected model.</td>
+          </tr>
+          <tr>
+            <td><strong>Exam Analogy</strong></td>
+            <td>Textbook chapters and worked practice exercises.</td>
+            <td>Mock practice tests and strategy quizzes.</td>
+            <td>The official final certification examination.</td>
+          </tr>
+          <tr>
+            <td><strong>Model Parameters Fitted?</strong></td>
+            <td><span class="key-badge badge-train">YES</span> (Backpropagation / OLS)</td>
+            <td><span class="key-badge badge-leak">NO</span> (Never used in fit)</td>
+            <td><span class="key-badge badge-leak">NO</span> (Never used in fit)</td>
+          </tr>
+          <tr>
+            <td><strong>Hyperparameters Tuned?</strong></td>
+            <td><span class="key-badge badge-leak">NO</span> (Causes severe overfitting)</td>
+            <td><span class="key-badge badge-val">YES</span> (Primary purpose)</td>
+            <td><span class="key-badge badge-leak">NO</span> (Destroys test integrity)</td>
+          </tr>
+          <tr>
+            <td><strong>Preprocessing Fitted?</strong></td>
+            <td><span class="key-badge badge-train">YES</span> (fit_transform)</td>
+            <td><span class="key-badge badge-leak">NO</span> (transform only)</td>
+            <td><span class="key-badge badge-leak">NO</span> (transform only)</td>
+          </tr>
+          <tr>
+            <td><strong>Evaluation Frequency</strong></td>
+            <td>Every epoch / iteration during training.</td>
+            <td>Every candidate model / epoch for tuning.</td>
+            <td><strong>Exactly ONCE</strong> at project completion.</td>
+          </tr>
+          <tr>
+            <td><strong>Consequence of Misuse</strong></td>
+            <td>Underfitting if too small; noise memorization if too complex.</td>
+            <td>Overfitting to validation set if tuned excessively.</td>
+            <td>Overly optimistic metric; silent failure in production.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-success">
+      <div class="card-title"><span>&#10003;</span> The Memorable Summary Formula</div>
+      <p style="font-size: 1.1rem; line-height: 1.8;">
+        &bull; <strong>TRAIN:</strong> Learn what the data says.
+        <br>&bull; <strong>VALIDATE:</strong> Decide which model learned best.
+        <br>&bull; <strong>TEST:</strong> Verify what the model will do in the real world.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- SECTION 6: UNDERSTANDING DATASET SPLIT RATIOS -->
+  <section id="sec-06" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 06</span>
+      <h2 class="section-title">Understanding Dataset Split Ratios</h2>
+    </div>
+    <p class="section-intro">
+      Choosing how to partition your dataset between training, validation, and testing depends on the total sample size, the complexity of the learning algorithm, and the validation strategy being employed.
+    </p>
+
+    <!-- FIGURE 8.3: SPLIT RATIOS COMPARISON -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 230" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">VISUAL COMPARISON OF STANDARD DATASET SPLIT ARCHITECTURES</text>
+
+  <!-- Ratio Strategy A: 2-Way Split (80/20) with Cross-Validation -->
+  <g transform="translate(40, 50)">
+    <rect width="800" height="70" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">Strategy A: 2-Way Split (80% Train / 20% Test) — Paired with K-Fold Cross-Validation</text>
+    
+    <!-- Bar -->
+    <rect x="18" y="34" width="624" height="26" rx="4" fill="#4F46E5" />
+    <text x="330" y="51" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">TRAINING &amp; CV DEVELOPMENT (80%)</text>
+
+    <rect x="646" y="34" width="136" height="26" rx="4" fill="#10B981" />
+    <text x="714" y="51" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">TEST (20%)</text>
+  </g>
+
+  <!-- Ratio Strategy B: 3-Way Split (70/15/15) Dedicated Sets -->
+  <g transform="translate(40, 135)">
+    <rect width="800" height="75" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">Strategy B: 3-Way Split (70% Train / 15% Validation / 15% Test) — Dedicated Development Subset</text>
+
+    <!-- Bar -->
+    <rect x="18" y="36" width="546" height="26" rx="4" fill="#4F46E5" />
+    <text x="290" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">TRAIN (70%)</text>
+
+    <rect x="568" y="36" width="109" height="26" rx="4" fill="#F59E0B" />
+    <text x="622" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">VAL (15%)</text>
+
+    <rect x="681" y="36" width="101" height="26" rx="4" fill="#10B981" />
+    <text x="731" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">TEST (15%)</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.3: Comparing the standard 2-Way Split (80/20 with Cross-Validation) and 3-Way Split (70/15/15 dedicated sets).</div>
+    </div>
+
+    <h3>Standard Split Archetypes</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Split Archetype</th>
+            <th>Proportions</th>
+            <th>Best Suited For</th>
+            <th>Primary Advantages &amp; Trade-offs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Classic 2-Way Split</strong></td>
+            <td><code>80% Train / 20% Test</code></td>
+            <td>Small to medium datasets (N &lt; 50,000) using <strong>K-Fold Cross-Validation</strong> on the training set.</td>
+            <td>Maximizes training data; validation is handled dynamically via rotating cross-validation folds.</td>
+          </tr>
+          <tr>
+            <td><strong>Classic 3-Way Split</strong></td>
+            <td><code>70% Train / 15% Val / 15% Test</code></td>
+            <td>Medium datasets (50,000 &le; N &le; 500,000) where a dedicated validation set is desired for rapid tuning.</td>
+            <td>Clean separation of roles; fast tuning without retraining K models per hyperparameter.</td>
+          </tr>
+          <tr>
+            <td><strong>Deep Learning Split</strong></td>
+            <td><code>98% Train / 1% Val / 1% Test</code></td>
+            <td>Massive "Big Data" collections (N &gt; 1,000,000 observations / images / text tokens).</td>
+            <td>1% of 1,000,000 is <strong>10,000 samples</strong>&mdash;statistically abundant to measure generalization precision!</td>
+          </tr>
+          <tr>
+            <td><strong>Conservative Split</strong></td>
+            <td><code>60% Train / 20% Val / 20% Test</code></td>
+            <td>High-stakes domains (medical diagnostics, avionics) where high evaluation confidence is paramount.</td>
+            <td>Provides large validation and test buffers at the cost of reduced training sample size.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> The "Big Data" Myth: Fixed Percentage Rules are Obsolete</div>
+      <p>
+        In legacy machine learning textbooks from the 1990s, rules like <em>"Always use 70/30"</em> were standard because datasets were small (often only a few hundred samples).
+      </p>
+      <p>
+        If your modern database contains <strong>10,000,000 customer records</strong>, setting aside 30% for testing means locking away <strong>3,000,000 observations</strong>! That is a massive waste of precious training information. In modern deep learning and large-scale tabular modeling, a <code>98% / 1% / 1%</code> split gives you 9,800,000 training rows and 100,000 test rows, which provides extraordinary statistical precision for evaluation.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 7: CALCULATING THE NUMBER OF SAMPLES -->
+  <section id="sec-07" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 07</span>
+      <h2 class="section-title">Calculating the Number of Samples</h2>
+    </div>
+    <p class="section-intro">
+      Understanding the exact arithmetic of sample allocation ensures that subsets contain enough observations to evaluate metrics with statistical confidence.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formulation: Sample Partition Arithmetic</div>
+      <div class="formula-box">r<sub>train</sub> + r<sub>validation</sub> + r<sub>test</sub> = 1.0 &emsp; (100%)</div>
+      <br>
+      <div class="formula-box">N<sub>i</sub> = &lfloor; N &times; r<sub>i</sub> &rfloor;</div>
+      <div class="formula-desc">
+        Where:
+        <ul>
+          <li><strong>N:</strong> Total number of observations in the dataset.</li>
+          <li><strong>r<sub>i</sub>:</strong> Proportion allocated to subset i (e.g. 0.70 for 70%).</li>
+          <li><strong>N<sub>i</sub>:</strong> Integer count of samples assigned to subset i.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FIGURE 8.4: SAMPLE COUNT CALCULATION -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">SAMPLE-COUNT CALCULATION ENGINE: TOTAL N = 1,000 OBSERVATIONS</text>
+
+  <!-- 3 Computation Cards -->
+  <!-- Card 1: Train -->
+  <g transform="translate(40, 50)">
+    <rect width="250" height="165" rx="8" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#4F46E5" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">TRAINING COUNT (N_train)</text>
+
+    <text x="20" y="55" font-family="monospace" font-size="12" fill="#312E81">Formula: N ✕ r_train</text>
+    <text x="20" y="80" font-family="monospace" font-size="12" fill="#312E81">Calc: 1,000 ✕ 0.70</text>
+    
+    <rect x="20" y="100" width="210" height="45" rx="6" fill="#FFFFFF" stroke="#C7D2FE" />
+    <text x="125" y="128" text-anchor="middle" font-family="monospace" font-size="16" font-weight="800" fill="#4338CA">N_train = 700</text>
+  </g>
+
+  <!-- Card 2: Validation -->
+  <g transform="translate(315, 50)">
+    <rect width="250" height="165" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#F59E0B" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">VALIDATION COUNT (N_val)</text>
+
+    <text x="20" y="55" font-family="monospace" font-size="12" fill="#78350F">Formula: N ✕ r_val</text>
+    <text x="20" y="80" font-family="monospace" font-size="12" fill="#78350F">Calc: 1,000 ✕ 0.15</text>
+
+    <rect x="20" y="100" width="210" height="45" rx="6" fill="#FFFFFF" stroke="#FDE68A" />
+    <text x="125" y="128" text-anchor="middle" font-family="monospace" font-size="16" font-weight="800" fill="#D97706">N_val = 150</text>
+  </g>
+
+  <!-- Card 3: Test -->
+  <g transform="translate(590, 50)">
+    <rect width="250" height="165" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#10B981" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">TEST COUNT (N_test)</text>
+
+    <text x="20" y="55" font-family="monospace" font-size="12" fill="#065F46">Formula: N ✕ r_test</text>
+    <text x="20" y="80" font-family="monospace" font-size="12" fill="#065F46">Calc: 1,000 ✕ 0.15</text>
+
+    <rect x="20" y="100" width="210" height="45" rx="6" fill="#FFFFFF" stroke="#A7F3D0" />
+    <text x="125" y="128" text-anchor="middle" font-family="monospace" font-size="16" font-weight="800" fill="#059669">N_test = 150</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.4: Mathematical step-by-step sample count calculation for N = 1,000 across a 70/15/15 partition.</div>
+    </div>
+
+    <h3>Worked Step-by-Step Numerical Example</h3>
+    <p>
+      Consider an enterprise fraud detection dataset with <code>N = 1,000</code> transactions:
+    </p>
+    <ol>
+      <li><strong>Target Proportions:</strong> <code>r<sub>train</sub> = 0.70</code>, <code>r<sub>val</sub> = 0.15</code>, <code>r<sub>test</sub> = 0.15</code>.</li>
+      <li><strong>Check Sum:</strong> <code>0.70 + 0.15 + 0.15 = 1.00 (100.0%) &check;</code></li>
+      <li><strong>Compute Training Count:</strong> <code>N<sub>train</sub> = 1,000 &times; 0.70 = <strong>700 samples</strong></code></li>
+      <li><strong>Compute Validation Count:</strong> <code>N<sub>val</sub> = 1,000 &times; 0.15 = <strong>150 samples</strong></code></li>
+      <li><strong>Compute Test Count:</strong> <code>N<sub>test</sub> = 1,000 &times; 0.15 = <strong>150 samples</strong></code></li>
+      <li><strong>Verify Total:</strong> <code>700 + 150 + 150 = 1,000 samples &check;</code></li>
+    </ol>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The Small Sample Volatility Trap</div>
+      <p>
+        What happens if your total dataset contains only <strong>100 samples</strong>?
+      </p>
+      <p>
+        A 15% test set contains only <code>15 samples</code>. In a classification problem, if your model makes just <strong>one single mistake</strong>, your test accuracy drops by:
+      </p>
+      <div class="formula-box">1 / 15 &approx; 6.67% Swing in Accuracy!</div>
+      <p>
+        Evaluating a model on only 15 samples produces immense statistical noise&mdash;a model that scores 86% might easily score 73% or 93% on a slightly different 15-sample split!
+        <br><strong>Safer Engineering Rule:</strong> When total <code>N &lt; 1,000</code>, avoid dedicated 3-way splits. Instead, use an 80/20 split and perform <strong>Repeated Stratified K-Fold Cross-Validation</strong> on the 80% development set to average out variance.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 8: RANDOM SPLITTING AND REPRODUCIBILITY -->
+  <section id="sec-08" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 08</span>
+      <h2 class="section-title">Random Splitting and Reproducibility</h2>
+    </div>
+    <p class="section-intro">
+      Raw datasets are frequently collected or stored in systematic orders&mdash;sorted by timestamp, customer ID, or target class. Partitioning an unsorted table sequentially introduces fatal selection bias.
+    </p>
+
+    <!-- FIGURE 8.5: RANDOM SPLITTING MECHANICS -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">HOW RANDOM SHUFFLE SPLITTING WORKS: PREVENTING ROW-ORDER BIAS</text>
+
+  <!-- Left: Ordered Raw Table -->
+  <g transform="translate(40, 50)">
+    <rect width="260" height="175" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+    <text x="130" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">✕ UNSHUFFLED RAW TABLE (SORTED BIAS)</text>
+    
+    <!-- Rows sorted by class -->
+    <rect x="20" y="35" width="220" height="22" fill="#E2E8F0" />
+    <text x="30" y="50" font-family="monospace" font-size="10" fill="#334155">Row 001..080: Class 0 (Patients)</text>
+    <rect x="20" y="62" width="220" height="22" fill="#E2E8F0" />
+    <text x="30" y="77" font-family="monospace" font-size="10" fill="#334155">Row 081..160: Class 0 (Patients)</text>
+    <rect x="20" y="89" width="220" height="22" fill="#FEE2E2" />
+    <text x="30" y="104" font-family="monospace" font-size="10" font-weight="700" fill="#DC2626">Row 161..200: Class 1 (Deadly Risk!)</text>
+
+    <text x="130" y="145" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#991B1B">If split sequentially (first 70%):</text>
+    <text x="130" y="160" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#7F1D1D">Train gets 0% of Class 1! Catastrophic failure.</text>
+  </g>
+
+  <!-- Middle: Random Permutation Engine -->
+  <g transform="translate(330, 85)">
+    <rect width="180" height="90" rx="8" fill="#4F46E5" />
+    <text x="90" y="28" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">PSEUDO-RANDOM</text>
+    <text x="90" y="44" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">PERMUTATION</text>
+    <text x="90" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#C7D2FE">random_state = 42</text>
+  </g>
+
+  <!-- Right: Shuffled Partition -->
+  <g transform="translate(540, 50)">
+    <rect width="300" height="175" rx="8" fill="#F0FDF4" stroke="#BBF7D0" />
+    <text x="150" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#16A34A">✓ PERMUTED INDEX PARTITIONS</text>
+
+    <rect x="20" y="38" width="260" height="34" rx="4" fill="#EEF2FF" stroke="#6366F1" />
+    <text x="30" y="54" font-family="monospace" font-size="10" fill="#312E81">Train: [idx 142, idx 003, idx 189, ...]</text>
+    <text x="30" y="66" font-family="-apple-system, sans-serif" font-size="9" fill="#4338CA">Contains uniform sample mixture</text>
+
+    <rect x="20" y="80" width="260" height="34" rx="4" fill="#FFFBEB" stroke="#F59E0B" />
+    <text x="30" y="96" font-family="monospace" font-size="10" fill="#78350F">Val:   [idx 074, idx 195, idx 012, ...]</text>
+    <text x="30" y="108" font-family="-apple-system, sans-serif" font-size="9" fill="#92400E">Independent validation mixture</text>
+
+    <rect x="20" y="122" width="260" height="34" rx="4" fill="#F0FDF4" stroke="#10B981" />
+    <text x="30" y="138" font-family="monospace" font-size="10" fill="#065F46">Test:  [idx 051, idx 163, idx 099, ...]</text>
+    <text x="30" y="150" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">Pure unseen testing mixture</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.5: How pseudo-random shuffling breaks raw sorting bias and generates uniform sample partitions.</div>
+    </div>
+
+    <h3>The Critical Role of random_state</h3>
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> What is random_state?</div>
+      <p>
+        Computers cannot generate truly random numbers; they generate <strong>pseudo-random</strong> numbers using mathematical algorithms initialized by an integer seed value (the <code>random_state</code>).
+      </p>
+      <ul>
+        <li>When <code>random_state=42</code> is fixed, the exact same sequence of pseudo-random numbers is produced every time the code runs.</li>
+        <li>This ensures that your train, validation, and test sets contain the <strong>exact same observations</strong> across multiple experimental runs, team members, and CI/CD testing pipelines.</li>
+      </ul>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> Reproducibility &ne; Representativeness</div>
+      <p>
+        Setting <code>random_state=42</code> makes your experiment reproducible, but it does <strong>not</strong> guarantee that the split is a good, unbiased representation of reality!
+      </p>
+      <p>
+        By pure bad luck, a specific random seed might allocate an unusual cluster of outliers into the test set or starve the validation set of rare classes. This is why stratified splitting (for classification) and cross-validation are essential safeguards.
+      </p>
+    </div>
+
+    <h3>Scikit-Learn Implementation: 2-Stage Train/Val/Test Split</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_two_stage_split.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.model_selection import train_test_split
+
+# Generate synthetic dataset of 1,000 samples
+X = np.random.randn(1000, 10)
+y = np.random.randint(0, 2, size=1000)
+
+# STAGE 1: Split into 70% Train and 30% Temp (Val + Test)
+X_train, X_temp, y_train, y_temp = train_test_split(
+    X, y, test_size=0.30, random_state=42, shuffle=True
+)
+
+# STAGE 2: Split 30% Temp equally (50/50) into 15% Val and 15% Test
+X_val, X_test, y_val, y_test = train_test_split(
+    X_temp, y_temp, test_size=0.50, random_state=42, shuffle=True
+)
+
+print(f"Total:      {len(X)}")
+print(f"Train Set:  {len(X_train)} ({len(X_train)/len(X):.1%})")  # 700 (70.0%)
+print(f"Val Set:    {len(X_val)} ({len(X_val)/len(X):.1%})")      # 150 (15.0%)
+print(f"Test Set:   {len(X_test)} ({len(X_test)/len(X):.1%})")    # 150 (15.0%)</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 9: STRATIFIED SPLITTING FOR CLASSIFICATION -->
+  <section id="sec-09" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 09</span>
+      <h2 class="section-title">Stratified Splitting for Imbalanced Data</h2>
+    </div>
+    <p class="section-intro">
+      In classification problems, real-world target classes are rarely distributed 50/50. Fraud detection, medical diagnosis, and ad click prediction frequently exhibit severe <strong>class imbalance</strong>.
+    </p>
+
+    <!-- FIGURE 8.6: STRATIFIED SPLITTING PRESERVATION -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">STRATIFIED SPLITTING: PRESERVING MINORITY CLASS PROPORTIONS ACROSS SUBSETS</text>
+
+  <!-- Original Population (Left) -->
+  <g transform="translate(30, 48)">
+    <rect width="180" height="195" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="90" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E293B">ORIGINAL (N=200)</text>
+
+    <!-- Stacked bar -->
+    <rect x="40" y="45" width="100" height="100" rx="4" fill="#3B82F6" />
+    <text x="90" y="95" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Class 0: 160</text>
+    <text x="90" y="110" text-anchor="middle" font-family="monospace" font-size="10" fill="#DBEAFE">(80.0%)</text>
+
+    <rect x="40" y="145" width="100" height="25" rx="4" fill="#EF4444" />
+    <text x="90" y="162" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Class 1: 40 (20.0%)</text>
+    
+    <text x="90" y="188" text-anchor="middle" font-family="monospace" font-size="9" fill="#64748B">p_c = 40 / 200 = 20%</text>
+  </g>
+
+  <!-- Arrow -->
+  <g transform="translate(225, 125)">
+    <path d="M 0 0 L 30 0" stroke="#4F46E5" stroke-width="3" />
+    <polygon points="30,-4 38,0 30,4" fill="#4F46E5" />
+    <text x="15" y="-10" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#4F46E5">stratify=y</text>
+  </g>
+
+  <!-- 3 Stratified Subsets (Right) -->
+  <!-- Train Subset -->
+  <g transform="translate(280, 48)">
+    <rect width="170" height="195" rx="8" fill="#EEF2FF" stroke="#4F46E5" />
+    <text x="85" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">TRAIN (N=140)</text>
+
+    <rect x="40" y="45" width="90" height="100" rx="4" fill="#3B82F6" />
+    <text x="85" y="95" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Class 0: 112</text>
+    <text x="85" y="110" text-anchor="middle" font-family="monospace" font-size="10" fill="#DBEAFE">(80.0%)</text>
+
+    <rect x="40" y="145" width="90" height="25" rx="4" fill="#EF4444" />
+    <text x="85" y="162" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Class 1: 28 (20.0%)</text>
+
+    <text x="85" y="188" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#4338CA">✓ Ratio: 80% / 20%</text>
+  </g>
+
+  <!-- Val Subset -->
+  <g transform="translate(480, 48)">
+    <rect width="170" height="195" rx="8" fill="#FFFBEB" stroke="#F59E0B" />
+    <text x="85" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#78350F">VALIDATION (N=30)</text>
+
+    <rect x="40" y="45" width="90" height="100" rx="4" fill="#3B82F6" />
+    <text x="85" y="95" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Class 0: 24</text>
+    <text x="85" y="110" text-anchor="middle" font-family="monospace" font-size="10" fill="#DBEAFE">(80.0%)</text>
+
+    <rect x="40" y="145" width="90" height="25" rx="4" fill="#EF4444" />
+    <text x="85" y="162" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Class 1: 6 (20.0%)</text>
+
+    <text x="85" y="188" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#D97706">✓ Ratio: 80% / 20%</text>
+  </g>
+
+  <!-- Test Subset -->
+  <g transform="translate(680, 48)">
+    <rect width="170" height="195" rx="8" fill="#F0FDF4" stroke="#10B981" />
+    <text x="85" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">TEST (N=30)</text>
+
+    <rect x="40" y="45" width="90" height="100" rx="4" fill="#3B82F6" />
+    <text x="85" y="95" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">Class 0: 24</text>
+    <text x="85" y="110" text-anchor="middle" font-family="monospace" font-size="10" fill="#DBEAFE">(80.0%)</text>
+
+    <rect x="40" y="145" width="90" height="25" rx="4" fill="#EF4444" />
+    <text x="85" y="162" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Class 1: 6 (20.0%)</text>
+
+    <text x="85" y="188" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#059669">✓ Ratio: 80% / 20%</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.6: Stratified splitting guarantees that minority class proportions (20%) are preserved identically across Train, Val, and Test subsets.</div>
+    </div>
+
+    <h3>The Class Starvation Disaster</h3>
+    <p>
+      Imagine a cancer screening dataset with 1,000 patients where only <strong>10 patients (1.0%)</strong> have a malignant tumor (Class 1) and 990 are benign (Class 0).
+    </p>
+    <p>
+      If you perform an ordinary random split into 70% train and 30% test without stratification, pure probabilistic variance can easily allocate 9 or 10 malignant cases to the training set, leaving only <strong>0 or 1 cancer patient in the test set!</strong>
+    </p>
+    <p>
+      A test set with 1 positive sample cannot compute a meaningful Recall, Precision, or ROC-AUC score! The model could predict "Benign" for every single patient and achieve 99.7% test accuracy while failing 100% of real cancer patients.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Goal of Stratification</div>
+      <div class="formula-box">p<sub>c</sub>(Train) &approx; p<sub>c</sub>(Val) &approx; p<sub>c</sub>(Test) &approx; N<sub>c</sub> / N</div>
+      <div class="formula-desc">
+        Where <code>p<sub>c</sub></code> is the proportion of class <code>c</code>, <code>N<sub>c</sub></code> is the count of class <code>c</code> samples in the full dataset, and <code>N</code> is total sample size.
+      </div>
+    </div>
+
+    <h3>Verified Numerical Counts from Executed Python Code</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Subset Name</th>
+            <th>Total Samples</th>
+            <th>Class 0 Count (Benign)</th>
+            <th>Class 1 Count (Malignant)</th>
+            <th>Minority Class %</th>
+            <th>Stratification Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Full Dataset</strong></td>
+            <td>200</td>
+            <td>160</td>
+            <td>40</td>
+            <td><strong>20.0%</strong></td>
+            <td>Original Baseline Population</td>
+          </tr>
+          <tr>
+            <td><strong>Training Set (70%)</strong></td>
+            <td>140</td>
+            <td>112</td>
+            <td>28</td>
+            <td><strong>20.0%</strong></td>
+            <td><span class="key-badge badge-train">&check; Exact Preservation</span></td>
+          </tr>
+          <tr>
+            <td><strong>Validation Set (15%)</strong></td>
+            <td>30</td>
+            <td>24</td>
+            <td>6</td>
+            <td><strong>20.0%</strong></td>
+            <td><span class="key-badge badge-val">&check; Exact Preservation</span></td>
+          </tr>
+          <tr>
+            <td><strong>Test Set (15%)</strong></td>
+            <td>30</td>
+            <td>24</td>
+            <td>6</td>
+            <td><strong>20.0%</strong></td>
+            <td><span class="key-badge badge-test">&check; Exact Preservation</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> What Stratification Does NOT Do</div>
+      <ul>
+        <li><strong>It does NOT fix class imbalance:</strong> If your training data has 80% negative and 20% positive, the training set still has 80% negative and 20% positive. To balance training, you must apply re-weighting or sampling techniques (like SMOTE).</li>
+        <li><strong>It is NOT suitable for Time-Series data:</strong> Stratification randomly pulls observations from across the entire timeline, causing catastrophic lookahead leakage!</li>
+      </ul>
+    </div>
+  </section>
+
+
+  <!-- SECTION 10: COMMON SPLITTING STRATEGIES FOR DIFFERENT DATA TYPES -->
+  <section id="sec-10" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 10</span>
+      <h2 class="section-title">Common Splitting Strategies by Data Type</h2>
+    </div>
+    <p class="section-intro">
+      Standard random splitting relies on a critical assumption in statistics: that all data samples are <strong>Independent and Identically Distributed (I.I.D.)</strong>. When observations are grouped, correlated, or sequential in time, ordinary random splitting produces severe data leakage.
+    </p>
+
+    <!-- FIGURE 8.7: GROUP BASED SPLITTING -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GROUP-BASED SPLITTING: PREVENTING PATIENT / USER IDENTITY CONTAMINATION</text>
+
+  <!-- Left: Random Split Failure (Patient Contamination) -->
+  <g transform="translate(40, 50)">
+    <rect width="380" height="185" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+    <text x="190" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">✕ RANDOM SPLIT: IDENTITY LEAKAGE</text>
+    
+    <text x="20" y="50" font-family="-apple-system, sans-serif" font-size="11" fill="#7F1D1D">Patient 101 has 5 hospital visits:</text>
+    <rect x="20" y="60" width="340" height="30" rx="4" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="30" y="79" font-family="monospace" font-size="10" fill="#B91C1C">Train gets: Visit 1, Visit 2, Visit 4</text>
+    
+    <rect x="20" y="96" width="340" height="30" rx="4" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="30" y="115" font-family="monospace" font-size="10" fill="#B91C1C">Test gets:  Visit 3, Visit 5</text>
+
+    <text x="20" y="148" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#DC2626">The model memorizes Patient 101's unique physiology!</text>
+    <text x="20" y="165" font-family="-apple-system, sans-serif" font-size="10" fill="#991B1B">Test accuracy is artificially high; model fails on new patients.</text>
+  </g>
+
+  <!-- Right: Group-Aware Split (Patient Independence) -->
+  <g transform="translate(460, 50)">
+    <rect width="380" height="185" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <text x="190" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">✓ GroupShuffleSplit: ZERO PATIENT OVERLAP</text>
+
+    <text x="20" y="50" font-family="-apple-system, sans-serif" font-size="11" fill="#065F46">All visits for a subject are grouped together:</text>
+    <rect x="20" y="60" width="340" height="30" rx="4" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="30" y="79" font-family="monospace" font-size="10" fill="#047857">Train gets: Patient 101, 102, 104 (All Visits)</text>
+
+    <rect x="20" y="96" width="340" height="30" rx="4" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="30" y="115" font-family="monospace" font-size="10" fill="#047857">Test gets:  Patient 103, 105 (All Visits)</text>
+
+    <text x="20" y="148" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#059669">✓ True Patient-Level Generalization!</text>
+    <text x="20" y="165" font-family="-apple-system, sans-serif" font-size="10" fill="#065F46">Evaluates whether the model diagnoses brand new individuals.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.7: Group-based splitting ensures that all observations belonging to the same patient or user identity remain together in the same subset.</div>
+    </div>
+
+    <h3>The 5 Core Splitting Strategies</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Strategy Name</th>
+            <th>Underlying Assumption</th>
+            <th>Scikit-Learn Implementation</th>
+            <th>When Mandatory</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Ordinary Random Split</strong></td>
+            <td>Observations are completely independent and identically distributed (I.I.D.).</td>
+            <td><code>train_test_split(shuffle=True)</code></td>
+            <td>Standard tabular regression or balanced classification with unique entities per row.</td>
+          </tr>
+          <tr>
+            <td><strong>Stratified Split</strong></td>
+            <td>Class proportions in subsets must match the population to avoid class starvation.</td>
+            <td><code>train_test_split(stratify=y)</code></td>
+            <td>Any classification problem with moderate to severe class imbalance (e.g. fraud, medical).</td>
+          </tr>
+          <tr>
+            <td><strong>Group-Based Split</strong></td>
+            <td>Multiple rows belong to the same entity (person, patient, device, household, hospital).</td>
+            <td><code>GroupShuffleSplit</code> or <code>GroupKFold</code></td>
+            <td>Medical diagnostic records, user telemetry, customer churn with repeated sessions.</td>
+          </tr>
+          <tr>
+            <td><strong>Chronological Time Split</strong></td>
+            <td>Observations have temporal dependency; the past must predict the future.</td>
+            <td><code>TimeSeriesSplit</code> or date cutoff</td>
+            <td>Stock prices, weather forecasting, demand forecasting, IoT sensor telemetry.</td>
+          </tr>
+          <tr>
+            <td><strong>Stratified Group Split</strong></td>
+            <td>Both class balance and subject independence must be preserved simultaneously.</td>
+            <td><code>StratifiedGroupKFold</code></td>
+            <td>Multi-visit clinical trials with imbalanced rare disease diagnoses across patients.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- FIGURE 8.8: TIME SERIES SPLITTING -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">CHRONOLOGICAL SPLITTING: ELIMINATING LOOKAHEAD BIAS IN TEMPORAL DATA</text>
+
+  <!-- Timeline Axis -->
+  <line x1="80" y1="60" x2="800" y2="60" stroke="#94A3B8" stroke-width="2" />
+  <polygon points="800,56 808,60 800,64" fill="#94A3B8" />
+  <text x="80" y="50" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#475569">Past (Jan 2026)</text>
+  <text x="800" y="50" text-anchor="end" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#475569">Future (Dec 2026) →</text>
+
+  <!-- Fold 1 -->
+  <g transform="translate(80, 80)">
+    <text x="0" y="16" font-family="monospace" font-size="11" font-weight="700" fill="#334155">Split 1:</text>
+    <rect x="70" y="0" width="300" height="24" rx="4" fill="#4F46E5" />
+    <text x="220" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Train: Jan – Mar</text>
+    <rect x="375" y="0" width="120" height="24" rx="4" fill="#F59E0B" />
+    <text x="435" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val: Apr</text>
+  </g>
+
+  <!-- Fold 2 -->
+  <g transform="translate(80, 115)">
+    <text x="0" y="16" font-family="monospace" font-size="11" font-weight="700" fill="#334155">Split 2:</text>
+    <rect x="70" y="0" width="425" height="24" rx="4" fill="#4F46E5" />
+    <text x="280" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Train: Jan – Apr (Expanding Window)</text>
+    <rect x="500" y="0" width="120" height="24" rx="4" fill="#F59E0B" />
+    <text x="560" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val: May</text>
+  </g>
+
+  <!-- Fold 3 (Final Test) -->
+  <g transform="translate(80, 150)">
+    <text x="0" y="16" font-family="monospace" font-size="11" font-weight="700" fill="#334155">Final:</text>
+    <rect x="70" y="0" width="550" height="24" rx="4" fill="#4F46E5" />
+    <text x="345" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Train: Jan – Oct</text>
+    <rect x="625" y="0" width="95" height="24" rx="4" fill="#10B981" />
+    <text x="672" y="16" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Test: Nov–Dec</text>
+  </g>
+
+  <!-- Rule Banner -->
+  <rect x="80" y="195" width="720" height="32" rx="6" fill="#F0FDF4" stroke="#86EFAC" />
+  <text x="440" y="215" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">✓ CARDINAL TIME-SERIES LAW: Training index (t) must ALWAYS strictly precede testing index (t &gt; max(t_train)).</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.8: Chronological Time-Series Splitting: Training sets always strictly precede validation/test sets to eliminate lookahead bias.</div>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The Lookahead Disaster in Time-Series Data</div>
+      <p>
+        If you randomly shuffle a stock market or weather dataset:
+      </p>
+      <p>
+        Your model will be trained on data from <em>Wednesday</em> and tested on data from <em>Tuesday</em>! The model will learn future trends to "predict" the past, producing near-perfect validation accuracy (e.g. 99.8%). But when deployed live on Thursday morning, future data does not exist, and the trading bot or weather forecast will fail completely.
+        <br><strong>Cardinal Rule of Time-Series:</strong> Never shuffle temporal data. Always split chronologically: Past &rarr; Present &rarr; Future.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 11: DATA LEAKAGE DURING DATASET SPLITTING -->
+  <section id="sec-11" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 11</span>
+      <h2 class="section-title">Data Leakage During Dataset Splitting</h2>
+    </div>
+    <p class="section-intro">
+      <strong>Data Leakage</strong> is the introduction of information about the target or test distribution into the training pipeline. It is the single most common cause of high offline benchmark scores followed by catastrophic production failures.
+    </p>
+
+    <!-- FIGURE 8.9: NINE LEAKAGE VECTORS -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">THE 9 CRITICAL DATA LEAKAGE VECTORS DURING DATASET SPLITTING</text>
+
+  <!-- 3x3 Grid of Leakage Pitfalls -->
+  <!-- Row 1 -->
+  <g transform="translate(30, 42)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">1. Scaling Before Splitting</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Test mean and std contaminate training.</text>
+  </g>
+
+  <g transform="translate(315, 42)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">2. Full-Dataset Imputation</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Missing values filled using test statistics.</text>
+  </g>
+
+  <g transform="translate(600, 42)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">3. Test-Aware Feature Selection</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Selecting features correlated with test y.</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(30, 108)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">4. Global Target Encoding</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Category means leak test evaluation targets.</text>
+  </g>
+
+  <g transform="translate(315, 108)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">5. Oversampling Before Split</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Synthetic SMOTE clones cross into test.</text>
+  </g>
+
+  <g transform="translate(600, 108)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">6. Duplicate Record Crossing</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Identical rows appear in both train &amp; test.</text>
+  </g>
+
+  <!-- Row 3 -->
+  <g transform="translate(30, 174)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">7. Patient / Subject Group Leakage</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Same human identity appears in both sets.</text>
+  </g>
+
+  <g transform="translate(315, 174)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">8. Time Lookahead Bias</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Shuffling temporal data trains on future.</text>
+  </g>
+
+  <g transform="translate(600, 174)">
+    <rect width="250" height="56" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+    <text x="12" y="22" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">9. Test-Score Hyperparameter Tuning</text>
+    <text x="12" y="40" font-family="-apple-system, sans-serif" font-size="9" fill="#7F1D1D">Repeatedly tuning decisions to beat test score.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.9: The 9 primary data leakage vectors encountered during dataset splitting and preprocessing.</div>
+    </div>
+
+    <!-- FIGURE 8.10: LEAKAGE WORKFLOW COMPARISON -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">DATA LEAKAGE IN PREPROCESSING: THE INCORRECT VS CORRECT WORKFLOW</text>
+
+  <!-- Top Bad Path: Leaky Preprocessing -->
+  <g transform="translate(30, 45)">
+    <rect width="820" height="90" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+    <text x="20" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">✕ INCORRECT (LEAKY): PREPROCESSING APPLIED BEFORE SPLITTING</text>
+
+    <!-- Box 1 -->
+    <rect x="20" y="36" width="220" height="40" rx="6" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="130" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">Full Raw Dataset (X_all)</text>
+    <text x="130" y="67" text-anchor="middle" font-family="monospace" font-size="10" fill="#B91C1C">Scaler.fit_transform(X_all)</text>
+
+    <!-- Arrow -->
+    <path d="M 245 56 L 285 56" stroke="#DC2626" stroke-width="2" />
+    <polygon points="285,52 293,56 285,60" fill="#DC2626" />
+
+    <!-- Box 2 -->
+    <rect x="295" y="36" width="240" height="40" rx="6" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="415" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">train_test_split(X_scaled)</text>
+    <text x="415" y="67" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C">Test μ and σ leak into training!</text>
+
+    <!-- Arrow -->
+    <path d="M 540 56 L 580 56" stroke="#DC2626" stroke-width="2" />
+    <polygon points="580,52 588,56 580,60" fill="#DC2626" />
+
+    <!-- Box 3 -->
+    <rect x="590" y="36" width="210" height="40" rx="6" fill="#FEE2E2" stroke="#DC2626" />
+    <text x="695" y="53" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#7F1D1D">Overly Optimistic Score</text>
+    <text x="695" y="67" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">Fails silently in Production!</text>
+  </g>
+
+  <!-- Bottom Good Path: Clean Pipeline -->
+  <g transform="translate(30, 148)">
+    <rect width="820" height="105" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <text x="20" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">✓ CORRECT (LEAK-FREE): SPLIT FIRST, FIT PREPROCESSING ON TRAIN ONLY</text>
+
+    <!-- Step 1 -->
+    <rect x="20" y="36" width="180" height="52" rx="6" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="110" y="54" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">1. Split FIRST</text>
+    <text x="110" y="72" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">train_test_split()</text>
+
+    <!-- Arrow -->
+    <path d="M 205 62 L 235 62" stroke="#10B981" stroke-width="2" />
+    <polygon points="235,58 243,62 235,66" fill="#10B981" />
+
+    <!-- Step 2 -->
+    <rect x="245" y="36" width="270" height="52" rx="6" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="380" y="54" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">2. Pipeline.fit(X_train)</text>
+    <text x="380" y="72" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">scaler.fit(X_train) ONLY</text>
+
+    <!-- Arrow -->
+    <path d="M 520 62 L 550 62" stroke="#10B981" stroke-width="2" />
+    <polygon points="550,58 558,62 550,66" fill="#10B981" />
+
+    <!-- Step 3 -->
+    <rect x="560" y="36" width="240" height="52" rx="6" fill="#DCFCE7" stroke="#16A34A" />
+    <text x="680" y="54" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">3. Pipeline.transform(X_test)</text>
+    <text x="680" y="72" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#065F46">✓ True Unbiased Validation</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.10: Architectural comparison of a leaking preprocessing workflow vs a leak-free Scikit-Learn Pipeline.</div>
+    </div>
+
+    <h3>Detailed Breakdown of the 9 Leakage Vectors</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Leakage Vector</th>
+            <th>The Flawed Mechanism</th>
+            <th>The Safe Engineering Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>01</strong></td>
+            <td><strong>Scaling Before Splitting</strong></td>
+            <td><code>StandardScaler.fit(X_all)</code> calculates global &mu; and &sigma; using test rows.</td>
+            <td>Split first: <code>scaler.fit(X_train)</code>, then <code>scaler.transform(X_test)</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>02</strong></td>
+            <td><strong>Global Imputation</strong></td>
+            <td>Missing values filled with mean/median computed across training + test data.</td>
+            <td>Fit <code>SimpleImputer</code> strictly on training data; transform test data.</td>
+          </tr>
+          <tr>
+            <td><strong>03</strong></td>
+            <td><strong>Test Feature Selection</strong></td>
+            <td>Running ANOVA, Chi2, or correlation on the full dataset before splitting.</td>
+            <td>Select features using only training feature-target relationships.</td>
+          </tr>
+          <tr>
+            <td><strong>04</strong></td>
+            <td><strong>Global Target Encoding</strong></td>
+            <td>Category averages calculated using evaluation targets.</td>
+            <td>Compute target statistics within cross-fitting loops or training folds only.</td>
+          </tr>
+          <tr>
+            <td><strong>05</strong></td>
+            <td><strong>Oversampling (SMOTE) Before Split</strong></td>
+            <td>Synthetic minority points generated using test samples, leaking into training.</td>
+            <td>Apply SMOTE exclusively to the training split inside an <code>imblearn.Pipeline</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>06</strong></td>
+            <td><strong>Duplicate Records</strong></td>
+            <td>Identical or near-identical rows land in both training and testing sets.</td>
+            <td>De-duplicate identical rows based on unique entity keys before splitting.</td>
+          </tr>
+          <tr>
+            <td><strong>07</strong></td>
+            <td><strong>Subject / Patient Leakage</strong></td>
+            <td>Same human or device appears in both sets, memorizing individual traits.</td>
+            <td>Use <code>GroupShuffleSplit</code> or <code>GroupKFold</code> keyed on Subject ID.</td>
+          </tr>
+          <tr>
+            <td><strong>08</strong></td>
+            <td><strong>Time Lookahead Bias</strong></td>
+            <td>Randomly shuffling temporal observations leaks future trends into the past.</td>
+            <td>Split chronologically using expanding or rolling time windows.</td>
+          </tr>
+          <tr>
+            <td><strong>09</strong></td>
+            <td><strong>Test-Score Hyperparameter Tuning</strong></td>
+            <td>Repeatedly adjusting model parameters to improve test set scores.</td>
+            <td>Tune hyperparameters strictly on the <strong>validation set</strong>; touch test once!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 12: TRAIN/VALIDATION/TEST WORKFLOW WITH PREPROCESSING -->
+  <section id="sec-12" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 12</span>
+      <h2 class="section-title">Train/Val/Test Workflow with Preprocessing</h2>
+    </div>
+    <p class="section-intro">
+      Below is the complete, production-grade 11-step machine learning experimental workflow, showing exactly when preprocessing transformers are fitted, how candidate models are compared, and when the final test audit occurs.
+    </p>
+
+    <!-- FIGURE 8.11: MODEL SELECTION FLOWCHART -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">MODEL-SELECTION FLOWCHART: WHERE VALIDATION AND TEST SETS OPERATE</text>
+
+  <!-- Step 1: Candidate Generation -->
+  <g transform="translate(30, 50)">
+    <rect width="180" height="85" rx="8" fill="#EEF2FF" stroke="#4F46E5" />
+    <text x="90" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">1. TRAIN CANDIDATES</text>
+    <text x="15" y="48" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">• Model A: KNN (k=3)</text>
+    <text x="15" y="64" font-family="-apple-system, sans-serif" font-size="10" fill="#4338CA">• Model B: KNN (k=7)</text>
+    <text x="90" y="78" text-anchor="middle" font-family="monospace" font-size="9" fill="#6366F1">Fitted on X_train ONLY</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 215 92 L 255 92" stroke="#64748B" stroke-width="2" />
+  <polygon points="255,88 263,92 255,96" fill="#64748B" />
+
+  <!-- Step 2: Validation Evaluation -->
+  <g transform="translate(265, 50)">
+    <rect width="210" height="85" rx="8" fill="#FFFBEB" stroke="#F59E0B" />
+    <text x="105" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#78350F">2. VALIDATE &amp; COMPARE</text>
+    <text x="15" y="48" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">• Model A Val Acc: 83.3%</text>
+    <text x="15" y="64" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">• Model B Val Acc: 80.0%</text>
+    <text x="105" y="78" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#D97706">→ Winner: Model A (k=3)</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M 480 92 L 520 92" stroke="#64748B" stroke-width="2" />
+  <polygon points="520,88 528,92 520,96" fill="#64748B" />
+
+  <!-- Step 3: Final Test Evaluation -->
+  <g transform="translate(530, 50)">
+    <rect width="210" height="85" rx="8" fill="#F0FDF4" stroke="#10B981" />
+    <text x="105" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">3. UNBIASED TEST AUDIT</text>
+    <text x="15" y="48" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">• Evaluated on X_test ONCE.</text>
+    <text x="15" y="64" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">• Final Test Acc: 80.0%</text>
+    <text x="105" y="78" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#059669">NO MORE TUNING ALLOWED!</text>
+  </g>
+
+  <!-- Arrow Down to Deploy -->
+  <path d="M 635 140 L 635 170" stroke="#10B981" stroke-width="2" />
+  <polygon points="631,170 635,178 639,170" fill="#10B981" />
+
+  <!-- Step 4: Production Deployment -->
+  <g transform="translate(530, 180)">
+    <rect width="210" height="60" rx="8" fill="#ECFDF5" stroke="#059669" stroke-width="2" />
+    <text x="105" y="26" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="800" fill="#065F46">DEPLOY TO PRODUCTION</text>
+    <text x="105" y="45" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Guards against test-set overfitting</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.11: End-to-end model selection flowchart illustrating candidate comparison on validation data followed by a single final test set evaluation.</div>
+    </div>
+
+    <h3>The 11-Step Production ML Lifecycle</h3>
+    <ol>
+      <li><strong>Step 1: Define Problem &amp; Data Structure:</strong> Establish the target variable (y) and verify if data contains groups (subjects) or time ordering.</li>
+      <li><strong>Step 2: Clean Raw Data:</strong> Remove corrupted corrupted rows, deduplicate identical entities, and parse date stamps.</li>
+      <li><strong>Step 3: PARTITION FIRST (Golden Rule):</strong> Execute <code>train_test_split()</code>, <code>GroupShuffleSplit()</code>, or time cutoff to create Train (70%), Validation (15%), and Test (15%) subsets.</li>
+      <li><strong>Step 4: Lock the Test Set in a Vault:</strong> Disconnect the test set from your active coding notebook or pipeline to prevent accidental snoop leakage.</li>
+      <li><strong>Step 5: Fit Preprocessing on Train ONLY:</strong> Fit scalers (StandardScaler), imputers (SimpleImputer), and encoders (OneHotEncoder) on <code>X_train</code> only.</li>
+      <li><strong>Step 6: Transform Validation Data:</strong> Apply fitted transformers to <code>X_val</code> using <code>transformer.transform(X_val)</code>.</li>
+      <li><strong>Step 7: Train Candidate Models:</strong> Fit multiple model architectures (KNN, SVM, Random Forest, XGBoost) on <code>X_train</code>.</li>
+      <li><strong>Step 8: Evaluate &amp; Tune on Validation Set:</strong> Compare candidate predictions on <code>X_val</code>. Tune hyperparameters (e.g. <code>k</code> in KNN, tree depth) to optimize validation metric.</li>
+      <li><strong>Step 9: Select the Winning Model:</strong> Pick the single best-performing architecture and configuration based strictly on validation performance.</li>
+      <li><strong>Step 10: Conduct the Final Unbiased Test Audit:</strong> Evaluate the winning model <strong>exactly once</strong> on <code>X_test</code>. Report final accuracy, precision, recall, and F1-score.</li>
+      <li><strong>Step 11: Production Deployment:</strong> Package the fitted preprocessing pipeline and model weights for live inference serving.</li>
+    </ol>
+  </section>
+
+  <!-- SECTION 13: CROSS-VALIDATION: HOW IT FITS INTO THE PICTURE -->
+  <section id="sec-13" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 13</span>
+      <h2 class="section-title">Cross-Validation: How It Fits Into the Picture</h2>
+    </div>
+    <p class="section-intro">
+      When a dataset is small or moderately sized, setting aside a dedicated 15% validation set can reduce the amount of training data available, while a small validation set produces noisy evaluation scores. <strong>K-Fold Cross-Validation</strong> solves this dilemma by dynamically rotating the validation role across the training split.
+    </p>
+
+    <!-- FIGURE 8.12: FIVE FOLD CROSS VALIDATION -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">5-FOLD CROSS-VALIDATION: ROTATING VALIDATION FOLDS ACROSS TRAINING DATA</text>
+
+  <!-- 5 Iteration Rows -->
+  <!-- Iter 1 -->
+  <g transform="translate(50, 45)">
+    <text x="0" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#334155">Fold 1:</text>
+    <rect x="60" y="0" width="140" height="22" rx="3" fill="#F59E0B" />
+    <text x="130" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val Fold (Score 1)</text>
+    <rect x="205" y="0" width="575" height="22" rx="3" fill="#4F46E5" />
+    <text x="492" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#FFFFFF">Training Folds (4/5)</text>
+  </g>
+
+  <!-- Iter 2 -->
+  <g transform="translate(50, 75)">
+    <text x="0" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#334155">Fold 2:</text>
+    <rect x="60" y="0" width="140" height="22" rx="3" fill="#4F46E5" />
+    <rect x="205" y="0" width="140" height="22" rx="3" fill="#F59E0B" />
+    <text x="275" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val Fold (Score 2)</text>
+    <rect x="350" y="0" width="430" height="22" rx="3" fill="#4F46E5" />
+  </g>
+
+  <!-- Iter 3 -->
+  <g transform="translate(50, 105)">
+    <text x="0" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#334155">Fold 3:</text>
+    <rect x="60" y="0" width="285" height="22" rx="3" fill="#4F46E5" />
+    <rect x="350" y="0" width="140" height="22" rx="3" fill="#F59E0B" />
+    <text x="420" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val Fold (Score 3)</text>
+    <rect x="495" y="0" width="285" height="22" rx="3" fill="#4F46E5" />
+  </g>
+
+  <!-- Iter 4 -->
+  <g transform="translate(50, 135)">
+    <text x="0" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#334155">Fold 4:</text>
+    <rect x="60" y="0" width="430" height="22" rx="3" fill="#4F46E5" />
+    <rect x="495" y="0" width="140" height="22" rx="3" fill="#F59E0B" />
+    <text x="565" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val Fold (Score 4)</text>
+    <rect x="640" y="0" width="140" height="22" rx="3" fill="#4F46E5" />
+  </g>
+
+  <!-- Iter 5 -->
+  <g transform="translate(50, 165)">
+    <text x="0" y="16" font-family="monospace" font-size="10" font-weight="700" fill="#334155">Fold 5:</text>
+    <rect x="60" y="0" width="575" height="22" rx="3" fill="#4F46E5" />
+    <text x="345" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#FFFFFF">Training Folds (4/5)</text>
+    <rect x="640" y="0" width="140" height="22" rx="3" fill="#F59E0B" />
+    <text x="710" y="15" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">Val Fold (Score 5)</text>
+  </g>
+
+  <!-- Average Calculation Banner -->
+  <g transform="translate(110, 202)">
+    <rect width="660" height="34" rx="6" fill="#EEF2FF" stroke="#6366F1" />
+    <text x="330" y="21" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">Cross-Validation Score = (Score 1 + Score 2 + Score 3 + Score 4 + Score 5) / 5</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.12: 5-Fold Cross-Validation mechanics: The development dataset rotates through 5 training/validation splits, averaging scores into an aggregate performance metric.</div>
+    </div>
+
+    <h3>How K-Fold Cross-Validation Works</h3>
+    <ol>
+      <li>The training/development data is partitioned into <code>K</code> equal-sized chunks called <strong>folds</strong> (typically K = 5 or K = 10).</li>
+      <li>In iteration 1, fold 1 is held out as the validation set, and the model is trained on folds 2, 3, 4, 5. Score 1 is recorded.</li>
+      <li>In iteration 2, fold 2 is held out, and the model trains on folds 1, 3, 4, 5. Score 2 is recorded.</li>
+      <li>This process repeats until every fold has served as the validation set exactly once.</li>
+      <li>The overall cross-validation score is the arithmetic mean of all K iterations:</li>
+    </ol>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formula: K-Fold Cross-Validation Average Score</div>
+      <div class="formula-box">Score&#772;<sub>CV</sub> = (1 / K) &times; &Sigma;<sub>k=1</sub><sup>K</sup> Score<sub>k</sub></div>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> Does Cross-Validation Eliminate the Need for a Test Set?</div>
+      <p>
+        <strong>No!</strong> Cross-validation replaces the <em>validation set</em>, not the <em>test set</em>.
+      </p>
+      <p>
+        If you tune hyperparameters by maximizing cross-validation scores, your final selected model has still been tuned to that development dataset! To provide a completely unbiased estimate of real-world production performance, you must still maintain a separate, untouched <strong>Test Set</strong> (typically 20%) that was never used inside the cross-validation loop.
+      </p>
+    </div>
+  </section>
+
+
+  <!-- SECTION 14: COMPLETE PYTHON PRACTICAL LAB -->
+  <section id="sec-14" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 14</span>
+      <h2 class="section-title">Complete Python Practical Lab</h2>
+    </div>
+    <p class="section-intro">
+      In this comprehensive laboratory, we implement an end-to-end, reproducible dataset splitting and model selection workflow. We generate an imbalanced classification dataset, apply a two-step stratified 70/15/15 train/validation/test split, assert mathematical non-overlap, fit a Scikit-Learn pipeline strictly on training data, compare candidate models on validation data, and report an unbiased evaluation on the untouched test set.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">topic8_complete_practical_lab.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split, GroupShuffleSplit, TimeSeriesSplit
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import accuracy_score, classification_report
+
+print("=== STEP 1: CREATE SYNTHETIC CLASSIFICATION DATASET ===")
+# Deterministic seed for reproducible experimentation
+np.random.seed(42)
+n_samples = 200
+
+# Unique record identifiers to audit subset independence
+ids = np.array([f"REC-{i:04d}" for i in range(1, n_samples + 1)])
+X = np.random.randn(n_samples, 4)
+
+# 80% Majority (Class 0: 160) vs 20% Minority (Class 1: 40)
+y = np.array([0] * 160 + [1] * 40)
+
+# Simulate unsorted raw production ingestion
+perm = np.random.permutation(n_samples)
+ids, X, y = ids[perm], X[perm], y[perm]
+
+print(f"Total Dataset Shape: X={X.shape}, y={y.shape}")
+print(f"Class 0 Count: {np.sum(y == 0)} ({np.mean(y == 0):.1%})")
+print(f"Class 1 Count: {np.sum(y == 1)} ({np.mean(y == 1):.1%})")
+
+print("\n=== STEP 2: TWO-STAGE STRATIFIED SPLIT (70% TRAIN, 15% VAL, 15% TEST) ===")
+# Stage 1: Extract 70% Train, reserve 30% Temp (Val + Test)
+X_train, X_temp, y_train, y_temp, ids_train, ids_temp = train_test_split(
+    X, y, ids, test_size=0.30, random_state=42, stratify=y
+)
+
+# Stage 2: Split 30% Temp equally (50/50) into 15% Val and 15% Test
+X_val, X_test, y_val, y_test, ids_val, ids_test = train_test_split(
+    X_temp, y_temp, ids_temp, test_size=0.50, random_state=42, stratify=y_temp
+)
+
+print(f"Training Set:   {len(X_train)} samples ({len(X_train)/n_samples:.1%})")
+print(f"Validation Set: {len(X_val)} samples ({len(X_val)/n_samples:.1%})")
+print(f"Test Set:       {len(X_test)} samples ({len(X_test)/n_samples:.1%})")
+
+# Strict count verification
+assert len(X_train) == 140, "Train size must be exactly 140 (70%)"
+assert len(X_val) == 30, "Validation size must be exactly 30 (15%)"
+assert len(X_test) == 30, "Test size must be exactly 30 (15%)"
+
+print("\n=== STEP 3: ASSERT ZERO SUBSET OVERLAP (INDEPENDENCE AUDIT) ===")
+overlap_tr_val = set(ids_train).intersection(set(ids_val))
+overlap_tr_tst = set(ids_train).intersection(set(ids_test))
+overlap_val_tst = set(ids_val).intersection(set(ids_test))
+
+assert len(overlap_tr_val) == 0, f"Leakage: Train/Val overlap: {overlap_tr_val}"
+assert len(overlap_tr_tst) == 0, f"Leakage: Train/Test overlap: {overlap_tr_tst}"
+assert len(overlap_val_tst) == 0, f"Leakage: Val/Test overlap: {overlap_val_tst}"
+print("&#10003; Zero ID Overlap Verified across all three subsets!")
+
+print("\n=== STEP 4: AUDIT STRATIFIED CLASS PROPORTIONS ===")
+def check_props(subset_y, name):
+    c0 = np.sum(subset_y == 0)
+    c1 = np.sum(subset_y == 1)
+    p1 = c1 / len(subset_y)
+    print(f"  {name:14s}: Total={len(subset_y):3d} | Class 0={c0:3d} ({c0/len(subset_y):.1%}) | Class 1={c1:2d} ({p1:.1%})")
+    assert np.isclose(p1, 0.20, atol=0.03), f"Stratification proportion error in {name}!"
+
+check_props(y, "Original Data")
+check_props(y_train, "Train Set")
+check_props(y_val, "Validation Set")
+check_props(y_test, "Test Set")
+
+print("\n=== STEP 5: FIT PIPELINES ON TRAIN ONLY &amp; TUNE ON VALIDATION ===")
+# Candidate 1: Scaler + KNN (k=3)
+pipe1 = Pipeline([('scaler', StandardScaler()), ('knn', KNeighborsClassifier(n_neighbors=3))])
+pipe1.fit(X_train, y_train)
+val_acc1 = pipe1.score(X_val, y_val)
+
+# Candidate 2: Scaler + KNN (k=7)
+pipe2 = Pipeline([('scaler', StandardScaler()), ('knn', KNeighborsClassifier(n_neighbors=7))])
+pipe2.fit(X_train, y_train)
+val_acc2 = pipe2.score(X_val, y_val)
+
+print(f"Candidate 1 (k=3) Validation Accuracy: {val_acc1:.2%}")
+print(f"Candidate 2 (k=7) Validation Accuracy: {val_acc2:.2%}")
+
+# Model Selection Decision (Made strictly on Validation Set)
+if val_acc1 >= val_acc2:
+    best_pipe = pipe1
+    best_name = "Candidate 1 (k=3)"
+else:
+    best_pipe = pipe2
+    best_name = "Candidate 2 (k=7)"
+print(f"&#10140; Selected Champion Model: {best_name}")
+
+print("\n=== STEP 6: VERIFY ZERO LEAKAGE IN PREPROCESSING ===")
+fitted_scaler = best_pipe.named_steps['scaler']
+assert np.allclose(fitted_scaler.mean_, X_train.mean(axis=0)), "Leakage! Scaler mean != X_train mean!"
+print("&#10003; Zero Leakage Confirmed: StandardScaler fitted exclusively on X_train!")
+
+print("\n=== STEP 7: FINAL UNBIASED TEST EVALUATION (TOUCHED EXACTLY ONCE) ===")
+final_test_acc = best_pipe.score(X_test, y_test)
+print(f"Final Unbiased Test Accuracy: {final_test_acc:.2%}")
+
+print("\n=== STEP 8: GROUP-BASED SPLITTING DEMONSTRATION ===")
+# 10 clinical records from 4 unique patients
+patient_groups = np.array(['PAT-A', 'PAT-A', 'PAT-A', 'PAT-B', 'PAT-B', 'PAT-C', 'PAT-C', 'PAT-C', 'PAT-D', 'PAT-D'])
+gss = GroupShuffleSplit(n_splits=1, train_size=0.7, random_state=42)
+train_idx, test_idx = next(gss.split(X[:10], y[:10], patient_groups))
+
+train_patients = set(patient_groups[train_idx])
+test_patients = set(patient_groups[test_idx])
+print(f"Train Patient IDs: {train_patients}")
+print(f"Test Patient IDs:  {test_patients}")
+assert len(train_patients.intersection(test_patients)) == 0
+print("&#10003; Group Independence Verified: Zero patient overlap between train and test!")
+
+print("\n=== STEP 9: TIME-SERIES CHRONOLOGICAL SPLIT DEMONSTRATION ===")
+dates = pd.date_range("2026-01-01", periods=6, freq="D")
+tss = TimeSeriesSplit(n_splits=3)
+for fold, (t_idx, v_idx) in enumerate(tss.split(dates), 1):
+    t_start, t_end = dates[t_idx[0]].strftime('%m-%d'), dates[t_idx[-1]].strftime('%m-%d')
+    v_start, v_end = dates[v_idx[0]].strftime('%m-%d'), dates[v_idx[-1]].strftime('%m-%d')
+    print(f"Fold {fold}: Train [{t_start} to {t_end}] | Val [{v_start} to {v_end}]")
+    assert max(t_idx) &lt; min(v_idx), "Lookahead leakage in TimeSeriesSplit!"
+print("&#10003; Chronological Integrity Verified: Past strictly predicts future!")
+print("\nALL LAB VERIFICATIONS AND ASSERTIONS PASSED SUCCESSFULLY!")</code></pre>
+    </div>
+
+    <!-- FIGURE 8.13: LAB VERIFICATION CHART -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 230" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">PRACTICAL LAB VERIFICATION: QUANTITATIVE SPLIT DISTRIBUTION &amp; METRICS</text>
+
+  <!-- 3 Bars for Sample Counts -->
+  <g transform="translate(80, 50)">
+    <!-- Y Axis -->
+    <line x1="60" y1="20" x2="60" y2="130" stroke="#94A3B8" />
+    <line x1="55" y1="20" x2="60" y2="20" stroke="#94A3B8" />
+    <text x="50" y="24" text-anchor="end" font-family="monospace" font-size="9" fill="#64748B">140</text>
+    <line x1="55" y1="100" x2="60" y2="100" stroke="#94A3B8" />
+    <text x="50" y="104" text-anchor="end" font-family="monospace" font-size="9" fill="#64748B">30</text>
+    <line x1="60" y1="130" x2="380" y2="130" stroke="#94A3B8" />
+
+    <!-- Train Bar (140) -->
+    <rect x="90" y="20" width="70" height="110" rx="4" fill="#4F46E5" />
+    <text x="125" y="75" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#FFFFFF">140</text>
+    <text x="125" y="148" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#312E81">Train (70%)</text>
+
+    <!-- Val Bar (30) -->
+    <rect x="190" y="106" width="70" height="24" rx="4" fill="#F59E0B" />
+    <text x="225" y="122" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">30</text>
+    <text x="225" y="148" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#78350F">Val (15%)</text>
+
+    <!-- Test Bar (30) -->
+    <rect x="290" y="106" width="70" height="24" rx="4" fill="#10B981" />
+    <text x="325" y="122" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">30</text>
+    <text x="325" y="148" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#065F46">Test (15%)</text>
+  </g>
+
+  <!-- Right Side Scorecard -->
+  <g transform="translate(500, 50)">
+    <rect width="330" height="150" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="20" y="26" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E293B">Laboratory Verification Scorecard:</text>
+
+    <text x="20" y="52" font-family="monospace" font-size="11" fill="#059669">✓ Total Samples: 200 (100% accounted)</text>
+    <text x="20" y="74" font-family="monospace" font-size="11" fill="#059669">✓ Stratified Ratio: 80.0% / 20.0% (exact)</text>
+    <text x="20" y="96" font-family="monospace" font-size="11" fill="#059669">✓ Overlap Audit: 0 common IDs across sets</text>
+    <text x="20" y="118" font-family="monospace" font-size="11" fill="#059669">✓ Leakage Assertion: Scaler fitted on Train only</text>
+    <text x="20" y="140" font-family="monospace" font-size="11" fill="#0369A1">✓ Selected Model: KNN (k=3, 83.3% Val Acc)</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 8.13: Python Laboratory quantitative verification chart: Visualizing exact subset sizes, stratified class counts, zero ID overlap, and model selection scores.</div>
+    </div>
+
+    <h3>Laboratory Execution Results &amp; Verification Audit</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Workflow Stage</th>
+            <th>Sample Counts</th>
+            <th>Class 0 / Class 1 Distribution</th>
+            <th>Proportion</th>
+            <th>Verification Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Raw Dataset</strong></td>
+            <td>N = 200 samples</td>
+            <td>160 Class 0 / 40 Class 1</td>
+            <td>80.0% / 20.0%</td>
+            <td><span class="badge badge-train">Baseline</span></td>
+          </tr>
+          <tr>
+            <td><strong>Training Set</strong></td>
+            <td>N = 140 samples</td>
+            <td>112 Class 0 / 28 Class 1</td>
+            <td>80.0% / 20.0%</td>
+            <td><span class="badge badge-train">&#10003; Exact 70.0%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Validation Set</strong></td>
+            <td>N = 30 samples</td>
+            <td>24 Class 0 / 6 Class 1</td>
+            <td>80.0% / 20.0%</td>
+            <td><span class="badge badge-val">&#10003; Exact 15.0%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Test Set</strong></td>
+            <td>N = 30 samples</td>
+            <td>24 Class 0 / 6 Class 1</td>
+            <td>80.0% / 20.0%</td>
+            <td><span class="badge badge-test">&#10003; Exact 15.0%</span></td>
+          </tr>
+          <tr>
+            <td><strong>ID Overlap Audit</strong></td>
+            <td>Intersection: &empty;</td>
+            <td>0 IDs in common across all sets</td>
+            <td>0.0% Overlap</td>
+            <td><span class="badge badge-train">&#10003; Passed</span></td>
+          </tr>
+          <tr>
+            <td><strong>Model Selection</strong></td>
+            <td>Val Score Comparison</td>
+            <td>Candidate 1 (k=3): 83.33% vs Candidate 2 (k=7): 80.00%</td>
+            <td>&Delta; = +3.33%</td>
+            <td><span class="badge badge-val">&#10003; Winner: k=3</span></td>
+          </tr>
+          <tr>
+            <td><strong>Final Test Score</strong></td>
+            <td>Evaluated Once</td>
+            <td>Test Accuracy: 80.00% on untouched data</td>
+            <td>Unbiased</td>
+            <td><span class="badge badge-test">&#10003; Verified</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 15: REAL-LIFE CASE STUDIES -->
+  <section id="sec-15" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 15</span>
+      <h2 class="section-title">Real-Life Industry Case Studies</h2>
+    </div>
+    <p class="section-intro">
+      Explore four detailed real-world engineering case studies showing how dataset splitting choices directly determine production success or catastrophic failure.
+    </p>
+
+    <!-- Case Study A -->
+    <div class="card card-def">
+      <div class="card-title"><span>&#127891;</span> Case Study A: Student Course Exam Performance Prediction (EdTech)</div>
+      <p><strong>The Business Problem:</strong> An online learning platform collects 50,000 quiz attempts from 10,000 students across a 12-week computer science course to predict final exam pass/fail outcomes.</p>
+      <p><strong>The Data Structure:</strong> Many students took practice quizzes 5 to 10 times. A simple random split placed 4 quiz attempts of Student #402 in the training set and 1 quiz attempt of the same student in the test set.</p>
+      <p><strong>The Splitting Strategy:</strong> <code>GroupShuffleSplit</code> grouped on <code>Student_ID</code>. All quiz attempts from any given student were assigned exclusively to either the training set or the test set.</p>
+      <p><strong>The Risk of Incorrect Split:</strong> The random split suffered severe <em>Identity Leakage</em>. The model achieved 96% test accuracy by memorizing student-specific typing speeds and background traits. In production with brand-new enrolled students, accuracy plummeted to 68%.</p>
+      <p><strong>Production Takeaway:</strong> When an entity (student, user, customer) has multiple rows, always split by group ID to test generalizability to new subjects.</p>
+    </div>
+
+    <!-- Case Study B -->
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#127973;</span> Case Study B: Clinical Chest X-Ray Pneumonia Diagnosis (Healthcare)</div>
+      <p><strong>The Business Problem:</strong> A hospital network trains a convolutional neural network (CNN) to detect pneumonia from 30,000 thoracic radiography scans.</p>
+      <p><strong>The Data Structure:</strong> Sick patients undergo follow-up X-rays every 2 days during hospitalization, resulting in 4 to 8 images per patient with identical anatomical quirks and hospital bed hardware markers.</p>
+      <p><strong>The Splitting Strategy:</strong> <strong>Patient-Level Grouped Splitting</strong> combined with stratification on pneumonia diagnosis labels (<code>StratifiedGroupKFold</code>).</p>
+      <p><strong>The Risk of Incorrect Split:</strong> Random row splitting caused the CNN to learn patient-specific chest rib structures and bedside ECG lead placement instead of lung opacities, producing a dangerously false 99% validation accuracy that failed to diagnose new clinical admissions.</p>
+      <p><strong>Production Takeaway:</strong> In medical and biometric systems, data independence must be enforced at the biological subject level, never the image or record level.</p>
+    </div>
+
+    <!-- Case Study C -->
+    <div class="card card-concept">
+      <div class="card-title"><span>&#128179;</span> Case Study C: High-Volume Credit Card Fraud Detection (FinTech)</div>
+      <p><strong>The Business Problem:</strong> A global payment processor monitors 1,000,000 daily card transactions to flag fraudulent payments in real time.</p>
+      <p><strong>The Data Structure:</strong> Severe class imbalance: 99.8% legitimate transactions (998,000) vs 0.2% fraudulent transactions (2,000).</p>
+      <p><strong>The Splitting Strategy:</strong> <strong>Stratified Splitting</strong> with chronological block testing. Stratification ensured that both the training and test sets contained exactly 0.2% fraudulent cases (1,600 in train, 400 in test).</p>
+      <p><strong>The Risk of Incorrect Split:</strong> An unstratified random split risked placing almost no fraud samples in a small test set, creating wild evaluation swings where a single missed fraud shifted test recall by 25%. Furthermore, random shuffling across time allowed the model to train on future fraud patterns to predict past attacks.</p>
+      <p><strong>Production Takeaway:</strong> In extreme class imbalance, stratification preserves statistical evaluation power, while chronological splitting tests true forward predictive utility.</p>
+    </div>
+
+    <!-- Case Study D -->
+    <div class="card card-success">
+      <div class="card-title"><span>&#128200;</span> Case Study D: Algorithmic Quantitative Stock Trading (Capital Markets)</div>
+      <p><strong>The Business Problem:</strong> A hedge fund builds an automated algorithmic trading model to forecast 15-minute future equity returns across S&amp;P 500 stocks.</p>
+      <p><strong>The Data Structure:</strong> High-frequency continuous time-series data with strong temporal autocorrelation, volatility clustering, and market regime shifts.</p>
+      <p><strong>The Splitting Strategy:</strong> <strong>Chronological Forward-Chaining Split</strong> with an enforced <strong>Purge/Embargo Window</strong> between training and evaluation blocks.</p>
+      <p><strong>The Risk of Incorrect Split:</strong> Standard random shuffle splitting caused catastrophic lookahead leakage. The model used 2:15 PM market prices to predict 2:00 PM returns, showing an unrealistic 8.5 Sharpe Ratio in backtesting. Deployed live with real capital, the strategy lost $1.4M in two trading days.</p>
+      <p><strong>Production Takeaway:</strong> In financial markets and time-series forecasting, never shuffle rows. The timeline is an unbroken one-way arrow.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 16: COMMON BEGINNER MISTAKES -->
+  <section id="sec-16" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 16</span>
+      <h2 class="section-title">14 Common Beginner Mistakes &amp; Fixes</h2>
+    </div>
+    <p class="section-intro">
+      Learn to recognize and avoid the 14 most pervasive dataset splitting mistakes encountered in academic coursework and industry machine learning engineering.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Common Mistake</th>
+            <th>Why It Causes Serious Problems</th>
+            <th>Defensive Safe Engineering Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>01</strong></td>
+            <td>Training and testing on the exact same data</td>
+            <td>The model achieves 100% accuracy simply by memorizing training rows without learning any general patterns.</td>
+            <td>Always split data into distinct subsets before any model fitting begins.</td>
+          </tr>
+          <tr>
+            <td><strong>02</strong></td>
+            <td>Assuming high training accuracy proves generalisation</td>
+            <td>Training accuracy only measures memorization capacity. Complex models easily overfit noise.</td>
+            <td>Evaluate performance exclusively on holdout validation and test sets that the model never saw.</td>
+          </tr>
+          <tr>
+            <td><strong>03</strong></td>
+            <td>Using the test set to tune hyperparameters or select models</td>
+            <td>Causes <em>Test-Set Overfitting</em>. The test set becomes part of the training feedback loop, losing objectivity.</td>
+            <td>Use a dedicated <strong>Validation Set</strong> or K-Fold Cross-Validation for tuning; reserve Test for the final audit.</td>
+          </tr>
+          <tr>
+            <td><strong>04</strong></td>
+            <td>Fitting scalers or encoders before splitting</td>
+            <td>Creates <strong>Data Leakage</strong> by allowing test set means, standard deviations, or category frequencies into training.</td>
+            <td>Always call <code>fit()</code> strictly on <code>X_train</code>, or encapsulate steps inside a Scikit-Learn <code>Pipeline</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>05</strong></td>
+            <td>Ignoring class imbalance during splitting</td>
+            <td>Random splitting may leave zero minority class examples in the test set, creating unmeasurable evaluation metrics.</td>
+            <td>Always pass <code>stratify=y</code> in <code>train_test_split()</code> for classification tasks.</td>
+          </tr>
+          <tr>
+            <td><strong>06</strong></td>
+            <td>Randomly shuffling time-series observations</td>
+            <td>Leaks future market conditions, weather events, or trends into the past, creating impossible lookahead bias.</td>
+            <td>Use chronological forward-chaining splits via <code>TimeSeriesSplit</code> without shuffling (<code>shuffle=False</code>).</td>
+          </tr>
+          <tr>
+            <td><strong>07</strong></td>
+            <td>Ignoring repeated entities across subsets</td>
+            <td>Multiple records from the same patient, user, or device contaminate both sets, causing identity memorization.</td>
+            <td>Use group-aware splitting strategies like <code>GroupShuffleSplit</code> or <code>StratifiedGroupKFold</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>08</strong></td>
+            <td>Assuming random_state guarantees a representative split</td>
+            <td>A fixed seed only guarantees identical repeatability, not statistical quality. An unlucky seed can produce an unrepresentative split.</td>
+            <td>Always inspect class distributions, feature histograms, and summary statistics across all created subsets.</td>
+          </tr>
+          <tr>
+            <td><strong>09</strong></td>
+            <td>Blindly applying an 80/20 ratio without considering N</td>
+            <td>On 50 samples, a 20% test set is only 10 samples (highly unstable); on 10M samples, 20% wastes 2M samples.</td>
+            <td>Scale split ratios to sample volume: use K-Fold CV on small datasets and 98/1/1 splits on multi-million row datasets.</td>
+          </tr>
+          <tr>
+            <td><strong>10</strong></td>
+            <td>Assuming stratification solves all splitting challenges</td>
+            <td>Stratification only preserves class frequencies; it does not protect against group leakage or temporal autocorrelation.</td>
+            <td>Combine stratification with grouping (<code>StratifiedGroupKFold</code>) or chronological ordering where applicable.</td>
+          </tr>
+          <tr>
+            <td><strong>11</strong></td>
+            <td>Repeatedly checking the test score during development</td>
+            <td>Every time you alter architecture after seeing test performance, you inject human feedback bias into the test set.</td>
+            <td>Lock the test set away until all modeling and hyperparameter choices are 100% frozen.</td>
+          </tr>
+          <tr>
+            <td><strong>12</strong></td>
+            <td>Allowing duplicate records across subset boundaries</td>
+            <td>Duplicate rows present in both train and test artificially boost evaluation metrics via direct memorization.</td>
+            <td>Deduplicate raw datasets (<code>df.drop_duplicates()</code>) prior to performing splitting operations.</td>
+          </tr>
+          <tr>
+            <td><strong>13</strong></td>
+            <td>Reporting evaluation metrics without statistical confidence</td>
+            <td>Reporting "85% test accuracy" on a 20-sample test set ignores that the 95% confidence interval spans [62% &ndash; 97%].</td>
+            <td>Always report test set sample size (N<sub>test</sub>) and standard errors or confidence intervals.</td>
+          </tr>
+          <tr>
+            <td><strong>14</strong></td>
+            <td>Failing to assert subset non-overlap programmatically</td>
+            <td>Subtle bugs in splitting scripts can silently duplicate rows across sets without throwing Python errors.</td>
+            <td>Write explicit unit assertions: <code>assert len(set(ids_train).intersection(set(ids_test))) == 0</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 17: GLOSSARY, REVISION AND FINAL EXERCISE -->
+  <section id="sec-17" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 17</span>
+      <h2 class="section-title">Glossary, Revision &amp; Hands-On Exercise</h2>
+    </div>
+    <p class="section-intro">
+      Consolidate your mastery of dataset splitting with a production checklist, comprehensive glossary, interactive revision questions, scenario challenges, and a capstone practical exercise.
+    </p>
+
+    <!-- Checklist Card -->
+    <div class="card card-success">
+      <div class="card-title"><span>&#9745;</span> Production Dataset Splitting Checklist</div>
+      <ul class="checklist">
+        <li><strong>Step 1:</strong> Have you inspected the target variable for class imbalance and enabled <code>stratify=y</code> if classification?</li>
+        <li><strong>Step 2:</strong> Have you identified repeated entities (patients, users, devices) and enabled group-based splitting?</li>
+        <li><strong>Step 3:</strong> Is there a temporal sequence? If so, have you disabled row shuffling and used chronological forward chaining?</li>
+        <li><strong>Step 4:</strong> Have you verified zero record overlap between train, validation, and test index sets?</li>
+        <li><strong>Step 5:</strong> Are all data preprocessing transformers (imputers, scalers, encoders) fitted strictly on <code>X_train</code>?</li>
+        <li><strong>Step 6:</strong> Have you encapsulated transformations inside a Scikit-Learn <code>Pipeline</code>?</li>
+        <li><strong>Step 7:</strong> Were all hyperparameter tuning decisions made exclusively using the validation set or cross-validation?</li>
+        <li><strong>Step 8:</strong> Has the test set been evaluated strictly once as the final unbiased audit?</li>
+      </ul>
+    </div>
+
+    <h3>Comprehensive Glossary of Essential Terms</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Technical Term</th>
+            <th>Formal Engineering Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Generalization</strong></td>
+            <td>The ability of a machine learning model to make accurate predictions on new, unseen data drawn from the same distribution.</td>
+          </tr>
+          <tr>
+            <td><strong>Overfitting</strong></td>
+            <td>A failure mode where a model learns training noise and specific sample quirks rather than underlying population patterns.</td>
+          </tr>
+          <tr>
+            <td><strong>Training Set</strong></td>
+            <td>The subset of data directly supplied to the learning algorithm to optimize its internal model parameters (weights, biases).</td>
+          </tr>
+          <tr>
+            <td><strong>Validation Set</strong></td>
+            <td>An independent holdout subset used during model development to compare algorithms, tune hyperparameters, and select features.</td>
+          </tr>
+          <tr>
+            <td><strong>Test Set</strong></td>
+            <td>A strictly quarantined holdout subset evaluated only once at the conclusion of development to estimate real-world performance.</td>
+          </tr>
+          <tr>
+            <td><strong>Model Parameter</strong></td>
+            <td>An internal variable learned automatically from training data during fitting (e.g. regression coefficients &beta;, neural weights w).</td>
+          </tr>
+          <tr>
+            <td><strong>Hyperparameter</strong></td>
+            <td>An external configuration setting specified prior to training that controls the learning process (e.g. KNN k, tree depth, learning rate).</td>
+          </tr>
+          <tr>
+            <td><strong>Data Leakage</strong></td>
+            <td>The unintended contamination of training data with information from validation, test, or future operational distributions.</td>
+          </tr>
+          <tr>
+            <td><strong>Stratified Splitting</strong></td>
+            <td>A partitioning method that ensures each subset contains approximately the same target class proportions as the complete dataset.</td>
+          </tr>
+          <tr>
+            <td><strong>Group-Based Splitting</strong></td>
+            <td>A partitioning method where all records sharing a common group identifier (e.g. Patient ID) are confined to a single subset.</td>
+          </tr>
+          <tr>
+            <td><strong>Time-Series Split</strong></td>
+            <td>A chronological splitting technique where training observations strictly precede validation/test observations in time.</td>
+          </tr>
+          <tr>
+            <td><strong>K-Fold Cross-Validation</strong></td>
+            <td>A resampling procedure partitioning development data into K folds, iteratively using K-1 folds to train and 1 fold to validate.</td>
+          </tr>
+          <tr>
+            <td><strong>Target Encoding Leakage</strong></td>
+            <td>Calculating category target means using the complete dataset, which leaks ground-truth validation/test labels into training features.</td>
+          </tr>
+          <tr>
+            <td><strong>Holdout Method</strong></td>
+            <td>The fundamental practice of withholding a portion of available labeled data from the training process for unbiased evaluation.</td>
+          </tr>
+          <tr>
+            <td><strong>Early Stopping</strong></td>
+            <td>A regularization technique that halts iterative model training as soon as validation loss begins to deteriorate.</td>
+          </tr>
+          <tr>
+            <td><strong>Random Seed (random_state)</strong></td>
+            <td>An integer initialization value for pseudo-random number generators that ensures deterministic reproducibility across runs.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>10 Interactive Revision Questions &amp; Detailed Explanations</h3>
+    
+    <details>
+      <summary><span>&#10067;</span> Question 1: Why is training accuracy alone insufficient to evaluate an ML model?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Training accuracy only measures a model&apos;s ability to memorize data it has already seen. Highly flexible models (such as 1-Nearest Neighbor or unpruned Decision Trees) can achieve 100% training accuracy simply by memorizing training examples and random noise. However, memorized noise does not generalize to new observations. Evaluating on an independent holdout set is the only way to measure true predictive generalization.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 2: What is the crucial difference between a Validation Set and a Test Set?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Both are holdout sets, but they serve completely different lifecycle roles. The <strong>Validation Set</strong> is an active development tool used iteratively to compare algorithms, choose hyperparameters, and make architectural decisions. Because it guides modeling choices, it suffers slight indirect optimization bias. In contrast, the <strong>Test Set</strong> is strictly quarantined until all modeling decisions are frozen; it is evaluated exactly once to provide a final, unbiased estimate of production accuracy.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 3: What is the difference between a model parameter and a hyperparameter?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> <strong>Parameters</strong> (such as regression slope &beta;, intercept &beta;<sub>0</sub>, or neural network weights) are learned automatically from training data by an optimization algorithm during fitting. <strong>Hyperparameters</strong> (such as KNN&apos;s number of neighbors <code>k</code>, tree maximum depth, or regularization strength &alpha;) are external architectural knobs chosen by the engineer <em>prior</em> to training, and are tuned by evaluating performance on the validation set.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 4: How does setting stratify=y prevent evaluation failure in imbalanced datasets?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> In imbalanced datasets (e.g. 95% Class 0 vs 5% Class 1), an ordinary unstratified random split might accidentally assign all minority class examples to the training set, leaving zero minority examples in the test set. In that scenario, calculating minority recall or F1-score is impossible. Setting <code>stratify=y</code> forces the splitting algorithm to preserve the 95%/5% class ratio across train, validation, and test subsets.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 5: Why does standardizing the entire dataset before train/test split cause data leakage?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Standardizing requires computing the dataset mean (&mu;) and standard deviation (&sigma;). If computed before splitting, the training feature values are transformed using parameters derived in part from the test set. The model thereby gains subtle statistical foreknowledge about the scale and bounds of unseen test data, artificially inflating offline evaluation metrics and risking failure in production.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 6: When is ordinary random splitting inappropriate for dataset partitioning?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Ordinary random splitting fails in two major scenarios:
+        <br>1. <strong>Grouped / Clustered Data:</strong> When multiple observations belong to the same person, patient, or device, random splitting allows records from the same subject into both train and test sets, causing identity leakage.
+        <br>2. <strong>Time-Series / Temporal Sequences:</strong> When predicting future events, random shuffling leaks future information into past training data (lookahead bias).
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 7: What does random_state=42 actually accomplish in Scikit-Learn?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> It initializes the pseudo-random number generator with a deterministic seed value. Every time the script executes, Scikit-Learn will generate the exact same permutation of row indices, guaranteeing that experiments, sample counts, and subset assignments are 100% reproducible across different runs and collaborating team members. It does <em>not</em>, however, guarantee that the split is statistically representative.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 8: How does K-Fold Cross-Validation replace the validation set?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> In standard K-Fold CV, the development dataset is split into K equal folds. The model trains on K-1 folds and validates on the remaining fold, rotating until every fold has served as the validation set once. The K validation scores are averaged into an aggregate metric: <code>Score&#772;<sub>CV</sub> = (1/K)&Sigma;Score<sub>k</sub></code>. This eliminates the dependency on a single arbitrary validation split and maximizes training data utility.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 9: Why must you still maintain an independent Test Set when using Cross-Validation?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> If you use cross-validation scores to iteratively test 50 different models and select the best hyperparameter configuration, the selected model has been tuned to maximize performance on that development dataset. Just as with a single validation set, the cross-validation score has suffered selection bias. An independent, untouched Test Set is still required to confirm real-world performance.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 10: What is test-set overfitting and how does it happen?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> <em>Test-set overfitting</em> occurs when a data scientist repeatedly evaluates experimental models on the test set and uses those test scores to adjust features, change architectures, or tune hyperparameters. Even though the model is not trained on the test set via gradient descent, the human engineer acts as an optimization algorithm, tailoring decisions to the quirks of the test set until test accuracy no longer reflects performance on genuinely new data.
+      </div>
+    </details>
+
+    <h3>Scenario-Based Engineering Challenges</h3>
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 1: The Hospital Sepsis Alert System</div>
+      <p>
+        <strong>Scenario:</strong> You are tasked with developing a machine learning model to predict sepsis onset in hospital ICU patients. The dataset contains 25,000 hourly vital sign measurements recorded from 800 distinct patients over a 3-year period. Sepsis occurs in 4% of patient encounters.
+      </p>
+      <p>
+        <strong>Challenge:</strong> Which dataset splitting strategy should you implement, and what parameters must be configured?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> Implement <strong>Stratified Group Splitting</strong> using <code>StratifiedGroupKFold</code> or a grouped holdout based on <code>Patient_ID</code>.
+        <br>&bull; Grouping by <code>Patient_ID</code> ensures that no patient has hourly vitals in both training and test sets (preventing patient identity memorization).
+        <br>&bull; Stratifying on sepsis diagnosis ensures both train and test splits contain approximately 4% positive sepsis cases.
+      </p>
+    </div>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 2: The E-Commerce Black Friday Churn Model</div>
+      <p>
+        <strong>Scenario:</strong> A retail platform wants to predict customer subscription churn during the high-volume Q4 holiday shopping season. You have daily transaction records spanning January 1 to December 31, 2025.
+      </p>
+      <p>
+        <strong>Challenge:</strong> Why would an ordinary 80/20 random shuffle split produce catastrophic production failures in this context?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> An ordinary random split shuffles rows across the entire calendar year. The model would train on December holiday purchasing patterns to predict November customer behavior (future lookahead leakage). Furthermore, holiday consumer psychology is radically different from summer baseline shopping.
+        <br><strong>Safe Strategy:</strong> Implement a chronological split: Train on January through October, validate on November, and perform final test evaluation on December.
+      </p>
+    </div>
+
+    <h3>Final Hands-On Practical Assignment</h3>
+    <div class="card card-success">
+      <div class="card-title"><span>&#9997;</span> Capstone Exercise: End-to-End Leak-Free Customer Churn Pipeline</div>
+      <p>
+        Given a customer retention dataset with 10,000 records containing:
+        <br>&bull; <code>Customer_ID</code>: Unique customer identifier
+        <br>&bull; <code>Tenure_Months</code>: Number of months subscribed (numerical)
+        <br>&bull; <code>Monthly_Charges</code>: Monthly billing amount (numerical)
+        <br>&bull; <code>Contract_Type</code>: Categorical (Month-to-month, One year, Two year)
+        <br>&bull; <code>Churned</code>: Binary target label (0 = Retained, 1 = Churned, 12% minority class)
+      </p>
+      <p>
+        <strong>Your Engineering Assignment:</strong>
+        <br>1. Perform a two-stage stratified split: 70% Train, 15% Validation, 15% Test, using <code>random_state=42</code>.
+        <br>2. Assert programmatically that the three index sets share zero customer IDs.
+        <br>3. Verify that the minority churn rate is approximately 12% in all three subsets.
+        <br>4. Construct a Scikit-Learn <code>Pipeline</code> containing <code>StandardScaler</code> and a <code>KNeighborsClassifier</code>.
+        <br>5. Fit the pipeline strictly on the training set.
+        <br>6. Compare validation accuracy for <code>k=5</code> versus <code>k=15</code>; select the champion hyperparameter.
+        <br>7. Perform a single final evaluation on the untouched test set and report accuracy, precision, and recall.
+      </p>
+    </div>
+
+    <div class="notes-footer">
+      <p>CodeVerse Machine Learning Educational Notes &bull; Topic 8: Train, Validation &amp; Test Sets</p>
+      <p>Strict Light Mode Standard &bull; Validated for Web and Mobile Viewports &bull; Powered by Scikit-Learn 1.9+</p>
+    </div>
+  </section>
+
+  </div>
+</body>
+</html>

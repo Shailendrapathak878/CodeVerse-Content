@@ -1,0 +1,3277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive educational notes on Machine Learning Topic 7: Feature Scaling &amp; Normalization. Master Min-Max Scaling, Standardization (Z-score), Robust Scaling, and L1/L2 Vector Normalization with zero data leakage.">
+  <title>Machine Learning &bull; Topic 7: Feature Scaling &amp; Normalization</title>
+  <style>
+
+    :root {
+      /* Base Surfaces - Strict Light Mode Only */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+      
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Primary ML Theme: Indigo & Blue */
+      --primary-accent: #4F46E5;
+      --primary-accent-hover: #4338CA;
+      --primary-accent-light: #EEF2FF;
+      --primary-badge-bg: #EEF2FF;
+      --primary-badge-text: #4338CA;
+      --toc-bg: #F5F3FF;
+      --toc-border: #DDD6FE;
+      --toc-text: #4338CA;
+
+      /* Definition Card (Soft Sky Blue) */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0C4A6E;
+
+      /* Analogy Card (Soft Teal / Mint) */
+      --analogy-card-bg: #ECFEFF;
+      --analogy-card-border: #A5F3FC;
+      --analogy-card-title: #0891B2;
+      --analogy-card-text: #164E63;
+
+      /* Concept / Architecture Card (Soft Lavender) */
+      --concept-card-bg: #FAF5FF;
+      --concept-card-border: #E9D5FF;
+      --concept-card-title: #7C3AED;
+      --concept-card-text: #581C87;
+
+      /* Warning / Pitfall Card (Soft Coral) */
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      /* Amber / Highlight Card */
+      --amber-card-bg: #FFFBEB;
+      --amber-card-border: #FDE68A;
+      --amber-card-title: #D97706;
+      --amber-card-text: #92400E;
+
+      /* Success Card (Emerald) */
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #16A34A;
+      --success-card-text: #166534;
+
+      /* Code Block Colors */
+      --code-bg: #0F172A;
+      --code-text: #E2E8F0;
+      --code-header-bg: #1E293B;
+
+      /* Scaler Tag Badges */
+      --minmax-badge-bg: #E0F2FE;
+      --minmax-badge-text: #0369A1;
+      --std-badge-bg: #EEF2FF;
+      --std-badge-text: #4338CA;
+      --robust-badge-bg: #DCFCE7;
+      --robust-badge-text: #15803D;
+      --norm-badge-bg: #F3E8FF;
+      --norm-badge-text: #6B21A8;
+    }
+
+    /* Reset & Containment */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem 1.25rem;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.25rem 0.85rem 3rem 0.85rem;
+      }
+    }
+
+    /* Hero Card */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #4F46E5, #0284C7, #10B981, #F59E0B);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--heading-color);
+      line-height: 1.2;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.02em;
+    }
+
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .hero-subtitle {
+      font-size: 1.12rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.25rem;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--card-soft-bg);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* Table of Contents */
+    .toc-container {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--toc-text);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item {
+      margin-bottom: 0.5rem;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .toc-item a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      transition: color 0.15s ease;
+    }
+
+    .toc-item a:hover {
+      color: var(--primary-accent);
+      font-weight: 600;
+    }
+
+    .toc-number {
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--primary-accent);
+      min-width: 1.8rem;
+    }
+
+    /* Section Containers */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2.25rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--card-shadow);
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .section-card {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 1rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary-accent);
+      background: var(--primary-accent-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      line-height: 1.3;
+    }
+
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 1.75rem 0 0.85rem 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 1.25rem 0 0.5rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Educational Cards */
+    .card {
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      border-left: 4px solid;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-def {
+      background: var(--def-card-bg);
+      border-color: var(--def-card-title);
+      color: var(--def-card-text);
+    }
+    .card-def .card-title { color: var(--def-card-title); }
+
+    .card-analogy {
+      background: var(--analogy-card-bg);
+      border-color: var(--analogy-card-title);
+      color: var(--analogy-card-text);
+    }
+    .card-analogy .card-title { color: var(--analogy-card-title); }
+
+    .card-concept {
+      background: var(--concept-card-bg);
+      border-color: var(--concept-card-title);
+      color: var(--concept-card-text);
+    }
+    .card-concept .card-title { color: var(--concept-card-title); }
+
+    .card-warn {
+      background: var(--warn-card-bg);
+      border-color: var(--warn-card-title);
+      color: var(--warn-card-text);
+    }
+    .card-warn .card-title { color: var(--warn-card-title); }
+
+    .card-amber {
+      background: var(--amber-card-bg);
+      border-color: var(--amber-card-title);
+      color: var(--amber-card-text);
+    }
+    .card-amber .card-title { color: var(--amber-card-title); }
+
+    .card-success {
+      background: var(--success-card-bg);
+      border-color: var(--success-card-title);
+      color: var(--success-card-text);
+    }
+    .card-success .card-title { color: var(--success-card-title); }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+
+    /* Inline Code and Badges */
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88em;
+      background: var(--card-soft-bg);
+      color: #D946EF;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .key-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin: 0.1rem 0;
+    }
+    .badge-minmax { background: var(--minmax-badge-bg); color: var(--minmax-badge-text); border: 1px solid #BAE6FD; }
+    .badge-std { background: var(--std-badge-bg); color: var(--std-badge-text); border: 1px solid #DDD6FE; }
+    .badge-robust { background: var(--robust-badge-bg); color: var(--robust-badge-text); border: 1px solid #BBF7D0; }
+    .badge-norm { background: var(--norm-badge-bg); color: var(--norm-badge-text); border: 1px solid #E9D5FF; }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #FAFAFA;
+    }
+
+    /* Diagram Containers */
+    .diagram-container {
+      margin: 2rem 0;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .svg-diagram-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+
+    .svg-diagram-wrap svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .diagram-caption {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
+    .how-to-read {
+      background: #F8FAFC;
+      border-left: 3px solid var(--primary-accent);
+      padding: 0.85rem 1.15rem;
+      margin-top: 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #334155;
+    }
+
+    .how-to-read-title {
+      font-weight: 700;
+      color: var(--primary-accent);
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .diagram-takeaway {
+      background: #F0FDF4;
+      border-left: 3px solid #16A34A;
+      padding: 0.85rem 1.15rem;
+      margin-top: 0.75rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #166534;
+    }
+
+    /* Formula Cards */
+    .formula-card {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      text-align: center;
+    }
+
+    .formula-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .formula-box {
+      font-size: 1.35rem;
+      font-family: "Cambria Math", "Times New Roman", serif;
+      font-weight: 600;
+      color: #1E293B;
+      padding: 0.85rem 1.5rem;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 0.5rem 0;
+    }
+
+    .formula-desc {
+      font-size: 0.88rem;
+      color: #64748B;
+      margin-top: 0.75rem;
+      text-align: left;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: var(--code-bg);
+      border-radius: 10px;
+      margin: 1.5rem 0;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+
+    .code-header {
+      background: var(--code-header-bg);
+      padding: 0.6rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 0.8rem;
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .code-lang {
+      background: #334155;
+      color: #38BDF8;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    pre {
+      padding: 1.25rem 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--code-text);
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: 1em;
+    }
+
+    /* Accordions (<details>) */
+    details {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      margin-bottom: 0.85rem;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    details[open] {
+      border-color: #CBD5E1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    summary {
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      color: #1E293B;
+      cursor: pointer;
+      user-select: none;
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s ease;
+    }
+
+    summary:hover {
+      background: #F1F5F9;
+      color: var(--primary-accent);
+    }
+
+    .details-content {
+      padding: 1.25rem;
+      border-top: 1px solid var(--card-border);
+      background: #FFFFFF;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* Footer */
+    .notes-footer {
+      text-align: center;
+      padding: 2.5rem 0 1rem 0;
+      border-top: 1px solid var(--card-border);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <!-- HERO CARD -->
+  <div class="hero-card">
+    <div class="hero-badge">Machine Learning &bull; Topic 7 &bull; Light Mode</div>
+    <h1 class="hero-title">Feature Scaling &amp; Normalization</h1>
+    <p class="hero-subtitle">
+      Master the mathematical art of numerical calibration. Learn why machine learning algorithms fail on unscaled data, how to balance heterogeneous feature magnitudes, the critical differences between Min-Max Scaling, Standardization, Robust Scaling, and Vector Normalization, and how to build leak-free production pipelines.
+    </p>
+    <div class="hero-meta">
+      <span class="meta-tag"><strong>Difficulty:</strong> Beginner &rarr; Production</span>
+      <span class="meta-tag"><strong>Focus:</strong> Numerical Preprocessing &amp; MLOps</span>
+      <span class="meta-tag"><strong>Tooling:</strong> Scikit-Learn 1.9+ &bull; Pandas 2.3+ &bull; NumPy 2.5+</span>
+      <span class="meta-tag"><strong>Theme:</strong> Strict Light Mode</span>
+    </div>
+  </div>
+
+  <!-- TABLE OF CONTENTS -->
+  <div class="toc-container">
+    <div class="toc-title">
+      <span>&#128218;</span> Chapter Table of Contents
+    </div>
+    <div class="toc-grid">
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-01"><span class="toc-number">01</span> Introduction to Feature Scaling</a></li>
+        <li class="toc-item"><a href="#sec-02"><span class="toc-number">02</span> Why Do We Need Feature Scaling?</a></li>
+        <li class="toc-item"><a href="#sec-03"><span class="toc-number">03</span> Important Statistical Foundations</a></li>
+        <li class="toc-item"><a href="#sec-04"><span class="toc-number">04</span> Min-Max Scaling (0 to 1 Normalization)</a></li>
+        <li class="toc-item"><a href="#sec-05"><span class="toc-number">05</span> Standardization and Z-Score Scaling</a></li>
+        <li class="toc-item"><a href="#sec-06"><span class="toc-number">06</span> Robust Scaling (Outlier-Resistant)</a></li>
+        <li class="toc-item"><a href="#sec-07"><span class="toc-number">07</span> Normalization: What Does It Mean?</a></li>
+        <li class="toc-item"><a href="#sec-08"><span class="toc-number">08</span> Grand Comparison &amp; Decision Framework</a></li>
+      </ul>
+      <ul class="toc-list">
+        <li class="toc-item"><a href="#sec-09"><span class="toc-number">09</span> Visual Exploratory Graphs (Graphs 1 to 9)</a></li>
+        <li class="toc-item"><a href="#sec-10"><span class="toc-number">10</span> Which Algorithms Need Scaling?</a></li>
+        <li class="toc-item"><a href="#sec-11"><span class="toc-number">11</span> Data Leakage &amp; Preprocessing Pipelines</a></li>
+        <li class="toc-item"><a href="#sec-12"><span class="toc-number">12</span> Handling Edge Cases &amp; Special Features</a></li>
+        <li class="toc-item"><a href="#sec-13"><span class="toc-number">13</span> Complete Hands-On Python Lab</a></li>
+        <li class="toc-item"><a href="#sec-14"><span class="toc-number">14</span> Real-World Industry Case Studies</a></li>
+        <li class="toc-item"><a href="#sec-15"><span class="toc-number">15</span> 14 Common Beginner Mistakes &amp; Fixes</a></li>
+        <li class="toc-item"><a href="#sec-16"><span class="toc-number">16</span> Checklist, Glossary, Q&amp;A &amp; Final Challenge</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SECTION 1: INTRODUCTION TO FEATURE SCALING -->
+  <section id="sec-01" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 01</span>
+      <h2 class="section-title">Introduction to Feature Scaling</h2>
+    </div>
+    <p class="section-intro">
+      In machine learning, real-world data arrives as a mixture of different physical units, measurement conventions, and numerical magnitudes. A single dataset describing customers might record a person&apos;s age in tens of years, their annual income in hundreds of thousands of dollars, and their number of store visits as single digits.
+    </p>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> Formal Definition: Feature Scale</div>
+      <p>
+        A <strong>numerical feature</strong> is an individual measurable property or characteristic of a phenomenon being observed. The <strong>scale</strong> or <strong>magnitude</strong> of a feature refers to the range of numerical values it spans across observations in the dataset.
+      </p>
+      <p>
+        <strong>Feature Scaling</strong> is a data preprocessing technique used to transform numerical features of varying ranges and units into a common, proportional numerical scale so that mathematical algorithms treat them equitably.
+      </p>
+    </div>
+
+    <h3>The Magnitude Disparity Problem</h3>
+    <p>
+      Consider three typical customer attributes recorded in an e-commerce credit evaluation database:
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature Name</th>
+            <th>Physical Unit</th>
+            <th>Typical Numerical Range</th>
+            <th>Approximate Span</th>
+            <th>Order of Magnitude</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Age</strong></td>
+            <td>Years</td>
+            <td><code>18 &ndash; 65</code></td>
+            <td><code>47</code></td>
+            <td>~ 10<sup>1</sup> (Tens)</td>
+          </tr>
+          <tr>
+            <td><strong>Annual Income</strong></td>
+            <td>US Dollars ($)</td>
+            <td><code>$30,000 &ndash; $850,000</code></td>
+            <td><code>$820,000</code></td>
+            <td>~ 10<sup>5</sup> &ndash; 10<sup>6</sup> (Hundreds of Thousands)</td>
+          </tr>
+          <tr>
+            <td><strong>Years of Experience</strong></td>
+            <td>Years</td>
+            <td><code>0 &ndash; 30</code></td>
+            <td><code>30</code></td>
+            <td>~ 10<sup>1</sup> (Tens)</td>
+          </tr>
+          <tr>
+            <td><strong>App Purchases / Month</strong></td>
+            <td>Count</td>
+            <td><code>1 &ndash; 15</code></td>
+            <td><code>14</code></td>
+            <td>~ 10<sup>0</sup> (Units)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The Fundamental Trap: Big Numbers &ne; More Important</div>
+      <p>
+        Beginners often intuitively assume that an annual income of <code>$85,000</code> is mathematically "more significant" than an age of <code>35</code> because 85,000 is over 2,400 times larger than 35. <strong>This is completely false!</strong>
+      </p>
+      <p>
+        The size of a number is simply an arbitrary artifact of its measurement unit. If we measure income in thousands of dollars (<code>$85k</code>), or if we measure age in minutes (<code>18,396,000 minutes</code>), the relative magnitudes reverse entirely without changing any real-world information! A mathematical equation that calculates Euclidean distances or matrix multiplications does not know what a "dollar" or a "year" is&mdash;it sees only raw float numbers.
+      </p>
+    </div>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#128161;</span> Everyday Analogy: The Currency &amp; Distance Exchange</div>
+      <p>
+        Imagine you are competing in a fitness triathlon where your overall score is the sum of your race distance and your registration fee. If your running distance is measured in kilometers (<code>10 km</code>) and your fee is paid in Japanese Yen (<code>50,000 &yen;</code>), adding them directly (<code>10 + 50,000 = 50,010</code>) means your running effort contributes less than 0.02% of your score! A runner who ran twice as far (<code>20 km</code>) would see almost zero difference.
+      </p>
+      <p>
+        To make a fair athletic competition, both metrics must be converted into standard, normalized points (such as percentiles from 0 to 100). Feature scaling does exactly this for machine learning models.
+      </p>
+    </div>
+
+    <!-- FIGURE 7.1: HERO SCALING OVERVIEW -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <defs>
+    <linearGradient id="grad-raw" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#EFF6FF" />
+      <stop offset="100%" stop-color="#DBEAFE" />
+    </linearGradient>
+    <linearGradient id="grad-engine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#3730A3" />
+    </linearGradient>
+    <linearGradient id="grad-scaled" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0FDF4" />
+      <stop offset="100%" stop-color="#DCFCE7" />
+    </linearGradient>
+    <filter id="shadow7" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <!-- Left: Raw Heterogeneous Features -->
+  <g transform="translate(30, 25)" filter="url(#shadow7)">
+    <rect width="250" height="210" rx="10" fill="url(#grad-raw)" stroke="#93C5FD" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="38" rx="10" fill="#3B82F6" />
+    <text x="125" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">RAW HETEROGENEOUS SCALES</text>
+    
+    <!-- Feature 1: Age -->
+    <rect x="18" y="52" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BFDBFE" />
+    <text x="30" y="70" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">Age (years)</text>
+    <text x="30" y="86" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">Range: [18 – 65]</text>
+    <rect x="150" y="66" width="70" height="14" rx="3" fill="#DBEAFE" />
+    <rect x="150" y="66" width="35" height="14" rx="3" fill="#3B82F6" />
+    <text x="185" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#1E3A8A">mag ~ 10¹</text>
+
+    <!-- Feature 2: Income -->
+    <rect x="18" y="104" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BFDBFE" />
+    <text x="30" y="122" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">Annual Income ($)</text>
+    <text x="30" y="138" font-family="-apple-system, sans-serif" font-size="11" fill="#DC2626">Range: [30,000 – 850,000]</text>
+    <rect x="150" y="118" width="70" height="14" rx="3" fill="#FEE2E2" />
+    <rect x="150" y="118" width="65" height="14" rx="3" fill="#EF4444" />
+    <text x="185" y="129" text-anchor="middle" font-family="monospace" font-size="9" fill="#991B1B">mag ~ 10⁵</text>
+
+    <!-- Feature 3: Experience -->
+    <rect x="18" y="156" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BFDBFE" />
+    <text x="30" y="174" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">Purchases Count</text>
+    <text x="30" y="190" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">Range: [1 – 15]</text>
+    <rect x="150" y="170" width="70" height="14" rx="3" fill="#DBEAFE" />
+    <rect x="150" y="170" width="18" height="14" rx="3" fill="#3B82F6" />
+    <text x="185" y="181" text-anchor="middle" font-family="monospace" font-size="9" fill="#1E3A8A">mag ~ 10⁰</text>
+  </g>
+
+  <!-- Middle: Scaling Engine -->
+  <g transform="translate(330, 45)" filter="url(#shadow7)">
+    <!-- Arrow input -->
+    <path d="M-40, 85 L-10, 85" stroke="#6366F1" stroke-width="3" stroke-dasharray="4,4" />
+    <polygon points="-10,80 -2,85 -10,90" fill="#6366F1" />
+
+    <rect width="220" height="170" rx="14" fill="url(#grad-engine)" />
+    <text x="110" y="32" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="15" font-weight="800" fill="#FFFFFF">FEATURE SCALING</text>
+    <text x="110" y="50" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#C7D2FE">Mathematical Harmonizer</text>
+
+    <!-- Formula pills inside engine -->
+    <rect x="20" y="65" width="180" height="26" rx="6" fill="rgba(255,255,255,0.15)" />
+    <text x="110" y="82" text-anchor="middle" font-family="monospace" font-size="11" fill="#FFFFFF">MinMax: (x - min) / span</text>
+
+    <rect x="20" y="98" width="180" height="26" rx="6" fill="rgba(255,255,255,0.15)" />
+    <text x="110" y="115" text-anchor="middle" font-family="monospace" font-size="11" fill="#FFFFFF">Standard: (x - μ) / σ</text>
+
+    <rect x="20" y="131" width="180" height="26" rx="6" fill="rgba(255,255,255,0.15)" />
+    <text x="110" y="148" text-anchor="middle" font-family="monospace" font-size="11" fill="#FFFFFF">Robust: (x - Med) / IQR</text>
+
+    <!-- Arrow output -->
+    <path d="M225, 85 L255, 85" stroke="#10B981" stroke-width="3" />
+    <polygon points="255,80 263,85 255,90" fill="#10B981" />
+  </g>
+
+  <!-- Right: Normalized / Scaled Features -->
+  <g transform="translate(600, 25)" filter="url(#shadow7)">
+    <rect width="250" height="210" rx="10" fill="url(#grad-scaled)" stroke="#86EFAC" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="38" rx="10" fill="#10B981" />
+    <text x="125" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#FFFFFF">HARMONIZED NUMERICAL SCALE</text>
+
+    <!-- Scaled 1 -->
+    <rect x="18" y="52" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+    <text x="30" y="70" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">Scaled Age (z-score)</text>
+    <text x="30" y="86" font-family="-apple-system, sans-serif" font-size="11" fill="#047857">Mean μ = 0, Std σ = 1</text>
+    <rect x="150" y="66" width="70" height="14" rx="3" fill="#DCFCE7" />
+    <rect x="150" y="66" width="38" height="14" rx="3" fill="#10B981" />
+    <text x="185" y="77" text-anchor="middle" font-family="monospace" font-size="9" fill="#065F46">[-2, +2]</text>
+
+    <!-- Scaled 2 -->
+    <rect x="18" y="104" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+    <text x="30" y="122" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">Scaled Income (z-score)</text>
+    <text x="30" y="138" font-family="-apple-system, sans-serif" font-size="11" fill="#047857">Equal Footing with Age!</text>
+    <rect x="150" y="118" width="70" height="14" rx="3" fill="#DCFCE7" />
+    <rect x="150" y="118" width="40" height="14" rx="3" fill="#10B981" />
+    <text x="185" y="129" text-anchor="middle" font-family="monospace" font-size="9" fill="#065F46">[-2, +2]</text>
+
+    <!-- Scaled 3 -->
+    <rect x="18" y="156" width="214" height="42" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+    <text x="30" y="174" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">Scaled Purchases</text>
+    <text x="30" y="190" font-family="-apple-system, sans-serif" font-size="11" fill="#047857">Balanced Influence!</text>
+    <rect x="150" y="170" width="70" height="14" rx="3" fill="#DCFCE7" />
+    <rect x="150" y="170" width="35" height="14" rx="3" fill="#10B981" />
+    <text x="185" y="181" text-anchor="middle" font-family="monospace" font-size="9" fill="#065F46">[-2, +2]</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.1: Multi-scale raw features entering a Feature Scaling engine and emerging in harmonized, equitable numerical intervals.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> How to Read This Architectural Diagram:</div>
+        <ul>
+          <li><strong>Left Box:</strong> Raw features possess radically different spans (Age spans 47 units; Income spans 820,000 units). On an uncalibrated plane, Income completely dwarfs Age.</li>
+          <li><strong>Center Engine:</strong> Mathematical scalers (MinMaxScaler, StandardScaler, RobustScaler) apply deterministic transformations to calibrate scales.</li>
+          <li><strong>Right Box:</strong> Scaled features occupy uniform numerical intervals (typically centered at 0 with standard deviation 1, or bounded between 0 and 1), allowing algorithms to evaluate all dimensions proportionally.</li>
+        </ul>
+      </div>
+      <div class="diagram-takeaway">
+        <strong>Key Takeaway:</strong> Feature scaling alters the <em>numerical representation</em> of data; it does <em>not</em> create new information or automatically guarantee superior model performance. Its purpose is to remove artificial scale distortions.
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: WHY DO WE NEED FEATURE SCALING? -->
+  <section id="sec-02" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 02</span>
+      <h2 class="section-title">Why Do We Need Feature Scaling?</h2>
+    </div>
+    <p class="section-intro">
+      Not all machine learning algorithms require feature scaling. Understanding <em>why</em> scaling is essential requires examining the internal mathematical machinery of different algorithm families.
+    </p>
+
+    <!-- FIGURE 7.2: DISTANCE DOMINANCE -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 290" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title banner -->
+  <rect x="20" y="15" width="840" height="36" rx="8" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="440" y="38" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">HOW UNCALIBRATED SCALES DESTROY DISTANCE-BASED ALGORITHMS (KNN / K-MEANS)</text>
+
+  <!-- Left: Unscaled Disaster Box -->
+  <g transform="translate(30, 65)">
+    <rect width="395" height="205" rx="10" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+    <rect x="0" y="0" width="395" height="32" rx="10" fill="#EF4444" />
+    <text x="197" y="21" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">WITHOUT SCALING: DISTANCE HIJACKED</text>
+
+    <!-- Point A & B -->
+    <text x="20" y="55" font-family="-apple-system, sans-serif" font-size="12" fill="#7F1D1D">Customer A: Age = 25, Income = $40,000</text>
+    <text x="20" y="75" font-family="-apple-system, sans-serif" font-size="12" fill="#7F1D1D">Customer B: Age = 26, Income = $120,000 (Diff: 1 yr, $80k)</text>
+    <text x="20" y="95" font-family="-apple-system, sans-serif" font-size="12" fill="#7F1D1D">Customer C: Age = 65, Income = $40,000 (Diff: 40 yrs, $0)</text>
+
+    <!-- Distance calculation formula -->
+    <rect x="15" y="110" width="365" height="42" rx="6" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="25" y="128" font-family="monospace" font-size="11" fill="#B91C1C">d(A, B) = √((26 - 25)² + (120000 - 40000)²)</text>
+    <text x="25" y="144" font-family="monospace" font-size="11" fill="#B91C1C">d(A, B) = √(1 + 6,400,000,000) ≈ 80,000.0000</text>
+
+    <text x="20" y="172" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">✕ Age contributes 0.00000001% of the distance!</text>
+    <text x="20" y="190" font-family="-apple-system, sans-serif" font-size="11" fill="#991B1B">The algorithm behaves as if Age does not exist!</text>
+  </g>
+
+  <!-- Right: Standardized Balanced Box -->
+  <g transform="translate(455, 65)">
+    <rect width="395" height="205" rx="10" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <rect x="0" y="0" width="395" height="32" rx="10" fill="#10B981" />
+    <text x="197" y="21" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">AFTER STANDARDIZATION: FAIR CONTRIBUTION</text>
+
+    <!-- Standardized values -->
+    <text x="20" y="55" font-family="-apple-system, sans-serif" font-size="12" fill="#065F46">Customer A: Age_std = -0.80, Inc_std = -0.50</text>
+    <text x="20" y="75" font-family="-apple-system, sans-serif" font-size="12" fill="#065F46">Customer B: Age_std = -0.75, Inc_std = +1.50</text>
+    <text x="20" y="95" font-family="-apple-system, sans-serif" font-size="12" fill="#065F46">Customer C: Age_std = +1.80, Inc_std = -0.50</text>
+
+    <!-- Distance calculation formula -->
+    <rect x="15" y="110" width="365" height="42" rx="6" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="25" y="128" font-family="monospace" font-size="11" fill="#047857">d(A, B) = √((-0.75 - (-0.80))² + (1.50 - (-0.50))²)</text>
+    <text x="25" y="144" font-family="monospace" font-size="11" fill="#047857">d(A, B) = √(0.05² + 2.00²) = √(0.0025 + 4.0) ≈ 2.0006</text>
+
+    <text x="20" y="172" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#059669">✓ Age and Income both participate rationally!</text>
+    <text x="20" y="190" font-family="-apple-system, sans-serif" font-size="11" fill="#065F46">KNN distance honors both domain dimensions proportionally.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.2: Mathematical proof showing how an unscaled feature with large magnitude completely hijacks Euclidean distance calculations.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Step-by-Step Distance Breakdown:</div>
+        <p>
+          Let observation A have <code>Age = 25</code>, <code>Income = $40,000</code>. Let observation B have <code>Age = 26</code>, <code>Income = $120,000</code>. Let observation C have <code>Age = 65</code>, <code>Income = $40,000</code>.
+        </p>
+        <p>
+          <strong>Between A and B:</strong> The age difference is tiny (1 year), but the income difference is huge ($80,000). The Euclidean distance is &radic;(1<sup>2</sup> + 80,000<sup>2</sup>) = &radic;(1 + 6,400,000,000) &approx; <strong>80,000.000006</strong>.
+        </p>
+        <p>
+          <strong>Between A and C:</strong> The income difference is $0, but the age difference is 40 years! The Euclidean distance is &radic;(40<sup>2</sup> + 0<sup>2</sup>) = <strong>40.0</strong>.
+        </p>
+        <p>
+          Because 80,000 is dramatically larger than 40, the model declares A and C to be "almost identical" and A and B to be "infinitely far apart," completely ignoring that C is a senior citizen and A is a young adult!
+        </p>
+      </div>
+    </div>
+
+    <h3>Mathematical Reasons Across Algorithm Families</h3>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Algorithm Family</th>
+            <th>Primary Mathematical Mechanism</th>
+            <th>Scale Sensitivity</th>
+            <th>Exact Impact of Unscaled Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>K-Nearest Neighbors (KNN)</strong></td>
+            <td>Euclidean / Manhattan Distance metric: &radic;(&Sigma;(x<sub>1</sub> - x<sub>2</sub>)<sup>2</sup>)</td>
+            <td><span class="key-badge badge-high">Extremely Sensitive</span></td>
+            <td>Features with large spans dominate distance; features with small spans are effectively ignored.</td>
+          </tr>
+          <tr>
+            <td><strong>K-Means Clustering</strong></td>
+            <td>Distance between sample points and cluster centroids</td>
+            <td><span class="key-badge badge-high">Extremely Sensitive</span></td>
+            <td>Clusters form long, distorted ellipsoids aligned only with the feature having the largest variance.</td>
+          </tr>
+          <tr>
+            <td><strong>Support Vector Machines (SVM)</strong></td>
+            <td>Margin maximization and RBF Kernel: exp(-&gamma;||x<sub>1</sub> - x<sub>2</sub>||<sup>2</sup>)</td>
+            <td><span class="key-badge badge-high">Extremely Sensitive</span></td>
+            <td>RBF kernel bandwidth (&gamma;) collapses along the dominant feature, degrading classification boundaries.</td>
+          </tr>
+          <tr>
+            <td><strong>Principal Component Analysis (PCA)</strong></td>
+            <td>Orthogonal projection maximizing variance: Covariance matrix &Sigma;</td>
+            <td><span class="key-badge badge-high">Extremely Sensitive</span></td>
+            <td>PCA identifies the first principal component solely as the unscaled feature with the largest raw numerical variance.</td>
+          </tr>
+          <tr>
+            <td><strong>Regularized Linear Models (Ridge / Lasso)</strong></td>
+            <td>Loss + &lambda;&Sigma;w<sub>j</sub><sup>2</sup> or Loss + &lambda;&Sigma;|w<sub>j</sub>|</td>
+            <td><span class="key-badge badge-high">Extremely Sensitive</span></td>
+            <td>Features with small raw scales require massive weights (w) to impact prediction, causing regularization to unfairly penalize and zero them out!</td>
+          </tr>
+          <tr>
+            <td><strong>Gradient Descent (Logistic Reg / Neural Nets)</strong></td>
+            <td>Iterative weight updates: w &larr; w - &alpha; &nabla;L(w)</td>
+            <td><span class="key-badge badge-std">Moderately Sensitive</span></td>
+            <td>Loss surface forms an elongated canyon. Gradient oscillates wildly perpendicular to the valley, slowing convergence down by orders of magnitude.</td>
+          </tr>
+          <tr>
+            <td><strong>Decision Trees &amp; Ensembles (Random Forest / XGBoost)</strong></td>
+            <td>Orthogonal axis-aligned threshold splits: (feature &le; threshold)</td>
+            <td><span class="key-badge badge-robust">Scale Invariant</span></td>
+            <td>Trees evaluate ordering, not distances. Monotonic transformations preserve rank order; splits remain mathematically identical.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> The Regularization Paradox in Linear Regression</div>
+      <p>
+        Consider a linear model predicting house prices: <code>Price = w<sub>1</sub> &times; Area_sqft + w<sub>2</sub> &times; Bathrooms</code>.
+      </p>
+      <p>
+        If <code>Area_sqft</code> spans <code>[500 &ndash; 5,000]</code> and <code>Bathrooms</code> spans <code>[1 &ndash; 4]</code>, each additional bathroom might increase house price by $20,000. To achieve this, the model requires <code>w<sub>2</sub> &approx; 20,000</code>. But for square footage, an extra square foot increases price by $100, requiring <code>w<sub>1</sub> &approx; 100</code>.
+      </p>
+      <p>
+        When you apply <strong>L2 Regularization (Ridge)</strong>, the penalty is <code>&lambda;(w<sub>1</sub><sup>2</sup> + w<sub>2</sub><sup>2</sup>)</code>. Notice that <code>w<sub>2</sub><sup>2</sup> = 20,000<sup>2</sup> = 400,000,000</code>, while <code>w<sub>1</sub><sup>2</sup> = 10,000</code>! The penalty will mercilessly crush <code>w<sub>2</sub></code> towards zero simply because its physical unit is small. Standardizing both features beforehand ensures all weights are penalized equitably.
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: IMPORTANT STATISTICAL FOUNDATIONS -->
+  <section id="sec-03" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 03</span>
+      <h2 class="section-title">Important Statistical Foundations</h2>
+    </div>
+    <p class="section-intro">
+      Every feature scaler is fundamentally a statistical transformation. Before choosing a scaling formula, we must understand the core summary statistics used to measure location (center) and dispersion (spread).
+    </p>
+
+    <!-- FIGURE 7.3: SPREAD ANATOMY -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 230" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">STATISTICAL SPREAD ANATOMY: THE FOUNDATION OF ROBUST SCALING</text>
+
+  <!-- Number line axis -->
+  <line x1="80" y1="130" x2="800" y2="130" stroke="#CBD5E1" stroke-width="2" />
+  
+  <!-- Whiskers -->
+  <line x1="150" y1="130" x2="260" y2="130" stroke="#475569" stroke-width="2" />
+  <line x1="560" y1="130" x2="680" y2="130" stroke="#475569" stroke-width="2" />
+  <line x1="150" y1="105" x2="150" y2="155" stroke="#475569" stroke-width="2" />
+  <line x1="680" y1="105" x2="680" y2="155" stroke="#475569" stroke-width="2" />
+
+  <!-- IQR Box -->
+  <rect x="260" y="85" width="300" height="90" rx="4" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2" />
+  
+  <!-- Median Line -->
+  <line x1="390" y1="85" x2="390" y2="175" stroke="#DC2626" stroke-width="3" />
+
+  <!-- Outlier point -->
+  <circle cx="760" cy="130" r="7" fill="#EF4444" stroke="#991B1B" stroke-width="1.5" />
+
+  <!-- Labels -->
+  <!-- Min / Whisker -->
+  <text x="150" y="175" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#475569">Min (Non-outlier)</text>
+  <text x="150" y="190" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748B">Q1 - 1.5✕IQR</text>
+
+  <!-- Q1 -->
+  <text x="260" y="70" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#4338CA">Q1 (25th %)</text>
+  <text x="260" y="200" text-anchor="middle" font-family="monospace" font-size="11" fill="#4338CA">Q1 = 30</text>
+
+  <!-- Median -->
+  <text x="390" y="65" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="800" fill="#DC2626">Median / Q2 (50th %)</text>
+  <text x="390" y="200" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#DC2626">Median = 40 (Center)</text>
+
+  <!-- Q3 -->
+  <text x="560" y="70" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#4338CA">Q3 (75th %)</text>
+  <text x="560" y="200" text-anchor="middle" font-family="monospace" font-size="11" fill="#4338CA">Q3 = 50</text>
+
+  <!-- Whisker Max -->
+  <text x="680" y="175" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="600" fill="#475569">Max (Non-outlier)</text>
+  <text x="680" y="190" text-anchor="middle" font-family="monospace" font-size="10" fill="#64748B">Q3 + 1.5✕IQR</text>
+
+  <!-- Outlier label -->
+  <text x="760" y="112" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">Outlier (500)</text>
+
+  <!-- IQR double arrow -->
+  <line x1="265" y1="100" x2="555" y2="100" stroke="#4F46E5" stroke-width="1.5" />
+  <polygon points="265,97 258,100 265,103" fill="#4F46E5" />
+  <polygon points="555,97 562,100 555,103" fill="#4F46E5" />
+  <text x="410" y="118" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5">IQR = Q3 - Q1 = 20 (Scale)</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.3: Anatomy of statistical spread: Minimum, Q1 (25th percentile), Median (50th percentile), Q3 (75th percentile), Interquartile Range (IQR), and Outliers.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Key Statistical Measures Defined:</div>
+        <ul>
+          <li><strong>Minimum (x<sub>min</sub>):</strong> The smallest observed value in the sample. Highly sensitive to extreme negative outliers.</li>
+          <li><strong>Maximum (x<sub>max</sub>):</strong> The largest observed value in the sample. Highly sensitive to extreme positive outliers.</li>
+          <li><strong>Range (Span):</strong> <code>Range = x<sub>max</sub> - x<sub>min</sub></code>. The total numerical span of the feature.</li>
+          <li><strong>Arithmetic Mean (&mu; or x&#772;):</strong> The sum of all observations divided by sample count: &mu; = (1/N) &Sigma; x<sub>i</sub>. Vulnerable to outlier distortion.</li>
+          <li><strong>Median (Q2):</strong> The middle value when sorted in ascending order. Highly robust to outliers.</li>
+          <li><strong>First Quartile (Q1):</strong> The 25th percentile; 25% of data falls below this value.</li>
+          <li><strong>Third Quartile (Q3):</strong> The 75th percentile; 75% of data falls below this value.</li>
+          <li><strong>Interquartile Range (IQR):</strong> <code>IQR = Q3 - Q1</code>. The central 50% span of the distribution. Completely immune to extreme outlier corruption.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Standard Deviation: Population (&sigma;) vs Sample (s)</h3>
+    <p>
+      A common source of confusion for beginners is the discrepancy between Pandas and Scikit-Learn when calculating standard deviation.
+    </p>
+
+    <div class="card card-amber">
+      <div class="card-title"><span>&#128269;</span> The Degrees of Freedom (ddof) Convention</div>
+      <p>
+        <strong>Population Standard Deviation (&sigma;, ddof = 0):</strong> Divides the sum of squared differences by <code>N</code>. Used when data is treated as the complete population.
+      </p>
+      <div class="formula-box">&sigma; = &radic;[ (1 / N) &times; &Sigma; (x<sub>i</sub> - &mu;)<sup>2</sup> ]</div>
+      <p>
+        <strong>Sample Standard Deviation (s, ddof = 1):</strong> Divides by <code>N - 1</code> (Bessel&apos;s correction) to provide an unbiased estimator of population variance when sampling.
+      </p>
+      <div class="formula-box">s = &radic;[ (1 / (N - 1)) &times; &Sigma; (x<sub>i</sub> - x&#772;)<sup>2</sup> ]</div>
+      <p>
+        <strong>Critical Engineering Rule:</strong> Scikit-Learn&apos;s <code>StandardScaler</code> and NumPy&apos;s <code>np.std()</code> default to <strong>ddof = 0</strong> (&sigma;). Pandas&apos; <code>df['col'].std()</code> defaults to <strong>ddof = 1</strong> (s). Always use <code>ddof=0</code> when verifying Scikit-Learn calculations!
+      </p>
+    </div>
+  </section>
+
+  <!-- SECTION 4: MIN-MAX SCALING -->
+  <section id="sec-04" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 04</span>
+      <h2 class="section-title">Min-Max Scaling (0 to 1 Normalization)</h2>
+    </div>
+    <p class="section-intro">
+      Min-Max Scaling (often called <em>Min-Max Normalization</em>) linearly maps all values of a feature into a fixed, user-defined closed interval&mdash;most commonly between <strong>0.0</strong> and <strong>1.0</strong>.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formula: Min-Max Scaling</div>
+      <div class="formula-box">x&apos; = (x - x<sub>min</sub>) / (x<sub>max</sub> - x<sub>min</sub>)</div>
+      <div class="formula-desc">
+        Where:
+        <ul>
+          <li><strong>x:</strong> Original raw observation value.</li>
+          <li><strong>x<sub>min</sub>:</strong> Minimum value of the feature observed in the training set.</li>
+          <li><strong>x<sub>max</sub>:</strong> Maximum value of the feature observed in the training set.</li>
+          <li><strong>(x<sub>max</sub> - x<sub>min</sub>):</strong> Total range (span) of the feature.</li>
+          <li><strong>x&apos;:</strong> Scaled output value (strictly in [0, 1] for in-range training samples).</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FIGURE 7.7 / GRAPH 2: MINMAX BEFORE AND AFTER -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 2: MIN-MAX SCALING TRANSFORMATION: BOUNDING TO [0, 1]</text>
+
+  <!-- Left: Raw Input Axis [10, 20, 30] -->
+  <g transform="translate(60, 50)">
+    <text x="160" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E3A8A">ORIGINAL VALUES: X ∈ [10, 30]</text>
+    <line x1="30" y1="80" x2="290" y2="80" stroke="#3B82F6" stroke-width="3" />
+
+    <!-- Points on original axis -->
+    <circle cx="50" cy="80" r="7" fill="#1D4ED8" />
+    <text x="50" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#1E3A8A">x = 10 (min)</text>
+
+    <circle cx="160" cy="80" r="7" fill="#1D4ED8" />
+    <text x="160" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#1E3A8A">x = 20</text>
+
+    <circle cx="270" cy="80" r="7" fill="#1D4ED8" />
+    <text x="270" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#1E3A8A">x = 30 (max)</text>
+
+    <text x="160" y="145" text-anchor="middle" font-family="monospace" font-size="11" fill="#475569">Formula: x' = (x - 10) / (30 - 10)</text>
+  </g>
+
+  <!-- Mapping Arrows in Middle -->
+  <g transform="translate(400, 75)">
+    <path d="M-10, 35 L50, 35" stroke="#4F46E5" stroke-width="2.5" />
+    <polygon points="50,30 60,35 50,40" fill="#4F46E5" />
+    <text x="25" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5">MinMaxScaler</text>
+  </g>
+
+  <!-- Right: Scaled Output Axis [0.0, 0.5, 1.0] + Unseen [1.5] -->
+  <g transform="translate(500, 50)">
+    <text x="160" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#065F46">TRANSFORMED VALUES: X' ∈ [0, 1]</text>
+    <line x1="30" y1="80" x2="310" y2="80" stroke="#10B981" stroke-width="3" />
+
+    <!-- Points on scaled axis -->
+    <circle cx="50" cy="80" r="7" fill="#047857" />
+    <text x="50" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">x' = 0.0</text>
+
+    <circle cx="160" cy="80" r="7" fill="#047857" />
+    <text x="160" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">x' = 0.5</text>
+
+    <circle cx="270" cy="80" r="7" fill="#047857" />
+    <text x="270" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">x' = 1.0</text>
+
+    <!-- Outlier / Unseen Point 40 -->
+    <circle cx="340" cy="80" r="6" fill="#EF4444" stroke="#991B1B" />
+    <text x="340" y="110" text-anchor="middle" font-family="monospace" font-size="11" font-weight="700" fill="#DC2626">x' = 1.5</text>
+    <text x="340" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#991B1B">(Unseen 40)</text>
+
+    <text x="160" y="150" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#047857">✓ Relative spacing preserved: 0.5 is exactly midway.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.4 (Graph 2): Linear mapping of raw values [10, 20, 30] to [0.0, 0.5, 1.0], and how an unseen value (40) extends beyond 1.0.</div>
+    </div>
+
+    <h3>Step-by-Step Worked Numerical Example</h3>
+    <p>
+      Consider a simple feature with three training observations: <code>X = [10, 20, 30]</code>.
+    </p>
+    <ol>
+      <li><strong>Find Minimum &amp; Maximum:</strong> <code>x<sub>min</sub> = 10</code>, <code>x<sub>max</sub> = 30</code>.</li>
+      <li><strong>Calculate Span:</strong> <code>Span = 30 - 10 = 20</code>.</li>
+      <li><strong>Transform Observation 1 (x = 10):</strong>
+        <br><code>x&apos;<sub>1</sub> = (10 - 10) / 20 = 0 / 20 = <strong>0.0</strong></code>
+      </li>
+      <li><strong>Transform Observation 2 (x = 20):</strong>
+        <br><code>x&apos;<sub>2</sub> = (20 - 10) / 20 = 10 / 20 = <strong>0.5</strong></code>
+      </li>
+      <li><strong>Transform Observation 3 (x = 30):</strong>
+        <br><code>x&apos;<sub>3</sub> = (30 - 10) / 20 = 20 / 20 = <strong>1.0</strong></code>
+      </li>
+    </ol>
+    <p>
+      <strong>Verification:</strong> The minimum value maps to 0.0, the maximum maps to 1.0, and the midpoint 20 maps exactly to 0.5. The relative distance ratios between points are perfectly preserved!
+    </p>
+
+    <h3>Edge Cases &amp; Unseen Test Data</h3>
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> What Happens When Test Data Exceeds Training Bounds?</div>
+      <p>
+        Suppose an unseen customer appears in the production test set with <code>x<sub>test</sub> = 40</code>.
+      </p>
+      <p>
+        Because the scaler was fitted on training data where <code>x<sub>min</sub> = 10</code> and <code>x<sub>max</sub> = 30</code>:
+      </p>
+      <div class="formula-box">x&apos;<sub>test</sub> = (40 - 10) / (30 - 10) = 30 / 20 = <strong>1.5</strong></div>
+      <p>
+        Notice that <code>1.5</code> lies <strong>outside the [0, 1] range!</strong> Min-Max Scaling does <em>not</em> clip unseen test values by default unless explicitly configured via <code>MinMaxScaler(clip=True)</code> in Scikit-Learn.
+      </p>
+    </div>
+
+    <div class="card card-def">
+      <div class="card-title"><span>&#128214;</span> Constant Feature Behavior (Variance = 0)</div>
+      <p>
+        If all training values in a column are identical (e.g. <code>[20, 20, 20]</code>), then <code>x<sub>max</sub> - x<sub>min</sub> = 20 - 20 = 0</code>. Direct mathematical division by zero is undefined!
+      </p>
+      <p>
+        Scikit-Learn&apos;s <code>MinMaxScaler</code> defensively handles this: if <code>x<sub>max</sub> == x<sub>min</sub></code>, it sets the scale factor to 1.0 and outputs <code>0.0</code> for all samples, preventing runtime crashes.
+      </p>
+    </div>
+
+    <h3>Runnable Scikit-Learn Implementation</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_minmax_scaler.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+
+# 1. Training feature array (must be 2D matrix of shape [n_samples, n_features])
+X_train = np.array([[10.0], [20.0], [30.0]])
+
+# 2. Instantiate and fit scaler
+scaler = MinMaxScaler(feature_range=(0, 1))
+X_train_scaled = scaler.fit_transform(X_train)
+
+print("Fitted Training Minimum:", scaler.data_min_)   # Output: [10.]
+print("Fitted Training Maximum:", scaler.data_max_)   # Output: [30.]
+print("Scaled Training Array:
+", X_train_scaled.flatten())
+# Output: [0.  0.5 1. ]
+
+# 3. Transform unseen test data using training statistics
+X_test = np.array([[5.0], [25.0], [40.0]])
+X_test_scaled = scaler.transform(X_test)
+print("Scaled Test Array:
+", X_test_scaled.flatten())
+# Output: [-0.25  0.75  1.5 ] (Demonstrates values outside [0, 1]!)</code></pre>
+    </div>
+  </section>
+
+
+  <!-- SECTION 5: STANDARDIZATION AND Z-SCORE SCALING -->
+  <section id="sec-05" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 05</span>
+      <h2 class="section-title">Standardization and Z-Score Scaling</h2>
+    </div>
+    <p class="section-intro">
+      Standardization (also known as <em>Z-score normalization</em>) rescales a numerical feature so that its distribution is centered around a <strong>mean of 0</strong> with a <strong>standard deviation of 1</strong>.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formula: Z-Score Standardization</div>
+      <div class="formula-box">z = (x - &mu;) / &sigma;</div>
+      <div class="formula-desc">
+        Where:
+        <ul>
+          <li><strong>x:</strong> Original raw observation value.</li>
+          <li><strong>&mu; (Mu):</strong> Arithmetic mean of the feature fitted on the training split.</li>
+          <li><strong>&sigma; (Sigma):</strong> Population standard deviation of the feature fitted on the training split.</li>
+          <li><strong>z:</strong> Standardized score (Z-score) representing how many standard deviations x lies away from the mean.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FIGURE 7.5: Z-SCORE NORMAL BELL -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="25" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">THE STANDARD NORMAL DISTRIBUTION (μ = 0, σ = 1) AND EMPIRICAL Z-SCORES</text>
+
+  <!-- Bell Curve Area -->
+  <!-- 68% area (-1 to +1) -->
+  <path d="M 320 200 C 350 185, 380 90, 440 60 C 500 90, 530 185, 560 200 Z" fill="#EEF2FF" />
+  <!-- 95% area (-2 to +2) -->
+  <path d="M 200 200 C 240 198, 280 195, 320 200 L 560 200 C 600 195, 640 198, 680 200 Z" fill="#E0E7FF" opacity="0.6" />
+
+  <!-- Bell Curve Outline -->
+  <path d="M 100 200 C 200 200, 260 195, 320 160 C 370 125, 400 60, 440 60 C 480 60, 510 125, 560 160 C 620 195, 680 200, 780 200" fill="none" stroke="#4F46E5" stroke-width="3" />
+
+  <!-- Axis -->
+  <line x1="80" y1="200" x2="800" y2="200" stroke="#334155" stroke-width="2" />
+
+  <!-- Vertical tick lines at z = -3, -2, -1, 0, 1, 2, 3 -->
+  <line x1="440" y1="60" x2="440" y2="208" stroke="#DC2626" stroke-width="2" stroke-dasharray="4,3" />
+  <line x1="560" y1="160" x2="560" y2="208" stroke="#64748B" stroke-width="1.5" stroke-dasharray="3,3" />
+  <line x1="320" y1="160" x2="320" y2="208" stroke="#64748B" stroke-width="1.5" stroke-dasharray="3,3" />
+  <line x1="680" y1="195" x2="680" y2="208" stroke="#94A3B8" stroke-width="1" />
+  <line x1="200" y1="195" x2="200" y2="208" stroke="#94A3B8" stroke-width="1" />
+
+  <!-- Tick Labels (Z-scores) -->
+  <text x="440" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">z = 0 (μ)</text>
+  <text x="560" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#475569">z = +1σ</text>
+  <text x="320" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="600" fill="#475569">z = -1σ</text>
+  <text x="680" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B">z = +2σ</text>
+  <text x="200" y="226" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" fill="#64748B">z = -2σ</text>
+
+  <!-- Area Percentages -->
+  <rect x="390" y="125" width="100" height="22" rx="4" fill="#FFFFFF" stroke="#4F46E5" />
+  <text x="440" y="140" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5">68.27% of Data</text>
+
+  <rect x="365" y="80" width="150" height="20" rx="4" fill="#4338CA" />
+  <text x="440" y="94" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#FFFFFF">±2σ Encloses 95.45% of Data</text>
+
+  <!-- Takeaway badge below -->
+  <text x="440" y="250" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">StandardScaler centers data at zero and measures observations in standard deviation units.</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.5: The standard normal bell curve (&mu; = 0, &sigma; = 1) showing empirical Z-score intervals.</div>
+    </div>
+
+    <!-- GRAPH 3: STANDARDIZATION BEFORE AND AFTER -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 3: STANDARDIZATION (Z-SCORE) TRANSFORMATION: μ = 0, σ = 1</text>
+
+  <!-- Left: Raw Input (Mean = 20, Std = 8.165) -->
+  <g transform="translate(60, 50)">
+    <text x="160" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E3A8A">ORIGINAL: μ = 20.0, σ = 8.165</text>
+    <line x1="30" y1="80" x2="290" y2="80" stroke="#3B82F6" stroke-width="3" />
+
+    <circle cx="50" cy="80" r="7" fill="#1D4ED8" />
+    <text x="50" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#1E3A8A">x = 10</text>
+
+    <circle cx="160" cy="80" r="7" fill="#DC2626" />
+    <text x="160" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#DC2626">x = 20 (μ)</text>
+
+    <circle cx="270" cy="80" r="7" fill="#1D4ED8" />
+    <text x="270" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#1E3A8A">x = 30</text>
+
+    <text x="160" y="145" text-anchor="middle" font-family="monospace" font-size="11" fill="#475569">z = (x - 20) / 8.165</text>
+  </g>
+
+  <!-- Mapping Arrow -->
+  <g transform="translate(400, 75)">
+    <path d="M-10, 35 L50, 35" stroke="#4F46E5" stroke-width="2.5" />
+    <polygon points="50,30 60,35 50,40" fill="#4F46E5" />
+    <text x="25" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4F46E5">StandardScaler</text>
+  </g>
+
+  <!-- Right: Standardized Output (Z = -1.225, 0, +1.225) -->
+  <g transform="translate(500, 50)">
+    <text x="160" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#065F46">STANDARDIZED: μ = 0.0, σ = 1.0</text>
+    <line x1="30" y1="80" x2="290" y2="80" stroke="#10B981" stroke-width="3" />
+
+    <circle cx="50" cy="80" r="7" fill="#047857" />
+    <text x="50" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">z = -1.225</text>
+    <text x="50" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B">(below mean)</text>
+
+    <circle cx="160" cy="80" r="7" fill="#DC2626" />
+    <text x="160" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#DC2626">z = 0.000</text>
+    <text x="160" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#DC2626">(exact mean)</text>
+
+    <circle cx="270" cy="80" r="7" fill="#047857" />
+    <text x="270" y="110" text-anchor="middle" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">z = +1.225</text>
+    <text x="270" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#64748B">(above mean)</text>
+
+    <text x="160" y="150" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#047857">✓ Symmetric about zero with standard deviation equal to 1.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.6 (Graph 3): Numerical transformation of raw values [10, 20, 30] to Z-scores [-1.225, 0.000, +1.225].</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Interpreting Z-Scores:</div>
+        <ul>
+          <li><strong>z = 0:</strong> The observation is <em>identical</em> to the average (mean) value.</li>
+          <li><strong>z &gt; 0 (Positive):</strong> The observation is <em>above average</em>. For example, <code>z = +1.5</code> means 1.5 standard deviations above the mean.</li>
+          <li><strong>z &lt; 0 (Negative):</strong> The observation is <em>below average</em>. For example, <code>z = -1.225</code> means 1.225 standard deviations below the mean.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Step-by-Step Worked Numerical Example</h3>
+    <p>
+      Consider the same feature: <code>X = [10, 20, 30]</code>.
+    </p>
+    <ol>
+      <li><strong>Calculate Mean (&mu;):</strong>
+        <br><code>&mu; = (10 + 20 + 30) / 3 = 60 / 3 = <strong>20.0</strong></code>
+      </li>
+      <li><strong>Calculate Deviations from Mean:</strong>
+        <br><code>(10 - 20) = -10</code>, <code>(20 - 20) = 0</code>, <code>(30 - 20) = +10</code>
+      </li>
+      <li><strong>Calculate Squared Deviations &amp; Variance (&sigma;<sup>2</sup>, ddof = 0):</strong>
+        <br><code>&sigma;<sup>2</sup> = [(-10)<sup>2</sup> + 0<sup>2</sup> + 10<sup>2</sup>] / 3 = [100 + 0 + 100] / 3 = 200 / 3 &approx; <strong>66.667</strong></code>
+      </li>
+      <li><strong>Calculate Population Standard Deviation (&sigma;):</strong>
+        <br><code>&sigma; = &radic;(66.6667) &approx; <strong>8.1649658</strong></code>
+      </li>
+      <li><strong>Transform Each Observation:</strong>
+        <ul>
+          <li>Observation 1: <code>z<sub>1</sub> = (10 - 20) / 8.16497 = -10 / 8.16497 &approx; <strong>-1.2247</strong></code></li>
+          <li>Observation 2: <code>z<sub>2</sub> = (20 - 20) / 8.16497 = 0 / 8.16497 = <strong>0.0000</strong></code></li>
+          <li>Observation 3: <code>z<sub>3</sub> = (30 - 20) / 8.16497 = +10 / 8.16497 &approx; <strong>+1.2247</strong></code></li>
+        </ul>
+      </li>
+    </ol>
+    <p>
+      <strong>Verification:</strong> The mean of the Z-scores is <code>(-1.2247 + 0.0 + 1.2247) / 3 = 0.0</code>, and their standard deviation is exactly <code>1.0</code>!
+    </p>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> Two Dangerous Misconceptions About Standardization</div>
+      <p>
+        <strong>Myth 1: "Standardization makes data normal." &times; FALSE!</strong>
+        <br>Standardization is a <em>linear transformation</em>. It shifts the center and stretches/shrinks the axis, but it <strong>never alters the shape</strong> of the distribution. If your raw data is bimodal, uniform, or heavily right-skewed, the standardized data will remain equally bimodal, uniform, or right-skewed!
+      </p>
+      <p>
+        <strong>Myth 2: "Standardized values must fall between 0 and 1." &times; FALSE!</strong>
+        <br>Z-scores are unbounded. They typically span from <code>-3</code> to <code>+3</code> for roughly bell-shaped data, but extreme outliers can easily have Z-scores of <code>+15.0</code> or <code>-20.0</code>.
+      </p>
+    </div>
+
+    <h3>Scikit-Learn StandardScaler Implementation</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_standard_scaler.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.preprocessing import StandardScaler
+
+X_train = np.array([[10.0], [20.0], [30.0]])
+
+scaler = StandardScaler()
+X_train_z = scaler.fit_transform(X_train)
+
+print("Fitted Mean (&mu;):", scaler.mean_)           # Output: [20.]
+print("Fitted Std (&sigma;):", scaler.scale_)          # Output: [8.16496581]
+print("Standardized Z-Scores:
+", X_train_z.flatten())
+# Output: [-1.22474487  0.          1.22474487]
+
+# Constant feature defense
+X_const = np.array([[50.0], [50.0], [50.0]])
+scaler_const = StandardScaler()
+print("Constant Feature Z-Scores:
+", scaler_const.fit_transform(X_const).flatten())
+# Output: [0. 0. 0.] (Defensively handled without ZeroDivisionError!)</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 6: ROBUST SCALING -->
+  <section id="sec-06" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 06</span>
+      <h2 class="section-title">Robust Scaling (Outlier-Resistant)</h2>
+    </div>
+    <p class="section-intro">
+      Both Min-Max Scaling and Standardization suffer from an acute vulnerability: <strong>extreme outliers</strong>. Because <code>x<sub>min</sub></code>, <code>x<sub>max</sub></code>, <code>&mu;</code>, and <code>&sigma;</code> are calculated using all observations, a single astronomical value can distort the entire scaling parameter set.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formula: Robust Scaling</div>
+      <div class="formula-box">x&apos; = (x - Median) / (Q3 - Q1) = (x - Median) / IQR</div>
+      <div class="formula-desc">
+        Where:
+        <ul>
+          <li><strong>x:</strong> Original raw observation value.</li>
+          <li><strong>Median (Q2):</strong> 50th percentile of the training data (center of distribution).</li>
+          <li><strong>Q1:</strong> 25th percentile (first quartile).</li>
+          <li><strong>Q3:</strong> 75th percentile (third quartile).</li>
+          <li><strong>IQR (Interquartile Range):</strong> <code>Q3 - Q1</code>, representing the spread of the central 50% of observations.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- FIGURE 7.7 / GRAPH 4: OUTLIER IMPACT -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 290" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 4: OUTLIER RESISTANCE COMPARISON ACROSS 3 SCALERS</text>
+  <text x="440" y="38" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">Dataset: [20, 25, 30, 35, 40, 45, 50, 55] + Extreme Outlier [500]</text>
+
+  <!-- 3 Rows: MinMax, StandardScaler, RobustScaler -->
+  <!-- Row 1: MinMaxScaler (Crushed!) -->
+  <g transform="translate(40, 52)">
+    <rect width="800" height="60" rx="6" fill="#FEF2F2" stroke="#FECACA" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">1. MinMaxScaler: CRUSHED DATA</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#991B1B">Span = 480. Points [20..55] squeezed into [0.00, 0.07]! 93% of space wasted!</text>
+    
+    <!-- Mini line -->
+    <line x1="380" y1="30" x2="770" y2="30" stroke="#CBD5E1" stroke-width="2" />
+    <!-- Crushed clump -->
+    <rect x="380" y="22" width="28" height="16" rx="3" fill="#EF4444" opacity="0.8" />
+    <text x="394" y="50" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#B91C1C">[0.0 – 0.07]</text>
+    <!-- Outlier at far right -->
+    <circle cx="770" cy="30" r="6" fill="#DC2626" />
+    <text x="770" y="50" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#DC2626">1.0 (500)</text>
+  </g>
+
+  <!-- Row 2: StandardScaler (Distorted Mean & Variance) -->
+  <g transform="translate(40, 122)">
+    <rect width="800" height="60" rx="6" fill="#FFFBEB" stroke="#FDE68A" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#D97706">2. StandardScaler: SKEWED SPREAD</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">Mean pulled up to 88.9 by single outlier. Regular points have negative z-scores (-0.46 to -0.23).</text>
+
+    <!-- Mini line -->
+    <line x1="380" y1="30" x2="770" y2="30" stroke="#CBD5E1" stroke-width="2" />
+    <!-- Regular clump -->
+    <rect x="420" y="22" width="40" height="16" rx="3" fill="#F59E0B" opacity="0.8" />
+    <text x="440" y="50" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#B45309">[-0.46, -0.23]</text>
+    <!-- Outlier at +2.8z -->
+    <circle cx="740" cy="30" r="6" fill="#D97706" />
+    <text x="740" y="50" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#D97706">+2.81z</text>
+  </g>
+
+  <!-- Row 3: RobustScaler (Winner!) -->
+  <g transform="translate(40, 192)">
+    <rect width="800" height="70" rx="6" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">3. RobustScaler: FULL RESOLUTION PRESERVED (✓ WINNER)</text>
+    <text x="18" y="42" font-family="-apple-system, sans-serif" font-size="10" fill="#166534">Median = 40, IQR = 20. Regular points cleanly mapped across [-1.00, +0.75].</text>
+    <text x="18" y="56" font-family="-apple-system, sans-serif" font-size="10" font-weight="600" fill="#047857">The outlier 500 becomes +23.0 without compressing the inliers!</text>
+
+    <!-- Mini line -->
+    <line x1="380" y1="35" x2="770" y2="35" stroke="#CBD5E1" stroke-width="2" />
+    <!-- Robust spread: healthy wide band -->
+    <rect x="400" y="25" width="160" height="20" rx="4" fill="#10B981" opacity="0.85" />
+    <text x="480" y="39" text-anchor="middle" font-family="monospace" font-size="10" font-weight="700" fill="#FFFFFF">[-1.00 – +0.75] (High Detail)</text>
+    <!-- Outlier -->
+    <circle cx="750" cy="35" r="6" fill="#10B981" stroke="#065F46" />
+    <text x="750" y="55" text-anchor="middle" font-family="monospace" font-size="9" font-weight="700" fill="#065F46">+23.00</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.7 (Graph 4): Comparative performance of MinMaxScaler, StandardScaler, and RobustScaler on a dataset with an extreme outlier (500).</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> What Graph 4 Proves:</div>
+        <ul>
+          <li><strong>MinMaxScaler Fails:</strong> Points <code>[20 &ndash; 55]</code> are compressed into an unreadable sliver <code>[0.00 &ndash; 0.07]</code>. 93% of the numerical range is wasted on a single outlier!</li>
+          <li><strong>StandardScaler Distorts:</strong> The outlier drags the mean up to 88.9, forcing normal data points into negative Z-scores and shrinking their resolution.</li>
+          <li><strong>RobustScaler Triumphs:</strong> The median (40) and IQR (20) ignore the outlier completely. The normal points expand comfortably across <code>[-1.00, +0.75]</code>, preserving full feature resolution for the ML algorithm!</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Step-by-Step Worked Outlier Calculation</h3>
+    <p>
+      Consider a 9-observation dataset containing one severe anomaly:
+      <br><code>X = [20, 25, 30, 35, 40, 45, 50, 55, 500]</code>
+    </p>
+    <ol>
+      <li><strong>Find Median (50th percentile, index 4):</strong> <code>Median = <strong>40.0</strong></code></li>
+      <li><strong>Find Q1 (25th percentile, index 2):</strong> <code>Q1 = <strong>30.0</strong></code></li>
+      <li><strong>Find Q3 (75th percentile, index 6):</strong> <code>Q3 = <strong>50.0</strong></code></li>
+      <li><strong>Calculate IQR:</strong> <code>IQR = 50.0 - 30.0 = <strong>20.0</strong></code></li>
+      <li><strong>Transform Inlier (x = 20):</strong> <code>x&apos; = (20 - 40) / 20 = -20 / 20 = <strong>-1.00</strong></code></li>
+      <li><strong>Transform Median (x = 40):</strong> <code>x&apos; = (40 - 40) / 20 = 0 / 20 = <strong>0.00</strong></code></li>
+      <li><strong>Transform Inlier (x = 55):</strong> <code>x&apos; = (55 - 40) / 20 = 15 / 20 = <strong>+0.75</strong></code></li>
+      <li><strong>Transform Outlier (x = 500):</strong> <code>x&apos; = (500 - 40) / 20 = 460 / 20 = <strong>+23.00</strong></code></li>
+    </ol>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> Does RobustScaler Delete Outliers?</div>
+      <p>
+        <strong>No!</strong> RobustScaler does <em>not</em> filter, trim, or remove outliers from your dataset. It simply calculates centering and scaling parameters from the median and IQR so that the outliers <strong>cannot corrupt the transformation of regular data points</strong>. The outlier 500 remains in the dataset as <code>+23.00</code>, allowing anomaly detection models to still detect it.
+      </p>
+    </div>
+
+    <h3>Scikit-Learn RobustScaler Implementation</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_robust_scaler.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.preprocessing import RobustScaler
+
+X_with_outlier = np.array([[20], [25], [30], [35], [40], [45], [50], [55], [500]])
+
+robust = RobustScaler()
+X_robust = robust.fit_transform(X_with_outlier)
+
+print("Robust Center (Median):", robust.center_)  # Output: [40.]
+print("Robust Scale (IQR):", robust.scale_)        # Output: [20.]
+print("Robust Scaled Values:
+", X_robust.flatten())
+# Output: [-1.   -0.75 -0.5  -0.25  0.    0.25  0.5   0.75 23.  ]</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 7: NORMALIZATION: WHAT DOES IT MEAN? -->
+  <section id="sec-07" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 07</span>
+      <h2 class="section-title">Normalization: What Does It Mean?</h2>
+    </div>
+    <p class="section-intro">
+      The word &ldquo;normalization&rdquo; is one of the most overloaded terms in machine learning. Beginners frequently make catastrophic engineering mistakes by confusing <em>feature-level scaling</em> with <em>sample-level vector normalization</em>.
+    </p>
+
+    <!-- FIGURE 7.8: ROW VS COLUMN OPERATIONS -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <rect x="20" y="12" width="840" height="34" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="440" y="34" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">CRITICAL DISTINCTION: COLUMN-WISE SCALING VS ROW-WISE NORMALIZATION</text>
+
+  <!-- Left: Column-wise Feature Scaling -->
+  <g transform="translate(35, 58)">
+    <rect width="380" height="195" rx="8" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1.5" />
+    <text x="190" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#0369A1">COLUMN-WISE FEATURE SCALING</text>
+    <text x="190" y="40" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#0284C7">StandardScaler / MinMaxScaler / RobustScaler</text>
+
+    <!-- Mini Table Matrix -->
+    <rect x="30" y="55" width="320" height="95" rx="4" fill="#FFFFFF" stroke="#CBD5E1" />
+    <!-- Headers -->
+    <rect x="30" y="55" width="80" height="22" fill="#E2E8F0" />
+    <rect x="110" y="55" width="80" height="22" fill="#BAE6FD" />
+    <rect x="190" y="55" width="80" height="22" fill="#E2E8F0" />
+    <rect x="270" y="55" width="80" height="22" fill="#E2E8F0" />
+    <text x="70" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Age</text>
+    <text x="150" y="70" text-anchor="middle" font-family="monospace" font-size="10" font-weight="700" fill="#0369A1">Income ↓</text>
+    <text x="230" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Exp</text>
+    <text x="310" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Score</text>
+
+    <!-- Highlighted Column Arrow -->
+    <rect x="110" y="77" width="80" height="73" fill="#E0F2FE" stroke="#0284C7" stroke-width="1.5" stroke-dasharray="3,2" />
+    <text x="150" y="95" text-anchor="middle" font-family="monospace" font-size="10" fill="#0369A1">40,000</text>
+    <text x="150" y="115" text-anchor="middle" font-family="monospace" font-size="10" fill="#0369A1">85,000</text>
+    <text x="150" y="135" text-anchor="middle" font-family="monospace" font-size="10" fill="#0369A1">120,000</text>
+
+    <text x="190" y="168" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#0369A1">↓ Operates VERTICALLY across ALL samples</text>
+    <text x="190" y="184" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#0C4A6E">Statistics (μ, σ, min, max) calculated per column.</text>
+  </g>
+
+  <!-- Right: Row-wise Vector Normalization -->
+  <g transform="translate(465, 58)">
+    <rect width="380" height="195" rx="8" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.5" />
+    <text x="190" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#6B21A8">ROW-WISE VECTOR NORMALIZATION</text>
+    <text x="190" y="40" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#7C3AED">sklearn.preprocessing.Normalizer (L1 / L2)</text>
+
+    <!-- Mini Table Matrix -->
+    <rect x="30" y="55" width="320" height="95" rx="4" fill="#FFFFFF" stroke="#CBD5E1" />
+    <!-- Headers -->
+    <rect x="30" y="55" width="320" height="22" fill="#E2E8F0" />
+    <text x="70" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Word_1</text>
+    <text x="150" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Word_2</text>
+    <text x="230" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Word_3</text>
+    <text x="310" y="70" text-anchor="middle" font-family="monospace" font-size="10" fill="#334155">Word_4</text>
+
+    <!-- Highlighted Row Arrow -->
+    <rect x="30" y="100" width="320" height="26" fill="#F3E8FF" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="3,2" />
+    <text x="70" y="117" text-anchor="middle" font-family="monospace" font-size="10" fill="#581C87">3.0</text>
+    <text x="150" y="117" text-anchor="middle" font-family="monospace" font-size="10" fill="#581C87">4.0</text>
+    <text x="230" y="117" text-anchor="middle" font-family="monospace" font-size="10" fill="#581C87">0.0</text>
+    <text x="310" y="117" text-anchor="middle" font-family="monospace" font-size="10" fill="#581C87">0.0</text>
+    <text x="360" y="117" font-family="monospace" font-size="11" font-weight="700" fill="#7C3AED">→ ||x||=1</text>
+
+    <text x="190" y="168" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#6B21A8">→ Operates HORIZONTALLY across EACH sample</text>
+    <text x="190" y="184" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#581C87">Scales each row to unit length (direction preserved).</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.8: Column-wise Feature Scaling (vertical across samples) vs Row-wise Vector Normalization (horizontal across features within each sample).</div>
+    </div>
+
+    <h3>Two Conflicting Meanings of "Normalization"</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Primary Direction</th>
+            <th>What is Being Scaled?</th>
+            <th>Standard Scikit-Learn Class</th>
+            <th>Typical Application</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Meaning A: Range Scaling</strong></td>
+            <td><strong>Column-wise (Vertical)</strong></td>
+            <td>Scales an entire feature column across all dataset samples into a fixed range [0, 1].</td>
+            <td><code>MinMaxScaler</code></td>
+            <td>Tabular data with bounded physical quantities (e.g. image pixels, percentages).</td>
+          </tr>
+          <tr>
+            <td><strong>Meaning B: Vector Normalization</strong></td>
+            <td><strong>Row-wise (Horizontal)</strong></td>
+            <td>Scales each individual sample row so that its vector length equals 1.0 (Unit Norm).</td>
+            <td><code>Normalizer(norm='l2')</code></td>
+            <td>Natural Language Processing (TF-IDF vectors), Document Cosine Similarity, Embeddings.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Vector Norms: L1 Norm vs L2 Norm</h3>
+    <p>
+      In linear algebra, a sample with <code>n</code> numerical features is treated as a vector <strong>x</strong> = [x<sub>1</sub>, x<sub>2</sub>, ..., x<sub>n</sub>] in n-dimensional space.
+    </p>
+
+    <div class="formula-card">
+      <div class="formula-title">Mathematical Formulations: L2 and L1 Vector Norms</div>
+      <div class="formula-box">||x||<sub>2</sub> = &radic;[ &Sigma;<sub>i=1</sub><sup>n</sup> x<sub>i</sub><sup>2</sup> ] &emsp;&emsp; (L2 Euclidean Norm)</div>
+      <br>
+      <div class="formula-box">||x||<sub>1</sub> = &Sigma;<sub>i=1</sub><sup>n</sup> |x<sub>i</sub>| &emsp;&emsp; (L1 Manhattan Norm)</div>
+      <div class="formula-desc">
+        <strong>L2 Vector Normalization:</strong> <code>x&apos; = x / ||x||<sub>2</sub></code> (Forces Euclidean distance from origin to equal exactly 1.0).
+        <br>
+        <strong>L1 Vector Normalization:</strong> <code>x&apos; = x / ||x||<sub>1</sub></code> (Forces the sum of absolute values to equal exactly 1.0, creating a discrete probability distribution).
+      </div>
+    </div>
+
+    <!-- GRAPH 6 & GRAPH 7 -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 6: L2 VECTOR NORMALIZATION ON 2D CARTESIAN PLANE</text>
+  <text x="440" y="40" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">Sample Vector v = [3, 4] with ||v||₂ = 5.0 projected to Unit Circle: v' = [0.6, 0.8]</text>
+
+  <!-- Left Plane: Coordinate Visualization -->
+  <g transform="translate(100, 55)">
+    <!-- Axes -->
+    <line x1="40" y1="180" x2="260" y2="180" stroke="#94A3B8" stroke-width="1.5" />
+    <line x1="40" y1="180" x2="40" y2="20" stroke="#94A3B8" stroke-width="1.5" />
+    <text x="255" y="195" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">x₁</text>
+    <text x="25" y="25" font-family="-apple-system, sans-serif" font-size="11" fill="#64748B">x₂</text>
+
+    <!-- Unit Circle Arc (radius = 35px) -->
+    <path d="M 40 145 A 35 35 0 0 1 75 180" fill="none" stroke="#10B981" stroke-width="2" stroke-dasharray="3,3" />
+    <text x="82" y="170" font-family="monospace" font-size="9" fill="#059669">r = 1.0 (Unit Circle)</text>
+
+    <!-- Original Vector v = [3, 4] -> px = 40 + 3*35 = 145, py = 180 - 4*35 = 40 -->
+    <!-- Length = 5 * 35 = 175px -->
+    <line x1="40" y1="180" x2="145" y2="40" stroke="#3B82F6" stroke-width="3" />
+    <circle cx="145" cy="40" r="5" fill="#1D4ED8" />
+    <text x="155" y="42" font-family="monospace" font-size="11" font-weight="700" fill="#1E3A8A">v = [3, 4]</text>
+    <text x="155" y="55" font-family="-apple-system, sans-serif" font-size="10" fill="#3B82F6">Length ||v||₂ = 5.0</text>
+
+    <!-- Normalized Vector v' = [0.6, 0.8] -> px = 40 + 0.6*35 = 61, py = 180 - 0.8*35 = 152 -->
+    <line x1="40" y1="180" x2="61" y2="152" stroke="#10B981" stroke-width="4" />
+    <circle cx="61" cy="152" r="5" fill="#047857" />
+    <text x="70" y="145" font-family="monospace" font-size="11" font-weight="700" fill="#065F46">v' = [0.6, 0.8]</text>
+    <text x="70" y="157" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">||v'||₂ = 1.000</text>
+
+    <!-- Angle theta -->
+    <path d="M 60 180 A 20 20 0 0 0 54 162" fill="none" stroke="#DC2626" stroke-width="1.5" />
+    <text x="68" y="174" font-family="monospace" font-size="10" fill="#DC2626">θ = 53.1°</text>
+  </g>
+
+  <!-- Right Explanation Card -->
+  <g transform="translate(480, 55)">
+    <rect width="340" height="190" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="20" y="26" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E293B">Mathematical Verification:</text>
+    
+    <text x="20" y="52" font-family="monospace" font-size="11" fill="#334155">1. Norm: ||v||₂ = √(3² + 4²) = √25 = 5.0</text>
+    <text x="20" y="76" font-family="monospace" font-size="11" fill="#334155">2. Divide: [3/5, 4/5] = [0.60, 0.80]</text>
+    <text x="20" y="100" font-family="monospace" font-size="11" fill="#059669">3. Check: √(0.6² + 0.8²) = √(0.36 + 0.64) = 1.0</text>
+    <text x="20" y="124" font-family="monospace" font-size="11" fill="#0369A1">4. Direction: tan(θ) = 4/3 = 0.8/0.6 = 1.333</text>
+
+    <rect x="15" y="142" width="310" height="36" rx="4" fill="#ECFDF5" stroke="#A7F3D0" />
+    <text x="25" y="160" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">✓ Key Takeaway:</text>
+    <text x="25" y="172" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Direction is unchanged; only magnitude is scaled to 1.0.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.9 (Graph 6): L2 Vector Normalization projects a vector onto the 2D Unit Circle (r = 1.0) while preserving its exact directional angle &theta;.</div>
+    </div>
+
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 260" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 7: L1 (MANHATTAN) VS L2 (EUCLIDEAN) UNIT CONSTRAINTS</text>
+
+  <!-- Left: L1 Normalization (Diamond Constraint |x| + |y| = 1) -->
+  <g transform="translate(80, 45)">
+    <rect width="320" height="200" rx="8" fill="#FDF4FF" stroke="#F5D0FE" />
+    <text x="160" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#86198F">L1 NORMALIZATION (DIAMOND CONTOUR)</text>
+
+    <!-- Axes -->
+    <line x1="60" y1="110" x2="260" y2="110" stroke="#CBD5E1" stroke-width="1.5" />
+    <line x1="160" y1="20" x2="160" y2="190" stroke="#CBD5E1" stroke-width="1.5" />
+
+    <!-- L1 Diamond: vertices at (160, 40), (230, 110), (160, 180), (90, 110) -->
+    <polygon points="160,40 230,110 160,180 90,110" fill="#FAE8FF" stroke="#C026D3" stroke-width="2.5" />
+    
+    <!-- Vector [3, 4] -> normalized [3/7, 4/7] approx [0.43, 0.57] -->
+    <!-- Point = (160 + 0.43*70 = 190, 110 - 0.57*70 = 70) -->
+    <circle cx="190" cy="70" r="5" fill="#86198F" />
+    <text x="198" y="68" font-family="monospace" font-size="10" font-weight="700" fill="#86198F">[3/7, 4/7]</text>
+
+    <text x="160" y="160" text-anchor="middle" font-family="monospace" font-size="10" fill="#701A75">||v||₁ = |3| + |4| = 7</text>
+    <text x="160" y="175" text-anchor="middle" font-family="monospace" font-size="10" fill="#701A75">|3/7| + |4/7| = 1.0 (Unit Sum)</text>
+    <text x="160" y="192" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#A21CAF">Useful for probability distributions &amp; TF-IDF</text>
+  </g>
+
+  <!-- Right: L2 Normalization (Circle Constraint x² + y² = 1) -->
+  <g transform="translate(480, 45)">
+    <rect width="320" height="200" rx="8" fill="#F0FDF4" stroke="#BBF7D0" />
+    <text x="160" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">L2 NORMALIZATION (SPHERICAL CIRCLE)</text>
+
+    <!-- Axes -->
+    <line x1="60" y1="110" x2="260" y2="110" stroke="#CBD5E1" stroke-width="1.5" />
+    <line x1="160" y1="20" x2="160" y2="190" stroke="#CBD5E1" stroke-width="1.5" />
+
+    <!-- L2 Circle: radius = 70px -->
+    <circle cx="160" cy="110" r="70" fill="#DCFCE7" stroke="#10B981" stroke-width="2.5" />
+
+    <!-- Vector [3, 4] -> normalized [0.6, 0.8] -->
+    <!-- Point = (160 + 0.6*70 = 202, 110 - 0.8*70 = 54) -->
+    <circle cx="202" cy="54" r="5" fill="#047857" />
+    <text x="210" y="52" font-family="monospace" font-size="10" font-weight="700" fill="#065F46">[0.60, 0.80]</text>
+
+    <text x="160" y="160" text-anchor="middle" font-family="monospace" font-size="10" fill="#065F46">||v||₂ = √(3² + 4²) = 5.0</text>
+    <text x="160" y="175" text-anchor="middle" font-family="monospace" font-size="10" fill="#065F46">0.6² + 0.8² = 1.0 (Unit Euclidean)</text>
+    <text x="160" y="192" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">Ideal for Cosine Similarity &amp; Embeddings</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.10 (Graph 7): Geometric constraint shapes: L1 Diamond (|x| + |y| = 1) vs L2 Sphere (x&sup2; + y&sup2; = 1).</div>
+    </div>
+
+    <h3>Step-by-Step Worked Vector Normalization Example</h3>
+    <p>
+      Consider a single text document represented by two word counts: <code>v = [3, 4]</code>.
+    </p>
+    <ol>
+      <li><strong>L2 Euclidean Normalization:</strong>
+        <ul>
+          <li>Calculate L2 Norm: <code>||v||<sub>2</sub> = &radic;(3<sup>2</sup> + 4<sup>2</sup>) = &radic;(9 + 16) = &radic;25 = <strong>5.0</strong></code></li>
+          <li>Normalize components: <code>v&apos;<sub>L2</sub> = [3/5, 4/5] = <strong>[0.60, 0.80]</strong></code></li>
+          <li>Verify resulting length: <code>&radic;(0.6<sup>2</sup> + 0.8<sup>2</sup>) = &radic;(0.36 + 0.64) = &radic;1.0 = <strong>1.000</strong> &check;</code></li>
+        </ul>
+      </li>
+      <li><strong>L1 Manhattan Normalization:</strong>
+        <ul>
+          <li>Calculate L1 Norm: <code>||v||<sub>1</sub> = |3| + |4| = <strong>7.0</strong></code></li>
+          <li>Normalize components: <code>v&apos;<sub>L1</sub> = [3/7, 4/7] &approx; <strong>[0.4286, 0.5714]</strong></code></li>
+          <li>Verify resulting sum: <code>3/7 + 4/7 = 7/7 = <strong>1.000</strong> &check;</code></li>
+        </ul>
+      </li>
+    </ol>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The Zero-Vector Edge Case in Normalizer</div>
+      <p>
+        What happens if an observation has all zeros (e.g. <code>[0.0, 0.0, 0.0]</code>)?
+        <br>Its L2 norm is <code>||v|| = 0</code>. Dividing by zero is undefined!
+      </p>
+      <p>
+        Scikit-Learn&apos;s <code>Normalizer</code> defensively checks for zero norms: if a row vector has length zero, it bypasses division and outputs all zeros, avoiding <code>NaN</code> values.
+      </p>
+    </div>
+
+    <h3>Scikit-Learn Normalizer Implementation</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_normalizer.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.preprocessing import Normalizer
+
+# Matrix of 2 text sample rows across 2 vocabulary word features
+X_samples = np.array([
+    [3.0, 4.0],   # Sample 1 (Norm = 5.0)
+    [1.0, 1.0]    # Sample 2 (Norm = &radic;2 &approx; 1.414)
+])
+
+# L2 Unit Normalization (Default)
+normalizer_l2 = Normalizer(norm='l2')
+X_l2 = normalizer_l2.fit_transform(X_samples)
+
+print("L2 Normalized Matrix:
+", np.round(X_l2, 3))
+# Output:
+# [[0.6   0.8  ]
+#  [0.707 0.707]]
+
+# Verify row norms equal 1.0
+print("Sample 1 L2 Length:", np.linalg.norm(X_l2[0]))  # 1.0
+print("Sample 2 L2 Length:", np.linalg.norm(X_l2[1]))  # 1.0</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 8: FEATURE SCALING VERSUS NORMALIZATION VERSUS STANDARDIZATION -->
+  <section id="sec-08" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 08</span>
+      <h2 class="section-title">Feature Scaling vs Normalization vs Standardization</h2>
+    </div>
+    <p class="section-intro">
+      Below is the comprehensive architectural comparison matrix contrasting all five primary scaling and normalization methods.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Primary Direction</th>
+            <th>Quantities Used</th>
+            <th>Output Range</th>
+            <th>Outlier Sensitivity</th>
+            <th>Best Suited For</th>
+            <th>Main Limitations</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Min-Max Scaling</strong></td>
+            <td>Column-wise (Features)</td>
+            <td><code>x<sub>min</sub></code>, <code>x<sub>max</sub></code></td>
+            <td>Strictly <code>[0, 1]</code> (training)</td>
+            <td><span class="key-badge badge-high">High</span></td>
+            <td>Neural networks (bounded activation functions), Image RGB pixels, algorithms requiring positive inputs.</td>
+            <td>Extreme outliers crush non-outliers into a narrow band; unseen test data can exceed bounds.</td>
+          </tr>
+          <tr>
+            <td><strong>Standardization (Z-Score)</strong></td>
+            <td>Column-wise (Features)</td>
+            <td>Mean <code>&mu;</code>, Std <code>&sigma;</code></td>
+            <td>Unbounded (Centered at 0, &sigma;=1)</td>
+            <td><span class="key-badge badge-high">High</span></td>
+            <td><strong>Default choice</strong> for KNN, SVM, Logistic Regression, PCA, Ridge/Lasso, and Gradient Descent.</td>
+            <td>Outliers distort mean and variance; does not bound data into [0, 1]; does not make skewed data normal.</td>
+          </tr>
+          <tr>
+            <td><strong>Robust Scaling</strong></td>
+            <td>Column-wise (Features)</td>
+            <td>Median, IQR (Q3 - Q1)</td>
+            <td>Unbounded (Centered at 0)</td>
+            <td><span class="key-badge badge-robust">Very Low (Resistant)</span></td>
+            <td>Datasets with severe outliers, financial transactions with fraud spikes, heavy-tailed data.</td>
+            <td>Does not guarantee fixed bounds; does not remove outliers; less intuitive than Z-scores.</td>
+          </tr>
+          <tr>
+            <td><strong>L1 Normalization</strong></td>
+            <td>Row-wise (Samples)</td>
+            <td>Sum of absolute values <code>&Sigma;|x<sub>i</sub>|</code></td>
+            <td>Unit Sum <code>&Sigma;|x&apos;<sub>i</sub>| = 1.0</code></td>
+            <td><span class="key-badge badge-std">Moderate</span></td>
+            <td>Converting feature counts into probability distributions; sparse frequency models.</td>
+            <td>Discards overall magnitude/volume information of the sample row entirely.</td>
+          </tr>
+          <tr>
+            <td><strong>L2 Normalization</strong></td>
+            <td>Row-wise (Samples)</td>
+            <td>Euclidean Norm <code>&radic;&Sigma;x<sub>i</sub><sup>2</sup></code></td>
+            <td>Unit Length <code>||x&apos;||<sub>2</sub> = 1.0</code></td>
+            <td><span class="key-badge badge-std">Moderate</span></td>
+            <td>Cosine similarity, text mining (TF-IDF), vector embeddings, search ranking.</td>
+            <td>Discards sample magnitude; meaningless for general tabular columns with mixed units.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The 5-Step Beginner Decision Guide</h3>
+    <ol>
+      <li><strong>Step 1: Check your model family.</strong>
+        <br>If using pure tree-based models (Random Forest, Gradient Boosting, XGBoost), scaling is <em>optional and usually unnecessary</em>. If using KNN, SVM, K-Means, PCA, Linear/Logistic regression with regularization, or Neural Networks, scaling is <strong>mandatory</strong>.
+      </li>
+      <li><strong>Step 2: Check for extreme outliers.</strong>
+        <br>If your dataset contains massive outliers (e.g. billionaire salaries, viral click bursts), use <strong>RobustScaler</strong> to prevent parameter corruption.
+      </li>
+      <li><strong>Step 3: Check if bounded intervals are required.</strong>
+        <br>If your model requires non-negative inputs or strictly bounded values in <code>[0, 1]</code> (e.g. neural network sigmoid layers or image RGB channels), use <strong>MinMaxScaler</strong>.
+      </li>
+      <li><strong>Step 4: Use StandardScaler as the universal default.</strong>
+        <br>For general tabular datasets without extreme outliers, <strong>StandardScaler</strong> provides the most numerically stable gradients and isotropic distances for distance-based estimators.
+      </li>
+      <li><strong>Step 5: Use Normalizer only for row-wise vector direction.</strong>
+        <br>Never apply <code>Normalizer</code> across tabular features with mixed physical units. Reserve it for document vectors, embeddings, and cosine similarity tasks.
+      </li>
+    </ol>
+  </section>
+
+
+  <!-- SECTION 9: IMPORTANT GRAPHS AND VISUAL EXPLANATIONS -->
+  <section id="sec-09" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 09</span>
+      <h2 class="section-title">Important Graphs and Visual Explanations</h2>
+    </div>
+    <p class="section-intro">
+      Visualizing numerical data before and after scaling is essential for diagnosing range disparities, validating mathematical transformations, and verifying that distribution shapes remain uncorrupted.
+    </p>
+
+    <!-- GRAPH 1: ORIGINAL FEATURE RANGES -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 280" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 1: ORIGINAL FEATURE RANGES ACROSS NUMERICAL FEATURES</text>
+
+  <!-- 3 Separate Panels -->
+  <!-- Panel A: Age -->
+  <g transform="translate(30, 45)">
+    <rect width="250" height="210" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#3B82F6" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Age (Years)</text>
+    
+    <!-- Y Axis -->
+    <line x1="45" y1="40" x2="45" y2="175" stroke="#94A3B8" stroke-width="1.5" />
+    <line x1="40" y1="50" x2="45" y2="50" stroke="#94A3B8" />
+    <text x="35" y="54" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">60</text>
+    <line x1="40" y1="110" x2="45" y2="110" stroke="#94A3B8" />
+    <text x="35" y="114" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">40</text>
+    <line x1="40" y1="170" x2="45" y2="170" stroke="#94A3B8" />
+    <text x="35" y="174" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">20</text>
+
+    <!-- Range Bar -->
+    <rect x="90" y="50" width="70" height="120" rx="4" fill="#DBEAFE" stroke="#3B82F6" stroke-width="2" />
+    <text x="125" y="115" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#1E3A8A">Span: 38</text>
+    <text x="125" y="195" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">Range: [22 – 60]</text>
+  </g>
+
+  <!-- Panel B: Annual Income -->
+  <g transform="translate(315, 45)">
+    <rect width="250" height="210" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#EF4444" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Annual Income ($)</text>
+
+    <!-- Y Axis -->
+    <line x1="55" y1="40" x2="55" y2="175" stroke="#94A3B8" stroke-width="1.5" />
+    <line x1="50" y1="45" x2="55" y2="45" stroke="#94A3B8" />
+    <text x="45" y="49" text-anchor="end" font-family="monospace" font-size="9" fill="#991B1B">850k</text>
+    <line x1="50" y1="120" x2="55" y2="120" stroke="#94A3B8" />
+    <text x="45" y="124" text-anchor="end" font-family="monospace" font-size="9" fill="#991B1B">100k</text>
+    <line x1="50" y1="170" x2="55" y2="170" stroke="#94A3B8" />
+    <text x="45" y="174" text-anchor="end" font-family="monospace" font-size="9" fill="#991B1B">30k</text>
+
+    <!-- Range Bar -->
+    <rect x="90" y="45" width="70" height="125" rx="4" fill="#FEE2E2" stroke="#EF4444" stroke-width="2" />
+    <text x="125" y="105" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">Span: 818,000</text>
+    <text x="125" y="125" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C">(21,500✕ Age!)</text>
+    <text x="125" y="195" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#7F1D1D">Range: [32k – 850k]</text>
+  </g>
+
+  <!-- Panel C: Experience -->
+  <g transform="translate(600, 45)">
+    <rect width="250" height="210" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <rect x="0" y="0" width="250" height="28" rx="8" fill="#10B981" />
+    <text x="125" y="19" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Experience (Years)</text>
+
+    <!-- Y Axis -->
+    <line x1="45" y1="40" x2="45" y2="175" stroke="#94A3B8" stroke-width="1.5" />
+    <line x1="40" y1="50" x2="45" y2="50" stroke="#94A3B8" />
+    <text x="35" y="54" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">30</text>
+    <line x1="40" y1="110" x2="45" y2="110" stroke="#94A3B8" />
+    <text x="35" y="114" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">15</text>
+    <line x1="40" y1="170" x2="45" y2="170" stroke="#94A3B8" />
+    <text x="35" y="174" text-anchor="end" font-family="monospace" font-size="10" fill="#64748B">1</text>
+
+    <!-- Range Bar -->
+    <rect x="90" y="50" width="70" height="120" rx="4" fill="#DCFCE7" stroke="#10B981" stroke-width="2" />
+    <text x="125" y="115" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">Span: 29</text>
+    <text x="125" y="195" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" fill="#475569">Range: [1 – 30]</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Graph 1: Original feature ranges across Age (years), Annual Income ($), and Experience (years).</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Interpreting Range Disparity:</div>
+        <p>
+          On a shared raw numerical axis, plotting Age (span 38) alongside Annual Income (span 818,000) causes the Age bar to completely disappear. Separate panel plots with clear axis markings allow us to detect the 21,500&times; order-of-magnitude imbalance that breaks distance-based estimators.
+        </p>
+      </div>
+      <div class="diagram-takeaway">
+        <strong>Practical Takeaway:</strong> When features span different physical units, always inspect individual column spans and summary statistics prior to modeling.
+      </div>
+    </div>
+
+    <!-- GRAPH 5: DISTRIBUTION PRESERVATION -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 250" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 5: DISTRIBUTION SHAPE PRESERVATION UNDER LINEAR SCALING</text>
+
+  <!-- Left: Original Bimodal / Skewed Distribution -->
+  <g transform="translate(60, 45)">
+    <rect width="340" height="180" rx="8" fill="#F8FAFC" stroke="#E2E8F0" />
+    <text x="170" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">ORIGINAL FEATURE DISTRIBUTION</text>
+
+    <!-- Skewed histogram bars -->
+    <rect x="40" y="120" width="30" height="30" fill="#93C5FD" stroke="#3B82F6" />
+    <rect x="75" y="80" width="30" height="70" fill="#60A5FA" stroke="#3B82F6" />
+    <rect x="110" y="50" width="30" height="100" fill="#3B82F6" stroke="#1D4ED8" />
+    <rect x="145" y="90" width="30" height="60" fill="#60A5FA" stroke="#3B82F6" />
+    <rect x="180" y="115" width="30" height="35" fill="#93C5FD" stroke="#3B82F6" />
+    <rect x="215" y="135" width="30" height="15" fill="#BFDBFE" stroke="#3B82F6" />
+
+    <line x1="30" y1="150" x2="260" y2="150" stroke="#475569" stroke-width="1.5" />
+    <text x="40" y="165" font-family="monospace" font-size="9" fill="#64748B">$30k</text>
+    <text x="125" y="165" font-family="monospace" font-size="9" fill="#64748B">$70k</text>
+    <text x="230" y="165" font-family="monospace" font-size="9" fill="#64748B">$120k</text>
+  </g>
+
+  <!-- Equality Arrow in Middle -->
+  <g transform="translate(425, 100)">
+    <text x="15" y="0" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="20" font-weight="800" fill="#4F46E5">⇔</text>
+    <text x="15" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#4F46E5">Exact Shape</text>
+    <text x="15" y="34" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#6366F1">Preserved</text>
+  </g>
+
+  <!-- Right: Standardized Distribution (Identical relative heights!) -->
+  <g transform="translate(480, 45)">
+    <rect width="340" height="180" rx="8" fill="#F0FDF4" stroke="#BBF7D0" />
+    <text x="170" y="22" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">STANDARDIZED DISTRIBUTION (Z-SCORE)</text>
+
+    <!-- Identical shape bars, rescaled axis -->
+    <rect x="40" y="120" width="30" height="30" fill="#86EFAC" stroke="#10B981" />
+    <rect x="75" y="80" width="30" height="70" fill="#4ADE80" stroke="#10B981" />
+    <rect x="110" y="50" width="30" height="100" fill="#10B981" stroke="#047857" />
+    <rect x="145" y="90" width="30" height="60" fill="#4ADE80" stroke="#10B981" />
+    <rect x="180" y="115" width="30" height="35" fill="#86EFAC" stroke="#10B981" />
+    <rect x="215" y="135" width="30" height="15" fill="#BBF7D0" stroke="#10B981" />
+
+    <line x1="30" y1="150" x2="260" y2="150" stroke="#475569" stroke-width="1.5" />
+    <text x="40" y="165" font-family="monospace" font-size="9" fill="#065F46">-1.8z</text>
+    <text x="125" y="165" font-family="monospace" font-size="9" font-weight="700" fill="#DC2626">0.0z (μ)</text>
+    <text x="230" y="165" font-family="monospace" font-size="9" fill="#065F46">+2.1z</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Graph 5: Distribution shape preservation under linear standardization.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> How to Read This Distribution Comparison:</div>
+        <p>
+          Notice how the relative bar heights in the raw histogram (left) are <strong>100% identical</strong> to the standardized histogram (right). Linear scaling shifts the origin and scales the grid lines, but it preserves skewness, kurtosis, and multi-modal clustering.
+        </p>
+      </div>
+      <div class="diagram-takeaway">
+        <strong>Mathematical Truth:</strong> Standardizing a non-Gaussian feature does <em>not</em> make it Gaussian. It only ensures zero mean and unit variance.
+      </div>
+    </div>
+
+    <!-- GRAPH 8: ALGORITHM SENSITIVITY -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 8: MACHINE LEARNING ALGORITHM SENSITIVITY TO FEATURE SCALE</text>
+
+  <!-- 3 Groups: Highly Sensitive (Red), Moderately Sensitive (Amber), Scale Invariant (Green) -->
+  <!-- Group 1: Highly Sensitive -->
+  <g transform="translate(30, 45)">
+    <rect width="250" height="210" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="30" rx="8" fill="#EF4444" />
+    <text x="125" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">✕ HIGHLY SENSITIVE (MANDATORY)</text>
+
+    <text x="18" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#991B1B">• K-Nearest Neighbors (KNN)</text>
+    <text x="28" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">Euclidean distance dominated by largest scale.</text>
+
+    <text x="18" y="95" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#991B1B">• K-Means Clustering</text>
+    <text x="28" y="110" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">Cluster centroids distort along large variance axes.</text>
+
+    <text x="18" y="135" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#991B1B">• Support Vector Machines (SVM)</text>
+    <text x="28" y="150" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">RBF kernel bandwidth and margin collapse.</text>
+
+    <text x="18" y="175" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#991B1B">• Principal Component Analysis (PCA)</text>
+    <text x="28" y="190" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">Max variance direction aligns with raw scale.</text>
+  </g>
+
+  <!-- Group 2: Moderately Sensitive -->
+  <g transform="translate(315, 45)">
+    <rect width="250" height="210" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="30" rx="8" fill="#F59E0B" />
+    <text x="125" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">! MODERATELY SENSITIVE</text>
+
+    <text x="18" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#92400E">• Regularized Linear (Ridge / Lasso)</text>
+    <text x="28" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">L1/L2 penalties penalize large scale weights unfairly.</text>
+
+    <text x="18" y="100" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#92400E">• Logistic Regression</text>
+    <text x="28" y="115" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">Gradient descent converges much faster with scaling.</text>
+
+    <text x="18" y="145" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#92400E">• Deep Neural Networks (MLP / CNN)</text>
+    <text x="28" y="160" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">Prevents vanishing / exploding gradients.</text>
+    <text x="28" y="175" font-family="-apple-system, sans-serif" font-size="10" fill="#78350F">Accelerates backpropagation optimizer.</text>
+  </g>
+
+  <!-- Group 3: Scale Invariant -->
+  <g transform="translate(600, 45)">
+    <rect width="250" height="210" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <rect x="0" y="0" width="250" height="30" rx="8" fill="#10B981" />
+    <text x="125" y="20" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">✓ SCALE INVARIANT (TREE MODELS)</text>
+
+    <text x="18" y="55" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">• Decision Trees (CART / ID3)</text>
+    <text x="28" y="70" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Splits on ordering (X &gt; threshold), not distance.</text>
+
+    <text x="18" y="100" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">• Random Forests</text>
+    <text x="28" y="115" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Monotonic scaling does not change optimal cutpoints.</text>
+
+    <text x="18" y="145" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#065F46">• Gradient Boosted Trees (XGB / LGBM)</text>
+    <text x="28" y="160" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Works directly on raw unscaled numerical values.</text>
+    <text x="28" y="175" font-family="-apple-system, sans-serif" font-size="10" fill="#047857">Scaling neither helps nor hurts tree splits.</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Graph 8: Comprehensive algorithm scale sensitivity taxonomy.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Grouping Rationale:</div>
+        <ul>
+          <li><strong>Red Group (Mandatory):</strong> KNN, K-Means, SVM, PCA calculate raw geometric distances or covariances. Unscaled features guarantee failure.</li>
+          <li><strong>Amber Group (Recommended):</strong> Regularized linear models and Neural Networks converge faster and avoid regularizing small-scale weights unfairly.</li>
+          <li><strong>Green Group (Invariant):</strong> Decision trees and boosted ensembles evaluate monotonic rank splits; scaling neither improves nor hurts tree splits.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- GRAPH 9: DECISION FLOWCHART -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 320" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">GRAPH 9: PRACTICAL FEATURE SCALING DECISION FLOWCHART</text>
+
+  <!-- Node 1: Start -->
+  <rect x="360" y="42" width="160" height="34" rx="17" fill="#4F46E5" />
+  <text x="440" y="63" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Numerical Feature X</text>
+
+  <!-- Arrow down -->
+  <line x1="440" y1="76" x2="440" y2="98" stroke="#64748B" stroke-width="2" />
+  <polygon points="440,98 436,92 444,92" fill="#64748B" />
+
+  <!-- Decision 1: Tree model only? -->
+  <rect x="330" y="98" width="220" height="38" rx="6" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.5" />
+  <text x="440" y="115" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">Using Tree-based Model ONLY?</text>
+  <text x="440" y="128" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#4338CA">(Random Forest, XGBoost, Decision Tree)</text>
+
+  <!-- Yes -> No scaling needed -->
+  <line x1="550" y1="117" x2="680" y2="117" stroke="#10B981" stroke-width="2" />
+  <polygon points="680,117 674,113 674,121" fill="#10B981" />
+  <text x="610" y="110" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#047857">YES →</text>
+  <rect x="680" y="99" width="170" height="36" rx="6" fill="#F0FDF4" stroke="#10B981" />
+  <text x="765" y="116" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">NO SCALING NEEDED</text>
+  <text x="765" y="129" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">Trees split on rank order</text>
+
+  <!-- No -> Distance/Gradient based -->
+  <line x1="440" y1="136" x2="440" y2="160" stroke="#64748B" stroke-width="2" />
+  <polygon points="440,160 436,154 444,154" fill="#64748B" />
+  <text x="450" y="152" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#475569">NO</text>
+
+  <!-- Decision 2: Extreme Outliers? -->
+  <rect x="330" y="160" width="220" height="38" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5" />
+  <text x="440" y="177" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#78350F">Severe Outliers Present?</text>
+  <text x="440" y="190" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#92400E">(Heavy tails / extreme income / spikes)</text>
+
+  <!-- Yes -> RobustScaler -->
+  <line x1="330" y1="179" x2="200" y2="179" stroke="#D97706" stroke-width="2" />
+  <polygon points="200,179 206,175 206,183" fill="#D97706" />
+  <text x="250" y="172" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#B45309">← YES</text>
+  <rect x="30" y="161" width="170" height="36" rx="6" fill="#FFFBEB" stroke="#D97706" />
+  <text x="115" y="178" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#92400E">ROBUSTSCALER</text>
+  <text x="115" y="191" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#B45309">Uses Median &amp; IQR</text>
+
+  <!-- No -> Next Decision -->
+  <line x1="440" y1="198" x2="440" y2="222" stroke="#64748B" stroke-width="2" />
+  <polygon points="440,222 436,216 444,216" fill="#64748B" />
+  <text x="450" y="214" font-family="-apple-system, sans-serif" font-size="10" font-weight="700" fill="#475569">NO</text>
+
+  <!-- Decision 3: Fixed Bound [0, 1] Needed? -->
+  <rect x="320" y="222" width="240" height="38" rx="6" fill="#F0F9FF" stroke="#0284C7" stroke-width="1.5" />
+  <text x="440" y="238" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#0369A1">Strict Bounded Range [0, 1] Required?</text>
+  <text x="440" y="251" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#0284C7">(Image pixels, Neural activation inputs, Sigmoid)</text>
+
+  <!-- Yes -> MinMaxScaler -->
+  <line x1="320" y1="241" x2="200" y2="241" stroke="#0284C7" stroke-width="2" />
+  <polygon points="200,241 206,237 206,245" fill="#0284C7" />
+  <text x="245" y="234" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#0369A1">← YES</text>
+  <rect x="30" y="223" width="170" height="36" rx="6" fill="#F0F9FF" stroke="#0284C7" />
+  <text x="115" y="240" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#0369A1">MINMAXSCALER</text>
+  <text x="115" y="253" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#0284C7">Bounds to exact [0, 1]</text>
+
+  <!-- No -> StandardScaler -->
+  <line x1="560" y1="241" x2="680" y2="241" stroke="#4F46E5" stroke-width="2" />
+  <polygon points="680,241 674,237 674,245" fill="#4F46E5" />
+  <text x="605" y="234" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#4338CA">NO (DEFAULT) →</text>
+  <rect x="680" y="223" width="170" height="36" rx="6" fill="#EEF2FF" stroke="#4F46E5" />
+  <text x="765" y="240" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#312E81">STANDARDSCALER</text>
+  <text x="765" y="253" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#4338CA">Centers at 0, unit variance</text>
+
+  <!-- Bottom Caution Banner -->
+  <rect x="30" y="278" width="820" height="30" rx="6" fill="#FEF2F2" stroke="#FCA5A5" />
+  <text x="440" y="297" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#DC2626">■ MANDATORY MLOPS RULE: Always fit scalers on X_train ONLY! Never call fit() on full dataset or X_test!</text>
+</svg>
+      </div>
+      <div class="diagram-caption">Graph 9: Production Feature Scaling Decision Flowchart.</div>
+      <div class="how-to-read">
+        <div class="how-to-read-title"><span>&#128269;</span> Using the Flowchart:</div>
+        <p>
+          Follow the decision nodes sequentially: First confirm if a tree-based model is used (no scaling). Next check for severe outliers (RobustScaler). Next check for strict [0, 1] bounded input constraints (MinMaxScaler). Otherwise, adopt StandardScaler as the standard industry default.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 10: WHICH ALGORITHMS NEED SCALING? -->
+  <section id="sec-10" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 10</span>
+      <h2 class="section-title">Which Algorithms Need Scaling?</h2>
+    </div>
+    <p class="section-intro">
+      Understanding the exact mathematical inner workings of machine learning algorithms explains why some models fail catastrophically on unscaled features while others remain completely indifferent.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Algorithm</th>
+            <th>Needs Scaling?</th>
+            <th>Primary Mathematical Reason</th>
+            <th>Recommended Scaler</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>K-Nearest Neighbors (KNN)</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Distance function: <code>d = &radic;&Sigma;(x<sub>1</sub> - x<sub>2</sub>)<sup>2</sup></code>. Large features dominate the neighborhood search entirely.</td>
+            <td><code>StandardScaler</code> or <code>RobustScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>K-Means Clustering</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Minimizes within-cluster sum of squares. Unscaled data stretches clusters into elongated ellipses along the dominant axis.</td>
+            <td><code>StandardScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Support Vector Machines (SVM)</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Maximizes margin between support vectors: <code>2 / ||w||</code>. RBF kernel computes <code>exp(-&gamma;||x<sub>1</sub> - x<sub>2</sub>||<sup>2</sup>)</code>.</td>
+            <td><code>StandardScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Logistic Regression</strong></td>
+            <td><span class="key-badge badge-std">RECOMMENDED</span></td>
+            <td>Accelerates gradient descent convergence; essential when L1/L2 penalties are active.</td>
+            <td><code>StandardScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Regularized Linear (Ridge / Lasso)</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Penalizes weight magnitudes (&Sigma;w<sub>j</sub><sup>2</sup> or &Sigma;|w<sub>j</sub>|). Unscaled small features get unfairly erased by the penalty.</td>
+            <td><code>StandardScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Deep Neural Networks (MLP / CNN)</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Prevents vanishing/exploding gradients in backpropagation; matches activation function input sweet spots (tanh, sigmoid, ReLU).</td>
+            <td><code>StandardScaler</code> or <code>MinMaxScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Principal Component Analysis (PCA)</strong></td>
+            <td><span class="key-badge badge-high">MANDATORY</span></td>
+            <td>Eigenvalue decomposition of covariance matrix. Unscaled features with huge numbers artificially masquerade as the principal components.</td>
+            <td><code>StandardScaler</code></td>
+          </tr>
+          <tr>
+            <td><strong>Decision Trees</strong></td>
+            <td><span class="key-badge badge-robust">NO (Invariant)</span></td>
+            <td>Evaluates single-feature threshold inequality: <code>x &le; t</code>. Monotonic scaling transforms the threshold into <code>t&apos;</code> with identical split purity!</td>
+            <td>None (Raw data)</td>
+          </tr>
+          <tr>
+            <td><strong>Random Forests</strong></td>
+            <td><span class="key-badge badge-robust">NO (Invariant)</span></td>
+            <td>Ensemble of bagged decision trees. Invariant to any monotonic transformation of individual feature columns.</td>
+            <td>None (Raw data)</td>
+          </tr>
+          <tr>
+            <td><strong>Gradient Boosted Trees (XGB / LGBM)</strong></td>
+            <td><span class="key-badge badge-robust">NO (Invariant)</span></td>
+            <td>Splits on numerical quantile bins. Raw unscaled data is processed directly without performance degradation.</td>
+            <td>None (Raw data)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 11: DATA LEAKAGE AND CORRECT SCALING WORKFLOW -->
+  <section id="sec-11" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 11</span>
+      <h2 class="section-title">Data Leakage and Correct Scaling Workflow</h2>
+    </div>
+    <p class="section-intro">
+      <strong>Data Leakage</strong> in preprocessing occurs when information from outside the training dataset (such as validation or test splits) is inadvertently used to transform training data. This artificially inflates offline validation scores while guaranteeing degraded performance in production.
+    </p>
+
+    <!-- FIGURE 7.11: LEAKAGE WORKFLOW ARCHITECTURE -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 270" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <rect x="20" y="10" width="840" height="32" rx="6" fill="#F8FAFC" stroke="#E2E8F0" />
+  <text x="440" y="31" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="13" font-weight="700" fill="#1E293B">PRODUCTION PIPELINE ARCHITECTURE: PREVENTING PREPROCESSING DATA LEAKAGE</text>
+
+  <!-- Top Bad Practice -->
+  <g transform="translate(30, 52)">
+    <rect width="820" height="85" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+    <text x="20" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#DC2626">✕ THE DATA LEAKAGE DISASTER (FIT BEFORE SPLIT):</text>
+
+    <!-- Box 1 -->
+    <rect x="20" y="34" width="210" height="38" rx="6" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="125" y="50" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">Full Raw Dataset</text>
+    <text x="125" y="64" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C">Scaler.fit_transform(X_all)</text>
+
+    <!-- Arrow -->
+    <path d="M235, 53 L265, 53" stroke="#DC2626" stroke-width="2" />
+    <polygon points="265,49 273,53 265,57" fill="#DC2626" />
+
+    <!-- Box 2 -->
+    <rect x="275" y="34" width="250" height="38" rx="6" fill="#FFFFFF" stroke="#FCA5A5" />
+    <text x="400" y="50" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">train_test_split(X_scaled)</text>
+    <text x="400" y="64" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#B91C1C">Test μ and σ leaked into training!</text>
+
+    <!-- Arrow -->
+    <path d="M530, 53 L560, 53" stroke="#DC2626" stroke-width="2" />
+    <polygon points="560,49 568,53 560,57" fill="#DC2626" />
+
+    <!-- Box 3 -->
+    <rect x="570" y="34" width="230" height="38" rx="6" fill="#FEE2E2" stroke="#DC2626" />
+    <text x="685" y="50" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#991B1B">Overly Optimistic Validation</text>
+    <text x="685" y="64" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="10" fill="#7F1D1D">FAILS silently in Production!</text>
+  </g>
+
+  <!-- Bottom Good Practice -->
+  <g transform="translate(30, 150)">
+    <rect width="820" height="105" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+    <text x="20" y="22" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">✓ THE PRODUCTION STANDARD (LEAKAGE-SAFE PIPELINE):</text>
+
+    <!-- Step 1 -->
+    <rect x="20" y="34" width="180" height="55" rx="6" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="110" y="52" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">1. Split FIRST</text>
+    <text x="110" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">train_test_split()</text>
+    <text x="110" y="80" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">X_train vs X_test</text>
+
+    <!-- Arrow -->
+    <path d="M205, 60 L235, 60" stroke="#10B981" stroke-width="2" />
+    <polygon points="235,56 243,60 235,64" fill="#10B981" />
+
+    <!-- Step 2 -->
+    <rect x="245" y="34" width="260" height="55" rx="6" fill="#FFFFFF" stroke="#86EFAC" />
+    <text x="375" y="52" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">2. Pipeline.fit(X_train)</text>
+    <text x="375" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">scaler.fit(X_train)</text>
+    <text x="375" y="80" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#047857">Learns μ_train &amp; σ_train only!</text>
+
+    <!-- Arrow -->
+    <path d="M510, 60 L540, 60" stroke="#10B981" stroke-width="2" />
+    <polygon points="540,56 548,60 540,64" fill="#10B981" />
+
+    <!-- Step 3 -->
+    <rect x="550" y="34" width="250" height="55" rx="6" fill="#DCFCE7" stroke="#16A34A" />
+    <text x="675" y="52" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="11" font-weight="700" fill="#065F46">3. Pipeline.transform(X_test)</text>
+    <text x="675" y="68" text-anchor="middle" font-family="monospace" font-size="10" fill="#047857">scaler.transform(X_test)</text>
+    <text x="675" y="80" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="9" fill="#065F46">✓ 100% Leakage-Free &amp; Robust</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.11: Architecture of preprocessing data leakage vs the leak-free Scikit-Learn Pipeline standard.</div>
+    </div>
+
+    <h3>Why Scalers Cause Data Leakage</h3>
+    <p>
+      Every feature scaler learns statistics from the dataset passed to its <code>fit()</code> method:
+    </p>
+    <ul>
+      <li><code>MinMaxScaler</code> learns: <code>x<sub>min</sub></code> and <code>x<sub>max</sub></code></li>
+      <li><code>StandardScaler</code> learns: <code>&mu;</code> (mean) and <code>&sigma;</code> (standard deviation)</li>
+      <li><code>RobustScaler</code> learns: <code>Median</code> and <code>IQR</code></li>
+    </ul>
+
+    <div class="card card-warn">
+      <div class="card-title"><span>&#9888;</span> The "Fit Before Split" Disaster</div>
+      <p>
+        If you run <code>scaler.fit_transform(X)</code> on your entire dataset <strong>before</strong> calling <code>train_test_split()</code>:
+      </p>
+      <p>
+        The computed mean <code>&mu;</code> and standard deviation <code>&sigma;</code> contain the future test observations! Your model learns from a feature space that was calibrated using test distribution parameters. When deployed in production, incoming unseen customers cannot contribute to the training mean, causing the model&apos;s predictions to drift and fail.
+      </p>
+    </div>
+
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9777;</span> The Three Fundamental Preprocessing Methods</div>
+      <ul>
+        <li><code>fit(X_train)</code>: Computes and stores the summary statistics (&mu;, &sigma;, min, max) from <code>X_train</code> only. Returns the fitted scaler object.</li>
+        <li><code>transform(X)</code>: Applies the previously learned statistics to transform <code>X</code> into scaled values. Computes NO new statistics.</li>
+        <li><code>fit_transform(X_train)</code>: Combines both steps efficiently for the training split only.</li>
+      </ul>
+      <p>
+        <strong>Production Golden Rule:</strong> NEVER call <code>fit()</code> or <code>fit_transform()</code> on test or validation data! Always use <code>scaler.transform(X_test)</code>.
+      </p>
+    </div>
+
+    <h3>Building a Leak-Free Pipeline with Scikit-Learn</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">python_leakfree_pipeline.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+
+# 1. Create synthetic dataset
+X = np.array([[22, 32000], [25, 45000], [45, 95000], [50, 110000], [29, 48000], [38, 78000]])
+y = np.array([0, 0, 1, 1, 0, 1])
+
+# 2. SPLIT FIRST (Mandatory Step 1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=42)
+
+# 3. Encapsulate Scaler and Estimator inside Pipeline
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('model', KNeighborsClassifier(n_neighbors=2))
+])
+
+# 4. Fit pipeline on X_train ONLY!
+# StandardScaler.fit() executes ONLY on X_train internally.
+pipeline.fit(X_train, y_train)
+
+# 5. Evaluate on held-out test set
+# Internally calls StandardScaler.transform() using X_train statistics!
+test_accuracy = pipeline.score(X_test, y_test)
+print(f"Leak-Free Test Accuracy: {test_accuracy:.2f}")
+
+# Verify fitted statistics match training split only:
+fitted_scaler = pipeline.named_steps['scaler']
+print("Pipeline Scaler Mean:", fitted_scaler.mean_)
+print("Actual X_train Mean:", X_train.mean(axis=0))
+assert np.allclose(fitted_scaler.mean_, X_train.mean(axis=0)), "Leakage detected!"</code></pre>
+    </div>
+  </section>
+
+  <!-- SECTION 12: HANDLING SPECIAL CASES -->
+  <section id="sec-12" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 12</span>
+      <h2 class="section-title">Handling Special Cases &amp; Edge Features</h2>
+    </div>
+    <p class="section-intro">
+      Real-world tabular datasets contain edge cases, sparse matrices, and mixed feature types that require specialized preprocessing policies.
+    </p>
+
+    <!-- FIGURE 7.12: SPECIAL CASES GRID -->
+    <div class="diagram-container">
+      <div class="svg-diagram-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="100%" style="background:#FFFFFF; border-radius:12px;">
+  <!-- Title -->
+  <text x="440" y="24" text-anchor="middle" font-family="-apple-system, sans-serif" font-size="14" font-weight="700" fill="#1E293B">SPECIAL CASES AND EDGE-CASE HANDLING IN FEATURE SCALING</text>
+
+  <!-- 4 Quadrants -->
+  <!-- Case 1: Constant Features -->
+  <g transform="translate(30, 42)">
+    <rect width="395" height="88" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#1E3A8A">1. Constant Features (Variance = 0)</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">If all values are identical (e.g. 20, 20, 20):</text>
+    <text x="18" y="60" font-family="monospace" font-size="10" fill="#0284C7">• MinMaxScaler maps to 0.0 (avoids division by zero)</text>
+    <text x="18" y="76" font-family="monospace" font-size="10" fill="#0284C7">• StandardScaler sets scale=1.0 &amp; output=0.0</text>
+  </g>
+
+  <!-- Case 2: One-Hot Encoded Features -->
+  <g transform="translate(455, 42)">
+    <rect width="395" height="88" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#7C3AED">2. One-Hot Encoded Binary Columns</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">Columns with {0, 1} indicator values:</text>
+    <text x="18" y="60" font-family="-apple-system, sans-serif" font-size="10" fill="#581C87">• DO NOT scale with StandardScaler (destroys sparsity &amp; interpretability)</text>
+    <text x="18" y="76" font-family="-apple-system, sans-serif" font-size="10" fill="#581C87">• Leave raw {0, 1} untouched or use ColumnTransformer!</text>
+  </g>
+
+  <!-- Case 3: Extreme Outliers -->
+  <g transform="translate(30, 140)">
+    <rect width="395" height="88" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#D97706">3. Extreme Outliers &amp; Heavy Tails</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">Features with billionaires, viral spikes, or fraud bursts:</text>
+    <text x="18" y="60" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">• Use RobustScaler (median &amp; IQR resist outlier corruption)</text>
+    <text x="18" y="76" font-family="-apple-system, sans-serif" font-size="10" fill="#92400E">• Or apply Log Transformation np.log1p(x) if strictly positive</text>
+  </g>
+
+  <!-- Case 4: Sparse Matrices -->
+  <g transform="translate(455, 140)">
+    <rect width="395" height="88" rx="8" fill="#F8FAFC" stroke="#CBD5E1" />
+    <text x="18" y="24" font-family="-apple-system, sans-serif" font-size="12" font-weight="700" fill="#16A34A">4. Sparse Matrices (Text / Bag-of-Words)</text>
+    <text x="18" y="44" font-family="-apple-system, sans-serif" font-size="10" fill="#475569">High-dimensional matrices with 99% zeros:</text>
+    <text x="18" y="60" font-family="-apple-system, sans-serif" font-size="10" fill="#065F46">• StandardScaler(with_mean=False) preserves zero sparsity</text>
+    <text x="18" y="76" font-family="-apple-system, sans-serif" font-size="10" fill="#065F46">• Centering with_mean=True dense-expands matrix → Out of Memory!</text>
+  </g>
+</svg>
+      </div>
+      <div class="diagram-caption">Figure 7.12: Defensive engineering policies for constant features, binary columns, extreme outliers, and sparse matrices.</div>
+    </div>
+
+    <h3>10 Defensive Engineering Policies</h3>
+    <ol>
+      <li><strong>Constant Features (Variance = 0):</strong>
+        <br>Columns where all values are identical provide zero predictive signal. Both <code>MinMaxScaler</code> and <code>StandardScaler</code> output zeros. Safest action: Drop zero-variance columns prior to scaling using <code>VarianceThreshold</code>.
+      </li>
+      <li><strong>Missing Values (NaNs):</strong>
+        <br>Scikit-Learn scalers require complete numerical arrays. Always apply numerical imputation (Mean, Median, or IterativeImputer) <strong>before</strong> calling the scaler in your pipeline.
+      </li>
+      <li><strong>One-Hot Encoded Binary Columns ((0, 1)):</strong>
+        <br>Never standardize binary dummy features with <code>StandardScaler</code>! Centering them shifts zeros to negative floats, destroying matrix sparsity and intuitive binary interpretation. Keep them untouched in [0, 1].
+      </li>
+      <li><strong>Sparse Matrices (Text / Bag-of-Words):</strong>
+        <br>High-dimensional sparse matrices (e.g. TF-IDF) contain 99% zeros. Calling <code>StandardScaler(with_mean=True)</code> subtracts the mean from every zero, expanding the sparse matrix into a massive dense array that triggers Out-of-Memory (OOM) crashes. <strong>Always use <code>StandardScaler(with_mean=False)</code></strong> to scale variance without centering zeros!
+      </li>
+      <li><strong>Extreme Skewness (Log Transformation vs Scaling):</strong>
+        <br>Scaling does not resolve extreme right-skewness. For positive quantities like revenue or web visits, apply a logarithmic transform (<code>np.log1p(x) = ln(1 + x)</code>) to compress exponential spreads into normal bell curves before scaling.
+      </li>
+      <li><strong>Features Already in Comparable Ranges:</strong>
+        <br>If all features in your dataset naturally span <code>[0 &ndash; 10]</code> (such as survey ratings), scaling may be optional if units are identical.
+      </li>
+      <li><strong>Unseen Test Values Outside Training Bounds:</strong>
+        <br>When using <code>MinMaxScaler</code>, configure <code>MinMaxScaler(clip=True)</code> if downstream models require strictly bounded inputs.
+      </li>
+      <li><strong>Mixed Data Types (Numerical + Categorical):</strong>
+        <br>Use Scikit-Learn&apos;s <code>ColumnTransformer</code> to apply <code>StandardScaler</code> to continuous columns while routing categorical columns through <code>OneHotEncoder</code> simultaneously.
+      </li>
+      <li><strong>Outliers in Real Data:</strong>
+        <br>Never arbitrarily delete outliers without domain justification. Use <code>RobustScaler</code> to build models that remain resilient against extreme events.
+      </li>
+      <li><strong>Inverting Transformations for Predictions:</strong>
+        <br>When scaling a regression target variable (y), use <code>scaler.inverse_transform(y_pred)</code> to return model predictions back to original physical currency/unit scale for stakeholders.
+      </li>
+    </ol>
+  </section>
+
+
+  <!-- SECTION 13: COMPLETE PYTHON PRACTICAL LAB -->
+  <section id="sec-13" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 13</span>
+      <h2 class="section-title">Complete Python Practical Lab</h2>
+    </div>
+    <p class="section-intro">
+      This hands-on laboratory demonstrates the complete end-to-end feature scaling workflow on a realistic 12-sample customer dataset containing Age, Annual Income (with an intentional $850,000 outlier), Experience, and Purchases. All code is deterministic, runnable offline, and validated against Scikit-Learn 1.9+.
+    </p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-title">topic7_complete_practical_lab.py</span>
+        <span class="code-lang">python</span>
+      </div>
+      <pre><code>import numpy as np
+import pandas as pd
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, RobustScaler, Normalizer
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.neighbors import KNeighborsClassifier
+
+print("=== STEP 1: CREATE SYNTHETIC CUSTOMER DATASET ===")
+raw_data = {
+    'Customer_ID': [f'CUST-{i:03d}' for i in range(1, 13)],
+    'Age': [22, 25, 28, 32, 35, 40, 45, 50, 55, 60, 29, 38],
+    'Annual_Income': [32000, 45000, 52000, 68000, 75000, 82000, 95000, 110000, 125000, 850000, 48000, 78000],
+    'Experience_Years': [1, 3, 5, 8, 10, 15, 18, 22, 25, 30, 4, 12],
+    'Purchases_Count': [3, 5, 8, 12, 15, 18, 22, 28, 35, 42, 7, 16],
+    'High_Value': [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1]
+}
+df = pd.DataFrame(raw_data)
+features = ['Age', 'Annual_Income', 'Experience_Years', 'Purchases_Count']
+X = df[features]
+y = df['High_Value']
+
+print("
+=== STEP 2 &amp; 3: INSPECT SUMMARY STATISTICS ===")
+stats = X.describe().T[['min', 'mean', '50%', 'max', 'std']]
+print(np.round(stats, 2))
+
+print("
+=== STEP 4 TO 8: COMPARE THREE FEATURE SCALERS ON INCOME ===")
+# Fit scalers
+X_mm = MinMaxScaler().fit_transform(X)
+X_ss = StandardScaler().fit_transform(X)
+X_rs = RobustScaler().fit_transform(X)
+
+comp_df = pd.DataFrame({
+    'Raw_Income ($)': X['Annual_Income'],
+    'MinMax [0, 1]': np.round(X_mm[:, 1], 3),
+    'Standard (z)': np.round(X_ss[:, 1], 3),
+    'Robust (IQR)': np.round(X_rs[:, 1], 3)
+})
+print(comp_df.iloc[[0, 1, 2, 3, 4, 9]]) # Show first 5 + outlier row 9
+
+print("
+=== STEP 10 TO 12: ROW-WISE VECTOR NORMALIZATION ===")
+sample_vector = np.array([[3.0, 4.0]]) # Vector with length 5.0
+l2_normed = Normalizer(norm='l2').fit_transform(sample_vector)
+l1_normed = Normalizer(norm='l1').fit_transform(sample_vector)
+print("Sample Vector [3, 4] L2 Normalized:", np.round(l2_normed, 3)) # [0.6, 0.8]
+print("Sample Vector [3, 4] L1 Normalized:", np.round(l1_normed, 3)) # [0.429, 0.571]
+
+print("
+=== STEP 13 TO 17: LEAK-FREE PIPELINE TRAINING &amp; ASSERTIONS ===")
+# Split data into train (75%) and test (25%)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42, stratify=y
+)
+
+# Encapsulate in Pipeline (Uses RobustScaler to neutralize $850k outlier)
+pipe = Pipeline([
+    ('scaler', RobustScaler()),
+    ('classifier', KNeighborsClassifier(n_neighbors=3))
+])
+
+# Fit on training data ONLY
+pipe.fit(X_train, y_train)
+train_acc = pipe.score(X_train, y_train)
+test_acc = pipe.score(X_test, y_test)
+
+print(f"Pipeline Train Accuracy: {train_acc:.2f}")
+print(f"Pipeline Test Accuracy:  {test_acc:.2f}")
+
+# Assert zero data leakage
+scaler_fitted = pipe.named_steps['scaler']
+expected_train_median = X_train['Annual_Income'].median()
+assert np.isclose(scaler_fitted.center_[1], expected_train_median), "Data Leakage Detected!"
+print(f"Assertion Passed: Scaler median ({scaler_fitted.center_[1]}) == X_train median ({expected_train_median})")
+print("ALL LAB VERIFICATIONS PASSED SUCCESSFULLY!")</code></pre>
+    </div>
+
+    <h3>Expected Laboratory Execution Output</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Index / Customer</th>
+            <th>Raw Income ($)</th>
+            <th>MinMax [0, 1]</th>
+            <th>Standard (z-score)</th>
+            <th>RobustScaler (IQR)</th>
+            <th>Engineering Interpretation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>0 (CUST-001)</strong></td>
+            <td><code>$32,000</code></td>
+            <td><code>0.000</code></td>
+            <td><code>-0.492</code></td>
+            <td><code>-0.932</code></td>
+            <td>Lowest income in training set; MinMax maps to zero.</td>
+          </tr>
+          <tr>
+            <td><strong>1 (CUST-002)</strong></td>
+            <td><code>$45,000</code></td>
+            <td><code>0.016</code></td>
+            <td><code>-0.432</code></td>
+            <td><code>-0.660</code></td>
+            <td>MinMax compresses $13k jump into tiny 0.016 delta!</td>
+          </tr>
+          <tr>
+            <td><strong>2 (CUST-003)</strong></td>
+            <td><code>$52,000</code></td>
+            <td><code>0.024</code></td>
+            <td><code>-0.399</code></td>
+            <td><code>-0.513</code></td>
+            <td>RobustScaler spreads values smoothly around center.</td>
+          </tr>
+          <tr>
+            <td><strong>3 (CUST-004)</strong></td>
+            <td><code>$68,000</code></td>
+            <td><code>0.044</code></td>
+            <td><code>-0.325</code></td>
+            <td><code>-0.178</code></td>
+            <td>StandardScaler shows negative z due to high mean.</td>
+          </tr>
+          <tr>
+            <td><strong>4 (CUST-005)</strong></td>
+            <td><code>$75,000</code></td>
+            <td><code>0.053</code></td>
+            <td><code>-0.293</code></td>
+            <td><code>-0.031</code></td>
+            <td>Almost exact median of the dataset (Robust &approx; 0).</td>
+          </tr>
+          <tr>
+            <td><strong>9 (CUST-010)</strong></td>
+            <td><code>$850,000</code></td>
+            <td><code>1.000</code></td>
+            <td><code>+3.292</code></td>
+            <td><code>+16.199</code></td>
+            <td><strong>Extreme Outlier:</strong> RobustScaler leaves inlier scale intact!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 14: REAL-LIFE CASE STUDIES -->
+  <section id="sec-14" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 14</span>
+      <h2 class="section-title">Real-Life Industry Case Studies</h2>
+    </div>
+    <p class="section-intro">
+      Examine how proper feature scaling resolved critical production failures across four distinct machine learning domains.
+    </p>
+
+    <!-- Case Study A -->
+    <div class="card card-def">
+      <div class="card-title"><span>&#128179;</span> Case Study A: Customer Credit Risk Modeling (FinTech)</div>
+      <p><strong>The Business Problem:</strong> A retail bank deploys a KNN model to identify credit default risk using Age (18&ndash;70), Credit Inquiries (0&ndash;10), and Annual Salary ($25,000&ndash;$500,000).</p>
+      <p><strong>The Failure:</strong> The model misclassified 22-year-old high-risk applicants as low-risk retirees simply because their salaries were similar. The $475,000 salary span dominated 99.99% of the Euclidean distance calculation, rendering age and inquiry count completely irrelevant.</p>
+      <p><strong>The Remedy:</strong> Applied <code>RobustScaler</code> within a Scikit-Learn Pipeline. Because salary distributions feature high wealth outliers, RobustScaler preserved salary resolution without allowing multi-millionaires to corrupt the model&apos;s distance metric.</p>
+    </div>
+
+    <!-- Case Study B -->
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#127973;</span> Case Study B: Patient ICU Mortality Prediction (Healthcare)</div>
+      <p><strong>The Business Problem:</strong> An intensive care unit uses an SVM classifier with an RBF kernel to predict sepsis using Heart Rate (40&ndash;180 bpm) and Blood White Cell Count (4,000&ndash;30,000 cells/&mu;L).</p>
+      <p><strong>The Failure:</strong> The SVM model produced identical prediction probabilities for all patients. The unscaled White Cell Count caused the RBF kernel distance <code>||x<sub>1</sub> - x<sub>2</sub>||<sup>2</sup></code> to explode into millions, causing <code>exp(-&gamma; &times; distance)</code> to collapse to exact zero across all support vectors.</p>
+      <p><strong>The Remedy:</strong> Standardized both features using <code>StandardScaler</code>. The kernel distances normalized to <code>[0.1 &ndash; 3.5]</code>, restoring proper non-linear classification margins and improving patient triage sensitivity by 34%.</p>
+    </div>
+
+    <!-- Case Study C -->
+    <div class="card card-concept">
+      <div class="card-title"><span>&#127968;</span> Case Study C: Real Estate Valuation with Regularization (PropTech)</div>
+      <p><strong>The Business Problem:</strong> An automated valuation model uses Ridge Regression to predict property sale prices using Square Footage (400&ndash;6,000 sq ft) and Number of Bedrooms (1&ndash;6).</p>
+      <p><strong>The Failure:</strong> Ridge regression completely zeroed out the Bedroom feature weight. Because square footage numbers were in thousands while bedroom numbers were single digits, the model required a huge weight (<code>w &approx; 25,000</code>) for bedrooms. The L2 penalty <code>&lambda;&Sigma;w<sup>2</sup></code> heavily penalized the bedroom weight while ignoring the small square-footage weight (<code>w &approx; 150</code>).</p>
+      <p><strong>The Remedy:</strong> Standardized all regressors using <code>StandardScaler</code> prior to fitting Ridge. Post-prediction, outputs were scaled back to US dollars using <code>scaler.inverse_transform()</code>.</p>
+    </div>
+
+    <!-- Case Study D -->
+    <div class="card card-success">
+      <div class="card-title"><span>&#128214;</span> Case Study D: E-Commerce Search &amp; Document Embeddings (Search / NLP)</div>
+      <p><strong>The Business Problem:</strong> An e-commerce search engine compares customer query text against millions of product catalog descriptions using 300-dimensional TF-IDF vectors.</p>
+      <p><strong>The Failure:</strong> Long product descriptions received higher raw Euclidean distances from short queries simply because long descriptions contained more total words, favoring short product titles over detailed comprehensive listings.</p>
+      <p><strong>The Remedy:</strong> Applied row-wise <strong>L2 Vector Normalization</strong> via <code>Normalizer(norm='l2')</code>. Normalizing each document vector to unit length converts Euclidean distance directly into <em>Cosine Similarity</em>, making document length completely irrelevant and ranking purely on semantic keyword relevance.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 15: COMMON BEGINNER MISTAKES -->
+  <section id="sec-15" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 15</span>
+      <h2 class="section-title">14 Common Beginner Mistakes &amp; Fixes</h2>
+    </div>
+    <p class="section-intro">
+      Review these 14 frequent pitfalls made by data science students and junior machine learning engineers, along with practical defensive remedies.
+    </p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Common Mistake</th>
+            <th>Why It Causes Serious Problems</th>
+            <th>Defensive Safe Engineering Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>01</strong></td>
+            <td>Scaling features when using Decision Trees or XGBoost</td>
+            <td>Wastes compute time and destroys the human interpretability of tree split rules (e.g. &ldquo;Age &le; 35&rdquo; becomes &ldquo;Age &le; -0.23z&rdquo;).</td>
+            <td>Skip scaling entirely for pure tree-based models unless using a mixed pipeline with linear/distance components.</td>
+          </tr>
+          <tr>
+            <td><strong>02</strong></td>
+            <td>Assuming MinMaxScaler always outperforms StandardScaler</td>
+            <td>MinMaxScaler collapses when test data contains outliers or values outside the fitted [0, 1] bounds.</td>
+            <td>Use <code>StandardScaler</code> as your default baseline; reserve <code>MinMaxScaler</code> for strictly bounded inputs (e.g. image pixels).</td>
+          </tr>
+          <tr>
+            <td><strong>03</strong></td>
+            <td>Believing Standardization converts non-normal data into a normal distribution</td>
+            <td>Standardization is purely linear. It shifts and scales axes, but preserves original skewness and bimodality.</td>
+            <td>If your goal is Gaussian normality, use non-linear Power Transforms like <code>PowerTransformer(method='yeo-johnson')</code> or <code>QuantileTransformer</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>04</strong></td>
+            <td>Assuming standardized Z-scores must lie strictly between 0 and 1</td>
+            <td>Z-scores are completely unbounded and can easily equal -3.5 or +12.0 for extreme values.</td>
+            <td>Understand that Z-score 0 represents the mean, and magnitude measures standard deviations away from average.</td>
+          </tr>
+          <tr>
+            <td><strong>05</strong></td>
+            <td>Applying RobustScaler without understanding its purpose</td>
+            <td>Using RobustScaler on cleanly distributed data produces slightly wider spreads than StandardScaler with no added benefit.</td>
+            <td>Reserve <code>RobustScaler</code> for heavy-tailed datasets, financial logs, or features with documented extreme anomalies.</td>
+          </tr>
+          <tr>
+            <td><strong>06</strong></td>
+            <td>Confusing column-wise feature scaling with row-wise vector normalization</td>
+            <td>Calling <code>Normalizer</code> across tabular columns with mixed units (Age, Income) creates meaningless unit vectors.</td>
+            <td>Apply <code>StandardScaler</code> / <code>MinMaxScaler</code> vertically on features; apply <code>Normalizer</code> horizontally on sample vectors (e.g. text TF-IDF).</td>
+          </tr>
+          <tr>
+            <td><strong>07</strong></td>
+            <td>Fitting scalers on the full dataset before train/test splitting</td>
+            <td>Severe data leakage! Test set statistics leak into the training split, producing overly optimistic validation metrics.</td>
+            <td>Always split first: <code>X_train, X_test = train_test_split(...)</code>, then call <code>scaler.fit(X_train)</code> only!</td>
+          </tr>
+          <tr>
+            <td><strong>08</strong></td>
+            <td>Fitting separate scalers on training and test sets</td>
+            <td>Calling <code>scaler_test.fit(X_test)</code> creates two different coordinate spaces, making test predictions mathematically invalid.</td>
+            <td>Fit <strong>one</strong> scaler on <code>X_train</code>, and call <code>scaler.transform(X_test)</code> using the training parameters.</td>
+          </tr>
+          <tr>
+            <td><strong>09</strong></td>
+            <td>Forgetting that unseen test data can exceed Min-Max bounds</td>
+            <td>A test observation larger than <code>x_max</code> produces scaled values &gt; 1.0, breaking models expecting strict [0, 1] inputs.</td>
+            <td>Use <code>MinMaxScaler(clip=True)</code> in Scikit-Learn to force all unseen values to truncate at [0, 1].</td>
+          </tr>
+          <tr>
+            <td><strong>10</strong></td>
+            <td>Scaling datasets containing missing values (NaNs)</td>
+            <td>Scikit-Learn scalers crash or propagate NaNs across the transformed matrix.</td>
+            <td>Place a <code>SimpleImputer</code> or <code>KNNImputer</code> step immediately <em>before</em> the scaler inside your Pipeline.</td>
+          </tr>
+          <tr>
+            <td><strong>11</strong></td>
+            <td>Treating scaling as a replacement for data cleaning</td>
+            <td>Scaling bad, corrupt, or duplicate data simply normalizes bad numbers into scaled bad numbers.</td>
+            <td>Perform comprehensive data validation, missing value imputation, and noise filtering before scaling.</td>
+          </tr>
+          <tr>
+            <td><strong>12</strong></td>
+            <td>Arbitrarily clipping or deleting outliers instead of using robust scalers</td>
+            <td>Outlier removal destroys real high-value data (e.g. fraud transactions, billionaire clients).</td>
+            <td>Use <code>RobustScaler</code> to scale inliers cleanly while keeping extreme events intact for model learning.</td>
+          </tr>
+          <tr>
+            <td><strong>13</strong></td>
+            <td>Standardizing one-hot encoded binary columns ((0, 1))</td>
+            <td>Subtracting the mean shifts zeros to negative numbers, destroying matrix sparsity and intuitive binary flags.</td>
+            <td>Use <code>ColumnTransformer</code> to scale continuous columns while passing one-hot encoded columns through unchanged.</td>
+          </tr>
+          <tr>
+            <td><strong>14</strong></td>
+            <td>Assuming feature scaling guarantees higher accuracy on every model</td>
+            <td>Scale invariance means tree models gain 0.0% accuracy improvement from scaling.</td>
+            <td>Validate performance empirically: scaling improves optimization convergence and distance metrics, not tree splits.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 16: GLOSSARY, REVISION AND FINAL EXERCISE -->
+  <section id="sec-16" class="section-card">
+    <div class="section-header">
+      <span class="section-badge">Section 16</span>
+      <h2 class="section-title">Checklist, Glossary &amp; Interactive Revision</h2>
+    </div>
+    <p class="section-intro">
+      Consolidate your knowledge with our production deployment checklist, comprehensive terminology glossary, interactive revision questions, and hands-on final exercise.
+    </p>
+
+    <h3>Production Preprocessing Deployment Checklist</h3>
+    <ul style="list-style: none; margin-left: 0;">
+      <li>&#9745; <strong>1. Data Split Verification:</strong> Confirm that <code>train_test_split()</code> executed before any scaler was fitted.</li>
+      <li>&#9745; <strong>2. Algorithm Requirement Audit:</strong> Confirm whether your chosen model family (KNN, SVM, Linear, Tree) actually requires scaling.</li>
+      <li>&#9745; <strong>3. Outlier Inspection:</strong> Check feature box plots; switch to <code>RobustScaler</code> if extreme outliers are detected.</li>
+      <li>&#9745; <strong>4. Pipeline Encapsulation:</strong> Ensure the scaler is bundled with the model inside a Scikit-Learn <code>Pipeline</code>.</li>
+      <li>&#9745; <strong>5. Column Separation:</strong> Use <code>ColumnTransformer</code> to ensure one-hot encoded binary columns are not standardized.</li>
+      <li>&#9745; <strong>6. Missing Value Sequencing:</strong> Verify that imputation occurs prior to the scaling step.</li>
+      <li>&#9745; <strong>7. Sparse Matrix Protection:</strong> Ensure sparse text matrices use <code>StandardScaler(with_mean=False)</code> to avoid memory explosion.</li>
+      <li>&#9745; <strong>8. MinMax Bounding:</strong> Enable <code>clip=True</code> if downstream models require strictly bounded inputs in [0, 1].</li>
+      <li>&#9745; <strong>9. Target Inversion:</strong> For regression targets that were scaled, ensure <code>scaler.inverse_transform()</code> is called on predictions.</li>
+      <li>&#9745; <strong>10. Zero-Leakage Assertion:</strong> Run unit tests verifying that <code>scaler.mean_</code> or <code>scaler.center_</code> matches <code>X_train</code> statistics only.</li>
+    </ul>
+
+    <h3>Glossary of Essential Terminology</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>Formal Engineering Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Feature Scale</strong></td>
+            <td>The numerical range or span across which a feature&apos;s observations vary in a dataset.</td>
+          </tr>
+          <tr>
+            <td><strong>Min-Max Scaling</strong></td>
+            <td>Linear transformation mapping values into a fixed interval [0, 1]: <code>(x - min) / (max - min)</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Standardization</strong></td>
+            <td>Transformation centering data at mean 0 with standard deviation 1: <code>(x - &mu;) / &sigma;</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Z-Score</strong></td>
+            <td>The signed number of standard deviations by which an observation exceeds the mean value.</td>
+          </tr>
+          <tr>
+            <td><strong>Robust Scaling</strong></td>
+            <td>Outlier-resistant transformation using Median and IQR: <code>(x - Median) / (Q3 - Q1)</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Interquartile Range (IQR)</strong></td>
+            <td>The difference between the 75th percentile (Q3) and 25th percentile (Q1), spanning the central 50% of data.</td>
+          </tr>
+          <tr>
+            <td><strong>Vector Normalization</strong></td>
+            <td>Row-wise scaling of a single sample vector across its features to produce a unit length of 1.0.</td>
+          </tr>
+          <tr>
+            <td><strong>L2 Norm (Euclidean)</strong></td>
+            <td>The square root of the sum of squared vector components: <code>&radic;&Sigma;x<sub>i</sub><sup>2</sup></code>.</td>
+          </tr>
+          <tr>
+            <td><strong>L1 Norm (Manhattan)</strong></td>
+            <td>The sum of the absolute values of vector components: <code>&Sigma;|x<sub>i</sub>|</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Data Leakage</strong></td>
+            <td>The contamination of training data with statistical information from validation, test, or future data.</td>
+          </tr>
+          <tr>
+            <td><strong>Scale Invariance</strong></td>
+            <td>The mathematical property of an algorithm (e.g. Decision Tree) whose predictions are completely unchanged by monotonic scaling.</td>
+          </tr>
+          <tr>
+            <td><strong>Cosine Similarity</strong></td>
+            <td>The cosine of the angle between two vectors, equivalent to the dot product of their L2-normalized vectors.</td>
+          </tr>
+          <tr>
+            <td><strong>ColumnTransformer</strong></td>
+            <td>Scikit-Learn utility that applies different preprocessing pipelines to subsets of columns simultaneously.</td>
+          </tr>
+          <tr>
+            <td><strong>Pipeline</strong></td>
+            <td>Scikit-Learn object that chains preprocessing transformers and estimators into a single leak-free deployable unit.</td>
+          </tr>
+          <tr>
+            <td><strong>Sparse Matrix</strong></td>
+            <td>A matrix where the vast majority of elements are zero, stored efficiently by recording only non-zero coordinates.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>10 Interactive Revision Questions &amp; Detailed Explanations</h3>
+    
+    <details>
+      <summary><span>&#10067;</span> Question 1: Why does KNN fail when trained on unscaled features?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> KNN calculates geometric distances (typically Euclidean) between data points: <code>d = &radic;&Sigma;(x<sub>1</sub> - x<sub>2</sub>)<sup>2</sup></code>. If one feature spans <code>[0 &ndash; 1,000,000]</code> (like Salary) while another spans <code>[0 &ndash; 10]</code> (like Number of Children), the squared difference in salary will be trillions, while children differences will be at most 100. The salary feature contributes 99.999% of the distance, effectively rendering the children feature completely invisible to the nearest neighbor search.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 2: Does standardization turn any skewed distribution into a normal bell curve?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> <strong>No, absolutely not!</strong> Standardization is a purely linear transformation: <code>z = (x - &mu;) / &sigma;</code>. It shifts the center of the distribution to 0 and stretches/compresses the scale by 1/&sigma;, but it does <em>not</em> alter relative frequencies or distribution shape. If the original data is bimodal, uniform, or heavily skewed, the standardized data remains equally bimodal, uniform, or skewed. To reshape data toward a Gaussian curve, you must use non-linear transformations like <code>PowerTransformer</code> or <code>QuantileTransformer</code>.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 3: What is the primary difference between StandardScaler and RobustScaler?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> StandardScaler calculates centering and scaling using the <strong>Mean (&mu;)</strong> and <strong>Standard Deviation (&sigma;)</strong>, both of which are highly sensitive to extreme outliers. A single huge outlier inflates both &mu; and &sigma;, distorting the scaling of normal observations. In contrast, RobustScaler uses the <strong>Median</strong> and <strong>Interquartile Range (IQR = Q3 - Q1)</strong>, which are based on percentiles and completely immune to extreme outlier distortion.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 4: What is the difference between column-wise feature scaling and row-wise vector normalization?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Column-wise feature scaling (e.g. <code>StandardScaler</code>, <code>MinMaxScaler</code>) operates <em>vertically</em> down a feature column across all dataset samples to make different features comparable. Row-wise vector normalization (e.g. <code>Normalizer</code>) operates <em>horizontally</em> across all features for a single sample observation, scaling the sample row vector to a unit length (||x|| = 1.0). Vector normalization is used for text documents, embeddings, and cosine similarity, but should not be used on tabular data with mixed physical units.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 5: Why do Decision Trees and Random Forests not require feature scaling?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Decision trees evaluate feature splits using independent, axis-aligned threshold inequalities (e.g., <code>Income &le; $50,000</code>). Because monotonic scaling (like MinMax or Standardization) preserves the exact sorting order of observations, any threshold <code>t</code> on raw data maps to an equivalent threshold <code>t&apos;</code> on scaled data with identical sample purity. Since trees never compute distances or multiply weights across features, scaling has zero mathematical impact on tree splits.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 6: What happens if you call fit_transform() on the entire dataset before train/test split?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> This creates <strong>data leakage</strong>. The scaler computes summary statistics (&mu;, &sigma;, min, max) using the entire dataset, meaning the training set is transformed using parameters derived from the test set. This artificially inflates your offline cross-validation performance, but causes the model to fail in production when truly unseen data arrives with different distribution parameters.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 7: How does Ridge or Lasso regression behave when features are unscaled?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Regularized linear models add a penalty proportional to the magnitude of feature weights: <code>&lambda;&Sigma;w<sub>j</sub><sup>2</sup></code> (Ridge) or <code>&lambda;&Sigma;|w<sub>j</sub>|</code> (Lasso). Features with small numerical ranges (e.g. number of bedrooms) require huge weights to impact prediction, while features with large ranges (e.g. square footage) require tiny weights. As a result, the penalty unfairly penalizes and shrinks the small-scale features, even if they are more predictive! Standardizing features ensures all weights are penalized on an equal footing.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 8: Why should you avoid standardizing one-hot encoded binary columns?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> Binary one-hot columns naturally contain clean <code>0</code> and <code>1</code> indicator values that represent categorical presence. If you apply <code>StandardScaler</code>, subtracting the mean converts the 0s into negative floating-point numbers (e.g. -0.35) and 1s into positive numbers (e.g. +2.1). This destroys the clean binary interpretation, breaks sparsity in sparse matrices, and offers zero predictive benefit.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 9: What happens when an unseen test sample exceeds the training bounds in MinMaxScaler?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> By default, <code>MinMaxScaler</code> will produce scaled outputs <strong>outside the [0, 1] range!</strong> For example, if training max was 30 and a test sample is 40, the scaled value becomes <code>(40 - 10)/(30 - 10) = 1.5</code>. If your model strictly requires inputs in [0, 1] (such as certain neural network architectures), you must initialize the scaler with <code>MinMaxScaler(clip=True)</code> to force all values to be clamped at 0.0 and 1.0.
+      </div>
+    </details>
+
+    <details>
+      <summary><span>&#10067;</span> Question 10: Why does StandardScaler(with_mean=False) exist for sparse matrices?</summary>
+      <div class="details-content">
+        <strong>Answer:</strong> In high-dimensional sparse matrices (such as text TF-IDF matrices with 50,000 words), 99% of entries are zero. If you center the data (<code>with_mean=True</code>), the mean (e.g. 0.02) is subtracted from every single zero, turning all zeros into non-zero floats (-0.02). This instantly converts the sparse matrix into a massive dense matrix, consuming gigabytes of RAM and triggering Out-of-Memory (OOM) crashes. Setting <code>with_mean=False</code> scales the variance while leaving all zeros untouched, preserving sparsity and memory efficiency.
+      </div>
+    </details>
+
+    <h3>Scenario-Based Engineering Challenges</h3>
+    <div class="card card-concept">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 1: The High-Frequency Trading Engine</div>
+      <p>
+        <strong>Scenario:</strong> You are building a low-latency trading model predicting stock price movements using Trade Volume (10&ndash;10,000,000 shares), Bid-Ask Spread (0.01&ndash;0.50 cents), and Market Volatility. Flash crashes occasionally produce trading volumes of 50,000,000 shares.
+      </p>
+      <p>
+        <strong>Challenge:</strong> Which scaler should you use in your pipeline, and what preliminary transformation is needed?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> First apply a logarithmic transformation <code>np.log1p(Trade_Volume)</code> to compress the exponential volume spikes. Next, route features through <strong>RobustScaler</strong> to ensure flash crashes cannot corrupt the centering median or IQR scale parameters.
+      </p>
+    </div>
+
+    <div class="card card-analogy">
+      <div class="card-title"><span>&#9874;</span> Scenario Challenge 2: The Multi-Modal Recommender System</div>
+      <p>
+        <strong>Scenario:</strong> An e-commerce platform recommends products by combining customer numerical demographics (Age, Total Spend) with a 500-dimensional TF-IDF product description embedding vector.
+      </p>
+      <p>
+        <strong>Challenge:</strong> How should you configure your preprocessing pipeline to handle both feature groups correctly?
+      </p>
+      <p>
+        <strong>Recommended Solution:</strong> Use Scikit-Learn&apos;s <code>ColumnTransformer</code>:
+        <br>1. Route tabular demographics (Age, Spend) through <code>StandardScaler</code> or <code>RobustScaler</code> (column-wise).
+        <br>2. Route TF-IDF text features through <code>Normalizer(norm='l2')</code> (row-wise) to project text embeddings onto unit vectors for cosine similarity.
+        <br>Combine the transformed blocks into a unified feature matrix.
+      </p>
+    </div>
+
+    <h3>Final Hands-On Assignment</h3>
+    <div class="card card-success">
+      <div class="card-title"><span>&#9997;</span> Practical Exercise: Mixed-Scale Housing Valuation</div>
+      <p>
+        Given a new synthetic dataset with:
+        <br>&bull; <code>Lot_Area</code>: [1,200 &ndash; 45,000 sq ft]
+        <br>&bull; <code>Bedrooms</code>: [1 &ndash; 6 rooms]
+        <br>&bull; <code>Year_Built</code>: [1920 &ndash; 2024]
+        <br>&bull; <code>Has_Pool</code>: [0 or 1 binary flag]
+        <br>&bull; <code>Sale_Price</code>: [$120,000 &ndash; $3,500,000 target]
+      </p>
+      <p>
+        <strong>Your Task:</strong>
+        <br>1. Write a Python script using <code>ColumnTransformer</code> to standardize <code>Lot_Area</code> and <code>Year_Built</code> using <code>RobustScaler</code>.
+        <br>2. Pass <code>Has_Pool</code> through unchanged (<code>remainder='passthrough'</code>).
+        <br>3. Fit a Ridge Regression model inside a <code>Pipeline</code> on an 80/20 train/test split.
+        <br>4. Assert that no data leakage occurred by checking that the scaler&apos;s center matches the training split median.
+      </p>
+    </div>
+
+    <div class="notes-footer">
+      <p>CodeVerse Machine Learning Educational Notes &bull; Topic 7: Feature Scaling &amp; Normalization</p>
+      <p>Strict Light Mode Standard &bull; Validated for Web and Mobile Viewports &bull; Powered by Scikit-Learn 1.9+</p>
+    </div>
+  </section>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,3595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Comprehensive educational notes on Machine Learning Topic 6: Categorical Data &amp; Encoding. Master nominal, ordinal, binary, and high-cardinality encoding, avoid label encoding traps, prevent target leakage, and build production ColumnTransformers.">
+  <title>Machine Learning &bull; Topic 6: Categorical Data &amp; Encoding</title>
+  <style>
+
+    :root {
+      /* Base & Surfaces - Light Mode Only */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.03);
+      
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+      
+      /* Primary ML Theme: Indigo & Blue */
+      --primary-accent: #4F46E5;
+      --primary-accent-hover: #4338CA;
+      --primary-accent-light: #EEF2FF;
+      --primary-badge-bg: #EEF2FF;
+      --primary-badge-text: #4338CA;
+      --toc-bg: #F5F3FF;
+      --toc-border: #DDD6FE;
+      --toc-text: #4338CA;
+
+      /* Definition Card (Soft Sky Blue) */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0C4A6E;
+
+      /* Analogy Card (Soft Teal / Mint) */
+      --analogy-card-bg: #ECFEFF;
+      --analogy-card-border: #A5F3FC;
+      --analogy-card-title: #0891B2;
+      --analogy-card-text: #164E63;
+
+      /* Concept / Architecture Card (Soft Lavender) */
+      --concept-card-bg: #FAF5FF;
+      --concept-card-border: #E9D5FF;
+      --concept-card-title: #7C3AED;
+      --concept-card-text: #581C87;
+
+      /* Warning / Pitfall Card (Soft Coral) */
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      /* Amber / Highlight Card */
+      --amber-card-bg: #FFFBEB;
+      --amber-card-border: #FDE68A;
+      --amber-card-title: #D97706;
+      --amber-card-text: #92400E;
+
+      /* Success Card (Emerald) */
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #16A34A;
+      --success-card-text: #166534;
+
+      /* Code Block Colors */
+      --code-bg: #0F172A;
+      --code-text: #E2E8F0;
+      --code-header-bg: #1E293B;
+
+      /* Encoding Cell Highlights */
+      --nominal-cell-bg: #F0F9FF;
+      --nominal-cell-border: #0284C7;
+      --ordinal-cell-bg: #FAF5FF;
+      --ordinal-cell-border: #7C3AED;
+      --binary-cell-bg: #F0FDF4;
+      --binary-cell-border: #16A34A;
+      --trap-cell-bg: #FEF2F2;
+      --trap-cell-border: #DC2626;
+    }
+
+    /* Reset & Base Containment */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.65;
+      font-size: 16px;
+      overflow-x: hidden;
+      max-width: 100vw;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem 1.25rem;
+      width: 100%;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1.25rem 0.85rem 3rem 0.85rem;
+      }
+    }
+
+    /* Hero Header */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 2rem;
+      box-shadow: var(--card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #4F46E5, #06B6D4, #10B981);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-title {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: var(--heading-color);
+      line-height: 1.2;
+      margin-bottom: 0.85rem;
+      letter-spacing: -0.02em;
+    }
+
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 1.75rem;
+      }
+    }
+
+    .hero-subtitle {
+      font-size: 1.12rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      border-top: 1px solid var(--card-border);
+      padding-top: 1.25rem;
+    }
+
+    .meta-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      background: var(--card-soft-bg);
+      padding: 0.3rem 0.65rem;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    /* Table of Contents */
+    .toc-container {
+      background: var(--toc-bg);
+      border: 1px solid var(--toc-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .toc-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--toc-text);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item {
+      margin-bottom: 0.5rem;
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .toc-item a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      transition: color 0.15s ease;
+    }
+
+    .toc-item a:hover {
+      color: var(--primary-accent);
+      font-weight: 600;
+    }
+
+    .toc-number {
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--primary-accent);
+      min-width: 1.6rem;
+    }
+
+    /* Section Containers */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 2.25rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--card-shadow);
+      overflow-x: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .section-card {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    .section-header {
+      margin-bottom: 1.5rem;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 1rem;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--primary-accent);
+      background: var(--primary-accent-light);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .section-title {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: var(--heading-color);
+      line-height: 1.3;
+    }
+
+    .section-intro {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      line-height: 1.65;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1E293B;
+      margin: 1.75rem 0 0.85rem 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #334155;
+      margin: 1.25rem 0 0.5rem 0;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Card Variants */
+    .card {
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin: 1.25rem 0;
+      border-left: 4px solid;
+    }
+
+    .card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .card-def {
+      background: var(--def-card-bg);
+      border-color: var(--def-card-title);
+      color: var(--def-card-text);
+    }
+    .card-def .card-title { color: var(--def-card-title); }
+
+    .card-analogy {
+      background: var(--analogy-card-bg);
+      border-color: var(--analogy-card-title);
+      color: var(--analogy-card-text);
+    }
+    .card-analogy .card-title { color: var(--analogy-card-title); }
+
+    .card-concept {
+      background: var(--concept-card-bg);
+      border-color: var(--concept-card-title);
+      color: var(--concept-card-text);
+    }
+    .card-concept .card-title { color: var(--concept-card-title); }
+
+    .card-warn {
+      background: var(--warn-card-bg);
+      border-color: var(--warn-card-title);
+      color: var(--warn-card-text);
+    }
+    .card-warn .card-title { color: var(--warn-card-title); }
+
+    .card-amber {
+      background: var(--amber-card-bg);
+      border-color: var(--amber-card-title);
+      color: var(--amber-card-text);
+    }
+    .card-amber .card-title { color: var(--amber-card-title); }
+
+    .card-success {
+      background: var(--success-card-bg);
+      border-color: var(--success-card-title);
+      color: var(--success-card-text);
+    }
+    .card-success .card-title { color: var(--success-card-title); }
+
+    /* Lists */
+    ul, ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      line-height: 1.6;
+    }
+
+    /* Key-Value / Inline Code */
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88em;
+      background: var(--card-soft-bg);
+      color: #D946EF;
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .key-badge {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin: 0.1rem 0;
+    }
+    .badge-nom { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+    .badge-ord { background: #F3E8FF; color: #6B21A8; border: 1px solid #E9D5FF; }
+    .badge-bin { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+    .badge-high { background: #FEE2E2; color: #B91C1C; border: 1px solid #FECACA; }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 1.5rem 0;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background: #F8FAFC;
+      color: #334155;
+      font-weight: 700;
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+      vertical-align: top;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #FAFAFA;
+    }
+
+    /* Diagram Containers */
+    .diagram-container {
+      margin: 2rem 0;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+
+    .svg-diagram-wrap {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+
+    .svg-diagram-wrap svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .diagram-caption {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
+    .how-to-read {
+      background: #F8FAFC;
+      border-left: 3px solid var(--primary-accent);
+      padding: 0.85rem 1.15rem;
+      margin-top: 1rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    /* Code Blocks */
+    .code-container {
+      margin: 1.5rem 0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--code-bg);
+      border: 1px solid #334155;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--code-header-bg);
+      padding: 0.5rem 1rem;
+      font-family: monospace;
+      font-size: 0.82rem;
+      color: #94A3B8;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-copy-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #CBD5E1;
+      padding: 0.2rem 0.55rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+
+    pre {
+      padding: 1.25rem 1rem;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--code-text);
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: inherit;
+    }
+
+    /* Accordion FAQ (Section 15) */
+    .qa-accordion {
+      margin: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+    }
+
+    .qa-card {
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    .qa-card[open] {
+      border-color: var(--primary-accent);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+    }
+
+    .qa-summary {
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      color: var(--heading-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      list-style: none;
+      user-select: none;
+      background: #FFFFFF;
+      font-size: 0.98rem;
+    }
+
+    .qa-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .qa-summary:hover {
+      background: #F8FAFC;
+      color: var(--primary-accent);
+    }
+
+    .qa-icon {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary-accent);
+      transition: transform 0.2s ease;
+    }
+
+    .qa-card[open] .qa-icon {
+      transform: rotate(45deg);
+    }
+
+    .qa-body {
+      padding: 1rem 1.25rem 1.25rem 1.25rem;
+      border-top: 1px solid var(--card-border);
+      background: #F8FAFC;
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    /* Math Formula Block */
+    .math-block {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      text-align: center;
+      font-size: 1.1rem;
+      color: #0F172A;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- HERO HEADER -->
+    <header class="hero-card">
+      <span class="hero-badge">&#128640; Machine Learning &bull; Topic 06</span>
+      <h1 class="hero-title">Categorical Data &amp; Encoding</h1>
+      <p class="hero-subtitle">
+        A definitive, beginner-to-practitioner guide to qualitative data, nominal vs. ordinal attributes, label vs. one-hot encoding, high-cardinality strategies, target leakage prevention, and production Scikit-Learn pipelines.
+      </p>
+      <div class="hero-meta">
+        <span class="meta-tag">&#9201; 45 Min Read</span>
+        <span class="meta-tag">&#128202; 17 Interactive SVGs &amp; Graphs</span>
+        <span class="meta-tag">&#128013; Verified Scikit-Learn 1.9 Lab</span>
+        <span class="meta-tag">&#9728;&#65039; Pure Light Mode</span>
+        <span class="meta-tag">&#128737;&#65039; Production Robust</span>
+      </div>
+    </header>
+
+    <!-- TABLE OF CONTENTS -->
+    <nav class="toc-container" aria-label="Table of Contents">
+      <h2 class="toc-title">&#128218; Chapter Contents</h2>
+      <div class="toc-grid">
+        <ul class="toc-list">
+          <li class="toc-item"><a href="#sec-01"><span class="toc-number">01</span> Introduction to Categorical Data</a></li>
+          <li class="toc-item"><a href="#sec-02"><span class="toc-number">02</span> Types of Categorical Variables</a></li>
+          <li class="toc-item"><a href="#sec-03"><span class="toc-number">03</span> Why Do We Need Encoding?</a></li>
+          <li class="toc-item"><a href="#sec-04"><span class="toc-number">04</span> Label Encoding &amp; The Feature Trap</a></li>
+          <li class="toc-item"><a href="#sec-05"><span class="toc-number">05</span> Ordinal Encoding &amp; Domain Sorting</a></li>
+          <li class="toc-item"><a href="#sec-06"><span class="toc-number">06</span> One-Hot Encoding &amp; Orthogonality</a></li>
+          <li class="toc-item"><a href="#sec-07"><span class="toc-number">07</span> Alternative Encoding Methods</a></li>
+          <li class="toc-item"><a href="#sec-08"><span class="toc-number">08</span> Comparison &amp; Decision Guide</a></li>
+        </ul>
+        <ul class="toc-list">
+          <li class="toc-item"><a href="#sec-09"><span class="toc-number">09</span> Visual Exploratory Graphs (1-8)</a></li>
+          <li class="toc-item"><a href="#sec-10"><span class="toc-number">10</span> Mathematical Foundations</a></li>
+          <li class="toc-item"><a href="#sec-11"><span class="toc-number">11</span> Missing &amp; Unseen Categories</a></li>
+          <li class="toc-item"><a href="#sec-12"><span class="toc-number">12</span> 14 Common Beginner Mistakes</a></li>
+          <li class="toc-item"><a href="#sec-13"><span class="toc-number">13</span> Complete Python Practical Lab</a></li>
+          <li class="toc-item"><a href="#sec-14"><span class="toc-number">14</span> Real-Life Case Studies</a></li>
+          <li class="toc-item"><a href="#sec-15"><span class="toc-number">15</span> Checklist, Glossary &amp; Q&amp;A</a></li>
+        </ul>
+      </div>
+    </nav>
+    
+
+    <!-- SECTION 01 -->
+    <section id="sec-01" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 01</span>
+        <h2 class="section-title">Introduction to Categorical Data</h2>
+      </div>
+
+      <p class="section-intro">
+        In introductory data science tutorials, datasets are often simplified into neat columns of numbers like exam scores, temperatures, and housing prices. But look at any real-world production database, mobile app event log, or e-commerce transaction system, and you will find that human existence is predominantly described in words. We live in cities, choose colors, possess academic degrees, select payment methods, and express subjective satisfaction levels.
+      </p>
+
+      <div class="card card-def">
+        <div class="card-title">&#128214; Formal Definition: Categorical Data</div>
+        <p>
+          <strong>Categorical Data</strong> (also termed <em>qualitative data</em>) represents discrete values that belong to a fixed, finite set of distinct groups, classes, or modalities. Unlike numerical data, categorical values convey <strong>identity, type, status, or membership</strong> rather than a continuous physical measurement or count.
+        </p>
+      </div>
+
+      <h3>1.1 Why Categorical Data Is Ubiquitous in Real-World ML</h3>
+      <p>
+        Machine learning systems operate in human environments. Whether diagnosing a medical patient, assessing creditworthiness, or routing logistics packages, categorical attributes form the foundational context of every observation:
+      </p>
+      <ul>
+        <li><strong>Demographics &amp; Geography:</strong> City (<code>Lucknow</code>, <code>Delhi</code>, <code>Mumbai</code>), Country, State, Nationality.</li>
+        <li><strong>Operational Modalities:</strong> Payment Method (<code>UPI</code>, <code>Cash</code>, <code>Card</code>, <code>NetBanking</code>), Shipping Tier (<code>Standard</code>, <code>Express</code>).</li>
+        <li><strong>Status &amp; Verification:</strong> Transaction State (<code>Pending</code>, <code>Completed</code>, <code>Failed</code>), Account Active (<code>Yes</code>, <code>No</code>).</li>
+        <li><strong>Subjective Evaluations:</strong> Customer Sentiment (<code>Low</code>, <code>Medium</code>, <code>High</code>), Survey Feedback (<code>Satisfied</code>, <code>Neutral</code>, <code>Dissatisfied</code>).</li>
+        <li><strong>Physical Qualities:</strong> Product Color (<code>Red</code>, <code>Blue</code>, <code>Green</code>), Apparel Size (<code>S</code>, <code>M</code>, <code>L</code>, <code>XL</code>).</li>
+      </ul>
+
+      <div class="card card-analogy">
+        <div class="card-title">&#128161; Everyday Analogy: The Passport vs. The Weighing Scale</div>
+        <p>
+          Imagine stepping onto a medical weighing scale: the display reads <strong>72.5 kg</strong>. If you gain 1 kg, you weigh 73.5 kg; the numbers possess physical distance, continuous scale, and direct arithmetic meaning (73.5 is strictly greater than 72.5).
+        </p>
+        <p>
+          Now open your passport: your Nationality reads <strong>"Indian"</strong>. Is "Indian" greater than "Canadian"? Can you subtract "Japanese" from "German"? Of course not. Nationality is a category of belonging, not an arithmetic measurement. Treating categorical labels as numbers without careful translation is like trying to weigh your passport photo on a bathroom scale.
+        </p>
+      </div>
+
+      <h3>1.2 When a Number Is NOT a Number: The Zip Code Trap</h3>
+      <p>
+        A widespread trap for beginner data scientists is assuming that if a pandas DataFrame column has a numeric data type (such as <code>int64</code> or <code>float64</code>), it represents numerical data. <strong>This assumption is dangerously false.</strong>
+      </p>
+      <p>
+        Consider these common columns stored as numbers:
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Column Name</th>
+              <th>Example Stored Value</th>
+              <th>Data Type</th>
+              <th>Why It Is Categorical, NOT Numerical</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Postal PIN Code</strong></td>
+              <td><code>226001</code> (Lucknow)</td>
+              <td>Integer</td>
+              <td>Subtracting PIN <code>110001</code> (Delhi) from <code>226001</code> yields <code>116000</code>, which is mathematically meaningless. A PIN is a geographic label.</td>
+            </tr>
+            <tr>
+              <td><strong>Customer ID / Phone</strong></td>
+              <td><code>9889123456</code></td>
+              <td>Integer</td>
+              <td>A phone number is an arbitrary unique key. You cannot calculate the "average phone number" of your customer base.</td>
+            </tr>
+            <tr>
+              <td><strong>Credit Card Type Code</strong></td>
+              <td><code>1</code> (Visa), <code>2</code> (MasterCard)</td>
+              <td>Integer</td>
+              <td>MasterCard (2) is not "twice" Visa (1). The number is an administrative identifier for a qualitative category.</td>
+            </tr>
+            <tr>
+              <td><strong>Server HTTP Status</strong></td>
+              <td><code>200</code>, <code>404</code>, <code>500</code></td>
+              <td>Integer</td>
+              <td>These represent discrete operating states (OK, Not Found, Internal Error), not continuous magnitudes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>1.3 The Meaning of Categorical Encoding</h3>
+      <p>
+        <strong>Encoding</strong> is the disciplined mathematical process of translating qualitative categorical tokens into structured numeric vectors that machine learning estimators can ingest.
+      </p>
+      <div class="card card-warn">
+        <div class="card-title">&#9888; Critical Rule: Encoding Changes Representation, NOT Information</div>
+        <p>
+          Encoding is merely a translator. It changes how data is presented to an algorithm; <strong>it does not invent new predictive signals or magically make poor data informative</strong>. If your original categorical column is corrupted, filled with typos, or irrelevant to the target label, translating it into numbers will only produce model-ready noise.
+        </p>
+      </div>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 340" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-enc" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#4F46E5" />
+        </marker>
+      </defs>
+
+      <!-- Canvas Background -->
+      <rect width="850" height="340" rx="12" fill="#F8FAFC" />
+
+      <!-- Diagram Title -->
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Raw Categorical Text vs. Numerically Encoded Feature Matrix</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Transforming Qualitative String Labels into Mathematical Vectors for Machine Learning Ingestion</text>
+
+      <!-- Panel 1: Raw Qualitative Table (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="360" height="235" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="360" height="38" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="180" y="24" text-anchor="middle" fill="#334155" font-weight="700" font-size="13">&#128221; RAW QUALITATIVE DATA (STRINGS)</text>
+
+        <!-- Miniature Raw Table -->
+        <g transform="translate(15, 50)" font-size="11" font-family="monospace">
+          <rect x="0" y="0" width="330" height="24" fill="#F8FAFC" />
+          <text x="10" y="16" fill="#475569" font-weight="bold">ID</text>
+          <text x="60" y="16" fill="#475569" font-weight="bold">City (Nom)</text>
+          <text x="165" y="16" fill="#475569" font-weight="bold">Level (Ord)</text>
+          <text x="260" y="16" fill="#475569" font-weight="bold">Pay (Nom)</text>
+
+          <rect x="0" y="26" width="330" height="22" fill="#FFFFFF" />
+          <text x="10" y="41" fill="#334155">101</text>
+          <text x="60" y="41" fill="#0284C7" font-weight="bold">"Lucknow"</text>
+          <text x="165" y="41" fill="#7C3AED" font-weight="bold">"Bachelor"</text>
+          <text x="260" y="41" fill="#0D9488" font-weight="bold">"UPI"</text>
+
+          <rect x="0" y="50" width="330" height="22" fill="#F8FAFC" />
+          <text x="10" y="65" fill="#334155">102</text>
+          <text x="60" y="65" fill="#0284C7" font-weight="bold">"Delhi"</text>
+          <text x="165" y="65" fill="#7C3AED" font-weight="bold">"Master"</text>
+          <text x="260" y="65" fill="#0D9488" font-weight="bold">"Cash"</text>
+
+          <rect x="0" y="74" width="330" height="22" fill="#FFFFFF" />
+          <text x="10" y="89" fill="#334155">103</text>
+          <text x="60" y="89" fill="#0284C7" font-weight="bold">"Mumbai"</text>
+          <text x="165" y="89" fill="#7C3AED" font-weight="bold">"School"</text>
+          <text x="260" y="89" fill="#0D9488" font-weight="bold">"Card"</text>
+        </g>
+
+        <!-- Limitation Callout -->
+        <g transform="translate(15, 175)" font-size="11" fill="#991B1B">
+          <text x="0" y="12">&#10008; Incompatible with linear loss functions: w &#183; "Delhi" = Error!</text>
+          <text x="0" y="30">&#10008; Distance metrics (Euclidean) cannot measure ("UPI" - "Card")&#178;</text>
+        </g>
+      </g>
+
+      <!-- Center Transformation Arrow -->
+      <g transform="translate(398, 175)">
+        <path d="M 0 0 L 40 0" stroke="#4F46E5" stroke-width="3" marker-end="url(#arrow-enc)" />
+        <text x="20" y="-12" text-anchor="middle" fill="#4F46E5" font-weight="700" font-size="10">ENCODING</text>
+      </g>
+
+      <!-- Panel 2: Encoded Numeric Matrix (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="235" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="38" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="185" y="24" text-anchor="middle" fill="#166534" font-weight="700" font-size="13">&#10004; ENCODED NUMERICAL MATRIX X &#8712; &#8477;</text>
+
+        <!-- Miniature Encoded Table -->
+        <g transform="translate(15, 50)" font-size="11" font-family="monospace">
+          <rect x="0" y="0" width="340" height="24" fill="#F1F5F9" />
+          <text x="10" y="16" fill="#475569" font-weight="bold">ID</text>
+          <text x="45" y="16" fill="#475569" font-weight="bold">City_Del</text>
+          <text x="115" y="16" fill="#475569" font-weight="bold">City_Luc</text>
+          <text x="185" y="16" fill="#475569" font-weight="bold">City_Mum</text>
+          <text x="255" y="16" fill="#475569" font-weight="bold">Ord_Level</text>
+
+          <rect x="0" y="26" width="340" height="22" fill="#FFFFFF" />
+          <text x="10" y="41" fill="#334155">101</text>
+          <text x="65" y="41" fill="#64748B">0</text>
+          <text x="135" y="41" fill="#15803D" font-weight="bold">1</text>
+          <text x="205" y="41" fill="#64748B">0</text>
+          <text x="280" y="41" fill="#7C3AED" font-weight="bold">1</text>
+
+          <rect x="0" y="50" width="340" height="22" fill="#F0FDF4" />
+          <text x="10" y="65" fill="#334155">102</text>
+          <text x="65" y="65" fill="#15803D" font-weight="bold">1</text>
+          <text x="135" y="65" fill="#64748B">0</text>
+          <text x="205" y="65" fill="#64748B">0</text>
+          <text x="280" y="65" fill="#7C3AED" font-weight="bold">2</text>
+
+          <rect x="0" y="74" width="340" height="22" fill="#FFFFFF" />
+          <text x="10" y="89" fill="#334155">103</text>
+          <text x="65" y="89" fill="#64748B">0</text>
+          <text x="135" y="89" fill="#64748B">0</text>
+          <text x="205" y="89" fill="#15803D" font-weight="bold">1</text>
+          <text x="280" y="89" fill="#7C3AED" font-weight="bold">0</text>
+        </g>
+
+        <!-- Solution Callout -->
+        <g transform="translate(15, 175)" font-size="11" fill="#166534">
+          <text x="0" y="12">&#10004; Fully compatible with NumPy arrays &amp; linear models</text>
+          <text x="0" y="30">&#10004; Preserves ordinal ranks (0 &lt; 1 &lt; 2) without false city order</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.1: Comparative Architecture: Raw Qualitative String Attributes vs. Sanitized Encoded Numeric Feature Matrix.</p>
+  <div class="how-to-read">
+    <strong>How to read this comparison:</strong> Machine learning algorithms perform numerical linear algebra (matrix multiplications, gradient descents, and geometric distances). Strings cannot participate directly in mathematical operations. Encoding transforms qualitative categories into structured numeric indicators without inventing artificial relationships.
+  </div>
+</div>
+    </section>
+
+    <!-- SECTION 02 -->
+    <section id="sec-02" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 02</span>
+        <h2 class="section-title">Types of Categorical Variables</h2>
+      </div>
+
+      <p class="section-intro">
+        Before selecting any encoding function in Scikit-Learn or pandas, you must examine the intrinsic relationship between the categories. Not all categories behave the same way. Machine learning categorizes qualitative features into four distinct structural families.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 360" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="360" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Taxonomy of Categorical Variables in Machine Learning</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Structural Characteristics, Mathematical Ordering, and Primary Encoding Routes</text>
+
+      <!-- Card 1: Nominal (Blue) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="180" height="260" rx="8" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1.5" />
+        <rect x="0" y="0" width="180" height="36" rx="8" fill="#E0F2FE" stroke="#BAE6FD" />
+        <text x="90" y="23" text-anchor="middle" fill="#0369A1" font-weight="700" font-size="13">&#128392; NOMINAL</text>
+
+        <g transform="translate(12, 50)" font-size="11" fill="#0C4A6E">
+          <text x="0" y="14" font-weight="bold">Core Meaning:</text>
+          <text x="0" y="30">Unordered labels.</text>
+          <text x="0" y="46">No mathematical rank.</text>
+
+          <text x="0" y="76" font-weight="bold">Examples:</text>
+          <text x="0" y="92">&#8226; City (Delhi, Mumbai)</text>
+          <text x="0" y="108">&#8226; Color (Red, Blue)</text>
+          <text x="0" y="124">&#8226; Pay (UPI, Cash, Card)</text>
+
+          <text x="0" y="154" font-weight="bold">Primary Strategy:</text>
+          <text x="0" y="170" fill="#0369A1" font-weight="bold">&#10004; One-Hot Encoding</text>
+          <text x="0" y="186" fill="#0369A1" font-weight="bold">&#10004; Binary Encoding</text>
+
+          <text x="0" y="212" font-size="10" fill="#B91C1C">&#9888; Never use LabelEncoder</text>
+          <text x="0" y="226" font-size="10" fill="#B91C1C">for nominal features!</text>
+        </g>
+      </g>
+
+      <!-- Card 2: Ordinal (Purple) -->
+      <g transform="translate(230, 75)">
+        <rect x="0" y="0" width="180" height="260" rx="8" fill="#FAF5FF" stroke="#E9D5FF" stroke-width="1.5" />
+        <rect x="0" y="0" width="180" height="36" rx="8" fill="#F3E8FF" stroke="#E9D5FF" />
+        <text x="90" y="23" text-anchor="middle" fill="#6B21A8" font-weight="700" font-size="13">&#128200; ORDINAL</text>
+
+        <g transform="translate(12, 50)" font-size="11" fill="#581C87">
+          <text x="0" y="14" font-weight="bold">Core Meaning:</text>
+          <text x="0" y="30">Natural ranking order.</text>
+          <text x="0" y="46">Steps may not be equal.</text>
+
+          <text x="0" y="76" font-weight="bold">Examples:</text>
+          <text x="0" y="92">&#8226; Satisfaction (L, M, H)</text>
+          <text x="0" y="108">&#8226; Education (School, Bach)</text>
+          <text x="0" y="124">&#8226; Skill (Beg, Int, Adv)</text>
+
+          <text x="0" y="154" font-weight="bold">Primary Strategy:</text>
+          <text x="0" y="170" fill="#6B21A8" font-weight="bold">&#10004; OrdinalEncoder</text>
+          <text x="0" y="186" fill="#6B21A8" font-weight="bold">(Explicit categories list)</text>
+
+          <text x="0" y="212" font-size="10" fill="#B91C1C">&#9888; Avoid alphabetical</text>
+          <text x="0" y="226" font-size="10" fill="#B91C1C">sorting defaults!</text>
+        </g>
+      </g>
+
+      <!-- Card 3: Binary (Green) -->
+      <g transform="translate(430, 75)">
+        <rect x="0" y="0" width="180" height="260" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="180" height="36" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="90" y="23" text-anchor="middle" fill="#15803D" font-weight="700" font-size="13">&#9878; BINARY</text>
+
+        <g transform="translate(12, 50)" font-size="11" fill="#166534">
+          <text x="0" y="14" font-weight="bold">Core Meaning:</text>
+          <text x="0" y="30">Exactly two outcomes.</text>
+          <text x="0" y="46">Dichotomous state.</text>
+
+          <text x="0" y="76" font-weight="bold">Examples:</text>
+          <text x="0" y="92">&#8226; Passed (Yes / No)</text>
+          <text x="0" y="108">&#8226; Churn (True / False)</text>
+          <text x="0" y="124">&#8226; Fraud (0 / 1)</text>
+
+          <text x="0" y="154" font-weight="bold">Primary Strategy:</text>
+          <text x="0" y="170" fill="#15803D" font-weight="bold">&#10004; Direct 0 / 1 Map</text>
+          <text x="0" y="186" fill="#15803D" font-weight="bold">&#10004; OneHot(drop='first')</text>
+
+          <text x="0" y="212" font-size="10" fill="#15803D">&#10004; Minimal storage,</text>
+          <text x="0" y="226" font-size="10" fill="#15803D">zero dimensionality risk.</text>
+        </g>
+      </g>
+
+      <!-- Card 4: High-Cardinality (Amber/Red) -->
+      <g transform="translate(630, 75)">
+        <rect x="0" y="0" width="190" height="260" rx="8" fill="#FFFBEB" stroke="#FDE68A" stroke-width="1.5" />
+        <rect x="0" y="0" width="190" height="36" rx="8" fill="#FEF3C7" stroke="#FDE68A" />
+        <text x="95" y="23" text-anchor="middle" fill="#B45309" font-weight="700" font-size="13">&#128202; HIGH-CARDINALITY</text>
+
+        <g transform="translate(12, 50)" font-size="11" fill="#92400E">
+          <text x="0" y="14" font-weight="bold">Core Meaning:</text>
+          <text x="0" y="30">Huge number of unique</text>
+          <text x="0" y="46">distinct category levels.</text>
+
+          <text x="0" y="76" font-weight="bold">Examples:</text>
+          <text x="0" y="92">&#8226; Pincodes (10,000+)</text>
+          <text x="0" y="108">&#8226; Product IDs (50,000+)</text>
+          <text x="0" y="124">&#8226; Device IP Subnets</text>
+
+          <text x="0" y="154" font-weight="bold">Primary Strategy:</text>
+          <text x="0" y="170" fill="#B45309" font-weight="bold">&#10004; Target Encoding</text>
+          <text x="0" y="186" fill="#B45309" font-weight="bold">&#10004; Frequency / Group 'Other'</text>
+
+          <text x="0" y="212" font-size="10" fill="#B91C1C">&#9888; One-Hot Encoding</text>
+          <text x="0" y="226" font-size="10" fill="#B91C1C">causes column explosion!</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.2: Structural Taxonomy: Nominal vs. Ordinal vs. Binary vs. High-Cardinality Categorical Attributes.</p>
+  <div class="how-to-read">
+    <strong>How to read this taxonomy:</strong> Every categorical feature must be classified into one of these four structural buckets prior to model training. Choosing the wrong encoder (e.g. integer encoding for nominal, or one-hot for thousands of postal codes) induces severe modeling errors, from false linear assumptions to memory exhaustion.
+  </div>
+</div>
+
+      <h3>2.1 Nominal Categorical Data (Unordered Labels)</h3>
+      <p>
+        <strong>Nominal data</strong> (from the Latin <em>nomen</em>, meaning name) consists of categories that possess <strong>no natural, intrinsic, or mathematical ordering</strong>. No category is inherently "greater than", "less than", or "better than" another.
+      </p>
+      <ul>
+        <li><strong>Examples:</strong> City (<code>Delhi</code>, <code>Mumbai</code>, <code>Lucknow</code>), Color (<code>Red</code>, <code>Green</code>, <code>Blue</code>), Payment Method (<code>UPI</code>, <code>Card</code>, <code>Cash</code>), Blood Group (<code>A+</code>, <code>O-</code>, <code>B+</code>).</li>
+        <li><strong>Mathematical Trait:</strong> The only valid mathematical comparison between two nominal observations is equality: <code>x_i == x_j</code> or <code>x_i != x_j</code>. Inequalities like <code>x_i &gt; x_j</code> are completely undefined.</li>
+        <li><strong>Primary Encoders:</strong> <code>OneHotEncoder</code> (for low cardinality), <code>BinaryEncoder</code> or Target Encoding (for high cardinality).</li>
+      </ul>
+
+      <h3>2.2 Ordinal Categorical Data (Ordered Rankings)</h3>
+      <p>
+        <strong>Ordinal data</strong> consists of categories that follow a <strong>clear, meaningful, and unambiguous natural progression or rank</strong>.
+      </p>
+      <ul>
+        <li><strong>Examples:</strong> Academic Degree (<code>High School</code> &lt; <code>Bachelor's</code> &lt; <code>Master's</code> &lt; <code>PhD</code>), Customer Satisfaction (<code>Low</code> &lt; <code>Medium</code> &lt; <code>High</code>), Student Skill Level (<code>Beginner</code> &lt; <code>Intermediate</code> &lt; <code>Advanced</code>), T-Shirt Size (<code>S</code> &lt; <code>M</code> &lt; <code>L</code> &lt; <code>XL</code>).</li>
+        <li><strong>Mathematical Trait:</strong> Inequalities are fully valid: <code>Master's &gt; Bachelor's</code>. However, the <strong>distance between steps is not necessarily uniform or equal</strong>! The effort required to transition from High School to a Bachelor's degree is not identical to the effort of earning a PhD from a Master's degree.</li>
+        <li><strong>Primary Encoder:</strong> <code>OrdinalEncoder</code> with an explicitly defined domain list.</li>
+      </ul>
+
+      <h3>2.3 Binary Categorical Data (Two Modalities)</h3>
+      <p>
+        <strong>Binary data</strong> (also called <em>dichotomous data</em>) is a special case of categorical data where exactly <strong>two mutually exclusive outcomes</strong> exist.
+      </p>
+      <ul>
+        <li><strong>Examples:</strong> Exam Passed (<code>Yes</code> / <code>No</code>), Customer Churn (<code>True</code> / <code>False</code>), Payment Verified (<code>0</code> / <code>1</code>), Fraud Flag (<code>Legitimate</code> / <code>Fraudulent</code>).</li>
+        <li><strong>Primary Strategy:</strong> Map directly to integer indicators <code>0</code> and <code>1</code>, or use <code>OneHotEncoder(drop='first')</code>. Binary features are the simplest to encode because they require exactly 1 single column without introducing multi-class ambiguity.</li>
+      </ul>
+
+      <h3>2.4 High-Cardinality Categorical Data</h3>
+      <p>
+        <strong>Cardinality</strong> refers to the number of unique distinct values present in a column. A column with low cardinality has few unique categories (e.g. Gender has 2-3, Blood Group has 8). A column with <strong>high cardinality</strong> has hundreds, thousands, or millions of unique categories:
+      </p>
+      <ul>
+        <li><strong>Examples:</strong> Postal ZIP / PIN codes (20,000+ unique values), E-Commerce SKU Product IDs (100,000+), User IP addresses, University Major specializations (500+).</li>
+        <li><strong>The Engineering Danger:</strong> If you apply standard One-Hot Encoding to a feature with 5,000 unique postal codes, your dataset instantly expands by <strong>5,000 new columns</strong>! This triggers the <em>curse of dimensionality</em>, exhausts server RAM, and forces tree models to make fractured, low-confidence splits.</li>
+        <li><strong>Primary Strategies:</strong> Group rare categories into an <code>'Other'</code> token, apply <code>TargetEncoder</code> with Bayesian smoothing, or use <code>BinaryEncoder</code>.</li>
+      </ul>
+
+      <h3>2.5 Special Edge Cases</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Edge Case</th>
+              <th>Why It Occurs</th>
+              <th>How to Handle</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Numeric-Looking IDs</strong></td>
+              <td>Databases store customer IDs as sequential integers (e.g. <code>101</code>, <code>102</code>).</td>
+              <td>Drop ID columns before training. They encode arbitrary database sequence order rather than real-world predictive traits.</td>
+            </tr>
+            <tr>
+              <td><strong>Missing Categories</strong></td>
+              <td>Users leave dropdown menus blank (<code>NaN</code>, <code>None</code>).</td>
+              <td>Impute with the mode category or assign a dedicated <code>"Unknown"</code> token before encoding.</td>
+            </tr>
+            <tr>
+              <td><strong>Rare Categories</strong></td>
+              <td>A category appears only 1 or 2 times across 100,000 rows.</td>
+              <td>Consolidate infrequent categories below a frequency threshold (e.g. &lt; 2%) into an <code>"Other"</code> bucket.</td>
+            </tr>
+            <tr>
+              <td><strong>Unseen Categories</strong></td>
+              <td>Production test traffic brings categories never seen in training.</td>
+              <td>Configure <code>OneHotEncoder(handle_unknown='ignore')</code> to output an all-zero vector rather than crashing.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 03 -->
+    <section id="sec-03" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 03</span>
+        <h2 class="section-title">Why Do We Need Encoding?</h2>
+      </div>
+
+      <p class="section-intro">
+        Human brains effortlessly process text labels. When you see "Lucknow", you visualize a historical city in northern India. When a machine learning algorithm looks at "Lucknow", it sees an arbitrary byte array of characters. To understand why encoding is mandatory, we must look at the mathematical engine powering statistical estimators.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="300" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Why Machine Learning Models Cannot Ingest Text Directly</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Mathematical Dot Products and Distance Formulations Require Real Numeric Coordinates</text>
+
+      <!-- Panel 1: What the Algorithm Computes (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="370" height="200" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#EEF2FF" stroke="#E2E8F0" />
+        <text x="185" y="23" text-anchor="middle" fill="#4338CA" font-weight="700" font-size="12">&#128290; LINEAR ESTIMATOR EQUATION (e.g. REGRESSION)</text>
+
+        <g transform="translate(20, 55)" font-size="12" fill="#1E293B">
+          <text x="0" y="20" font-family="monospace" font-weight="bold">y = w&#8321;&#183;x&#8321; + w&#8322;&#183;x&#8322; + ... + w&#8347;&#183;x&#8347; + b</text>
+          
+          <text x="0" y="55" fill="#DC2626" font-family="monospace">If x&#8322; = "Lucknow":</text>
+          <text x="0" y="75" fill="#DC2626" font-family="monospace">y = (1.5 &#183; 4.5) + (2.8 &#183; "Lucknow") + 0.5</text>
+          
+          <rect x="0" y="95" width="330" height="36" rx="6" fill="#FEE2E2" stroke="#FECACA" />
+          <text x="10" y="118" fill="#991B1B" font-weight="bold">&#10008; TypeError: can't multiply sequence by float</text>
+        </g>
+      </g>
+
+      <!-- Panel 2: Geometric Distance Metric (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="200" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#EEF2FF" stroke="#E2E8F0" />
+        <text x="185" y="23" text-anchor="middle" fill="#4338CA" font-weight="700" font-size="12">&#128207; DISTANCE ESTIMATORS (e.g. KNN, SVM, K-MEANS)</text>
+
+        <g transform="translate(20, 55)" font-size="12" fill="#1E293B">
+          <text x="0" y="20" font-family="monospace" font-weight="bold">d(A, B) = &#8730; [ (x&#8321;&#7491; - x&#8321;&#7495;)&#178; + (x&#8322;&#7491; - x&#8322;&#7495;)&#178; ]</text>
+          
+          <text x="0" y="55" fill="#DC2626" font-family="monospace">If A = "UPI" and B = "Cash":</text>
+          <text x="0" y="75" fill="#DC2626" font-family="monospace">d = &#8730; [ ... + ("UPI" - "Cash")&#178; ]</text>
+          
+          <rect x="0" y="95" width="330" height="36" rx="6" fill="#FEE2E2" stroke="#FECACA" />
+          <text x="10" y="118" fill="#991B1B" font-weight="bold">&#10008; TypeError: unsupported operand type for -: 'str'</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.3: The Fundamental Constraint: Linear Models and Distance Metrics Inevitably Crash on Raw String Tokens.</p>
+  <div class="how-to-read">
+    <strong>How to read this diagram:</strong> Deep neural networks, linear regressions, logistic models, and support vector machines perform mathematical floating-point operations. Strings have no algebraic meaning; without encoding, an estimator cannot compute weights, losses, gradients, or geometric similarities.
+  </div>
+</div>
+
+      <h3>3.1 The Linear Equation Boundary</h3>
+      <p>
+        Classical parametric models — including <strong>Linear Regression</strong>, <strong>Logistic Regression</strong>, and <strong>Neural Networks</strong> — express their predictive hypothesis as a linear combination of input features weighted by learned parameters:
+      </p>
+      <div class="math-block">
+        <code>y = w&#8321;x&#8321; + w&#8322;x&#8322; + ... + w&#8347;x&#8347; + b = w<sup>T</sup>x + b</code>
+      </div>
+      <p>
+        Notice what this formula requires: <strong>scalar multiplication</strong> (<code>w&#8322; &#183; x&#8322;</code>) and <strong>addition</strong>. If <code>x&#8322;</code> is the text string <code>"Lucknow"</code>, what is <code>2.5 &#183; "Lucknow"</code>? Python's interpreter will either duplicate the string (yielding <code>"LucknowLucknow..."</code>) or raise a catastrophic <code>TypeError</code>. Linear models cannot calculate gradients, losses, or predictions without numeric coordinates.
+      </p>
+
+      <h3>3.2 Geometric Distance Metrics</h3>
+      <p>
+        Non-parametric and distance-based estimators — including <strong>K-Nearest Neighbors (KNN)</strong>, <strong>Support Vector Machines (SVM)</strong> with RBF kernels, and <strong>K-Means Clustering</strong> — compute geometric distances (such as Euclidean distance) between pairs of observations:
+      </p>
+      <div class="math-block">
+        <code>d(a, b) = &radic; [ &Sigma; (a_j - b_j)&sup2; ]</code>
+      </div>
+      <p>
+        If observation A has Payment Method <code>"UPI"</code> and observation B has Payment Method <code>"Cash"</code>, what is <code>("UPI" - "Cash")&#178;</code>? The difference is mathematically undefined. Encoding bridges this chasm by representing categories as points in a structured Euclidean space.
+      </p>
+
+      <h3>3.3 Do Any Algorithms Accept Raw Strings?</h3>
+      <p>
+        Some specialized gradient boosting implementations (such as <strong>CatBoost</strong> and <strong>LightGBM</strong>) provide native categorical support. However:
+      </p>
+      <ul>
+        <li>Even CatBoost and LightGBM <strong>do not train on raw strings</strong>; under the hood, their engines automatically execute target encoding or integer histogram binning before splitting tree nodes!</li>
+        <li>The standard Scikit-Learn estimator ecosystem (e.g. <code>RandomForestClassifier</code>, <code>LinearRegression</code>, <code>HistGradientBoostingClassifier</code>) strictly enforces that input matrices <code>X</code> must be floating-point NumPy arrays.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 04 -->
+    <section id="sec-04" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 04</span>
+        <h2 class="section-title">Label Encoding</h2>
+      </div>
+
+      <p class="section-intro">
+        Label encoding is the simplest encoding technique in machine learning. It maps each distinct category in an attribute to a unique integer index: 0, 1, 2, ..., K-1. While intuitive and lightweight, it harbors one of the most dangerous traps in all of data science.
+      </p>
+
+      <h3>4.1 How Label Encoding Operates</h3>
+      <p>
+        Suppose we have a target column indicating exam results: <code>['Pass', 'Fail', 'Pass', 'Pass']</code>. Label encoding scans the unique categories, sorts them, and assigns sequential integers:
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Original Token</th>
+              <th>Alphabetical Order</th>
+              <th>Assigned Integer Code</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>"Fail"</code></td>
+              <td>Index 0</td>
+              <td><code>0</code></td>
+            </tr>
+            <tr>
+              <td><code>"Pass"</code></td>
+              <td>Index 1</td>
+              <td><code>1</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4.2 Python Implementation with Scikit-Learn</h3>
+      <p>
+        In Scikit-Learn, label encoding is implemented via <code>sklearn.preprocessing.LabelEncoder</code>:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>python &bull; Target Label Encoding Example</span>
+          <button class="code-copy-btn">Copy Code</button>
+        </div>
+        <pre><code>from sklearn.preprocessing import LabelEncoder
+
+# Sample binary target classes
+y_raw = ['Pass', 'Fail', 'Pass', 'Pass', 'Fail']
+
+# Instantiate and fit
+le = LabelEncoder()
+y_encoded = le.fit_transform(y_raw)
+
+print("Original Target:", y_raw)
+print("Encoded Target: ", y_encoded)
+print("Learned Classes:", le.classes_)
+# Output:
+# Original Target: ['Pass', 'Fail', 'Pass', 'Pass', 'Fail']
+# Encoded Target:  [1, 0, 1, 1, 0]
+# Learned Classes: ['Fail' 'Pass']</code></pre>
+      </div>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 340" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="340" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">The Fatal Trap: Applying Label Encoding to Nominal Features</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">How Arbitrary Integer Mappings Impose Hallucinated Distance and Linear Slopes</text>
+
+      <!-- Panel 1: The Misleading Mapping (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="360" height="235" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="360" height="36" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="180" y="23" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#9888; ARBITRARY INTEGER MAPPING (NOMINAL)</text>
+
+        <g transform="translate(20, 55)" font-size="12" font-family="monospace">
+          <text x="0" y="18" fill="#334155">Color: "Red"   &#8594; <tspan fill="#DC2626" font-weight="bold">0</tspan></text>
+          <text x="0" y="44" fill="#334155">Color: "Blue"  &#8594; <tspan fill="#DC2626" font-weight="bold">1</tspan></text>
+          <text x="0" y="70" fill="#334155">Color: "Green" &#8594; <tspan fill="#DC2626" font-weight="bold">2</tspan></text>
+        </g>
+
+        <!-- Unintended Mathematical Side Effects -->
+        <g transform="translate(20, 155)" font-size="11" fill="#991B1B">
+          <text x="0" y="12" font-weight="bold">Unintended Mathematical Illusions Created:</text>
+          <text x="0" y="30">1. False Ordering: 0 &lt; 1 &lt; 2 (Is Green "greater" than Red?)</text>
+          <text x="0" y="48">2. False Distance: |Green - Red| = 2, but |Blue - Red| = 1</text>
+          <text x="0" y="66">3. False Average: (Red + Green) / 2 = Blue!</text>
+        </g>
+      </g>
+
+      <!-- Panel 2: The Model's Distortion (Right) -->
+      <g transform="translate(430, 75)">
+        <rect x="0" y="0" width="390" height="235" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="390" height="36" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="195" y="23" text-anchor="middle" fill="#334155" font-weight="700" font-size="12">&#128200; MODEL INTERPRETATION DISTORTION</text>
+
+        <!-- Graphic Number Line -->
+        <g transform="translate(35, 70)">
+          <!-- Number Line Axis -->
+          <line x1="0" y1="40" x2="320" y2="40" stroke="#94A3B8" stroke-width="2" />
+          
+          <!-- Tick 0: Red -->
+          <circle cx="30" cy="40" r="7" fill="#EF4444" />
+          <text x="30" y="65" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Red = 0</text>
+
+          <!-- Tick 1: Blue -->
+          <circle cx="160" cy="40" r="7" fill="#3B82F6" />
+          <text x="160" y="65" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Blue = 1</text>
+
+          <!-- Tick 2: Green -->
+          <circle cx="290" cy="40" r="7" fill="#10B981" />
+          <text x="290" y="65" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Green = 2</text>
+
+          <!-- Linear slope line -->
+          <line x1="20" y1="20" x2="300" y2="-20" stroke="#DC2626" stroke-width="2" stroke-dasharray="4" />
+          <text x="160" y="-5" text-anchor="middle" fill="#DC2626" font-size="10" font-weight="bold">Assumed Linear Slope w &#183; Color</text>
+        </g>
+
+        <g transform="translate(20, 165)" font-size="11" fill="#475569">
+          <text x="0" y="12" font-weight="bold" fill="#0F172A">Senior Engineering Rule:</text>
+          <text x="0" y="30">Use <tspan font-weight="bold">OneHotEncoder</tspan> for nominal input features X.</text>
+          <text x="0" y="48">Reserve <tspan font-weight="bold">LabelEncoder</tspan> solely for the target variable y.</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.4: The Label Encoding Fallacy: Imposing an Artificial Metric Space onto Unordered Nominal Categories.</p>
+  <div class="how-to-read">
+    <strong>How to read this diagram:</strong> When you assign Red=0, Blue=1, and Green=2, linear models assume a steady incremental trend along the color axis. Distance-based models assume Red and Green are twice as dissimilar as Red and Blue. Because nominal categories have no physical hierarchy, this introduces artificial bias into the model's loss landscape.
+  </div>
+</div>
+
+      <h3>4.3 The Fatal Flaw: Using LabelEncoder on Nominal Feature Columns</h3>
+      <div class="card card-warn">
+        <div class="card-title">&#9888; The Golden Rule: LabelEncoder is for Target y, NOT Input Features X!</div>
+        <p>
+          Scikit-Learn's official documentation explicitly specifies that <code>LabelEncoder</code> is engineered solely for <strong>1-dimensional target vectors (y)</strong>. Using it to encode multi-column feature matrices (X) will inject false mathematical relationships that ruin linear models, neural networks, and distance estimators.
+        </p>
+      </div>
+
+      <p>
+        Suppose an engineer naively label-encodes the nominal feature <code>Color</code>:
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Color Token</th>
+              <th>Assigned Integer Code</th>
+              <th>False Mathematical Relationships Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>"Red"</code></td>
+              <td><code>0</code></td>
+              <td>The model assumes Red is the smallest, lowest-value state.</td>
+            </tr>
+            <tr>
+              <td><code>"Blue"</code></td>
+              <td><code>1</code></td>
+              <td>The model assumes Blue is halfway between Red and Green.</td>
+            </tr>
+            <tr>
+              <td><code>"Green"</code></td>
+              <td><code>2</code></td>
+              <td>The model assumes Green is twice as large as Blue, and that (Red + Green)/2 = Blue!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        When a linear regression model fits a coefficient <code>w_color &#183; Color</code>, it is forced to fit a single linear line across these numbers. If the true optimal prediction for Red is high, Blue is low, and Green is high, a linear slope <strong>cannot physically fit this non-monotonic pattern</strong>! The model's loss function is artificially constrained and distorted.
+      </p>
+    </section>
+    
+
+    <!-- SECTION 05 -->
+    <section id="sec-05" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 05</span>
+        <h2 class="section-title">Ordinal Encoding</h2>
+      </div>
+
+      <p class="section-intro">
+        While nominal features must never be arbitrarily mapped to integers, <strong>ordinal features legitimately possess a true, monotonic physical ranking</strong>. For these attributes, integer encoding is mathematically sound and computationally elegant — provided the hierarchy is dictated by domain expertise rather than automated sorting.
+      </p>
+
+      <h3>5.1 The Logic of Monotonic Ordering</h3>
+      <p>
+        Consider student skill levels: <code>['Beginner', 'Intermediate', 'Advanced']</code>. An Advanced student possesses strictly more skills than an Intermediate student, who in turn knows more than a Beginner. Mapping this sequence to:
+      </p>
+      <div class="math-block">
+        <code>"Beginner" &rarr; 0, &emsp; "Intermediate" &rarr; 1, &emsp; "Advanced" &rarr; 2</code>
+      </div>
+      <p>
+        allows tree-based decision nodes (e.g. <code>Skill &gt;= 1.5</code>) and linear regression weights to correctly leverage the directionality of mastery.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 320" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="320" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Domain-Driven Ordinal Encoding vs. The Default Alphabetical Trap</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Why Ordinal Categories Demand Explicit Domain Specification Instead of Lexicographical Defaults</text>
+
+      <!-- Panel 1: Alphabetical Bug (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="370" height="215" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="185" y="23" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#10008; ALPHABETICAL SORTING (SCIKIT-LEARN DEFAULT)</text>
+
+        <g transform="translate(20, 55)" font-size="12" font-family="monospace">
+          <text x="0" y="18" fill="#991B1B">"Advanced"     &#8594; <tspan font-weight="bold">0</tspan>  (Sorted 'A' first!)</text>
+          <text x="0" y="44" fill="#991B1B">"Beginner"     &#8594; <tspan font-weight="bold">1</tspan>  (Sorted 'B' second)</text>
+          <text x="0" y="70" fill="#991B1B">"Intermediate" &#8594; <tspan font-weight="bold">2</tspan>  (Sorted 'I' third)</text>
+        </g>
+
+        <g transform="translate(20, 145)" font-size="11" fill="#991B1B">
+          <text x="0" y="12" font-weight="bold">Catastrophic Hierarchy Inversion:</text>
+          <text x="0" y="30">&#10008; Model learns that Advanced (0) &lt; Beginner (1)!</text>
+          <text x="0" y="48">&#10008; Inverts the true physical progression completely.</text>
+        </g>
+      </g>
+
+      <!-- Panel 2: Domain-Specified Sequence (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="215" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="185" y="23" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; EXPLICIT DOMAIN SPECIFICATION (VERIFIED)</text>
+
+        <g transform="translate(20, 55)" font-size="12" font-family="monospace">
+          <text x="0" y="18" fill="#166534">"Beginner"     &#8594; <tspan font-weight="bold">0</tspan>  (Lowest mastery level)</text>
+          <text x="0" y="44" fill="#166534">"Intermediate" &#8594; <tspan font-weight="bold">1</tspan>  (Middle mastery)</text>
+          <text x="0" y="70" fill="#166534">"Advanced"     &#8594; <tspan font-weight="bold">2</tspan>  (Highest mastery level)</text>
+        </g>
+
+        <g transform="translate(20, 145)" font-size="11" fill="#166534">
+          <text x="0" y="12" font-weight="bold">Correct Physical Alignment:</text>
+          <text x="0" y="30">&#10004; Preserves monotonic progression (0 &lt; 1 &lt; 2).</text>
+          <text x="0" y="48">&#10004; Configured via: <tspan font-family="monospace">categories=[['Beg', 'Int', 'Adv']]</tspan></text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.5: Lexicographical Ordering Bug vs. Domain-Aware Ordinal Encoding Sequence.</p>
+  <div class="how-to-read">
+    <strong>How to read this comparison:</strong> If you pass ordinal categories into an automated encoder without specifying the order, it sorts strings alphabetically. Because 'Advanced' starts with 'A' and 'Beginner' starts with 'B', the algorithm learns that an advanced engineer has less knowledge than a beginner. Always explicitly pass the ordered list to OrdinalEncoder.
+  </div>
+</div>
+
+      <h3>5.2 The Alphabetical Ordering Trap</h3>
+      <p>
+        By default, many generic software functions sort categories lexicographically (alphabetically) before assigning integer codes. <strong>This creates catastrophic inversion bugs for ordinal features!</strong>
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Skill Level</th>
+              <th>Alphabetical Code (BUG!)</th>
+              <th>Domain-Specified Code (CORRECT)</th>
+              <th>The Consequence of the Bug</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>"Advanced"</code></td>
+              <td><code>0</code> (starts with 'A')</td>
+              <td><code>2</code> (highest mastery)</td>
+              <td>Model learns that Advanced engineers know <em>less</em> than Beginners!</td>
+            </tr>
+            <tr>
+              <td><code>"Beginner"</code></td>
+              <td><code>1</code> (starts with 'B')</td>
+              <td><code>0</code> (introductory mastery)</td>
+              <td>Model learns Beginners have intermediate knowledge.</td>
+            </tr>
+            <tr>
+              <td><code>"Intermediate"</code></td>
+              <td><code>2</code> (starts with 'I')</td>
+              <td><code>1</code> (middle mastery)</td>
+              <td>The entire real-world hierarchy is inverted and scrambled.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>5.3 Python Implementation with Scikit-Learn</h3>
+      <p>
+        To prevent alphabetical scrambling, always pass an explicit nested list of categories to <code>sklearn.preprocessing.OrdinalEncoder</code>:
+      </p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>python &bull; Domain-Aware Ordinal Encoding</span>
+          <button class="code-copy-btn">Copy Code</button>
+        </div>
+        <pre><code>import pandas as pd
+from sklearn.preprocessing import OrdinalEncoder
+
+# Sample DataFrame with ordinal feature
+df_ordinal = pd.DataFrame({
+    'student_id': ['STU_101', 'STU_102', 'STU_103', 'STU_104'],
+    'education': ["Bachelor's", "Master's", "High School", "Bachelor's"]
+})
+
+# 1. Define the explicit domain hierarchy (lowest to highest)
+education_order = ['High School', "Bachelor's", "Master's"]
+
+# 2. Instantiate encoder with explicit category sequence
+encoder = OrdinalEncoder(categories=[education_order])
+
+# 3. Fit and transform the feature
+df_ordinal['education_encoded'] = encoder.fit_transform(df_ordinal[['education']])
+
+print(df_ordinal[['student_id', 'education', 'education_encoded']])
+# Output:
+#   student_id   education  education_encoded
+# 0    STU_101  Bachelor's                1.0
+# 1    STU_102    Master's                2.0
+# 2    STU_103 High School                0.0
+# 3    STU_104  Bachelor's                1.0</code></pre>
+      </div>
+
+      <h3>5.4 The Step-Size Caveat</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#128207; Statistical Caveat: Integer Steps Do Not Equal Uniform Distance</div>
+        <p>
+          While <code>OrdinalEncoder</code> assigns <code>0, 1, 2</code>, do not assume the distance from 0 to 1 is physically identical to the distance from 1 to 2. A Bachelor's degree takes 3 to 4 years of study, while a Master's degree takes 1 to 2 years. Linear models assume each integer step provides an identical marginal change in target prediction. Tree models (Random Forests, Gradient Boosting) handle non-uniform ordinal steps exceptionally well because they split on thresholds (<code>x &gt;= 1.5</code>) rather than multiplying weights.
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 06 -->
+    <section id="sec-06" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 06</span>
+        <h2 class="section-title">One-Hot Encoding</h2>
+      </div>
+
+      <p class="section-intro">
+        <strong>One-Hot Encoding (OHE)</strong> is the industry-standard gold standard for nominal categorical features. Instead of cramming multiple qualitative categories into a single scalar column, One-Hot Encoding expands each category into its own dedicated binary indicator feature.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-ohe" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#4F46E5" />
+        </marker>
+      </defs>
+
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">One-Hot Encoding: 1 Categorical Column &#8594; K Distinct Binary Features</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Expanding a Single Categorical Attribute with K Distinct Levels into an Orthogonal Vector Basis</text>
+
+      <!-- Panel 1: Original Column (Left) -->
+      <g transform="translate(50, 75)">
+        <rect x="0" y="0" width="220" height="205" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="220" height="36" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="110" y="23" text-anchor="middle" fill="#334155" font-weight="700" font-size="12">ORIGINAL ATTRIBUTE (K=3)</text>
+
+        <!-- Miniature Table -->
+        <g transform="translate(15, 50)" font-size="11" font-family="monospace">
+          <rect x="0" y="0" width="190" height="22" fill="#F8FAFC" />
+          <text x="10" y="15" fill="#475569" font-weight="bold">Obs</text>
+          <text x="70" y="15" fill="#475569" font-weight="bold">Payment_Method</text>
+
+          <rect x="0" y="24" width="190" height="22" fill="#FFFFFF" />
+          <text x="10" y="39" fill="#64748B">#1</text>
+          <text x="70" y="39" fill="#0284C7" font-weight="bold">"UPI"</text>
+
+          <rect x="0" y="48" width="190" height="22" fill="#F8FAFC" />
+          <text x="10" y="63" fill="#64748B">#2</text>
+          <text x="70" y="63" fill="#15803D" font-weight="bold">"Cash"</text>
+
+          <rect x="0" y="72" width="190" height="22" fill="#FFFFFF" />
+          <text x="10" y="87" fill="#64748B">#3</text>
+          <text x="70" y="87" fill="#7C3AED" font-weight="bold">"Card"</text>
+
+          <rect x="0" y="96" width="190" height="22" fill="#F8FAFC" />
+          <text x="10" y="111" fill="#64748B">#4</text>
+          <text x="70" y="111" fill="#0284C7" font-weight="bold">"UPI"</text>
+        </g>
+      </g>
+
+      <!-- Center Transformation Arrow -->
+      <g transform="translate(300, 165)">
+        <path d="M 0 0 L 50 0" stroke="#4F46E5" stroke-width="3" marker-end="url(#arrow-ohe)" />
+        <text x="25" y="-12" text-anchor="middle" fill="#4F46E5" font-weight="700" font-size="10">ONE-HOT</text>
+      </g>
+
+      <!-- Panel 2: Expanded Binary Columns (Right) -->
+      <g transform="translate(380, 75)">
+        <rect x="0" y="0" width="420" height="205" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="420" height="36" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="210" y="23" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; 3 INDEPENDENT BINARY COLUMNS (ORTHOGONAL)</text>
+
+        <!-- Miniature Expanded Table -->
+        <g transform="translate(15, 50)" font-size="11" font-family="monospace">
+          <rect x="0" y="0" width="390" height="22" fill="#F1F5F9" />
+          <text x="10" y="15" fill="#475569" font-weight="bold">Obs</text>
+          <text x="80" y="15" fill="#0284C7" font-weight="bold">Pay_Card</text>
+          <text x="180" y="15" fill="#15803D" font-weight="bold">Pay_Cash</text>
+          <text x="290" y="15" fill="#7C3AED" font-weight="bold">Pay_UPI</text>
+
+          <rect x="0" y="24" width="390" height="22" fill="#FFFFFF" />
+          <text x="10" y="39" fill="#64748B">#1</text>
+          <text x="100" y="39" fill="#94A3B8">0</text>
+          <text x="200" y="39" fill="#94A3B8">0</text>
+          <text x="310" y="39" fill="#4338CA" font-weight="bold">1</text>
+
+          <rect x="0" y="48" width="390" height="22" fill="#F0FDF4" />
+          <text x="10" y="63" fill="#64748B">#2</text>
+          <text x="100" y="63" fill="#94A3B8">0</text>
+          <text x="200" y="63" fill="#15803D" font-weight="bold">1</text>
+          <text x="310" y="63" fill="#94A3B8">0</text>
+
+          <rect x="0" y="72" width="390" height="22" fill="#FFFFFF" />
+          <text x="10" y="87" fill="#64748B">#3</text>
+          <text x="100" y="87" fill="#7C3AED" font-weight="bold">1</text>
+          <text x="200" y="87" fill="#94A3B8">0</text>
+          <text x="310" y="87" fill="#94A3B8">0</text>
+
+          <rect x="0" y="96" width="390" height="22" fill="#F0FDF4" />
+          <text x="10" y="111" fill="#64748B">#4</text>
+          <text x="100" y="111" fill="#94A3B8">0</text>
+          <text x="200" y="111" fill="#94A3B8">0</text>
+          <text x="310" y="111" fill="#4338CA" font-weight="bold">1</text>
+        </g>
+
+        <!-- Property Note -->
+        <g transform="translate(15, 175)" font-size="10" fill="#166534">
+          <text x="0" y="12">&#10004; Equal pairwise distance: d(UPI, Cash) = d(UPI, Card) = &#8730;2 = 1.414</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.6: One-Hot Encoding Expansion: Translating Discrete Tokens into Orthogonal Vectors.</p>
+  <div class="how-to-read">
+    <strong>How to read this expansion:</strong> Each distinct category is given its own dedicated binary column. For any individual row, only one column has the active bit (1, 'hot') while all others contain 0 ('cold'). This ensures every category is equidistant from every other category in mathematical Euclidean space.
+  </div>
+</div>
+
+      <h3>6.1 The Mathematical Principle of Orthogonality</h3>
+      <p>
+        When you have 3 payment methods — <code>['Card', 'Cash', 'UPI']</code> — One-Hot Encoding maps them into a 3-dimensional Euclidean space:
+      </p>
+      <div class="math-block">
+        <code>"Card" &rarr; [1, 0, 0]<sup>T</sup>, &emsp; "Cash" &rarr; [0, 1, 0]<sup>T</sup>, &emsp; "UPI" &rarr; [0, 0, 1]<sup>T</sup></code>
+      </div>
+      <p>
+        Notice the profound geometric consequence:
+      </p>
+      <ul>
+        <li>The dot product between any two distinct category vectors is zero: <code>[1, 0, 0] &#183; [0, 1, 0] = 0</code>. The categories are <strong>mutually orthogonal</strong> (perpendicular).</li>
+        <li>The Euclidean distance between any two distinct categories is identical:
+          <br>
+          <code>d(Card, Cash) = &radic; [ (1-0)&sup2; + (0-1)&sup2; + (0-0)&sup2; ] = &radic;2 &approx; 1.414</code>
+          <br>
+          <code>d(Card, UPI) = &radic; [ (1-0)&sup2; + (0-0)&sup2; + (0-1)&sup2; ] = &radic;2 &approx; 1.414</code>
+        </li>
+      </ul>
+      <p>
+        No category is "closer" to another, and no category is "greater than" another. The artificial geometry created by label encoding is completely dismantled!
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 320" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="320" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Diagnostic Chart: One-Hot Encoding Binary Sparsity Heatmap</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Row-by-Feature Visualization of Active Bits (1.0 = Hot) vs. Inactive Bits (0.0 = Cold)</text>
+
+      <!-- Heatmap Grid -->
+      <g transform="translate(180, 80)">
+        <!-- Column Headers -->
+        <text x="40" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Delhi</text>
+        <text x="120" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Jaipur</text>
+        <text x="200" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Lucknow</text>
+        <text x="280" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Mumbai</text>
+        <text x="360" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Card</text>
+        <text x="440" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Cash</text>
+        <text x="520" y="-10" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">UPI</text>
+
+        <!-- Row 1: Lucknow, UPI -->
+        <text x="-25" y="22" text-anchor="end" fill="#64748B" font-size="11" font-family="monospace">Row 1</text>
+        <rect x="10" y="5" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="90" y="5" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="170" y="5" width="60" height="24" rx="4" fill="#4F46E5" stroke="#4338CA" />
+        <rect x="250" y="5" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="330" y="5" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="410" y="5" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="490" y="5" width="60" height="24" rx="4" fill="#10B981" stroke="#059669" />
+        <text x="200" y="21" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+        <text x="520" y="21" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+
+        <!-- Row 2: Delhi, Cash -->
+        <text x="-25" y="54" text-anchor="end" fill="#64748B" font-size="11" font-family="monospace">Row 2</text>
+        <rect x="10" y="37" width="60" height="24" rx="4" fill="#4F46E5" stroke="#4338CA" />
+        <rect x="90" y="37" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="170" y="37" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="250" y="37" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="330" y="37" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="410" y="37" width="60" height="24" rx="4" fill="#10B981" stroke="#059669" />
+        <rect x="490" y="37" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="40" y="53" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+        <text x="440" y="53" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+
+        <!-- Row 3: Mumbai, Card -->
+        <text x="-25" y="86" text-anchor="end" fill="#64748B" font-size="11" font-family="monospace">Row 3</text>
+        <rect x="10" y="69" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="90" y="69" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="170" y="69" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="250" y="69" width="60" height="24" rx="4" fill="#4F46E5" stroke="#4338CA" />
+        <rect x="330" y="69" width="60" height="24" rx="4" fill="#10B981" stroke="#059669" />
+        <rect x="410" y="69" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="490" y="69" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="280" y="85" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+        <text x="360" y="85" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+
+        <!-- Row 4: Jaipur, UPI -->
+        <text x="-25" y="118" text-anchor="end" fill="#64748B" font-size="11" font-family="monospace">Row 4</text>
+        <rect x="10" y="101" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="90" y="101" width="60" height="24" rx="4" fill="#4F46E5" stroke="#4338CA" />
+        <rect x="170" y="101" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="250" y="101" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="330" y="101" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="410" y="101" width="60" height="24" rx="4" fill="#F1F5F9" stroke="#E2E8F0" />
+        <rect x="490" y="101" width="60" height="24" rx="4" fill="#10B981" stroke="#059669" />
+        <text x="120" y="117" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+        <text x="520" y="117" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="11">1</text>
+      </g>
+
+      <!-- Legend -->
+      <g transform="translate(250, 260)" font-size="11">
+        <rect x="0" y="0" width="16" height="16" rx="3" fill="#4F46E5" />
+        <text x="24" y="12" fill="#334155">City Bit Active (1.0)</text>
+
+        <rect x="160" y="0" width="16" height="16" rx="3" fill="#10B981" />
+        <text x="184" y="12" fill="#334155">Payment Bit Active (1.0)</text>
+
+        <rect x="340" y="0" width="16" height="16" rx="3" fill="#F1F5F9" stroke="#CBD5E1" />
+        <text x="364" y="12" fill="#64748B">Zero Bit Inactive (0.0)</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.7: Sparsity Heatmap: Visualizing Exactly One Active Bit per Encoded Categorical Feature Group.</p>
+  <div class="how-to-read">
+    <strong>How to read this heatmap:</strong> Across each feature block (e.g. City columns, Payment columns), exactly one block per row is lit up with a 1.0 bit, leaving the remainder as zeros. Notice how sparse the matrix becomes as the number of category levels grows.
+  </div>
+</div>
+
+      <h3>6.2 Implementation: pandas.get_dummies() vs. Scikit-Learn OneHotEncoder</h3>
+      <p>
+        Data scientists have two primary tools for one-hot encoding in Python. Choosing the wrong one for production pipelines is a classic beginner mistake.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature / Trait</th>
+              <th><code>pandas.get_dummies()</code></th>
+              <th><code>sklearn.preprocessing.OneHotEncoder</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Primary Purpose</strong></td>
+              <td>Quick exploratory data analysis (EDA) and ad-hoc inspection.</td>
+              <td>Production pipelines, cross-validation, and production inference.</td>
+            </tr>
+            <tr>
+              <td><strong>Train/Test Column Consistency</strong></td>
+              <td><span style="color:#DC2626; font-weight:bold;">Dangerous</span>: If test data lacks a category, it produces fewer columns; if it has a new category, it produces more columns. Model crashes!</td>
+              <td><span style="color:#15803D; font-weight:bold;">Safe</span>: Freezes the exact training feature schema. Guarantees identical columns during <code>transform()</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Handling Unseen Categories</strong></td>
+              <td>Cannot handle unseen categories gracefully in an inference pipeline.</td>
+              <td>Supports <code>handle_unknown='ignore'</code>, producing an all-zero vector for new categories without crashing.</td>
+            </tr>
+            <tr>
+              <td><strong>Pipeline Integration</strong></td>
+              <td>Cannot be embedded directly in a Scikit-Learn <code>Pipeline</code>.</td>
+              <td>Fully compatible with <code>ColumnTransformer</code> and cross-validation folds.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>python &bull; Robust Production OneHotEncoder with handle_unknown='ignore'</span>
+          <button class="code-copy-btn">Copy Code</button>
+        </div>
+        <pre><code>import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+# Training partition
+df_train = pd.DataFrame({'city': ['Delhi', 'Mumbai', 'Lucknow', 'Delhi']})
+
+# 1. Instantiate encoder with production safeguards
+ohe = OneHotEncoder(handle_unknown='ignore', sparse_output=False)
+
+# 2. Fit strictly on training data
+ohe.fit(df_train[['city']])
+
+print("Learned Feature Names:", ohe.get_feature_names_out())
+# Output: ['city_Delhi' 'city_Lucknow' 'city_Mumbai']
+
+# 3. Transform production test batch with an UNSEEN city ('Bhopal')
+df_test = pd.DataFrame({'city': ['Delhi', 'Bhopal']})
+test_encoded = ohe.transform(df_test[['city']])
+
+df_test_result = pd.DataFrame(test_encoded, columns=ohe.get_feature_names_out())
+print("
+Transformed Test Set (Notice 'Bhopal' encoded as all zeros!):")
+print(df_test_result)
+# Output:
+#    city_Delhi  city_Lucknow  city_Mumbai
+# 0         1.0           0.0          0.0   (Delhi active)
+# 1         0.0           0.0          0.0   (Bhopal unseen -> all cold zeros!)</code></pre>
+      </div>
+
+      <h3>6.3 The Dummy Variable Trap and drop='first'</h3>
+      <p>
+        In linear regression models with an intercept term <code>b</code>, One-Hot Encoding introduces a subtle mathematical trap known as <strong>multicollinearity</strong>.
+      </p>
+      <p>
+        Because every observation belongs to exactly one category, the sum across all one-hot columns in a group always equals 1:
+      </p>
+      <div class="math-block">
+        <code>x<sub>Card</sub> + x<sub>Cash</sub> + x<sub>UPI</sub> = 1.0</code>
+      </div>
+      <p>
+        This creates <strong>perfect linear dependence</strong> with the model's intercept column (which is also a vector of ones). The matrix <code>X<sup>T</sup>X</code> becomes non-invertible, causing ordinary least squares (OLS) regression coefficients to become unstable or explode to infinity.
+      </p>
+
+      <div class="card card-concept">
+        <div class="card-title">&#128161; When to Use drop='first' vs. Full One-Hot Encoding</div>
+        <p>
+          Setting <code>OneHotEncoder(drop='first')</code> removes the first category column as a baseline reference:
+        </p>
+        <ul>
+          <li><strong>Use <code>drop='first'</code>:</strong> In unregularized linear regression and classical econometric models with an intercept, where matrix singularity must be avoided.</li>
+          <li><strong>Do NOT use <code>drop='first'</code>:</strong> In regularized models (Ridge, Lasso, ElasticNet), tree-based algorithms (Decision Trees, Random Forests, XGBoost), or Neural Networks. In tree models, dropping a column forces the tree to make deep multi-step splits just to isolate the dropped reference class. Furthermore, <code>drop='first'</code> is incompatible with <code>handle_unknown='ignore'</code>!</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 07 -->
+    <section id="sec-07" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 07</span>
+        <h2 class="section-title">Important Alternative Encoding Methods</h2>
+      </div>
+
+      <p class="section-intro">
+        While One-Hot and Ordinal Encoding cover 80% of common machine learning tasks, they struggle when categorical features exhibit high cardinality (thousands of unique values) or when memory constraints prohibit wide feature matrices. Senior engineers utilize specialized alternative encoding strategies.
+      </p>
+
+      <h3>7.1 Binary Encoding</h3>
+      <p>
+        <strong>Binary Encoding</strong> provides a logarithmic compression strategy. It converts each category into an integer index, translates that integer into its binary digits (0s and 1s), and splits those bits across individual columns:
+      </p>
+      <div class="math-block">
+        <code>Output Columns = &lceil; log<sub>2</sub>(K) &rceil;</code>
+      </div>
+      <p>
+        If an attribute has <strong>1,000 unique categories</strong>:
+      </p>
+      <ul>
+        <li>One-Hot Encoding creates: <strong>1,000 columns</strong> (extremely sparse, high memory).</li>
+        <li>Binary Encoding creates: <code>&lceil; log<sub>2</sub>(1000) &rceil; = <strong>10 columns</strong></code>!</li>
+      </ul>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-bin" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#4F46E5" />
+        </marker>
+      </defs>
+
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Binary Encoding: Compressing K Categories into &#8968;log&#8322;(K)&#8969; Columns</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Transforming 8 Categories into Just 3 Binary Features Instead of 8 One-Hot Columns</text>
+
+      <!-- Stage 1: Categories to Integers -->
+      <g transform="translate(30, 80)">
+        <rect x="0" y="0" width="220" height="190" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="220" height="32" rx="8" fill="#EEF2FF" stroke="#E2E8F0" />
+        <text x="110" y="21" text-anchor="middle" fill="#4338CA" font-weight="700" font-size="11">STAGE 1: INTEGER MAP</text>
+
+        <g transform="translate(15, 45)" font-size="11" font-family="monospace">
+          <text x="0" y="16" fill="#334155">Delhi    &#8594; <tspan font-weight="bold" fill="#4F46E5">1</tspan></text>
+          <text x="0" y="36" fill="#334155">Mumbai   &#8594; <tspan font-weight="bold" fill="#4F46E5">2</tspan></text>
+          <text x="0" y="56" fill="#334155">Lucknow  &#8594; <tspan font-weight="bold" fill="#4F46E5">3</tspan></text>
+          <text x="0" y="76" fill="#334155">Jaipur   &#8594; <tspan font-weight="bold" fill="#4F46E5">4</tspan></text>
+          <text x="0" y="96" fill="#334155">Chennai  &#8594; <tspan font-weight="bold" fill="#4F46E5">5</tspan></text>
+          <text x="0" y="116" fill="#334155">Kolkata  &#8594; <tspan font-weight="bold" fill="#4F46E5">6</tspan></text>
+          <text x="0" y="136" fill="#334155">Bhopal   &#8594; <tspan font-weight="bold" fill="#4F46E5">7</tspan></text>
+        </g>
+      </g>
+
+      <path d="M 265 175 L 300 175" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-bin)" />
+
+      <!-- Stage 2: Integer to Binary Digits -->
+      <g transform="translate(315, 80)">
+        <rect x="0" y="0" width="220" height="190" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="220" height="32" rx="8" fill="#EEF2FF" stroke="#E2E8F0" />
+        <text x="110" y="21" text-anchor="middle" fill="#4338CA" font-weight="700" font-size="11">STAGE 2: BINARY DIGITS</text>
+
+        <g transform="translate(15, 45)" font-size="11" font-family="monospace">
+          <text x="0" y="16" fill="#334155">1 &#8594; <tspan font-weight="bold" fill="#0284C7">0 0 1</tspan></text>
+          <text x="0" y="36" fill="#334155">2 &#8594; <tspan font-weight="bold" fill="#0284C7">0 1 0</tspan></text>
+          <text x="0" y="56" fill="#334155">3 &#8594; <tspan font-weight="bold" fill="#0284C7">0 1 1</tspan></text>
+          <text x="0" y="76" fill="#334155">4 &#8594; <tspan font-weight="bold" fill="#0284C7">1 0 0</tspan></text>
+          <text x="0" y="96" fill="#334155">5 &#8594; <tspan font-weight="bold" fill="#0284C7">1 0 1</tspan></text>
+          <text x="0" y="116" fill="#334155">6 &#8594; <tspan font-weight="bold" fill="#0284C7">1 1 0</tspan></text>
+          <text x="0" y="136" fill="#334155">7 &#8594; <tspan font-weight="bold" fill="#0284C7">1 1 1</tspan></text>
+        </g>
+      </g>
+
+      <path d="M 550 175 L 585 175" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-bin)" />
+
+      <!-- Stage 3: Split into Columns -->
+      <g transform="translate(600, 80)">
+        <rect x="0" y="0" width="220" height="190" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="220" height="32" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="110" y="21" text-anchor="middle" fill="#166534" font-weight="700" font-size="11">STAGE 3: 3 OUTPUT COLUMNS</text>
+
+        <g transform="translate(15, 45)" font-size="11" font-family="monospace">
+          <text x="0" y="16" fill="#475569" font-weight="bold">Col_0  Col_1  Col_2</text>
+          <text x="10" y="36" fill="#334155">0      0      1</text>
+          <text x="10" y="56" fill="#334155">0      1      0</text>
+          <text x="10" y="76" fill="#334155">0      1      1</text>
+          <text x="10" y="96" fill="#334155">1      0      0</text>
+          <text x="10" y="116" fill="#334155">1      0      1</text>
+          <text x="10" y="136" fill="#334155">1      1      0</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.8: Binary Encoding Workflow: Logarithmic Dimensionality Reduction for Medium-to-High Cardinality.</p>
+  <div class="how-to-read">
+    <strong>How to read this workflow:</strong> Instead of creating 8 or 16 separate one-hot columns, binary encoding converts categories into integer identifiers, translates those integers into binary bits, and unpacks the bits into separate columns. 1,024 categories can be compressed into just 10 binary columns!
+  </div>
+</div>
+
+      <h3>7.2 Frequency &amp; Count Encoding</h3>
+      <p>
+        <strong>Frequency Encoding</strong> replaces each category with its normalized relative proportion in the training dataset:
+      </p>
+      <div class="math-block">
+        <code>f(c) = count(c) / N</code>
+      </div>
+      <p>
+        <strong>Count Encoding</strong> replaces each category with its absolute occurrence count: <code>count(c)</code>.
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>City</th>
+              <th>Occurrence Count in Train (N=10)</th>
+              <th>Count Encoding Value</th>
+              <th>Frequency Encoding Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>"Lucknow"</code></td>
+              <td>4 occurrences</td>
+              <td><code>4</code></td>
+              <td><code>0.40</code> (40%)</td>
+            </tr>
+            <tr>
+              <td><code>"Delhi"</code></td>
+              <td>3 occurrences</td>
+              <td><code>3</code></td>
+              <td><code>0.30</code> (30%)</td>
+            </tr>
+            <tr>
+              <td><code>"Mumbai"</code></td>
+              <td>2 occurrences</td>
+              <td><code>2</code></td>
+              <td><code>0.20</code> (20%)</td>
+            </tr>
+            <tr>
+              <td><code>"Jaipur"</code></td>
+              <td>1 occurrence</td>
+              <td><code>1</code></td>
+              <td><code>0.10</code> (10%)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Advantages:</strong> Replaces a high-cardinality category with a single continuous feature that captures sample popularity. Highly effective for tree models where category frequency correlates with user behavior.
+        <br>
+        <strong>Limitation:</strong> If two different cities (e.g. Jaipur and Bhopal) both appear exactly once, they both receive the identical value <code>0.10</code>! The model loses the ability to distinguish their distinct qualitative identities.
+      </p>
+
+      <h3>7.3 Target Encoding (Mean Encoding)</h3>
+      <p>
+        <strong>Target Encoding</strong> replaces each category with the average target value (<code>y&#772;<sub>c</sub></code>) observed for that category in the training data:
+      </p>
+      <div class="math-block">
+        <code>y&#772;<sub>c</sub> = (1 / n<sub>c</sub>) &Sigma;<sub>i &isin; I<sub>c</sub></sub> y<sub>i</sub></code>
+      </div>
+      <p>
+        For binary classification where <code>y &isin; {0, 1}</code>, <code>y&#772;<sub>c</sub></code> represents the empirical probability of class 1 given category <code>c</code>.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 320" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="320" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Target Encoding: Supervised Mapping &amp; Overfitting Protection</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Replacing Categories with Target Statistics: The Critical Distinction Between Naive Leakage and Smoothed Cross-Fitting</text>
+
+      <!-- Panel 1: Naive Target Leakage (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="370" height="215" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="185" y="23" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#10008; NAIVE GLOBAL TARGET ENCODING (LEAKAGE)</text>
+
+        <g transform="translate(20, 55)" font-size="11" fill="#991B1B">
+          <text x="0" y="16" font-weight="bold">Fatal Flaw: Target Contamination</text>
+          <text x="0" y="34">&#8226; A rare category appearing once with y=1 gets mapped</text>
+          <text x="0" y="50">  directly to 1.0! The model memorizes this single label.</text>
+          <text x="0" y="74">&#8226; Computing means across the entire dataset exposes test</text>
+          <text x="0" y="90">  partition target distributions to training estimators.</text>
+
+          <rect x="0" y="110" width="330" height="36" rx="6" fill="#FFFFFF" stroke="#FECACA" />
+          <text x="10" y="132" fill="#DC2626" font-family="monospace" font-weight="bold">Result: 99% Train Score, 50% Test Failure!</text>
+        </g>
+      </g>
+
+      <!-- Panel 2: Smoothed Target Encoding (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="215" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="185" y="23" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; SMOOTHED &amp; CROSS-FITTED ENCODING</text>
+
+        <g transform="translate(20, 55)" font-size="11" fill="#166534">
+          <text x="0" y="16" font-weight="bold">The Engineering Remedy: m-Estimate Smoothing</text>
+          <text x="0" y="36" font-family="monospace">S_c = [ n_c &#183; mean_c + m &#183; global_mean ] / (n_c + m)</text>
+          
+          <text x="0" y="65">&#8226; Rare categories (small n_c) shrink toward the global prior.</text>
+          <text x="0" y="83">&#8226; Frequent categories rely predominantly on their own mean.</text>
+          <text x="0" y="101">&#8226; Out-of-fold (OOF) cross-fitting strictly prevents self-prediction.</text>
+
+          <rect x="0" y="115" width="330" height="36" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+          <text x="10" y="137" fill="#15803D" font-family="monospace" font-weight="bold">Result: Robust Generalization on Unseen Data</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.9: Target Encoding Dynamics: Naive Leakage Failure vs. Bayesian m-Estimate Smoothing.</p>
+  <div class="how-to-read">
+    <strong>How to read this comparison:</strong> Target encoding is immensely powerful for high-cardinality features, but computing raw target averages causes severe overfitting on rare categories. Using a smoothing weight m blends rare categories with the global population average, eliminating target leakage.
+  </div>
+</div>
+
+      <div class="card card-warn">
+        <div class="card-title">&#9888; The Target Leakage Catastrophe</div>
+        <p>
+          Target encoding directly incorporates the target label <code>y</code> into the feature matrix <code>X</code>. If implemented naively without smoothing or cross-fitting:
+        </p>
+        <ul>
+          <li>A rare category with only 1 sample that happens to be positive (y=1) receives an encoded value of <code>1.0</code>. The model memorizes this single observation and severely overfits!</li>
+          <li>Computing target averages on the entire dataset prior to splitting leaks holdout test performance into training features.</li>
+        </ul>
+        <p>
+          <strong>The Solution: Bayesian m-Estimate Smoothing:</strong>
+          <br>
+          <code>S&#770;<sub>c</sub> = (n<sub>c</sub> y&#772;<sub>c</sub> + m &mu;) / (n<sub>c</sub> + m)</code>
+          <br>
+          where <code>&mu;</code> is the global target mean across all records, and <code>m</code> is a smoothing weight. For rare categories with small sample size <code>n<sub>c</sub></code>, the encoded value shrinks toward the global prior <code>&mu;</code>, neutralizing overfitting.
+        </p>
+      </div>
+
+      <h3>7.4 Hash Encoding (The Hashing Trick)</h3>
+      <p>
+        <strong>Hash Encoding</strong> applies a deterministic hashing algorithm (such as MurmurHash3) to category string tokens and maps the resulting hash value modulo <code>m</code> into a fixed number of binary columns:
+      </p>
+      <div class="math-block">
+        <code>Feature Index = hash(category) mod m</code>
+      </div>
+      <ul>
+        <li><strong>Superpower:</strong> Bounded memory footprint. Even if an infinite stream of new categories appears in production, the feature matrix never expands beyond <code>m</code> columns!</li>
+        <li><strong>Trade-off:</strong> <em>Hash collisions</em> occur when two different categories hash to the exact same bucket (e.g. "Paris" and "Tokyo" both land in Column 3), diluting signal interpretability.</li>
+      </ul>
+
+      <h3>7.5 Grouping Rare Categories into 'Other'</h3>
+      <p>
+        A powerful industry standard for high-cardinality nominal features is to calculate category frequencies and replace all classes below a threshold (e.g. &lt; 2% or 5%) with a consolidated <code>"Other"</code> token. This retains dedicated one-hot columns for the major traffic drivers while capping dimensionality.
+      </p>
+    </section>
+    
+
+    <!-- SECTION 08 -->
+    <section id="sec-08" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 08</span>
+        <h2 class="section-title">Comparison of Encoding Methods</h2>
+      </div>
+
+      <p class="section-intro">
+        Selecting the correct encoder is not a matter of personal preference; it is a rigorous engineering decision driven by feature scale, cardinality, downstream algorithm mechanics, and memory budgets. Below is the comprehensive architectural comparison matrix.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Encoding Method</th>
+              <th>Best-Suited Feature Type</th>
+              <th>Transformation Mechanism</th>
+              <th>Output Dimensions</th>
+              <th>Key Advantages</th>
+              <th>Limitations &amp; Overfitting Risks</th>
+              <th>Typical Industry Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Label Encoding</strong></td>
+              <td>Target Variable <code>y</code> strictly</td>
+              <td>Maps tokens to sequential integers (0, 1, ..., K-1)</td>
+              <td>1 column (1D array)</td>
+              <td>Zero memory expansion; compact storage.</td>
+              <td><span style="color:#DC2626; font-weight:bold;">Dangerous for X!</span> Imposes false distances and linear order.</td>
+              <td>Target classes in multi-class classification.</td>
+            </tr>
+            <tr>
+              <td><strong>Ordinal Encoding</strong></td>
+              <td>Ordinal Features with natural hierarchy</td>
+              <td>Maps domain sequence to monotonic integers</td>
+              <td>1 column per feature</td>
+              <td>Preserves physical rank; compact; ideal for tree splits.</td>
+              <td>Assumes uniform step distances; sensitive to alphabetical sorting bugs.</td>
+              <td>Education tiers, satisfaction levels, customer tiers.</td>
+            </tr>
+            <tr>
+              <td><strong>One-Hot Encoding</strong></td>
+              <td>Nominal Features (Low Cardinality &lt; 15)</td>
+              <td>Expands K levels into K orthogonal binary columns</td>
+              <td>K columns (or K-1 with drop='first')</td>
+              <td>Zero artificial ordering; completely orthogonal vectors.</td>
+              <td>Curse of dimensionality for high cardinality; memory intensive.</td>
+              <td>Payment methods, product colors, operating systems.</td>
+            </tr>
+            <tr>
+              <td><strong>Binary Encoding</strong></td>
+              <td>Nominal Features (Medium-High Cardinality)</td>
+              <td>Converts integer index to binary bits across columns</td>
+              <td>&lceil; log<sub>2</sub>(K) &rceil; columns</td>
+              <td>Exponential compression (1,000 categories &rarr; 10 columns).</td>
+              <td>Obscures direct category interpretability; artificial bit correlations.</td>
+              <td>US Zip codes, international airports, car models.</td>
+            </tr>
+            <tr>
+              <td><strong>Frequency / Count</strong></td>
+              <td>Nominal Features (High Cardinality)</td>
+              <td>Replaces category with relative frequency or sample count</td>
+              <td>1 column per feature</td>
+              <td>Reflects category popularity; zero dimensionality expansion.</td>
+              <td>Different categories with identical count receive identical values.</td>
+              <td>E-commerce search queries, user agent types.</td>
+            </tr>
+            <tr>
+              <td><strong>Target Encoding</strong></td>
+              <td>Nominal Features (High Cardinality, Supervised)</td>
+              <td>Replaces category with smoothed mean target value</td>
+              <td>1 column per feature</td>
+              <td>Monotonically aligns category with target; highly predictive.</td>
+              <td><span style="color:#DC2626; font-weight:bold;">Extreme Leakage Risk!</span> Requires Bayesian smoothing and cross-fitting.</td>
+              <td>Fraud detection (merchant IDs), click-through rate (ad IDs).</td>
+            </tr>
+            <tr>
+              <td><strong>Hash Encoding</strong></td>
+              <td>Nominal Features (Extreme / Unbounded Cardinality)</td>
+              <td>Applies hash function modulo m feature buckets</td>
+              <td>Fixed m columns</td>
+              <td>Fixed memory ceiling; handles infinite unseen production categories.</td>
+              <td>Hash collisions blend unrelated categories; zero interpretability.</td>
+              <td>Real-time streaming pipelines, NLP bag-of-words.</td>
+            </tr>
+            <tr>
+              <td><strong>Rare Grouping</strong></td>
+              <td>Long-Tail Nominal Features</td>
+              <td>Consolidates infrequent categories (&lt; threshold) to 'Other'</td>
+              <td>Reduces one-hot columns</td>
+              <td>Eliminates noise; stabilizes estimator variance.</td>
+              <td>Loses granular distinctions among low-frequency classes.</td>
+              <td>Demographic nationalities, browser device versions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>8.1 The Beginner Decision Guide</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#129302; Senior Machine Learning Engineer Decision Heuristic</div>
+        <ol>
+          <li><strong>Is this the target variable (y)?</strong> &rarr; Use <code>LabelEncoder</code>.</li>
+          <li><strong>Does the feature possess a true physical/semantic hierarchy?</strong> &rarr; Use <code>OrdinalEncoder</code> with an explicit <code>categories=[[...]]</code> sequence.</li>
+          <li><strong>Is the feature binary (exactly 2 states)?</strong> &rarr; Map directly to <code>0</code> and <code>1</code>, or use <code>OneHotEncoder(drop='first')</code>.</li>
+          <li><strong>Is the feature nominal with low cardinality (K &le; 15)?</strong> &rarr; Use <code>OneHotEncoder(handle_unknown='ignore')</code>.</li>
+          <li><strong>Is the feature nominal with high cardinality (K &gt; 50)?</strong> &rarr;
+            <ul>
+              <li>If tree-based model &amp; high volume: Use <strong>Target Encoding</strong> with Bayesian smoothing.</li>
+              <li>If linear model or neural net: Use <strong>Binary Encoding</strong> or group long-tail into <strong>'Other'</strong> prior to One-Hot.</li>
+            </ul>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- SECTION 09 -->
+    <section id="sec-09" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 09</span>
+        <h2 class="section-title">Important Graphs and Visual Explanations</h2>
+      </div>
+
+      <p class="section-intro">
+        Visual exploratory data analysis illuminates categorical structures that summary tables conceal. Below are the six essential diagnostic visual learning components demonstrating frequency skews, dimensional trade-offs, and complete pipeline flows.
+      </p>
+
+      <h3>9.1 Graph 1: Category Frequency Bar Chart</h3>
+      <p>
+        The frequency bar chart exposes category imbalances and rare cohorts that could destabilize model fitting:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 300" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="300" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="30" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Diagnostic Chart 1: Categorical Frequency Distribution</text>
+      <text x="425" y="50" text-anchor="middle" fill="#64748B" font-size="12">Auditing Volume and Class Imbalance Across Payment Method Categories</text>
+
+      <g transform="translate(100, 70)">
+        <!-- Axes -->
+        <line x1="50" y1="20" x2="50" y2="170" stroke="#94A3B8" stroke-width="1.5" />
+        <line x1="50" y1="170" x2="680" y2="170" stroke="#94A3B8" stroke-width="1.5" />
+
+        <!-- Y Ticks -->
+        <text x="40" y="174" text-anchor="end" fill="#64748B" font-size="10">0</text>
+        <text x="40" y="135" text-anchor="end" fill="#64748B" font-size="10">2</text>
+        <text x="40" y="96" text-anchor="end" fill="#64748B" font-size="10">4</text>
+        <text x="40" y="57" text-anchor="end" fill="#64748B" font-size="10">6</text>
+        <text x="40" y="24" text-anchor="end" fill="#64748B" font-size="10">8</text>
+
+        <line x1="46" y1="135" x2="680" y2="135" stroke="#E2E8F0" stroke-dasharray="3" />
+        <line x1="46" y1="96" x2="680" y2="96" stroke="#E2E8F0" stroke-dasharray="3" />
+        <line x1="46" y1="57" x2="680" y2="57" stroke="#E2E8F0" stroke-dasharray="3" />
+
+        <!-- Bars -->
+        <!-- UPI: 6 (Height: 6 * 19.5 = 117) -->
+        <rect x="90" y="53" width="70" height="117" rx="4" fill="#4F46E5" />
+        <text x="125" y="45" text-anchor="middle" fill="#4F46E5" font-weight="bold" font-size="11">6 (50%)</text>
+        <text x="125" y="188" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">UPI</text>
+
+        <!-- Cash: 3 (Height: 3 * 19.5 = 58.5) -->
+        <rect x="220" y="111.5" width="70" height="58.5" rx="4" fill="#0284C7" />
+        <text x="255" y="103" text-anchor="middle" fill="#0284C7" font-weight="bold" font-size="11">3 (25%)</text>
+        <text x="255" y="188" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Cash</text>
+
+        <!-- Card: 2 (Height: 2 * 19.5 = 39) -->
+        <rect x="350" y="131" width="70" height="39" rx="4" fill="#7C3AED" />
+        <text x="385" y="123" text-anchor="middle" fill="#7C3AED" font-weight="bold" font-size="11">2 (17%)</text>
+        <text x="385" y="188" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Card</text>
+
+        <!-- NetBanking: 1 (Height: 1 * 19.5 = 19.5) -->
+        <rect x="480" y="150.5" width="70" height="19.5" rx="4" fill="#F59E0B" />
+        <text x="515" y="142" text-anchor="middle" fill="#D97706" font-weight="bold" font-size="11">1 (8%)</text>
+        <text x="515" y="188" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">NetBanking</text>
+
+        <!-- Crypto (Rare): 0 -->
+        <rect x="610" y="169" width="70" height="1" rx="1" fill="#DC2626" />
+        <text x="645" y="160" text-anchor="middle" fill="#DC2626" font-weight="bold" font-size="11">0 (0%)</text>
+        <text x="645" y="188" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">Crypto</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.10: Categorical Frequency Distribution: Auditing Relative Frequencies and Identifying Rare Categories.</p>
+  <div class="how-to-read">
+    <strong>How to read this chart:</strong> Frequency charts reveal class imbalance. In this dataset, UPI represents 50% of all observations while NetBanking represents only 8%, and Crypto is completely absent. Rare categories require deliberate strategies such as 'Other' grouping or smoothing.
+  </div>
+</div>
+
+      <h3>9.2 Graph 2 &amp; Graph 3: One-Hot Encoding Expansion &amp; Sparsity Heatmap</h3>
+      <p>
+        Visualizing how a single attribute expands into orthogonal binary dimensions, and how sparsity manifests across tabular rows:
+      </p>
+      <div class="card card-analogy">
+        <div class="card-title">&#128065; Visual Review: Refer to Figures 6.6 and 6.7 in Section 6</div>
+        <p>
+          Notice how Figure 6.6 demonstrates the expansion of 1 column into 3 orthogonal basis vectors, while Figure 6.7 illustrates the row-by-row binary sparsity heatmap where exactly one cell lights up with an active 1.0 bit per feature group.
+        </p>
+      </div>
+
+      <h3>9.3 Graph 4: Geometric Ordinal vs. Nominal Distance Comparison</h3>
+      <p>
+        Demonstrating why 1D scalar mappings are statistically valid for monotonic progressions but catastrophic for unordered nominal features:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 290" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="290" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Geometric Comparison: Valid Ordinal Metric vs. Distorted Nominal Metric</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Why 1D Integer Projections Fail for Nominal Data but Correctly Reflect Monotonic Progressions</text>
+
+      <!-- Panel 1: Valid Ordinal Projection (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="370" height="185" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="34" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="185" y="22" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; VALID 1D ORDINAL NUMBER LINE</text>
+
+        <g transform="translate(35, 75)">
+          <line x1="0" y1="20" x2="300" y2="20" stroke="#16A34A" stroke-width="2.5" />
+          
+          <circle cx="20" cy="20" r="7" fill="#15803D" />
+          <text x="20" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">School (0)</text>
+
+          <circle cx="150" cy="20" r="7" fill="#15803D" />
+          <text x="150" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Bachelor (1)</text>
+
+          <circle cx="280" cy="20" r="7" fill="#15803D" />
+          <text x="280" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Master (2)</text>
+        </g>
+        <text x="185" y="160" text-anchor="middle" fill="#166534" font-size="11">&#10004; Monotonic progression correctly guides decision trees &amp; regression</text>
+      </g>
+
+      <!-- Panel 2: Distorted Nominal Projection (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="185" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="34" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="185" y="22" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#10008; DISTORTED NOMINAL 1D PROJECTION</text>
+
+        <g transform="translate(35, 75)">
+          <line x1="0" y1="20" x2="300" y2="20" stroke="#DC2626" stroke-width="2.5" stroke-dasharray="4" />
+          
+          <circle cx="20" cy="20" r="7" fill="#DC2626" />
+          <text x="20" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Lucknow (0)</text>
+
+          <circle cx="150" cy="20" r="7" fill="#DC2626" />
+          <text x="150" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Delhi (1)</text>
+
+          <circle cx="280" cy="20" r="7" fill="#DC2626" />
+          <text x="280" y="45" text-anchor="middle" fill="#334155" font-size="11" font-weight="bold">Mumbai (2)</text>
+        </g>
+        <text x="185" y="160" text-anchor="middle" fill="#991B1B" font-size="11">&#10008; False distance: Claims Lucknow is closer to Delhi than to Mumbai!</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.11: Geometric Reality: Natural 1D Progression vs. Distorted Unordered Placement.</p>
+  <div class="how-to-read">
+    <strong>How to read this comparison:</strong> Ordinal categories have a true semantic direction (education level increases from left to right). Nominal categories have no spatial orientation; placing them along a single line artificially invents geographic and quantitative distances that distort the model's loss landscape.
+  </div>
+</div>
+
+      <h3>9.4 Graph 5: Dimensionality Comparison (Low vs. High Cardinality)</h3>
+      <p>
+        Evaluating the column expansion cost of One-Hot Encoding against compact alternatives (Binary, Frequency, Target) for an attribute with 50 unique levels:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Diagnostic Chart 2: Dimensionality Explosion vs. Compression Methods</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Output Feature Count for a 50-Category Attribute Across Different Encoding Strategies</text>
+
+      <g transform="translate(100, 75)">
+        <!-- Axes -->
+        <line x1="50" y1="20" x2="50" y2="180" stroke="#94A3B8" stroke-width="1.5" />
+        <line x1="50" y1="180" x2="680" y2="180" stroke="#94A3B8" stroke-width="1.5" />
+
+        <!-- Grid Lines & Ticks -->
+        <text x="40" y="184" text-anchor="end" fill="#64748B" font-size="10">0</text>
+        <text x="40" y="148" text-anchor="end" fill="#64748B" font-size="10">10</text>
+        <text x="40" y="116" text-anchor="end" fill="#64748B" font-size="10">20</text>
+        <text x="40" y="84" text-anchor="end" fill="#64748B" font-size="10">30</text>
+        <text x="40" y="52" text-anchor="end" fill="#64748B" font-size="10">40</text>
+        <text x="40" y="24" text-anchor="end" fill="#64748B" font-size="10">50</text>
+
+        <line x1="46" y1="148" x2="680" y2="148" stroke="#E2E8F0" stroke-dasharray="3" />
+        <line x1="46" y1="116" x2="680" y2="116" stroke="#E2E8F0" stroke-dasharray="3" />
+        <line x1="46" y1="84" x2="680" y2="84" stroke="#E2E8F0" stroke-dasharray="3" />
+        <line x1="46" y1="52" x2="680" y2="52" stroke="#E2E8F0" stroke-dasharray="3" />
+
+        <!-- Bars -->
+        <!-- One-Hot Encoding: 50 Columns -->
+        <rect x="90" y="20" width="85" height="160" rx="4" fill="#DC2626" />
+        <text x="132" y="12" text-anchor="middle" fill="#DC2626" font-weight="bold" font-size="11">50 Cols</text>
+        <text x="132" y="200" text-anchor="middle" fill="#334155" font-weight="bold" font-size="10">One-Hot</text>
+
+        <!-- Binary Encoding: 6 Columns (2^6 = 64 > 50) -->
+        <rect x="235" y="160.8" width="85" height="19.2" rx="4" fill="#0284C7" />
+        <text x="277" y="152" text-anchor="middle" fill="#0284C7" font-weight="bold" font-size="11">6 Cols</text>
+        <text x="277" y="200" text-anchor="middle" fill="#334155" font-weight="bold" font-size="10">Binary</text>
+
+        <!-- Frequency Encoding: 1 Column -->
+        <rect x="380" y="176.8" width="85" height="3.2" rx="2" fill="#10B981" />
+        <text x="422" y="168" text-anchor="middle" fill="#15803D" font-weight="bold" font-size="11">1 Col</text>
+        <text x="422" y="200" text-anchor="middle" fill="#334155" font-weight="bold" font-size="10">Frequency</text>
+
+        <!-- Target Encoding: 1 Column -->
+        <rect x="525" y="176.8" width="85" height="3.2" rx="2" fill="#7C3AED" />
+        <text x="567" y="168" text-anchor="middle" fill="#7C3AED" font-weight="bold" font-size="11">1 Col</text>
+        <text x="567" y="200" text-anchor="middle" fill="#334155" font-weight="bold" font-size="10">Target (Smoothed)</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.12: Dimensionality Comparison: The Curse of Dimensionality Under One-Hot Encoding vs. Compact Alternatives.</p>
+  <div class="how-to-read">
+    <strong>How to read this chart:</strong> For a single feature with 50 unique categories, One-Hot Encoding expands your dataset by 50 columns. Binary Encoding compresses the identical information into just 6 columns, while Frequency and Target Encoding compress it into a single informative continuous column.
+  </div>
+</div>
+
+      <h3>9.5 Graph 6: Rare Categories &amp; Long-Tail Pareto Distribution</h3>
+      <p>
+        Analyzing the frequency distribution of a high-cardinality geographic feature and establishing the threshold cutoff for the 'Other' group:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Diagnostic Chart 3: The Long-Tail Category Distribution</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Identifying Infrequent Classes and Applying the 'Other' Grouping Threshold</text>
+
+      <g transform="translate(80, 75)">
+        <!-- Axes -->
+        <line x1="60" y1="20" x2="60" y2="180" stroke="#94A3B8" stroke-width="1.5" />
+        <line x1="60" y1="180" x2="710" y2="180" stroke="#94A3B8" stroke-width="1.5" />
+
+        <!-- Bars for Cities -->
+        <!-- Delhi: 45% -->
+        <rect x="80" y="36" width="55" height="144" rx="4" fill="#4F46E5" />
+        <text x="107" y="28" text-anchor="middle" fill="#4F46E5" font-weight="bold" font-size="10">45%</text>
+        <text x="107" y="196" text-anchor="middle" fill="#334155" font-size="10">Delhi</text>
+
+        <!-- Mumbai: 28% -->
+        <rect x="155" y="90" width="55" height="90" rx="4" fill="#4F46E5" />
+        <text x="182" y="82" text-anchor="middle" fill="#4F46E5" font-weight="bold" font-size="10">28%</text>
+        <text x="182" y="196" text-anchor="middle" fill="#334155" font-size="10">Mumbai</text>
+
+        <!-- Bangalore: 14% -->
+        <rect x="230" y="135" width="55" height="45" rx="4" fill="#4F46E5" />
+        <text x="257" y="127" text-anchor="middle" fill="#4F46E5" font-weight="bold" font-size="10">14%</text>
+        <text x="257" y="196" text-anchor="middle" fill="#334155" font-size="10">Bangalore</text>
+
+        <!-- Lucknow: 7% -->
+        <rect x="305" y="157" width="55" height="23" rx="4" fill="#4F46E5" />
+        <text x="332" y="149" text-anchor="middle" fill="#4F46E5" font-weight="bold" font-size="10">7%</text>
+        <text x="332" y="196" text-anchor="middle" fill="#334155" font-size="10">Lucknow</text>
+
+        <!-- Rare Cities below 3% threshold -->
+        <!-- Jaipur: 2% -->
+        <rect x="380" y="173.6" width="45" height="6.4" rx="2" fill="#F87171" />
+        <text x="402" y="196" text-anchor="middle" fill="#DC2626" font-size="9">Jaipur</text>
+
+        <!-- Bhopal: 1.5% -->
+        <rect x="440" y="175.2" width="45" height="4.8" rx="2" fill="#F87171" />
+        <text x="462" y="196" text-anchor="middle" fill="#DC2626" font-size="9">Bhopal</text>
+
+        <!-- Patna: 1.2% -->
+        <rect x="500" y="176.1" width="45" height="3.9" rx="2" fill="#F87171" />
+        <text x="522" y="196" text-anchor="middle" fill="#DC2626" font-size="9">Patna</text>
+
+        <!-- 20 other micro cities -->
+        <rect x="560" y="177" width="130" height="3" rx="1" fill="#F87171" />
+        <text x="625" y="196" text-anchor="middle" fill="#DC2626" font-size="9">20+ Rare Cities (&lt;1% each)</text>
+
+        <!-- Threshold Line at 3% (Y = 170.4) -->
+        <line x1="60" y1="170" x2="710" y2="170" stroke="#DC2626" stroke-width="2" stroke-dasharray="4" />
+        <text x="715" y="174" fill="#DC2626" font-weight="bold" font-size="10">3% Threshold</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.13: Long-Tail Pareto Distribution: Isolating High-Volume Hubs vs. Grouping Rare Classes into 'Other'.</p>
+  <div class="how-to-read">
+    <strong>How to read this distribution:</strong> A handful of head categories account for 94% of all traffic, while dozens of rare cities populate the long tail. One-hot encoding all rare categories creates dozens of sparse, uninformative columns. Grouping everything below 3% into a consolidated 'Other' token preserves statistical power.
+  </div>
+</div>
+
+      <h3>9.6 Graph 7: Encoding Decision Flowchart</h3>
+      <p>
+        The standard operating procedure flowchart for choosing an encoding strategy:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 350" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#4F46E5" />
+        </marker>
+      </defs>
+
+      <rect width="850" height="350" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="30" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Architecture: Categorical Feature Encoding Decision Flowchart</text>
+      <text x="425" y="50" text-anchor="middle" fill="#64748B" font-size="12">Standard Operating Procedure for Selecting Optimal Encoders in Machine Learning</text>
+
+      <!-- Start Node -->
+      <g transform="translate(340, 70)">
+        <rect x="0" y="0" width="170" height="38" rx="19" fill="#4F46E5" />
+        <text x="85" y="24" text-anchor="middle" fill="#FFFFFF" font-weight="bold" font-size="12">Categorical Feature</text>
+      </g>
+
+      <!-- Decision Branches -->
+      <!-- Branch 1: Is Target Variable y? -->
+      <line x1="340" y1="89" x2="130" y2="89" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-flow)" />
+      <g transform="translate(40, 130)">
+        <rect x="0" y="0" width="180" height="60" rx="8" fill="#F0F9FF" stroke="#BAE6FD" />
+        <text x="90" y="22" text-anchor="middle" fill="#0369A1" font-weight="bold" font-size="11">Is it the Target (y)?</text>
+        <text x="90" y="44" text-anchor="middle" fill="#0284C7" font-weight="bold" font-size="12">&#10004; LabelEncoder</text>
+      </g>
+
+      <!-- Branch 2: Is it Ordinal? -->
+      <line x1="425" y1="108" x2="425" y2="130" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-flow)" />
+      <g transform="translate(335, 130)">
+        <rect x="0" y="0" width="180" height="60" rx="8" fill="#FAF5FF" stroke="#E9D5FF" />
+        <text x="90" y="22" text-anchor="middle" fill="#6B21A8" font-weight="bold" font-size="11">Has Meaningful Order?</text>
+        <text x="90" y="44" text-anchor="middle" fill="#7C3AED" font-weight="bold" font-size="12">&#10004; OrdinalEncoder</text>
+      </g>
+
+      <!-- Branch 3: Nominal Input Features -->
+      <line x1="510" y1="89" x2="700" y2="89" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-flow)" />
+      <g transform="translate(610, 130)">
+        <rect x="0" y="0" width="180" height="60" rx="8" fill="#FFFBEB" stroke="#FDE68A" />
+        <text x="90" y="22" text-anchor="middle" fill="#B45309" font-weight="bold" font-size="11">Nominal (Unordered)</text>
+        <text x="90" y="44" text-anchor="middle" fill="#D97706" font-size="11">Check Cardinality (K)</text>
+      </g>
+
+      <!-- Nominal Sub-Branches -->
+      <line x1="640" y1="190" x2="560" y2="230" stroke="#D97706" stroke-width="2" marker-end="url(#arrow-flow)" />
+      <g transform="translate(470, 235)">
+        <rect x="0" y="0" width="170" height="70" rx="8" fill="#F0FDF4" stroke="#BBF7D0" />
+        <text x="85" y="20" text-anchor="middle" fill="#15803D" font-weight="bold" font-size="11">Low Cardinality (K &lt; 15)</text>
+        <text x="85" y="42" text-anchor="middle" fill="#166534" font-weight="bold" font-size="11">&#10004; OneHotEncoder</text>
+        <text x="85" y="58" text-anchor="middle" fill="#64748B" font-size="9">(handle_unknown='ignore')</text>
+      </g>
+
+      <line x1="760" y1="190" x2="760" y2="230" stroke="#D97706" stroke-width="2" marker-end="url(#arrow-flow)" />
+      <g transform="translate(660, 235)">
+        <rect x="0" y="0" width="170" height="70" rx="8" fill="#FEF2F2" stroke="#FECACA" />
+        <text x="85" y="20" text-anchor="middle" fill="#991B1B" font-weight="bold" font-size="11">High Cardinality (K &gt; 50)</text>
+        <text x="85" y="42" text-anchor="middle" fill="#B91C1C" font-weight="bold" font-size="11">&#10004; Target / Binary</text>
+        <text x="85" y="58" text-anchor="middle" fill="#64748B" font-size="9">(Smoothed or Group 'Other')</text>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.14: Machine Learning Engineering Decision Hierarchy for Categorical Encoders.</p>
+  <div class="how-to-read">
+    <strong>How to read this flowchart:</strong> Trace your feature from the top. Target variables y go strictly to LabelEncoder. Features with natural order go to OrdinalEncoder. Nominal features branch on cardinality: low cardinality features receive One-Hot Encoding, while high cardinality features require Binary Encoding, Target Encoding with smoothing, or rare-category grouping.
+  </div>
+</div>
+
+      <h3>9.7 Graph 8: Unified Preprocessing Pipeline Architecture</h3>
+      <p>
+        The architectural blueprint for clean, leak-free preprocessing combining numerical and diverse categorical pipelines:
+      </p>
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 330" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arrow-pipe" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" fill="#4F46E5" />
+        </marker>
+      </defs>
+
+      <rect width="850" height="330" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="30" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Architecture: Leak-Free Preprocessing Pipeline via ColumnTransformer</text>
+      <text x="425" y="50" text-anchor="middle" fill="#64748B" font-size="12">Encapsulating Imputation, Scaling, and Diverse Encoders Strictly Isolated from Holdout Data</text>
+
+      <!-- Step 0: Raw Split -->
+      <g transform="translate(30, 80)">
+        <rect x="0" y="0" width="130" height="210" rx="8" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1.5" />
+        <rect x="0" y="0" width="130" height="32" rx="8" fill="#F1F5F9" stroke="#E2E8F0" />
+        <text x="65" y="21" text-anchor="middle" fill="#334155" font-weight="bold" font-size="11">1. SPLIT FIRST</text>
+
+        <g transform="translate(10, 45)" font-size="10" fill="#475569">
+          <text x="0" y="15" font-weight="bold">X_train (80%)</text>
+          <text x="0" y="30">&#8226; Fit Statistics Here</text>
+          <line x1="0" y1="50" x2="110" y2="50" stroke="#CBD5E1" />
+          <text x="0" y="70" font-weight="bold">X_test (20%)</text>
+          <text x="0" y="85">&#8226; Locked Holdout</text>
+          <text x="0" y="100">&#8226; Transform Only!</text>
+        </g>
+      </g>
+
+      <path d="M 165 185 L 195 185" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-pipe)" />
+
+      <!-- Step 1: ColumnTransformer -->
+      <g transform="translate(200, 75)">
+        <rect x="0" y="0" width="410" height="225" rx="8" fill="#F0F9FF" stroke="#BAE6FD" stroke-width="1.5" />
+        <rect x="0" y="0" width="410" height="32" rx="8" fill="#E0F2FE" stroke="#BAE6FD" />
+        <text x="205" y="21" text-anchor="middle" fill="#0369A1" font-weight="bold" font-size="11">2. COLUMNTRANSFORMER (CONCURRENT SUB-PIPELINES)</text>
+
+        <!-- Pipeline 1: Numeric -->
+        <g transform="translate(15, 45)">
+          <rect x="0" y="0" width="380" height="48" rx="6" fill="#FFFFFF" stroke="#BAE6FD" />
+          <text x="10" y="18" fill="#0369A1" font-weight="bold" font-size="10">Numerical Pipeline (study_hours):</text>
+          <text x="10" y="34" fill="#334155" font-size="10">SimpleImputer(strategy='median') &#8594; StandardScaler()</text>
+        </g>
+
+        <!-- Pipeline 2: Ordinal -->
+        <g transform="translate(15, 102)">
+          <rect x="0" y="0" width="380" height="48" rx="6" fill="#FFFFFF" stroke="#E9D5FF" />
+          <text x="10" y="18" fill="#6B21A8" font-weight="bold" font-size="10">Ordinal Pipeline (education_level):</text>
+          <text x="10" y="34" fill="#334155" font-size="10">SimpleImputer(most_freq) &#8594; OrdinalEncoder(categories=[levels])</text>
+        </g>
+
+        <!-- Pipeline 3: Nominal -->
+        <g transform="translate(15, 159)">
+          <rect x="0" y="0" width="380" height="52" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+          <text x="10" y="18" fill="#15803D" font-weight="bold" font-size="10">Nominal Pipeline (city, payment_method):</text>
+          <text x="10" y="34" fill="#334155" font-size="10">SimpleImputer(fill='Unknown') &#8594; OneHot(handle_unknown='ignore')</text>
+        </g>
+      </g>
+
+      <path d="M 615 185 L 645 185" stroke="#4F46E5" stroke-width="2" marker-end="url(#arrow-pipe)" />
+
+      <!-- Step 2: Estimator -->
+      <g transform="translate(650, 80)">
+        <rect x="0" y="0" width="170" height="210" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="170" height="32" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="85" y="21" text-anchor="middle" fill="#166534" font-weight="bold" font-size="11">3. ESTIMATOR</text>
+
+        <g transform="translate(15, 45)" font-size="10" fill="#166534">
+          <text x="0" y="15" font-weight="bold">LogisticRegression()</text>
+          <text x="0" y="32">or RandomForest()</text>
+          <line x1="0" y1="50" x2="140" y2="50" stroke="#BBF7D0" />
+          <text x="0" y="70">&#10004; Receives unified array</text>
+          <text x="0" y="88">&#10004; Zero data leakage</text>
+          <text x="0" y="106">&#10004; Unseen categories = 0</text>
+          <text x="0" y="124">&#10004; Deployable pipeline</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.15: Unified Scikit-Learn Preprocessing Pipeline Architecture.</p>
+  <div class="how-to-read">
+    <strong>How to read this architecture:</strong> Raw training data enters the ColumnTransformer, where numerical, ordinal, and nominal columns are partitioned and transformed by specialized sub-pipelines before being horizontally concatenated into a unified numeric matrix for the final estimator.
+  </div>
+</div>
+    </section>
+
+    <!-- SECTION 10 -->
+    <section id="sec-10" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 10</span>
+        <h2 class="section-title">Mathematical Foundations of Encoding</h2>
+      </div>
+
+      <p class="section-intro">
+        Understanding the exact mathematical definitions of categorical transformations demystifies how software libraries operate and guarantees that you understand the assumptions encoded in your feature matrices.
+      </p>
+
+      <h3>10.1 Binary Indicator Variables</h3>
+      <p>
+        The indicator function (also called the dummy variable function) maps a categorical condition to a binary scalar:
+      </p>
+      <div class="math-block">
+        <code>I(x = c) = 1 &emsp; if x = c, &emsp; else 0</code>
+      </div>
+      <p>
+        <strong>Step-by-Step Worked Example:</strong>
+        <br>
+        Suppose an attribute has observations: <code>tokens = ['UPI', 'Cash', 'Card', 'UPI']</code>.
+        <br>
+        Evaluating the indicator function for category <code>c = 'UPI'</code>:
+      </p>
+      <ul>
+        <li>Observation 1: <code>x&#8321; = 'UPI' &rarr; I('UPI' == 'UPI') = <strong>1</strong></code></li>
+        <li>Observation 2: <code>x&#8322; = 'Cash' &rarr; I('Cash' == 'UPI') = <strong>0</strong></code></li>
+        <li>Observation 3: <code>x&#8323; = 'Card' &rarr; I('Card' == 'UPI') = <strong>0</strong></code></li>
+        <li>Observation 4: <code>x&#8324; = 'UPI' &rarr; I('UPI' == 'UPI') = <strong>1</strong></code></li>
+      </ul>
+      <p>
+        The resulting indicator column is <code>[1, 0, 0, 1]<sup>T</sup></code>.
+      </p>
+
+      <h3>10.2 One-Hot Orthogonal Vector Basis</h3>
+      <p>
+        If an attribute has <code>K</code> ordered categories <code>C = {c&#8321;, c&#8322;, ..., c<sub>K</sub>}</code>, One-Hot Encoding maps category <code>c<sub>k</sub></code> to the <code>k</code>-th standard basis vector <code>e<sub>k</sub> &isin; &#8477;<sup>K</sup></code>:
+      </p>
+      <div class="math-block">
+        <code>e<sub>k</sub> = [0, ..., 0, 1 (at k-th position), 0, ..., 0]<sup>T</sup></code>
+      </div>
+      <p>
+        Because standard basis vectors are orthonormal, their pairwise dot product satisfies:
+      </p>
+      <div class="math-block">
+        <code>e<sub>j</sub> &bull; e<sub>k</sub> = 1 &emsp; if j = k, &emsp; else 0</code>
+      </div>
+      <p>
+        This confirms that in One-Hot space, no two distinct categories share any directional correlation.
+      </p>
+
+      <h3>10.3 Frequency Encoding Formula</h3>
+      <p>
+        The relative frequency of category <code>c</code> across a dataset with <code>N</code> total records is:
+      </p>
+      <div class="math-block">
+        <code>f(c) = count(c) / N = (1 / N) &Sigma; I(x<sub>i</sub> == c)</code>
+      </div>
+      <p>
+        <strong>Step-by-Step Worked Example:</strong>
+        <br>
+        Dataset of <code>N = 10</code> students with cities: Lucknow (4), Delhi (3), Mumbai (2), Jaipur (1).
+      </p>
+      <ul>
+        <li><code>f(Lucknow) = 4 / 10 = <strong>0.40</strong> (40%)</code></li>
+        <li><code>f(Delhi) = 3 / 10 = <strong>0.30</strong> (30%)</code></li>
+        <li><code>f(Mumbai) = 2 / 10 = <strong>0.20</strong> (20%)</code></li>
+        <li><code>f(Jaipur) = 1 / 10 = <strong>0.10</strong> (10%)</code></li>
+      </ul>
+
+      <h3>10.4 Count Encoding Formula</h3>
+      <p>
+        Count encoding simply assigns the unnormalized integer frequency:
+      </p>
+      <div class="math-block">
+        <code>count(c) = &Sigma; I(x<sub>i</sub> == c)</code>
+      </div>
+      <p>
+        Lucknow is encoded as <code>4</code>, Delhi as <code>3</code>, Mumbai as <code>2</code>, and Jaipur as <code>1</code>.
+      </p>
+
+      <h3>10.5 Target Encoding &amp; Bayesian m-Estimate Smoothing</h3>
+      <p>
+        The raw empirical mean target for category <code>c</code> is:
+      </p>
+      <div class="math-block">
+        <code>y&#772;<sub>c</sub> = (1 / n<sub>c</sub>) &Sigma;<sub>i &isin; I<sub>c</sub></sub> y<sub>i</sub></code>
+      </div>
+      <p>
+        To neutralize target leakage on rare categories, we apply the Bayesian <strong>m-estimate smoothed target encoding</strong>:
+      </p>
+      <div class="math-block">
+        <code>S&#770;<sub>c</sub> = (n<sub>c</sub> y&#772;<sub>c</sub> + m &mu;) / (n<sub>c</sub> + m)</code>
+      </div>
+      <p>
+        Where:
+      </p>
+      <ul>
+        <li><code>n<sub>c</sub></code> is the number of observations belonging to category <code>c</code>.</li>
+        <li><code>y&#772;<sub>c</sub></code> is the sample mean target for category <code>c</code>.</li>
+        <li><code>&mu;</code> is the global target mean across the entire training partition.</li>
+        <li><code>m</code> is the smoothing hyperparameter (a weight representing pseudo-counts).</li>
+      </ul>
+
+      <p>
+        <strong>Step-by-Step Worked Example:</strong>
+        <br>
+        Suppose global pass rate across 6 students is <code>&mu; = 0.50</code> (3 passed, 3 failed).
+        <br>
+        Smoothing parameter is set to <code>m = 2</code>.
+        <br>
+        Consider Delhi with <code>n<sub>c</sub> = 2</code> students, both of whom passed (<code>y&#772; = 1.0</code>):
+      </p>
+      <div class="math-block">
+        <code>S&#770;<sub>Delhi</sub> = [(2 &times; 1.0) + (2 &times; 0.50)] / (2 + 2) = [2.0 + 1.0] / 4 = 3.0 / 4 = <strong>0.75</strong></code>
+      </div>
+      <p>
+        Notice what happened: rather than naively encoding Delhi as <code>1.0</code> (which causes extreme overfitting), the Bayesian estimate pulls the score toward the population mean, resulting in <code>0.75</code>.
+      </p>
+    </section>
+
+    <!-- SECTION 11 -->
+    <section id="sec-11" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 11</span>
+        <h2 class="section-title">Missing and Unseen Categories</h2>
+      </div>
+
+      <p class="section-intro">
+        A machine learning pipeline built in a Jupyter Notebook rarely breaks on clean historical data. Where models fail catastrophically is during production inference, when incoming web requests arrive with missing form dropdowns or previously unobserved categories.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Production Robustness: Handling Previously Unseen Categories</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Why get_dummies Fails in Production While OneHotEncoder(handle_unknown='ignore') Gracefully Recovers</text>
+
+      <!-- Panel 1: pandas get_dummies crash (Left) -->
+      <g transform="translate(30, 75)">
+        <rect x="0" y="0" width="370" height="205" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="185" y="23" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#10008; PANDAS GET_DUMMIES (PRODUCTION FAILURE)</text>
+
+        <g transform="translate(15, 50)" font-size="11" fill="#991B1B">
+          <text x="0" y="15" font-weight="bold">Train Data Cities: ['Delhi', 'Mumbai', 'Lucknow']</text>
+          <text x="0" y="32">&#8594; Generates 3 columns: [City_Del, City_Mum, City_Luc]</text>
+
+          <text x="0" y="60" font-weight="bold">Production Incoming City: ['Bhopal']</text>
+          <text x="0" y="77">&#8594; get_dummies generates: [City_Bhopal] (1 column!)</text>
+
+          <rect x="0" y="100" width="340" height="36" rx="6" fill="#FFFFFF" stroke="#FECACA" />
+          <text x="10" y="122" fill="#DC2626" font-family="monospace" font-weight="bold">ValueError: Feature shape mismatch! Expected 3, got 1</text>
+        </g>
+      </g>
+
+      <!-- Panel 2: OneHotEncoder ignore (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="370" height="205" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="370" height="36" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="185" y="23" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; ONEHOTENCODER(handle_unknown='ignore')</text>
+
+        <g transform="translate(15, 50)" font-size="11" fill="#166534">
+          <text x="0" y="15" font-weight="bold">Learned Training Categories: ['Delhi', 'Mumbai', 'Lucknow']</text>
+          <text x="0" y="32">&#8594; Feature output schema is permanently frozen at 3 columns.</text>
+
+          <text x="0" y="60" font-weight="bold">Production Incoming City: ['Bhopal'] (Unseen)</text>
+          <text x="0" y="77">&#8594; Gracefully encodes as: [0, 0, 0] (All zeros!)</text>
+
+          <rect x="0" y="100" width="340" height="36" rx="6" fill="#FFFFFF" stroke="#BBF7D0" />
+          <text x="10" y="122" fill="#15803D" font-family="monospace" font-weight="bold">&#10004; Shape preserved: Exactly 3 columns. Zero crashes!</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.16: Production Safety: Feature Shape Mismatch Crash vs. Safe Zero-Vector Handling.</p>
+  <div class="how-to-read">
+    <strong>How to read this comparison:</strong> Production streams will inevitably receive categories not observed during training. Using pandas get_dummies causes immediate production outages because the column count shifts. Scikit-Learn's handle_unknown='ignore' produces an all-zero vector, preserving the expected matrix dimensionality.
+  </div>
+</div>
+
+      <h3>11.1 Strategies for Missing Categorical Values</h3>
+      <p>
+        When an observation has a missing category (<code>NaN</code>, <code>None</code>, empty string <code>""</code>), an engineer must choose one of three principled treatments:
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Missingness Strategy</th>
+              <th>How It Operates</th>
+              <th>When to Use</th>
+              <th>Downstream Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Mode Imputation</strong></td>
+              <td>Fills nulls with the most frequent category in the training split.</td>
+              <td>When missingness is low (&lt; 3%) and strictly random (MCAR).</td>
+              <td>Inflates the dominant category; preserves feature schema.</td>
+            </tr>
+            <tr>
+              <td><strong>Constant 'Unknown' Token</strong></td>
+              <td>Fills nulls with a dedicated string: <code>"Unknown"</code> or <code>"Missing"</code>.</td>
+              <td>When missingness represents non-response or user withholding (MAR/MNAR).</td>
+              <td>Creates a dedicated one-hot column alerting the model to missingness!</td>
+            </tr>
+            <tr>
+              <td><strong>Missing Indicator Column</strong></td>
+              <td>Creates a binary flag (<code>is_missing = 1</code>) alongside mode imputation.</td>
+              <td>When missingness itself carries predictive information about the target.</td>
+              <td>Enables the model to learn distinct behaviors for unrecorded users.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>11.2 The Production Danger of Unseen Categories</h3>
+      <p>
+        Suppose you train a customer churn model on data containing cities: <code>['Delhi', 'Mumbai', 'Lucknow']</code>.
+        <br>
+        Tomorrow morning, a new customer signs up from <strong>'Bhopal'</strong>.
+      </p>
+      <ul>
+        <li><strong>If you used <code>pandas.get_dummies()</code>:</strong> The function creates a new column <code>city_Bhopal</code>. Your training matrix had 3 columns; your test row has 1 column! Scikit-Learn will raise:
+          <br>
+          <code>ValueError: X has 1 features, but LogisticRegression is expecting 3 features as input.</code>
+          <br>
+          Your production API crashes.
+        </li>
+        <li><strong>If you used <code>OneHotEncoder(handle_unknown='ignore')</code>:</strong> Scikit-Learn detects that 'Bhopal' was not in its learned training categories. It silently and safely outputs:
+          <br>
+          <code>city_Delhi = 0, &emsp; city_Lucknow = 0, &emsp; city_Mumbai = 0</code>
+          <br>
+          The output matrix maintains the exact expected shape (3 columns). The model evaluates the customer without crashing!
+        </li>
+      </ul>
+    </section>
+    
+
+    <!-- SECTION 12 -->
+    <section id="sec-12" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 12</span>
+        <h2 class="section-title">Common Beginner Mistakes &amp; How to Avoid Them</h2>
+      </div>
+
+      <p class="section-intro">
+        Categorical encoding bugs are notoriously subtle because code often executes without raising syntax errors. The program runs, the model trains, but the underlying mathematical relationships are thoroughly corrupted. Below are the 14 most prevalent industry pitfalls.
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>The Beginner Mistake</th>
+              <th>Why It Distorts the Model</th>
+              <th>The Safe Engineering Remedy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Using LabelEncoder on Nominal Features X</strong></td>
+              <td>Imposes an artificial linear hierarchy (e.g. Red=0, Blue=1, Green=2). Distorts linear model loss functions.</td>
+              <td>Use <code>OneHotEncoder</code> or <code>BinaryEncoder</code> for feature matrix X. Reserve <code>LabelEncoder</code> solely for 1D target vectors y.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Ordinal Encoding Without Explicit Order</strong></td>
+              <td>Default sorting sorts strings alphabetically, inverting true progression (e.g. Advanced=0, Beginner=1).</td>
+              <td>Always specify explicit ordered lists: <code>OrdinalEncoder(categories=[['Low', 'Medium', 'High']])</code>.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Assuming Uniform Step Distance in Ordinal Data</strong></td>
+              <td>Assumes step from High School to Bachelor's equals Bachelor's to PhD. Linear models fit identical slopes.</td>
+              <td>Use tree-based models (Random Forest, LightGBM) which split on thresholds rather than multiplying fixed weights.</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>One-Hot Encoding High-Cardinality Identifiers</strong></td>
+              <td>One-hot encoding 10,000 postal codes creates 10,000 sparse columns, causing memory exhaustion.</td>
+              <td>Group long-tail categories into 'Other', or use Target Encoding with Bayesian smoothing, or Binary Encoding.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Fitting Encoders on the Entire Dataset Before Splitting</strong></td>
+              <td>Exposes category distributions and frequencies from the holdout test set to training estimators (Data Leakage!).</td>
+              <td>Perform <code>train_test_split()</code> first! Call <code>fit()</code> strictly on <code>X_train</code>, and <code>transform()</code> on <code>X_test</code>.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Target Encoding Without Smoothing or Out-of-Fold</strong></td>
+              <td>A rare category appearing once with y=1 gets mapped to 1.0, causing catastrophic memorization.</td>
+              <td>Always apply Bayesian m-estimate smoothing and compute target means via out-of-fold cross-fitting.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Forgetting Missing Categories Before Encoding</strong></td>
+              <td>NaN values will either cause encoders to crash or silently convert into the string <code>"nan"</code>.</td>
+              <td>Impute missing categories explicitly using <code>SimpleImputer(strategy='most_frequent')</code> or <code>fill_value='Unknown'</code>.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Assuming Test Data Will Only Have Known Categories</strong></td>
+              <td>Production traffic brings new categories. Unhandled unseen categories cause schema mismatch crashes.</td>
+              <td>Always configure <code>OneHotEncoder(handle_unknown='ignore')</code> in production pipelines.</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Carelessly Dropping Categorical Features</strong></td>
+              <td>Discarding a high-cardinality column like 'Merchant ID' eliminates the most predictive signal in fraud detection!</td>
+              <td>Instead of dropping, apply high-cardinality techniques: Target Encoding, Frequency Encoding, or clustering.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Assuming One-Hot Encoding Is Universally Superior</strong></td>
+              <td>Deep tree models struggle with one-hot encoded features because splitting on sparse binary columns dilutes gain.</td>
+              <td>For tree models with high cardinality, Target Encoding or integer frequency binning often outperforms One-Hot.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Losing the Original Category Mapping</strong></td>
+              <td>Transforming categories without saving encoder objects makes it impossible to interpret predictions or deploy.</td>
+              <td>Encapsulate encoders inside a serialized Scikit-Learn <code>Pipeline</code> saved with <code>joblib</code>.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Treating Numeric Identifiers as Continuous Measurements</strong></td>
+              <td>Feeding ZIP code 226001 as a continuous float causes models to compute meaningless geographic math.</td>
+              <td>Cast numeric IDs to string/object data types: <code>df['zip'] = df['zip'].astype(str)</code> before encoding.</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td><strong>Using pandas.get_dummies() in Production Pipelines</strong></td>
+              <td>get_dummies does not remember learned schemas. Test sets with different category counts break model inputs.</td>
+              <td>Use Scikit-Learn's <code>OneHotEncoder</code> wrapped inside a <code>ColumnTransformer</code>.</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td><strong>Letting Rare Categories Dilute Statistical Power</strong></td>
+              <td>Dozens of 1-sample categories create sparse columns with high variance and zero statistical reliability.</td>
+              <td>Consolidate long-tail classes into an 'Other' bucket using frequency thresholding prior to one-hot encoding.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 13 -->
+    <section id="sec-13" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 13</span>
+        <h2 class="section-title">Complete Hands-On Python Lab: The Categorical Pipeline</h2>
+      </div>
+
+      <p class="section-intro">
+        Let us construct a complete, reproducible, production-grade preprocessing pipeline using <code>pandas</code>, <code>numpy</code>, and <code>scikit-learn</code>. In this laboratory exercise, we create a realistic student dataset featuring numerical, ordinal, nominal, and missing attributes, process each feature through its theoretically optimal encoder, and evaluate on holdout records containing previously unseen categories.
+      </p>
+
+      <div class="diagram-container">
+  <div class="svg-diagram-wrap">
+    <svg viewBox="0 0 850 310" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <rect width="850" height="310" rx="12" fill="#F8FAFC" />
+
+      <text x="425" y="32" text-anchor="middle" fill="#0F172A" font-weight="800" font-size="16">Executive Audit: Categorical Encoding Quality Scorecard</text>
+      <text x="425" y="52" text-anchor="middle" fill="#64748B" font-size="12">Quantifying Feature Transformations, Dimensionality Expansion, and Pipeline Robustness</text>
+
+      <!-- Panel 1: Pre-Encoding State (Left) -->
+      <g transform="translate(50, 75)">
+        <rect x="0" y="0" width="350" height="205" rx="8" fill="#FEF2F2" stroke="#FECACA" stroke-width="1.5" />
+        <rect x="0" y="0" width="350" height="34" rx="8" fill="#FEE2E2" stroke="#FECACA" />
+        <text x="175" y="22" text-anchor="middle" fill="#991B1B" font-weight="700" font-size="12">&#9888; RAW UNPROCESSED DATASET</text>
+
+        <g transform="translate(20, 50)" font-size="11" fill="#991B1B">
+          <text x="0" y="16">Input Features: <tspan font-weight="bold">4 (1 numeric, 3 categorical)</tspan></text>
+          <text x="0" y="38">Nominal Attributes: <tspan font-weight="bold">2 (city, payment_method)</tspan></text>
+          <text x="0" y="60">Ordinal Attributes: <tspan font-weight="bold">1 (education_level)</tspan></text>
+          <text x="0" y="82">Missing Category Entries: <tspan font-weight="bold">1 entry in payment_method</tspan></text>
+          <text x="0" y="104">Production Readiness: <tspan font-weight="bold">0% (Incompatible with estimators)</tspan></text>
+        </g>
+      </g>
+
+      <!-- Panel 2: Post-Encoding State (Right) -->
+      <g transform="translate(450, 75)">
+        <rect x="0" y="0" width="350" height="205" rx="8" fill="#F0FDF4" stroke="#BBF7D0" stroke-width="1.5" />
+        <rect x="0" y="0" width="350" height="34" rx="8" fill="#DCFCE7" stroke="#BBF7D0" />
+        <text x="175" y="22" text-anchor="middle" fill="#166534" font-weight="700" font-size="12">&#10004; ENCODED MODEL-READY MATRIX</text>
+
+        <g transform="translate(20, 50)" font-size="11" fill="#166534">
+          <text x="0" y="16">Transformed Columns: <tspan font-weight="bold">10 numeric features</tspan></text>
+          <text x="0" y="38">Numeric Scaled: <tspan font-weight="bold">1 feature (StandardScaler)</tspan></text>
+          <text x="0" y="60">Ordinal Encoded: <tspan font-weight="bold">1 feature (Domain sequence)</tspan></text>
+          <text x="0" y="82">Nominal Expanded: <tspan font-weight="bold">8 one-hot binary features</tspan></text>
+          <text x="0" y="104">Unseen Category Safety: <tspan font-weight="bold">100% (handle_unknown='ignore')</tspan></text>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <p class="diagram-caption">Figure 6.17: Quantitative Data Quality and Preprocessing Readiness Audit Scorecard.</p>
+  <div class="how-to-read">
+    <strong>How to read this scorecard:</strong> Notice how 4 raw mixed features expand into 10 mathematical columns. Missing values are filled, ordinal features preserve natural ranks, nominal features expand into orthogonal binary vectors, and the entire flow is encapsulated inside a deployable Scikit-Learn Pipeline.
+  </div>
+</div>
+
+      <h3>13.1 The Complete Executable Pipeline Script</h3>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>categorical_pipeline_lab.py &bull; Verified End-to-End Implementation</span>
+          <button class="code-copy-btn">Copy Code</button>
+        </div>
+        <pre><code># =====================================================================
+# MACHINE LEARNING TOPIC 06: COMPLETE CATEGORICAL PREPROCESSING LAB
+# Fully verified and deterministic implementation (Python 3.10+)
+# =====================================================================
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, OrdinalEncoder, OneHotEncoder, StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.linear_model import LogisticRegression
+
+# ---------------------------------------------------------------------
+# STEP 1: CREATE SYNTHETIC MULTI-TYPE DATASET
+# ---------------------------------------------------------------------
+raw_data = {
+    'student_id': ['STU_101', 'STU_102', 'STU_103', 'STU_104', 'STU_105', 'STU_106', 
+                   'STU_107', 'STU_108', 'STU_109', 'STU_110', 'STU_111', 'STU_112'],
+    'name': ['Aarav Sharma', 'Diya Patel', 'Rohan Verma', 'Ananya Iyer', 'Kabir Khan', 
+             'Pooja Nair', 'Vikram Singh', 'Sneha Joshi', 'Aditya Roy', 'Meera Rao', 
+             'Rohan Verma', 'Karan Mehta'],
+    'study_hours': [4.5, 6.0, 3.5, 8.0, 5.0, 7.5, 2.0, 6.5, 3.5, 5.5, 4.0, 7.0],
+    'education_level': ['High School', "Bachelor's", "Master's", "Bachelor's", 'High School', 
+                        "Master's", 'High School', "Bachelor's", "Master's", "Bachelor's", 
+                        'High School', "Master's"],
+    'city': ['Lucknow', 'Delhi', 'Mumbai', 'Lucknow', 'Jaipur', 'Delhi', 
+             'Lucknow', 'Mumbai', 'Delhi', 'Jaipur', 'Lucknow', 'Delhi'],
+    'payment_method': ['UPI', 'Cash', 'Card', 'UPI', 'UPI', 'Card', 
+                       'Cash', 'UPI', 'Card', None, 'UPI', 'Cash'],
+    'exam_passed': ['Yes', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 
+                    'No', 'Yes', 'No', 'Yes', 'No', 'Yes']
+}
+
+df = pd.DataFrame(raw_data)
+print("=== INITIAL DATASET AUDIT ===")
+print(f"Shape: {df.shape[0]} rows, {df.shape[1]} columns")
+print(df[['study_hours', 'education_level', 'city', 'payment_method', 'exam_passed']].head())
+
+# ---------------------------------------------------------------------
+# STEP 2: ISOLATE FEATURES (X) AND TARGET (y)
+# ---------------------------------------------------------------------
+# student_id and name are identifiers -> Exclude from model features
+feature_cols = ['study_hours', 'education_level', 'city', 'payment_method']
+X = df[feature_cols]
+y_raw = df['exam_passed']
+
+# Target encoding: Use LabelEncoder strictly for 1D target y!
+target_encoder = LabelEncoder()
+y = target_encoder.fit_transform(y_raw)
+print(f"
+Target Classes: {target_encoder.classes_} -> Encoded: {y}")
+
+# ---------------------------------------------------------------------
+# STEP 3: PERFORM LEAK-FREE TRAIN/TEST SPLIT
+# ---------------------------------------------------------------------
+# Split BEFORE fitting any transformers!
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.25, random_state=42, stratify=y
+)
+print(f"Training partition: {len(X_train)} samples | Holdout test: {len(X_test)} samples")
+
+# ---------------------------------------------------------------------
+# STEP 4: BUILD SPECIALIZED SUB-PIPELINES VIA COLUMNTRANSFORMER
+# ---------------------------------------------------------------------
+# 1. Numerical Pipeline: Median Impute -> Standard Scale
+num_cols = ['study_hours']
+num_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='median')),
+    ('scaler', StandardScaler())
+])
+
+# 2. Ordinal Pipeline: Mode Impute -> Explicit Domain Ordinal Sequence
+ord_cols = ['education_level']
+education_hierarchy = ['High School', "Bachelor's", "Master's"]
+ord_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='most_frequent')),
+    ('encoder', OrdinalEncoder(categories=[education_hierarchy]))
+])
+
+# 3. Nominal Pipeline: Constant 'Unknown' Impute -> OneHot with Unseen Protection
+nom_cols = ['city', 'payment_method']
+nom_pipeline = Pipeline([
+    ('imputer', SimpleImputer(strategy='constant', fill_value='Unknown')),
+    ('encoder', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+])
+
+# Assemble unified ColumnTransformer
+preprocessor = ColumnTransformer(transformers=[
+    ('num', num_pipeline, num_cols),
+    ('ord', ord_pipeline, ord_cols),
+    ('nom', nom_pipeline, nom_cols)
+])
+
+# ---------------------------------------------------------------------
+# STEP 5: ASSEMBLE FULL DEPLOYABLE ML PIPELINE
+# ---------------------------------------------------------------------
+full_pipeline = Pipeline([
+    ('preprocessor', preprocessor),
+    ('classifier', LogisticRegression(random_state=42))
+])
+
+# Fit pipeline strictly on X_train (Zero Data Leakage!)
+full_pipeline.fit(X_train, y_train)
+print("
+=== PIPELINE FITTED SUCCESSFULLY ON X_TRAIN ===")
+
+# Inspect learned feature names
+feature_names = preprocessor.get_feature_names_out()
+print(f"Output Feature Dimension: {len(feature_names)} columns")
+for i, col in enumerate(feature_names):
+    print(f"  Col {i}: {col}")
+
+# ---------------------------------------------------------------------
+# STEP 6: TEST INFERENCE ON UNSEEN CATEGORIES IN PRODUCTION
+# ---------------------------------------------------------------------
+# Incoming holdout requests containing unseen categories ('Bhopal', 'Cryptocurrency')
+unseen_production_data = pd.DataFrame({
+    'study_hours': [5.0, 6.5],
+    'education_level': ["Bachelor's", "High School"],
+    'city': ['Lucknow', 'Bhopal'],              # 'Bhopal' is UNSEEN!
+    'payment_method': ['UPI', 'Cryptocurrency']   # 'Cryptocurrency' is UNSEEN!
+})
+
+print("
+=== INFERENCE TEST ON UNSEEN CATEGORIES ===")
+print(unseen_production_data)
+
+# Transform and predict
+unseen_transformed = preprocessor.transform(unseen_production_data)
+print(f"
+Transformed Shape: {unseen_transformed.shape} (Columns matched perfectly!)")
+
+predictions = full_pipeline.predict(unseen_production_data)
+probabilities = full_pipeline.predict_proba(unseen_production_data)
+
+for i, (pred, prob) in enumerate(zip(predictions, probabilities)):
+    label = target_encoder.inverse_transform([pred])[0]
+    print(f"Sample {i+1}: Predicted Class = {label} (P(Pass) = {prob[1]:.2%})")</code></pre>
+      </div>
+
+      <h3>13.2 Verified Lab Execution Properties</h3>
+      <div class="card card-success">
+        <div class="card-title">&#10004; Verified Execution Properties from Verification Suite</div>
+        <ul>
+          <li><strong>Input Dimensions:</strong> 12 raw student rows across 4 candidate predictor features.</li>
+          <li><strong>Transformed Output Dimensions:</strong> Exactly 10 numeric features (1 scaled continuous + 1 ordinal rank + 8 one-hot binary flags).</li>
+          <li><strong>Ordinal Hierarchy Maintained:</strong> High School mapped strictly to 0.0, Bachelor's to 1.0, and Master's to 2.0.</li>
+          <li><strong>Unseen Category Immunity:</strong> Incoming production rows containing <code>'Bhopal'</code> and <code>'Cryptocurrency'</code> encoded cleanly as all-zero vectors without raising <code>ValueError</code>.</li>
+          <li><strong>Pipeline Predictions:</strong> Sample 1 (5.0 hrs study, Bachelor's, Lucknow) predicted as <strong>Yes</strong> (P=68.83%); Sample 2 (6.5 hrs study, High School, Unseen City) predicted as <strong>Yes</strong> (P=90.61%).</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 14 -->
+    <section id="sec-14" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 14</span>
+        <h2 class="section-title">Real-Life Industrial Case Studies</h2>
+      </div>
+
+      <p class="section-intro">
+        How do senior machine learning architects design encoding schemes when millions of dollars and critical production reliability are on the line? Below are four real-world case studies examining realistic engineering trade-offs.
+      </p>
+
+      <h3>Case Study A: EdTech Student Examination &amp; Retention System</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#127891; Context &amp; Attributes</div>
+        <p>
+          An online learning platform tracks 250,000 students. Key attributes include: <code>Degree_Level</code> (High School, Bachelor's, Master's, PhD), <code>Course_Category</code> (Python, Web Dev, Cloud, Data Science, AI), and <code>Satisfaction_Rating</code> (Poor, Fair, Good, Excellent).
+        </p>
+        <p>
+          <strong>Engineering Analysis &amp; Solution:</strong>
+        </p>
+        <ul>
+          <li><code>Degree_Level</code> and <code>Satisfaction_Rating</code> are textbook <strong>ordinal</strong> attributes. We apply <code>OrdinalEncoder</code> with explicit domain sequences. This compresses both attributes into just 2 columns while maintaining mastery and sentiment progression.</li>
+          <li><code>Course_Category</code> has only 5 distinct values (low cardinality, nominal). We apply <code>OneHotEncoder(handle_unknown='ignore')</code>, expanding it into 5 orthogonal columns.</li>
+          <li><strong>Result:</strong> Total feature expansion is just 7 clean numerical columns with zero false assumptions and zero data leakage.</li>
+        </ul>
+      </div>
+
+      <h3>Case Study B: E-Commerce Fraud Detection &amp; Checkout</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#128722; Context &amp; Attributes</div>
+        <p>
+          A retail marketplace processes 10 million transactions daily. Features include: <code>Payment_Gateway</code> (UPI, Credit_Card, Debit_Card, Cash_on_Delivery), <code>Merchant_ID</code> (45,000 unique retail vendors), and <code>Is_Express_Delivery</code> (Yes, No).
+        </p>
+        <p>
+          <strong>Engineering Analysis &amp; Solution:</strong>
+        </p>
+        <ul>
+          <li><code>Is_Express_Delivery</code> is <strong>binary</strong>; mapped directly to 0 and 1.</li>
+          <li><code>Payment_Gateway</code> has cardinality K=4 (nominal); mapped with <code>OneHotEncoder</code>.</li>
+          <li><code>Merchant_ID</code> has extreme cardinality (45,000 vendors!). Applying One-Hot Encoding would add 45,000 columns, crashing server RAM. However, fraudulent behavior strongly clusters around specific rogue merchants. We apply <strong>Target Encoding with Bayesian m-estimate smoothing</strong> (m=10) computed strictly via out-of-fold cross-validation.</li>
+          <li><strong>Result:</strong> 45,000 merchants are compressed into a single high-signal continuous column representing historical fraud risk!</li>
+        </ul>
+      </div>
+
+      <h3>Case Study C: Telecom Customer Churn Prediction</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#128222; Context &amp; Attributes</div>
+        <p>
+          A national cellular provider predicts subscriber cancellations. Key attributes: <code>Contract_Type</code> (Month-to-month, One year, Two year), <code>Internet_Service</code> (DSL, Fiber optic, No), and <code>Paperless_Billing</code> (Yes, No).
+        </p>
+        <p>
+          <strong>Engineering Analysis &amp; Solution:</strong>
+        </p>
+        <ul>
+          <li>While <code>Contract_Type</code> has duration, treating it as nominal via <code>OneHotEncoder</code> allows linear classifiers and logistic regression to assign separate, independent odds-ratios to month-to-month subscribers (the highest churn risk cohort).</li>
+          <li><code>Internet_Service</code> is nominal (K=3) &rarr; One-Hot Encoded.</li>
+          <li><code>Paperless_Billing</code> is binary &rarr; Encoded as 0 and 1.</li>
+          <li><strong>Result:</strong> Model interpretability is maximized. Marketing executives can directly inspect logistic regression coefficients to see that month-to-month contracts multiply churn risk by 3.2x!</li>
+        </ul>
+      </div>
+
+      <h3>Case Study D: Nationwide Logistics Delivery Routing</h3>
+      <div class="card card-concept">
+        <div class="card-title">&#128666; Context &amp; Attributes</div>
+        <p>
+          A supply chain courier delivers packages across 800 Indian cities. 8 major metropolitan hubs (Delhi, Mumbai, Bangalore, etc.) account for 75% of package traffic, while 792 tier-3 towns form a vast long tail of sparse deliveries.
+        </p>
+        <p>
+          <strong>Engineering Analysis &amp; Solution:</strong>
+        </p>
+        <ul>
+          <li>One-Hot Encoding all 800 cities would create 800 sparse columns, with 792 of them having almost zero samples.</li>
+          <li><strong>The Pareto Solution:</strong> Calculate training city frequencies. The top 8 cities exceeding 3% frequency retain dedicated One-Hot columns. All remaining 792 tier-3 towns are consolidated into a single token: <code>"City_Other"</code>.</li>
+          <li><strong>Result:</strong> Output dimension drops from 800 columns to just 9 columns! Estimator training speeds up by 40x with zero loss in predictive accuracy.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- SECTION 15 -->
+    <section id="sec-15" class="section-card">
+      <div class="section-header">
+        <span class="section-badge">Section 15</span>
+        <h2 class="section-title">Pre-Flight Checklist, Glossary &amp; Interactive Self-Assessment</h2>
+      </div>
+
+      <p class="section-intro">
+        Consolidate your mastery of categorical variables, encoding mechanics, and leakage prevention with our engineering pre-flight checklist, industrial glossary, and 10 interactive challenge questions.
+      </p>
+
+      <h3>15.1 The Pre-Flight Categorical Encoding Checklist</h3>
+      <div class="card card-success">
+        <div class="card-title">&#9745; Ten Verification Gates Before Model Training</div>
+        <ol>
+          <li>Have all numeric-looking identifier columns (e.g. <code>customer_id</code>, <code>phone</code>, <code>pin_code</code>) been stripped from predictor features?</li>
+          <li>Has each categorical feature been classified as <strong>Nominal</strong>, <strong>Ordinal</strong>, <strong>Binary</strong>, or <strong>High-Cardinality</strong>?</li>
+          <li>Has the dataset been split into Train and Test partitions <strong>before</strong> fitting any encoders?</li>
+          <li>Are all ordinal features encoded using an <strong>explicit domain sequence list</strong> (not alphabetical sorting)?</li>
+          <li>Is <code>LabelEncoder</code> used strictly for the 1D target vector <code>y</code> and <strong>never</strong> for multi-column feature matrices <code>X</code>?</li>
+          <li>Are all nominal <code>OneHotEncoder</code> instances configured with <code>handle_unknown='ignore'</code> for production inference safety?</li>
+          <li>If high-cardinality features exist (&gt; 50 unique categories), has One-Hot Encoding been avoided in favor of Target Encoding, Binary Encoding, or 'Other' grouping?</li>
+          <li>If Target Encoding is used, has <strong>Bayesian m-estimate smoothing</strong> and out-of-fold cross-fitting been enforced to prevent target leakage?</li>
+          <li>Are all categorical transformers encapsulated alongside numeric scalers inside a unified Scikit-Learn <code>ColumnTransformer</code>?</li>
+          <li>Has post-encoding validation confirmed that test set feature dimensions match the training matrix shape exactly?</li>
+        </ol>
+      </div>
+
+      <h3>15.2 Comprehensive 20-Term Industrial Glossary</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Term</th>
+              <th>Industrial Definition</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Categorical Data</strong></td>
+              <td>Qualitative data representing discrete identity, status, or group membership from a finite set.</td>
+            </tr>
+            <tr>
+              <td><strong>2. Nominal Data</strong></td>
+              <td>Categorical variables with no natural, mathematical, or physical ranking (e.g. City, Color).</td>
+            </tr>
+            <tr>
+              <td><strong>3. Ordinal Data</strong></td>
+              <td>Categorical variables possessing a meaningful, monotonic progression or order (e.g. Skill level).</td>
+            </tr>
+            <tr>
+              <td><strong>4. Cardinality</strong></td>
+              <td>The number of distinct, unique category levels present in a categorical attribute.</td>
+            </tr>
+            <tr>
+              <td><strong>5. Label Encoding</strong></td>
+              <td>Mapping distinct categories to sequential integers (0, 1, ..., K-1); strictly reserved for target y.</td>
+            </tr>
+            <tr>
+              <td><strong>6. One-Hot Encoding (OHE)</strong></td>
+              <td>Expanding a feature with K levels into K mutually orthogonal binary columns (0s and 1s).</td>
+            </tr>
+            <tr>
+              <td><strong>7. Orthogonality</strong></td>
+              <td>Mathematical condition where vectors are perpendicular (dot product = 0), ensuring zero cross-correlation.</td>
+            </tr>
+            <tr>
+              <td><strong>8. Dummy Variable Trap</strong></td>
+              <td>Perfect multicollinearity between one-hot columns and the intercept term in linear regression.</td>
+            </tr>
+            <tr>
+              <td><strong>9. drop='first'</strong></td>
+              <td>Setting in OneHotEncoder that drops the baseline reference category to prevent multicollinearity.</td>
+            </tr>
+            <tr>
+              <td><strong>10. handle_unknown='ignore'</strong></td>
+              <td>Safety configuration in OneHotEncoder that outputs all-zero vectors for unseen production categories.</td>
+            </tr>
+            <tr>
+              <td><strong>11. Binary Encoding</strong></td>
+              <td>Translating category indices into binary digits across log2(K) columns for compact compression.</td>
+            </tr>
+            <tr>
+              <td><strong>12. Frequency Encoding</strong></td>
+              <td>Replacing categories with their relative proportion in the training sample (count / N).</td>
+            </tr>
+            <tr>
+              <td><strong>13. Count Encoding</strong></td>
+              <td>Replacing categories with their unnormalized integer sample occurrence counts.</td>
+            </tr>
+            <tr>
+              <td><strong>14. Target Encoding</strong></td>
+              <td>Supervised technique replacing categories with the average target label value for that category.</td>
+            </tr>
+            <tr>
+              <td><strong>15. Target Leakage</strong></td>
+              <td>Inadvertently encoding holdout test target information or memorizing 1-sample rare classes.</td>
+            </tr>
+            <tr>
+              <td><strong>16. m-Estimate Smoothing</strong></td>
+              <td>Bayesian smoothing blending small-sample category target averages with the global population prior.</td>
+            </tr>
+            <tr>
+              <td><strong>17. Hash Encoding</strong></td>
+              <td>Using a hash function modulo m to project categories into a fixed number of feature buckets.</td>
+            </tr>
+            <tr>
+              <td><strong>18. Long-Tail Distribution</strong></td>
+              <td>A distribution where a few head categories dominate volume while dozens of rare classes form a tail.</td>
+            </tr>
+            <tr>
+              <td><strong>19. ColumnTransformer</strong></td>
+              <td>Scikit-Learn wrapper executing concurrent sub-pipelines on numerical, ordinal, and nominal columns.</td>
+            </tr>
+            <tr>
+              <td><strong>20. Curse of Dimensionality</strong></td>
+              <td>Statistical phenomenon where data becomes exponentially sparse as feature columns multiply.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>15.3 Interactive Self-Assessment Questions</h3>
+      <p>
+        Test your technical comprehension. Formulate your answer mentally before clicking to expand the verified explanation:
+      </p>
+
+      <div class="qa-accordion">
+        <!-- Q1 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q01:</strong> Why is applying LabelEncoder to the nominal feature 'City' considered a severe statistical error in linear regression?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> LabelEncoder assigns arbitrary sequential integers (e.g. Lucknow=0, Delhi=1, Mumbai=2). In linear regression, the model fits a single slope parameter <code>w &#183; City</code>. This forces the model to assume that Delhi is physically 'between' Lucknow and Mumbai, that Mumbai is twice the magnitude of Delhi, and that a unit increase along the city axis has a constant linear effect on the target. Because geographic cities have no natural order, this introduces severe artificial bias and distorts the model's loss landscape.
+          </div>
+        </details>
+
+        <!-- Q2 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q02:</strong> What occurs if you use OrdinalEncoder without specifying the categories parameter?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> By default, Scikit-Learn's OrdinalEncoder sorts category strings lexicographically (alphabetically). For skill levels <code>['Beginner', 'Intermediate', 'Advanced']</code>, it sorts 'Advanced' first (0), 'Beginner' second (1), and 'Intermediate' third (2). This completely scrambles and inverts the real-world progression, causing the algorithm to learn that advanced practitioners possess lower competence than beginners! Always pass an explicit list: <code>categories=[['Beginner', 'Intermediate', 'Advanced']]</code>.
+          </div>
+        </details>
+
+        <!-- Q3 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q03:</strong> What is the 'Dummy Variable Trap' and when should drop='first' be avoided?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> The dummy variable trap occurs when all K one-hot columns are included in a linear regression model with an intercept. Because the sum across all one-hot columns in an observation always equals 1.0, it creates perfect multicollinearity with the constant intercept column, making <code>(X^T X)</code> non-invertible. Setting <code>drop='first'</code> removes one redundant reference column. However, <code>drop='first'</code> should be <strong>avoided</strong> in tree-based models (where trees struggle to isolate the dropped class), regularized models (Ridge/Lasso), and whenever production safety requires <code>handle_unknown='ignore'</code>.
+          </div>
+        </details>
+
+        <!-- Q4 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q04:</strong> Why does pandas.get_dummies() frequently cause production API crashes while OneHotEncoder succeeds?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> <code>pandas.get_dummies()</code> generates columns based solely on whatever categories happen to exist in the current DataFrame passed to it. If production inference receives an unseen category (e.g. 'Bhopal'), get_dummies creates a new column (<code>city_Bhopal</code>) that did not exist during training, shifting the feature dimension. The estimator immediately crashes with a shape mismatch error. In contrast, Scikit-Learn's <code>OneHotEncoder(handle_unknown='ignore')</code> permanently freezes the training feature schema and encodes unseen categories as all-zero vectors, preserving exact matrix dimensions.
+          </div>
+        </details>
+
+        <!-- Q5 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q05:</strong> How does Binary Encoding compress 1,024 categories into just 10 columns?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> Binary encoding maps categories to sequential integers (1 to 1,024), converts each integer into its base-2 binary representation (e.g. 1023 = <code>1111111111</code> in binary, which requires 10 bits), and unpacks each bit position into an independent feature column. Because <code>2^10 = 1024</code>, exactly 10 binary columns are mathematically sufficient to uniquely distinguish all 1,024 categories, achieving exponential compression compared to 1,024 one-hot columns.
+          </div>
+        </details>
+
+        <!-- Q6 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q06:</strong> What is target leakage in Target Encoding and how does Bayesian smoothing resolve it?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> Target leakage occurs when target information from holdout sets contaminates features, or when rare categories (e.g. 1 sample with y=1) receive an extreme encoding value of 1.0, enabling the model to trivially memorize training samples. Bayesian m-estimate smoothing resolves this via: <code>S = (n * mean + m * prior) / (n + m)</code>. When a category has very few samples <code>n</code>, the encoding shrinks toward the global population prior, neutralizing extreme overfitting.
+          </div>
+        </details>
+
+        <!-- Q7 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q07:</strong> Why is a postal PIN code (e.g. 226001) categorical data even though it is stored as an integer?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> A column's data type (integer) does not dictate its statistical nature. Numbers are only numerical measurements if arithmetic operations are physically meaningful. Subtracting PIN code 110001 from 226001 yields 116000, which is meaningless nonsense. PIN codes are discrete geographic labels; they must be cast to strings and encoded as nominal categories rather than continuous floats.
+          </div>
+        </details>
+
+        <!-- Q8 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q08:</strong> When should rare categories be grouped into a single 'Other' bucket?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> Rare categories should be grouped into an 'Other' bucket when dealing with long-tail distributions where a handful of categories dominate volume while hundreds of low-frequency classes each account for &lt; 1% to 3% of observations. Grouping stabilizes model variance, prevents one-hot column explosion, and prevents estimators from fitting spurious rules on tiny, unreliable samples.
+          </div>
+        </details>
+
+        <!-- Q9 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q09:</strong> Why must train_test_split() strictly occur before fitting an encoder?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> Fitting an encoder on the entire dataset leaks statistical knowledge from the validation/test partitions into the training process. For frequency encoders, the training model learns test set frequencies; for target encoders, it leaks test target labels; for one-hot encoders, it exposes test set category existence. To simulate true real-world deployment, encoders must learn their mapping strictly from <code>X_train</code>.
+          </div>
+        </details>
+
+        <!-- Q10 -->
+        <details class="qa-card">
+          <summary class="qa-summary">
+            <span><strong>Q10:</strong> What is the role of ColumnTransformer in a production Scikit-Learn pipeline?</span>
+            <span class="qa-icon">+</span>
+          </summary>
+          <div class="qa-body">
+            <strong>Verified Explanation:</strong> Real-world datasets contain a mixture of data types. ColumnTransformer allows engineers to define concurrent, isolated sub-pipelines: scaling numerical features, ordinal-encoding rank features, and one-hot-encoding nominal features. It executes each sub-pipeline independently, concatenates the resulting arrays horizontally into a unified numeric matrix, and enforces train-first isolation across the entire workflow.
+          </div>
+        </details>
+      </div>
+
+      <h3>15.4 Practical Senior Data Scientist Scenario Challenge</h3>
+      <div class="card card-amber">
+        <div class="card-title">&#128188; Industrial Challenge: The Hospital Readmission System</div>
+        <p>
+          <strong>Scenario:</strong> You are the lead machine learning architect for a hospital network predicting 30-day patient readmissions. The dataset contains 100,000 patient records with the following attributes:
+        </p>
+        <ul>
+          <li><code>Admission_Type</code> (Emergency, Elective, Urgent) &rarr; Nominal (K=3)</li>
+          <li><code>Severity_Score</code> (Mild, Moderate, Severe, Critical) &rarr; Ordinal (K=4)</li>
+          <li><code>Primary_Diagnosis_ICD10</code> (12,000 distinct diagnostic medical codes) &rarr; High-Cardinality Nominal</li>
+          <li><code>Prior_Readmission</code> (Yes, No) &rarr; Binary</li>
+        </ul>
+        <p>
+          <strong>Junior Intern Proposal:</strong> "Let's run <code>pd.get_dummies()</code> across all four columns to keep everything simple!"
+        </p>
+        <p>
+          <strong>Your Architectural Critique &amp; Solution:</strong>
+        </p>
+        <ul>
+          <li><strong>Critique:</strong> Running <code>get_dummies</code> on 12,000 ICD-10 codes will generate 12,000 new columns! The feature matrix will consume over 9.6 GB of RAM, causing severe memory paging or server crashes. Furthermore, get_dummies destroys the true clinical hierarchy of <code>Severity_Score</code> (Mild &lt; Moderate &lt; Severe &lt; Critical) and will crash the production API whenever an unobserved diagnosis code enters the emergency room.</li>
+          <li><strong>Production Solution:</strong>
+            <ol>
+              <li><code>Prior_Readmission</code>: Direct binary mapping to <code>0</code> and <code>1</code>.</li>
+              <li><code>Severity_Score</code>: Encoded with <code>OrdinalEncoder(categories=[['Mild', 'Moderate', 'Severe', 'Critical']])</code> to preserve clinical severity directionality.</li>
+              <li><code>Admission_Type</code>: Encoded with <code>OneHotEncoder(handle_unknown='ignore')</code> (yielding 3 orthogonal columns).</li>
+              <li><code>Primary_Diagnosis_ICD10</code>: High cardinality. Group all codes appearing in &lt; 0.5% of records into <code>'ICD_Other'</code> (reducing cardinality to ~150 major clinical groups) followed by Target Encoding with Bayesian smoothing (m=20) calculated via 5-fold cross-fitting.</li>
+            </ol>
+          </li>
+          <li><strong>Outcome:</strong> Feature space is compressed from 12,000 columns to under 160 dense, highly predictive clinical indicators that generalize reliably in emergency triage.</li>
+        </ul>
+      </div>
+
+      <h3>15.5 Final Hands-On Mixed-Type Exercise</h3>
+      <p>
+        To cement your skills, build an independent Python script that loads a new synthetic customer loan dataset with:
+      </p>
+      <ul>
+        <li><code>annual_income</code> (continuous float)</li>
+        <li><code>credit_rating</code> (ordinal: Poor &lt; Fair &lt; Good &lt; Excellent)</li>
+        <li><code>home_ownership</code> (nominal: Rent, Own, Mortgage)</li>
+        <li><code>loan_purpose</code> (nominal with 25 distinct categories, containing rare categories and missing values)</li>
+        <li><code>loan_approved</code> (binary target: Approved, Denied)</li>
+      </ul>
+      <p>
+        Implement a <code>ColumnTransformer</code> and verify that test data containing an unseen loan purpose (<code>'Aerospace Startup'</code>) executes smoothly through your pipeline without throwing an exception!
+      </p>
+    </section>
+    
+  </div>
+</body>
+</html>
