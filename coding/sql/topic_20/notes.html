@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 20: SQL Security &amp; Real-World Database Queries | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Subheadings */
+    .subhead {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 14px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0 14px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.security {
+      background: #7C3AED;
+    }
+
+    .code-tag.safe {
+      background: #059669;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+    .comment { color: var(--comment-color); font-style: italic; }
+
+    /* Visual Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Visual 1: Flow Pipeline */
+    .flow-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      margin: 6px 0;
+    }
+
+    .flow-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+
+    .flow-step.login { border-left-color: #0284C7; background: #F0F9FF; }
+    .flow-step.auth { border-left-color: #7C3AED; background: #FAF5FF; }
+    .flow-step.perm { border-left-color: #D97706; background: #FFFBEB; }
+    .flow-step.access { border-left-color: #059669; background: #F0FDF4; }
+
+    .flow-step-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .flow-step.login .flow-step-header { color: #0284C7; }
+    .flow-step.auth .flow-step-header { color: #7C3AED; }
+    .flow-step.perm .flow-step-header { color: #D97706; }
+    .flow-step.access .flow-step-header { color: #059669; }
+
+    /* Comparison Grids */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .compare-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 12.5px;
+    }
+
+    .compare-card.danger {
+      border-top: 3px solid #DC2626;
+      background: #FEF2F2;
+    }
+
+    .compare-card.safe {
+      border-top: 3px solid #059669;
+      background: #F0FDF4;
+    }
+
+    .compare-title {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .compare-card.danger .compare-title { color: #DC2626; }
+    .compare-card.safe .compare-title { color: #059669; }
+
+    /* Bullet List */
+    .bullet-list {
+      margin: 8px 0 10px 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    /* Final Project Completion Banner */
+    .completion-banner {
+      background: linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 50%, #EFF6FF 100%);
+      border: 2px solid #86EFAC;
+      border-radius: 14px;
+      padding: 24px 20px;
+      margin-top: 28px;
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.08);
+      text-align: center;
+    }
+
+    .completion-badge {
+      display: inline-block;
+      background-color: #DCFCE7;
+      color: #15803D;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      margin-bottom: 12px;
+      border: 1px solid #BBF7D0;
+    }
+
+    .completion-title {
+      font-size: 21px;
+      font-weight: 800;
+      color: #0F172A;
+      margin: 0 0 8px 0;
+      line-height: 1.3;
+    }
+
+    .completion-desc {
+      font-size: 14px;
+      color: #334155;
+      margin: 0 auto 16px auto;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .completion-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .completion-score {
+      font-size: 14px;
+      font-weight: 800;
+      color: #059669;
+    }
+
+    .progress-bar-wrap {
+      width: 100%;
+      max-width: 280px;
+      height: 10px;
+      background: #E2E8F0;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #0284C7 0%, #10B981 100%);
+      border-radius: 9999px;
+    }
+
+    .completion-art {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+      .completion-title {
+        font-size: 18px;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+      pre {
+        font-size: 12px;
+        padding: 10px 12px;
+      }
+      code {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 20</span>
+      <h1 class="hero-title">SQL Security &amp; Real-World Database Queries</h1>
+      <p class="hero-desc">Protect sensitive data, prevent SQL injection with parameterized queries, apply permissions, and build real-world shopping queries.</p>
+    </header>
+
+    <!-- Section A: SQL Security -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> SQL Security Fundamentals</h2>
+      <p>Database security protects confidential records from unauthorized access, accidental tampering, and malicious cyberattacks.</p>
+
+      <div class="subhead">Authentication vs. Authorization</div>
+      <p>Access control relies on two distinct security layers:</p>
+      <ul class="bullet-list">
+        <li><strong>Authentication:</strong> Verifies identity (who you are, such as through a username and password).</li>
+        <li><strong>Authorization:</strong> Determines permissions (what actions you are permitted to perform, such as reading or updating specific tables).</li>
+      </ul>
+
+      <div class="subhead">Managing Permissions: GRANT &amp; REVOKE</div>
+      <p>The <strong>principle of least privilege</strong> states that users, applications, and services should only receive the minimum permissions necessary for their duties:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Standard Permission Commands</span>
+          <span class="code-tag security">SECURITY</span>
+        </div>
+        <pre><code><span class="comment">-- Grant read access</span>
+<span class="kw">GRANT SELECT ON</span> <span class="ident">Customers</span>
+<span class="kw">TO</span> <span class="ident">analyst_user</span><span class="punct">;</span>
+
+<span class="comment">-- Revoke write access</span>
+<span class="kw">REVOKE INSERT</span><span class="punct">,</span> <span class="kw">UPDATE ON</span> <span class="ident">Customers</span>
+<span class="kw">FROM</span> <span class="ident">analyst_user</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <div class="subhead">SQL Injection &amp; Parameterized Queries</div>
+      <p><strong>SQL injection</strong> occurs when untrusted user input is directly concatenated into a query string, allowing attackers to manipulate SQL syntax. Parameterized queries treat user input strictly as literal values rather than executable code, completely neutralizing injection risks.</p>
+
+      <!-- Educational Visual 1: Database Security Flow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: Database Security Access Flow</div>
+        <div class="flow-pipeline">
+          <div class="flow-step login">
+            <div class="flow-step-header">1. User Login</div>
+            <div>Client submits username and password credentials.</div>
+          </div>
+          <div class="flow-step auth">
+            <div class="flow-step-header">2. Authentication</div>
+            <div>Database verifies identity (<em>Who are you?</em>).</div>
+          </div>
+          <div class="flow-step perm">
+            <div class="flow-step-header">3. Permission Check</div>
+            <div>Database checks table privileges via <code>GRANT/REVOKE</code> (<em>What can you do?</em>).</div>
+          </div>
+          <div class="flow-step access">
+            <div class="flow-step-header">4. Access Decision</div>
+            <div>Authorized Access granted to requested rows, or Access Denied with security error.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Educational Visual 2: SQL Injection vs Safe Query -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: SQL Injection vs. Parameterized Query</div>
+        <div class="compare-grid">
+          <div class="compare-card danger">
+            <div class="compare-title">&#9888; Vulnerable Concatenation</div>
+            <div><code>SELECT * FROM Users WHERE id = '' + input</code><br>Malicious input (<code>' OR '1'='1</code>) alters query syntax and bypasses password checks.</div>
+          </div>
+          <div class="compare-card safe">
+            <div class="compare-title">&#10004; Safe Parameterized Query</div>
+            <div><code>SELECT * FROM Users WHERE id = ?</code><br>Database engine treats user input strictly as a literal value, preventing unintended query execution.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section B: Real-World Database Queries -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> Real-World Shopping Queries</h2>
+      <p>Real-world online shopping systems combine multiple related tables to track customers, purchases, and payments.</p>
+
+      <div class="subhead">Sample Database Tables</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th colspan="3">Customers</th>
+            </tr>
+            <tr>
+              <th class="td-num">customer_id</th>
+              <th>name</th>
+              <th>city</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">1</td>
+              <td>Rahul</td>
+              <td>Delhi</td>
+            </tr>
+            <tr>
+              <td class="td-num">2</td>
+              <td>Priya</td>
+              <td>Mumbai</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th colspan="4">Orders</th>
+            </tr>
+            <tr>
+              <th class="td-num">order_id</th>
+              <th class="td-num">customer_id</th>
+              <th>order_date</th>
+              <th>status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td class="td-num">1</td>
+              <td>2026-10-01</td>
+              <td>Delivered</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td class="td-num">1</td>
+              <td>2026-10-15</td>
+              <td>Pending</td>
+            </tr>
+            <tr>
+              <td class="td-num">103</td>
+              <td class="td-num">2</td>
+              <td>2026-10-10</td>
+              <td>Delivered</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th colspan="4">OrderItems</th>
+            </tr>
+            <tr>
+              <th class="td-num">item_id</th>
+              <th class="td-num">order_id</th>
+              <th>item_name</th>
+              <th class="td-num">amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">1</td>
+              <td class="td-num">101</td>
+              <td>Laptop Bag</td>
+              <td class="td-num">1200</td>
+            </tr>
+            <tr>
+              <td class="td-num">2</td>
+              <td class="td-num">101</td>
+              <td>Wireless Mouse</td>
+              <td class="td-num">800</td>
+            </tr>
+            <tr>
+              <td class="td-num">3</td>
+              <td class="td-num">102</td>
+              <td>Keyboard</td>
+              <td class="td-num">1500</td>
+            </tr>
+            <tr>
+              <td class="td-num">4</td>
+              <td class="td-num">103</td>
+              <td>Headphones</td>
+              <td class="td-num">2500</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead">1. Recent Orders for a Customer (JOIN &amp; ORDER BY)</div>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Customer Order History</span>
+          <span class="code-tag">JOIN</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">name</span><span class="punct">,</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">order_id</span><span class="punct">,</span>
+       <span class="ident">o</span><span class="punct">.</span><span class="ident">order_date</span><span class="punct">,</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">status</span>
+<span class="kw">FROM</span> <span class="ident">Customers</span> <span class="ident">c</span>
+<span class="kw">JOIN</span> <span class="ident">Orders</span> <span class="ident">o</span>
+  <span class="kw">ON</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">customer_id</span> <span class="op">=</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">customer_id</span>
+<span class="kw">WHERE</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">name</span> <span class="op">=</span> <span class="str">'Rahul'</span>
+<span class="kw">ORDER BY</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">order_date</span> <span class="kw">DESC</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>Expected output:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>name</th>
+              <th class="td-num">order_id</th>
+              <th>order_date</th>
+              <th>status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rahul</td>
+              <td class="td-num">102</td>
+              <td>2026-10-15</td>
+              <td>Pending</td>
+            </tr>
+            <tr>
+              <td>Rahul</td>
+              <td class="td-num">101</td>
+              <td>2026-10-01</td>
+              <td>Delivered</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead">2. Total Spending Per Customer (SUM &amp; GROUP BY)</div>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Customer Spending Summary</span>
+          <span class="code-tag">AGGREGATE</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">name</span><span class="punct">,</span>
+       <span class="fn">SUM</span><span class="punct">(</span><span class="ident">i</span><span class="punct">.</span><span class="ident">amount</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">total_spent</span>
+<span class="kw">FROM</span> <span class="ident">Customers</span> <span class="ident">c</span>
+<span class="kw">JOIN</span> <span class="ident">Orders</span> <span class="ident">o</span>
+  <span class="kw">ON</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">customer_id</span> <span class="op">=</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">customer_id</span>
+<span class="kw">JOIN</span> <span class="ident">OrderItems</span> <span class="ident">i</span>
+  <span class="kw">ON</span> <span class="ident">o</span><span class="punct">.</span><span class="ident">order_id</span> <span class="op">=</span> <span class="ident">i</span><span class="punct">.</span><span class="ident">order_id</span>
+<span class="kw">GROUP BY</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">customer_id</span><span class="punct">,</span> <span class="ident">c</span><span class="punct">.</span><span class="ident">name</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>Expected output:</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>name</th>
+              <th class="td-num">total_spent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rahul</td>
+              <td class="td-num">3500</td>
+            </tr>
+            <tr>
+              <td>Priya</td>
+              <td class="td-num">2500</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead">3. Finding Pending Orders (WHERE)</div>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Pending Orders Query</span>
+          <span class="code-tag">FILTER</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="ident">order_id</span><span class="punct">,</span>
+       <span class="ident">customer_id</span><span class="punct">,</span> <span class="ident">order_date</span>
+<span class="kw">FROM</span> <span class="ident">Orders</span>
+<span class="kw">WHERE</span> <span class="ident">status</span> <span class="op">=</span> <span class="str">'Pending'</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <div class="subhead">4. Safe Parameterized Order Lookup</div>
+      <p>Application-level code safely binds parameter placeholders (such as <code>?</code> or <code>$1</code>) rather than concatenating values directly into raw SQL strings:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Application Parameterized Query</span>
+          <span class="code-tag safe">PREPARED</span>
+        </div>
+        <pre><code><span class="comment">-- Safe parameter placeholder (?)</span>
+<span class="kw">SELECT</span> <span class="ident">order_id</span><span class="punct">,</span>
+       <span class="ident">customer_id</span><span class="punct">,</span> <span class="ident">status</span>
+<span class="kw">FROM</span> <span class="ident">Orders</span>
+<span class="kw">WHERE</span> <span class="ident">order_id</span> <span class="op">=</span> <span class="punct">?;</span></code></pre>
+      </div>
+
+      <!-- Educational Visual 3: Real-World Shopping Query Pipeline -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 3: Real-World Shopping Query Flow</div>
+        <div class="flow-pipeline">
+          <div class="flow-step login">
+            <div class="flow-step-header">1. Source Tables</div>
+            <div><code>Customers</code> + <code>Orders</code> + <code>OrderItems</code> store relational shopping records.</div>
+          </div>
+          <div class="flow-step auth">
+            <div class="flow-step-header">2. Relational JOINs</div>
+            <div>Links records via <code>customer_id</code> and <code>order_id</code> common keys.</div>
+          </div>
+          <div class="flow-step perm">
+            <div class="flow-step-header">3. Processing &amp; Aggregates</div>
+            <div>Filters active status via <code>WHERE</code>; groups and aggregates total spending via <code>SUM()</code>.</div>
+          </div>
+          <div class="flow-step access">
+            <div class="flow-step-header">4. Business Results</div>
+            <div>Delivers accurate customer revenue metrics and order history reports.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final Project Completion Banner -->
+    <div class="completion-banner">
+      <div class="completion-badge">&#10004; SQL CURRICULUM COMPLETED</div>
+      <h2 class="completion-title">Congratulations! SQL Learning Journey Completed &#127881;</h2>
+      <p class="completion-desc">You've completed all 20 SQL topics. You are now ready to apply SQL concepts to real-world database problems.</p>
+      
+      <div class="completion-indicator">
+        <span class="completion-score">20 / 20 Topics Completed</span>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill"></div>
+        </div>
+      </div>
+
+      <!-- Database themed illustration (SVG) -->
+      <svg class="completion-art" width="220" height="70" viewBox="0 0 220 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Database Cylinder 1 -->
+        <g stroke="#0284C7" stroke-width="1.8">
+          <ellipse cx="45" cy="20" rx="25" ry="8" fill="#E0F2FE"/>
+          <path d="M20 20v18c0 4.4 11.2 8 25 8s25-3.6 25-8V20" fill="#F0F9FF"/>
+          <path d="M20 38v14c0 4.4 11.2 8 25 8s25-3.6 25-8V38" fill="#F0F9FF"/>
+        </g>
+        <!-- Connection Link -->
+        <path d="M72 32h26" stroke="#94A3B8" stroke-width="2" stroke-dasharray="3 3"/>
+        <!-- Central Success Badge -->
+        <circle cx="110" cy="32" r="16" fill="#10B981" stroke="#059669" stroke-width="2"/>
+        <path d="M103 32.5l4.5 4.5 9-9" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Connection Link -->
+        <path d="M128 32h26" stroke="#94A3B8" stroke-width="2" stroke-dasharray="3 3"/>
+        <!-- Database Cylinder 2 -->
+        <g stroke="#7C3AED" stroke-width="1.8">
+          <ellipse cx="175" cy="20" rx="25" ry="8" fill="#EDE9FE"/>
+          <path d="M150 20v18c0 4.4 11.2 8 25 8s25-3.6 25-8V20" fill="#FAF5FF"/>
+          <path d="M150 38v14c0 4.4 11.2 8 25 8s25-3.6 25-8V38" fill="#FAF5FF"/>
+        </g>
+      </svg>
+    </div>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 15: Normalization &amp; Relational Design | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Subheadings */
+    .subhead {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 16px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .table-caption {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    /* Grid for multiple normalized tables */
+    .norm-tables-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1.2fr;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    /* Highlight Notification Cards */
+    .card-def {
+      background-color: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .card-def p {
+      color: var(--def-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    .card-tip {
+      background-color: var(--tip-card-bg);
+      border: 1px solid var(--tip-card-border);
+      border-left: 4px solid var(--tip-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-tip-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--tip-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tip p {
+      color: var(--tip-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+
+    /* Visual Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Badges */
+    .badge-pk {
+      background: #FAF5FF;
+      color: #7C3AED;
+      border: 1px solid #E9D5FF;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .badge-fk {
+      background: #EFF6FF;
+      color: #2563EB;
+      border: 1px solid #BFDBFE;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+
+    .badge-repeat {
+      background: #FEE2E2;
+      color: #991B1B;
+      border: 1px solid #FECACA;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+
+    /* Progression Cards */
+    .prog-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .prog-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .prog-step.one {
+      border-left-color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    .prog-step.two {
+      border-left-color: #7C3AED;
+      background: #FAF5FF;
+    }
+
+    .prog-step.three {
+      border-left-color: #059669;
+      background: #F0FDF4;
+    }
+
+    .prog-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .prog-step.one .prog-header { color: #0284C7; }
+    .prog-step.two .prog-header { color: #7C3AED; }
+    .prog-step.three .prog-header { color: #059669; }
+
+    .prog-desc {
+      color: var(--text-primary);
+      font-size: 12.5px;
+    }
+
+    /* Relational Connection Diagram Box */
+    .rel-schema-box {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      margin: 8px 0;
+    }
+
+    .rel-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 10px;
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 6px;
+      font-size: 12px;
+    }
+
+    .rel-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .rel-conn-line {
+      text-align: center;
+      color: #64748B;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px 0 6px 0;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .norm-tables-grid {
+        grid-template-columns: 1fr;
+      }
+      .rel-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 15</span>
+      <h1 class="hero-title">Normalization &amp; Relational Design</h1>
+      <p class="hero-desc">Organize database tables systematically to eliminate redundant data, ensure consistency, and prevent update anomalies.</p>
+    </header>
+
+    <!-- Section A: The Problem with Unnormalized Data -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> The Problem with Unnormalized Data</h2>
+      <p><strong>Normalization</strong> organizes database columns and tables to reduce unnecessary data duplication and prevent insert, update, and deletion anomalies.</p>
+
+      <p>Consider this unnormalized college enrollment table:</p>
+
+      <!-- Poorly Designed Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>student_name</th>
+              <th>branch</th>
+              <th>course</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#FEF2F2;">
+              <td class="td-num">101</td>
+              <td>Rahul <span class="badge-repeat">Repeated</span></td>
+              <td>CSE <span class="badge-repeat">Repeated</span></td>
+              <td>SQL</td>
+            </tr>
+            <tr style="background:#FEF2F2;">
+              <td class="td-num">101</td>
+              <td>Rahul <span class="badge-repeat">Repeated</span></td>
+              <td>CSE <span class="badge-repeat">Repeated</span></td>
+              <td>Python</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td>Priya</td>
+              <td>AI</td>
+              <td>SQL</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Rahul's name and branch are repeated for every enrolled course. If Rahul switches branches, updating one row while missing another creates conflicting records (an <em>update anomaly</em>).</p>
+
+      <!-- 1NF -> 2NF -> 3NF Progression -->
+      <div class="subhead">The Normalization Steps (1NF &rarr; 2NF &rarr; 3NF)</div>
+      <div class="prog-grid">
+        <div class="prog-step one">
+          <div class="prog-header">1NF &mdash; Atomic Values</div>
+          <div class="prog-desc">Each column holds a single, indivisible value per cell (never comma-separated lists like <code>"SQL, Python"</code>), and each row is unique.</div>
+        </div>
+        <div class="prog-step two">
+          <div class="prog-header">2NF &mdash; No Partial Dependency</div>
+          <div class="prog-desc">Must satisfy 1NF, and all non-key columns must depend on the entire candidate key, rather than only part of a composite key.</div>
+        </div>
+        <div class="prog-step three">
+          <div class="prog-header">3NF &mdash; No Transitive Dependency</div>
+          <div class="prog-desc">Must satisfy 2NF, and non-key columns must depend strictly on the primary key, never on other non-key attributes (e.g., branch names depend on <code>branch_id</code>).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section B: Better Relational Design -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> A Better Relational Design</h2>
+      <p>We split the unnormalized table into three dedicated entities with distinct responsibilities: students, branches, and enrollments.</p>
+
+      <!-- 3 Normalized Tables -->
+      <div class="norm-tables-grid">
+        <div>
+          <div class="table-caption">&#127891; Students</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="td-num">student_id</th>
+                  <th>student_name</th>
+                  <th class="td-num">branch_id</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-num">101</td><td>Rahul</td><td class="td-num">1</td></tr>
+                <tr><td class="td-num">102</td><td>Priya</td><td class="td-num">2</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="table-caption">&#127979; Branches</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="td-num">branch_id</th>
+                  <th>branch_name</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-num">1</td><td>CSE</td></tr>
+                <tr><td class="td-num">2</td><td>AI</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <div class="table-caption">&#128218; Enrollments</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="td-num">student_id</th>
+                  <th>course</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td class="td-num">101</td><td>SQL</td></tr>
+                <tr><td class="td-num">101</td><td>Python</td></tr>
+                <tr><td class="td-num">102</td><td>SQL</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <p>Each table manages its own domain. <code>student_id</code> and <code>branch_id</code> connect related records. The <code>Enrollments</code> table represents the student-course relationship using a composite primary key <code>(student_id, course)</code>.</p>
+
+      <!-- Clean DDL Code Block -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Normalized Schema Definition</span>
+          <span class="code-tag">3NF SCHEMA</span>
+        </div>
+        <pre><code><span class="kw">CREATE TABLE</span> <span class="ident">Branches</span> <span class="punct">(</span>
+    <span class="ident">branch_id</span> <span class="kw">INT</span> <span class="kw">PRIMARY KEY</span><span class="punct">,</span>
+    <span class="ident">branch_name</span> <span class="kw">VARCHAR</span><span class="punct">(</span><span class="num">30</span><span class="punct">)</span> <span class="kw">NOT NULL UNIQUE</span>
+<span class="punct">);</span>
+
+<span class="kw">CREATE TABLE</span> <span class="ident">Students</span> <span class="punct">(</span>
+    <span class="ident">student_id</span> <span class="kw">INT</span> <span class="kw">PRIMARY KEY</span><span class="punct">,</span>
+    <span class="ident">student_name</span> <span class="kw">VARCHAR</span><span class="punct">(</span><span class="num">50</span><span class="punct">)</span> <span class="kw">NOT NULL</span><span class="punct">,</span>
+    <span class="ident">branch_id</span> <span class="kw">INT</span><span class="punct">,</span>
+    <span class="kw">FOREIGN KEY</span> <span class="punct">(</span><span class="ident">branch_id</span><span class="punct">)</span>
+        <span class="kw">REFERENCES</span> <span class="ident">Branches</span><span class="punct">(</span><span class="ident">branch_id</span><span class="punct">)</span>
+<span class="punct">);</span>
+
+<span class="kw">CREATE TABLE</span> <span class="ident">Enrollments</span> <span class="punct">(</span>
+    <span class="ident">student_id</span> <span class="kw">INT</span><span class="punct">,</span>
+    <span class="ident">course</span> <span class="kw">VARCHAR</span><span class="punct">(</span><span class="num">50</span><span class="punct">),</span>
+    <span class="kw">PRIMARY KEY</span> <span class="punct">(</span><span class="ident">student_id</span><span class="punct">,</span> <span class="ident">course</span><span class="punct">),</span>
+    <span class="kw">FOREIGN KEY</span> <span class="punct">(</span><span class="ident">student_id</span><span class="punct">)</span>
+        <span class="kw">REFERENCES</span> <span class="ident">Students</span><span class="punct">(</span><span class="ident">student_id</span><span class="punct">)</span>
+<span class="punct">);</span></code></pre>
+      </div>
+    </section>
+
+    <!-- Section C: Visual Explanations -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">C</span> Visual Design Explanations</h2>
+
+      <!-- Visual 1: Before vs After Normalization -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: Before vs. After Normalization</div>
+        <div class="prog-grid">
+          <div class="prog-step" style="border-left-color: #DC2626; background: #FEF2F2;">
+            <div class="prog-header" style="color:#DC2626;">Before: Single Flat Table (High Duplication)</div>
+            <div class="prog-desc">Rahul &bull; CSE repeated on every course row &rarr; High risk of update anomalies and inconsistent data.</div>
+          </div>
+          <div class="prog-step" style="border-left-color: #16A34A; background: #F0FDF4;">
+            <div class="prog-header" style="color:#16A34A;">After: Three Normalized Tables (Zero Redundancy)</div>
+            <div class="prog-desc">Students (Rahul, Priya) + Branches (CSE, AI) + Enrollments (course mappings) &rarr; Each fact stored once.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual 2: Relational Design Diagram -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: Relational Keys &amp; Table Relationships</div>
+        <div class="rel-schema-box">
+          <div class="rel-row">
+            <span><strong>Branches Table</strong>: <span class="badge-pk">PK</span> <code>branch_id</code> &bull; <code>branch_name</code></span>
+            <span style="color:#0284C7; font-weight:700;">Parent Table</span>
+          </div>
+          <div class="rel-conn-line">&darr; One-to-Many Relationship: <code>Branches.branch_id</code> &rarr; <code>Students.branch_id</code></div>
+          <div class="rel-row">
+            <span><strong>Students Table</strong>: <span class="badge-pk">PK</span> <code>student_id</code> &bull; <code>student_name</code> &bull; <span class="badge-fk">FK</span> <code>branch_id</code></span>
+            <span style="color:#7C3AED; font-weight:700;">Connected via branch_id</span>
+          </div>
+          <div class="rel-conn-line">&darr; One-to-Many Relationship: <code>Students.student_id</code> &rarr; <code>Enrollments.student_id</code></div>
+          <div class="rel-row">
+            <span><strong>Enrollments Table</strong>: <span class="badge-pk">PK</span> <code>(student_id, course)</code> &bull; <span class="badge-fk">FK</span> <code>student_id</code></span>
+            <span style="color:#059669; font-weight:700;">Composite Primary Key</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Revision Card -->
+      <div class="card-tip">
+        <div class="card-tip-title">&#9733; Quick Revision &amp; Takeaways</div>
+        <p><strong>1. Goal:</strong> Store each piece of data in exactly one place.<br><strong>2. Keys as Links:</strong> Foreign keys reference primary keys to reconstruct relationships when queried with JOINs.<br><strong>3. Integrity:</strong> Normalization eliminates update, insertion, and deletion anomalies.</p>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

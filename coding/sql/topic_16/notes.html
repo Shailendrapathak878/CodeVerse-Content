@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 16: Views &amp; Stored Procedures | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Subheadings */
+    .subhead {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 16px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Highlight Notification Cards */
+    .card-def {
+      background-color: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .card-def p {
+      color: var(--def-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    .card-tip {
+      background-color: var(--tip-card-bg);
+      border: 1px solid var(--tip-card-border);
+      border-left: 4px solid var(--tip-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-tip-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--tip-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tip p {
+      color: var(--tip-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.proc {
+      background: #7C3AED;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+
+    /* Visual Educational Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Workflow Pipeline */
+    .flow-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .flow-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+
+    .flow-step.define {
+      border-left-color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    .flow-step.store {
+      border-left-color: #7C3AED;
+      background: #FAF5FF;
+    }
+
+    .flow-step.run {
+      border-left-color: #059669;
+      background: #F0FDF4;
+    }
+
+    .flow-step-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .flow-step.define .flow-step-header { color: #0284C7; }
+    .flow-step.store .flow-step-header { color: #7C3AED; }
+    .flow-step.run .flow-step-header { color: #059669; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 16</span>
+      <h1 class="hero-title">Views &amp; Stored Procedures</h1>
+      <p class="hero-desc">Simplify data access and encapsulate business logic using virtual views and server-side stored procedures.</p>
+    </header>
+
+    <!-- Section A: Real-Life Dataset & Views -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> Views &mdash; A Saved Query</h2>
+      <p>A <strong>view</strong> is a named query stored in the database that acts like a virtual table. Rather than duplicating physical table data, a view dynamically executes its underlying query definition whenever queried.</p>
+
+      <p>We use our college <code>Students</code> table throughout this lesson:</p>
+
+      <!-- Sample Students Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>name</th>
+              <th>branch</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td>CSE</td>
+              <td class="td-num">80</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td>Priya</td>
+              <td>AI</td>
+              <td class="td-num">90</td>
+            </tr>
+            <tr>
+              <td class="td-num">103</td>
+              <td>Aman</td>
+              <td>CSE</td>
+              <td class="td-num">70</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>Real-Life Scenario:</strong> A teacher frequently needs to view student names and exam marks without exposing unrelated internal columns or rewriting the query repeatedly:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Create View</span>
+          <span class="code-tag">VIEW DDL</span>
+        </div>
+        <pre><code><span class="kw">CREATE VIEW</span> <span class="ident">StudentResults</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">marks</span>
+<span class="kw">FROM</span> <span class="ident">Students</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>Query the view exactly like a normal table:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Query View</span>
+          <span class="code-tag">SELECT</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="op">*</span> <span class="kw">FROM</span> <span class="ident">StudentResults</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>name</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rahul</td>
+              <td class="td-num">80</td>
+            </tr>
+            <tr>
+              <td>Priya</td>
+              <td class="td-num">90</td>
+            </tr>
+            <tr>
+              <td>Aman</td>
+              <td class="td-num">70</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The view makes recurring queries clean and reusable. In practice, permissions and direct updateability depend on the specific database engine and whether the view includes aggregations or joins.</p>
+
+      <!-- Educational Visual 1: View Workflow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: View Execution Workflow</div>
+        <div class="flow-pipeline">
+          <div class="flow-step define">
+            <div class="flow-step-header">1. Define View (CREATE VIEW)</div>
+            <div><code>CREATE VIEW StudentResults AS SELECT name, marks FROM Students;</code></div>
+          </div>
+          <div class="flow-step store">
+            <div class="flow-step-header">2. Stored Query Definition</div>
+            <div>Database saves query logic as a virtual schema object (no duplicated table rows).</div>
+          </div>
+          <div class="flow-step run">
+            <div class="flow-step-header">3. Query View &amp; Deliver Output</div>
+            <div><code>SELECT * FROM StudentResults;</code> dynamically pulls Rahul (80), Priya (90), Aman (70).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section B: Stored Procedures -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> Stored Procedures &mdash; Reusable Logic</h2>
+      <p>A <strong>stored procedure</strong> is a prepared set of SQL statements stored directly on the database server. It can accept parameters, execute complex logic, and be invoked on demand.</p>
+
+      <p><strong>Real-Life Scenario:</strong> A college administrator repeatedly needs to fetch all student records for a specific branch by passing the branch name dynamically.</p>
+
+      <!-- Clearly labeled MySQL Example -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>MySQL Stored Procedure Example</span>
+          <span class="code-tag proc">PROCEDURE</span>
+        </div>
+        <pre><code><span class="kw">DELIMITER</span> <span class="op">//</span>
+
+<span class="kw">CREATE PROCEDURE</span> <span class="ident">GetStudentsByBranch</span><span class="punct">(</span>
+    <span class="kw">IN</span> <span class="ident">selected_branch</span> <span class="kw">VARCHAR</span><span class="punct">(</span><span class="num">30</span><span class="punct">)</span>
+<span class="punct">)</span>
+<span class="kw">BEGIN</span>
+    <span class="kw">SELECT</span> <span class="ident">student_id</span><span class="punct">,</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">branch</span><span class="punct">,</span> <span class="ident">marks</span>
+    <span class="kw">FROM</span> <span class="ident">Students</span>
+    <span class="kw">WHERE</span> <span class="ident">branch</span> <span class="op">=</span> <span class="ident">selected_branch</span><span class="punct">;</span>
+<span class="kw">END</span> <span class="op">//</span>
+
+<span class="kw">DELIMITER</span> <span class="punct">;</span></code></pre>
+      </div>
+
+      <p>Invoke the procedure using <code>CALL</code>:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Call Stored Procedure</span>
+          <span class="code-tag proc">CALL</span>
+        </div>
+        <pre><code><span class="kw">CALL</span> <span class="ident">GetStudentsByBranch</span><span class="punct">(</span><span class="str">'CSE'</span><span class="punct">);</span></code></pre>
+      </div>
+
+      <!-- Expected Procedure Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>name</th>
+              <th>branch</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td>CSE</td>
+              <td class="td-num">80</td>
+            </tr>
+            <tr>
+              <td class="td-num">103</td>
+              <td>Aman</td>
+              <td>CSE</td>
+              <td class="td-num">70</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The parameter <code>IN selected_branch</code> receives <code>'CSE'</code>, and the procedure returns matching students. Creation and execution syntax vary across MySQL (<code>CALL</code>), PostgreSQL (<code>CALL</code> or functions), and SQL Server (<code>EXEC</code>); this syntax is MySQL-specific.</p>
+
+      <!-- Educational Visual 2: Stored Procedure Workflow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: Stored Procedure Workflow</div>
+        <div class="flow-pipeline">
+          <div class="flow-step define">
+            <div class="flow-step-header">1. Supply Input Parameter</div>
+            <div>Administrator passes argument value <code>'CSE'</code> into procedure.</div>
+          </div>
+          <div class="flow-step store">
+            <div class="flow-step-header">2. Invoke Routine (CALL)</div>
+            <div><code>CALL GetStudentsByBranch('CSE');</code> triggers precompiled routine on the server.</div>
+          </div>
+          <div class="flow-step run">
+            <div class="flow-step-header">3. Filter &amp; Return Records</div>
+            <div>Applies <code>WHERE branch = 'CSE'</code> and returns Rahul (101) &amp; Aman (103).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section C: View vs. Stored Procedure Comparison -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">C</span> Views vs. Stored Procedures</h2>
+      <p>Both objects encapsulate SQL logic on the server, but serve different architectural purposes:</p>
+
+      <!-- Comparison Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>View</th>
+              <th>Stored Procedure</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Reusable named query</td>
+              <td>Reusable database routine</td>
+            </tr>
+            <tr>
+              <td>Queried using <code>SELECT</code></td>
+              <td>Invoked using <code>CALL</code> in MySQL</td>
+            </tr>
+            <tr>
+              <td>Commonly used to simplify data access</td>
+              <td>Can encapsulate multiple SQL operations</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Quick Revision Card -->
+      <div class="card-tip">
+        <div class="card-tip-title">&#9733; Quick Revision &amp; Takeaways</div>
+        <p><strong>1. Views for Presentation:</strong> Use views to expose curated, read-only slices of tables without duplicating data.<br><strong>2. Procedures for Workflows:</strong> Use stored procedures to automate multi-step tasks with parameters.<br><strong>3. Portability Note:</strong> Stored procedure syntax is engine-dependent and requires adjustments across database vendors.</p>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 18: Transactions &amp; ACID Properties | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Subheadings */
+    .subhead {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 14px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0 14px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.rollback {
+      background: #DC2626;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+
+    /* Visual Educational Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Workflow Pipeline */
+    .flow-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .flow-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+
+    .flow-step.begin {
+      border-left-color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    .flow-step.debit {
+      border-left-color: #7C3AED;
+      background: #FAF5FF;
+    }
+
+    .flow-step.credit {
+      border-left-color: #0369A1;
+      background: #F0F9FF;
+    }
+
+    .flow-step-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .flow-step.begin .flow-step-header { color: #0284C7; }
+    .flow-step.debit .flow-step-header { color: #7C3AED; }
+    .flow-step.credit .flow-step-header { color: #0369A1; }
+
+    /* Comparison / Multi-Card Grid */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .compare-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 12.5px;
+    }
+
+    .compare-card.success {
+      border-top: 3px solid #059669;
+      background: #F0FDF4;
+    }
+
+    .compare-card.failure {
+      border-top: 3px solid #DC2626;
+      background: #FEF2F2;
+    }
+
+    .compare-title {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .compare-card.success .compare-title { color: #059669; }
+    .compare-card.failure .compare-title { color: #DC2626; }
+
+    /* ACID Cards Grid */
+    .acid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .acid-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 12.5px;
+    }
+
+    .acid-card.atomicity {
+      border-top: 3px solid #0284C7;
+    }
+
+    .acid-card.consistency {
+      border-top: 3px solid #059669;
+    }
+
+    .acid-card.isolation {
+      border-top: 3px solid #7C3AED;
+    }
+
+    .acid-card.durability {
+      border-top: 3px solid #D97706;
+    }
+
+    .acid-letter {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      line-height: 20px;
+      text-align: center;
+      border-radius: 4px;
+      font-weight: 800;
+      font-size: 11px;
+      margin-right: 6px;
+      color: #FFFFFF;
+    }
+
+    .acid-card.atomicity .acid-letter { background: #0284C7; }
+    .acid-card.consistency .acid-letter { background: #059669; }
+    .acid-card.isolation .acid-letter { background: #7C3AED; }
+    .acid-card.durability .acid-letter { background: #D97706; }
+
+    .acid-title {
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      color: var(--heading-color);
+    }
+
+    .acid-desc {
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    /* Bullet List */
+    .bullet-list {
+      margin: 8px 0 10px 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .compare-grid, .acid-grid {
+        grid-template-columns: 1fr;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 18</span>
+      <h1 class="hero-title">Transactions &amp; ACID Properties</h1>
+      <p class="hero-desc">Ensure reliable data updates, manage multi-step operations safely with COMMIT and ROLLBACK, and master the four ACID guarantees.</p>
+    </header>
+
+    <!-- Section A: What Is a Transaction? -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> What Is a Transaction?</h2>
+      <p>A <strong>transaction</strong> is a group of database operations treated as one logical unit of work.</p>
+
+      <p><strong>Real-Life Example:</strong> When a student pays college fees or transfers money between accounts, the payment record should be saved correctly. If part of the operation fails, the database should not be left in an inconsistent state.</p>
+
+      <div class="subhead">Initial Accounts Table</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">account_id</th>
+              <th>student_name</th>
+              <th class="td-num">balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td class="td-num">5000</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td>Priya</td>
+              <td class="td-num">3000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="subhead">Transferring Money with a Transaction</div>
+      <p>The following syntax is broadly supported, but transaction behavior and exact syntax can vary by database:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Transfer Transaction</span>
+          <span class="code-tag">SQL</span>
+        </div>
+        <pre><code><span class="kw">BEGIN</span><span class="punct">;</span>
+
+<span class="kw">UPDATE</span> <span class="ident">Accounts</span>
+<span class="kw">SET</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span> <span class="op">-</span> <span class="num">1000</span>
+<span class="kw">WHERE</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="num">101</span><span class="punct">;</span>
+
+<span class="kw">UPDATE</span> <span class="ident">Accounts</span>
+<span class="kw">SET</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span> <span class="op">+</span> <span class="num">1000</span>
+<span class="kw">WHERE</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="num">102</span><span class="punct">;</span>
+
+<span class="kw">COMMIT</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>This example transfers ₹1,000 from Rahul to Priya. After a successful commit, expected balances are:</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>student_name</th>
+              <th class="td-num">balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Rahul</td>
+              <td class="td-num">4000</td>
+            </tr>
+            <tr>
+              <td>Priya</td>
+              <td class="td-num">4000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Transaction control commands:</p>
+      <ul class="bullet-list">
+        <li><code>BEGIN</code> starts the transaction.</li>
+        <li><code>COMMIT</code> saves the transaction's changes.</li>
+        <li><code>ROLLBACK</code> cancels uncommitted changes when supported by the transaction context.</li>
+      </ul>
+
+      <div class="subhead">Illustrative Rollback Example</div>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Rollback Cancel</span>
+          <span class="code-tag rollback">ROLLBACK</span>
+        </div>
+        <pre><code><span class="kw">BEGIN</span><span class="punct">;</span>
+
+<span class="kw">UPDATE</span> <span class="ident">Accounts</span>
+<span class="kw">SET</span> <span class="ident">balance</span> <span class="op">=</span> <span class="ident">balance</span> <span class="op">-</span> <span class="num">1000</span>
+<span class="kw">WHERE</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="num">101</span><span class="punct">;</span>
+
+<span class="kw">ROLLBACK</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>Rahul's balance returns to its original value of 5000 if the update was uncommitted and the rollback succeeds.</p>
+
+      <!-- Educational Visual 1: Transaction Execution Flow & Failure Path -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: Transaction Flow &amp; Rollback Paths</div>
+        <div class="flow-pipeline">
+          <div class="flow-step begin">
+            <div class="flow-step-header">1. Start Transaction</div>
+            <div><code>BEGIN;</code> &mdash; Opens a new protected transaction scope.</div>
+          </div>
+          <div class="flow-step debit">
+            <div class="flow-step-header">2. Debit Sender</div>
+            <div><code>Rahul &minus;&#8377;1,000</code> &mdash; Pending balance: 4000.</div>
+          </div>
+          <div class="flow-step credit">
+            <div class="flow-step-header">3. Credit Receiver</div>
+            <div><code>Priya +&#8377;1,000</code> &mdash; Pending balance: 4000.</div>
+          </div>
+        </div>
+
+        <div class="compare-grid">
+          <div class="compare-card success">
+            <div class="compare-title">&#10004; Success Path (COMMIT)</div>
+            <div>Both updates succeed together. <code>COMMIT;</code> saves changes permanently to disk.</div>
+          </div>
+          <div class="compare-card failure">
+            <div class="compare-title">&#10008; Failure Path (ROLLBACK)</div>
+            <div>If any step fails, <code>ROLLBACK;</code> cancels pending changes, restoring Rahul's initial 5000 balance.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section B: ACID Properties -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> ACID Properties</h2>
+      <p>To ensure reliability during concurrent operations and system crashes, transactions adhere to four core properties:</p>
+
+      <ul class="bullet-list">
+        <li><strong>Atomicity:</strong> Both transfer updates succeed together, or the transaction is rolled back with no partial updates.</li>
+        <li><strong>Consistency:</strong> Database rules and constraints remain satisfied before and after the transaction.</li>
+        <li><strong>Isolation:</strong> Concurrent transactions should not interfere in ways that violate the database's isolation guarantees.</li>
+        <li><strong>Durability:</strong> Once a transaction is committed successfully, its changes are preserved according to the database's durability guarantees.</li>
+      </ul>
+
+      <!-- Educational Visual 2: The ACID Guarantees -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: The Four ACID Guarantees</div>
+        <div class="acid-grid">
+          <div class="acid-card atomicity">
+            <div class="acid-title"><span class="acid-letter">A</span> Atomicity</div>
+            <div class="acid-desc"><strong>All or Nothing:</strong> Either both the deduction and credit take place, or zero changes are applied.</div>
+          </div>
+          <div class="acid-card consistency">
+            <div class="acid-title"><span class="acid-letter">C</span> Consistency</div>
+            <div class="acid-desc"><strong>Valid State:</strong> Balances follow business rules and cannot become invalid or corrupted.</div>
+          </div>
+          <div class="acid-card isolation">
+            <div class="acid-title"><span class="acid-letter">I</span> Isolation</div>
+            <div class="acid-desc"><strong>Concurrent Safety:</strong> Other active transactions cannot observe partial, uncommitted balances.</div>
+          </div>
+          <div class="acid-card durability">
+            <div class="acid-title"><span class="acid-letter">D</span> Durability</div>
+            <div class="acid-desc"><strong>Permanent Record:</strong> Committed fee payments survive power outages and server reboots.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 17: Indexes &amp; Query Performance | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Subheadings */
+    .subhead {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 16px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 8px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Highlight Notification Cards */
+    .card-def {
+      background-color: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .card-def p {
+      color: var(--def-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    .card-tip {
+      background-color: var(--tip-card-bg);
+      border: 1px solid var(--tip-card-border);
+      border-left: 4px solid var(--tip-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-tip-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--tip-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tip p {
+      color: var(--tip-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.explain {
+      background: #7C3AED;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+
+    /* Visual Educational Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Workflow Pipeline */
+    .flow-pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .flow-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12.5px;
+    }
+
+    .flow-step.one {
+      border-left-color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    .flow-step.two {
+      border-left-color: #7C3AED;
+      background: #FAF5FF;
+    }
+
+    .flow-step.three {
+      border-left-color: #059669;
+      background: #F0FDF4;
+    }
+
+    .flow-step-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .flow-step.one .flow-step-header { color: #0284C7; }
+    .flow-step.two .flow-step-header { color: #7C3AED; }
+    .flow-step.three .flow-step-header { color: #059669; }
+
+    /* Comparison Grid */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 8px 0;
+    }
+
+    .compare-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 12.5px;
+    }
+
+    .compare-card.scan {
+      border-top: 3px solid #DC2626;
+    }
+
+    .compare-card.index {
+      border-top: 3px solid #059669;
+    }
+
+    .compare-card.reads {
+      border-top: 3px solid #0284C7;
+    }
+
+    .compare-card.writes {
+      border-top: 3px solid #D97706;
+    }
+
+    .compare-title {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .compare-card.scan .compare-title { color: #DC2626; }
+    .compare-card.index .compare-title { color: #059669; }
+    .compare-card.reads .compare-title { color: #0284C7; }
+    .compare-card.writes .compare-title { color: #D97706; }
+
+    .visual-note {
+      font-size: 11px;
+      color: #64748B;
+      font-style: italic;
+      margin-top: 6px;
+    }
+
+    /* Bullet List */
+    .bullet-list {
+      margin: 0 0 10px 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 5px;
+      line-height: 1.5;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .compare-grid {
+        grid-template-columns: 1fr;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 6px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 17</span>
+      <h1 class="hero-title">Indexes &amp; Query Performance</h1>
+      <p class="hero-desc">Accelerate data retrieval, understand execution plans with EXPLAIN, and balance read speed against write overhead.</p>
+    </header>
+
+    <!-- Section A: What is an Index? -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> Finding a Student with an Index</h2>
+      <p>A database <strong>index</strong> is a specialized lookup structure that helps the database find matching rows more efficiently, especially in large tables.</p>
+
+      <p><strong>Real-Life Analogy:</strong> Finding a student's name in an alphabetically ordered book index is far faster than reading through every page one by one. Actual performance gains depend on table size, data distribution, and available indexes.</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Create an Index</span>
+          <span class="code-tag">INDEX</span>
+        </div>
+        <pre><code><span class="kw">CREATE INDEX</span> <span class="ident">idx_students_name</span>
+<span class="kw">ON</span> <span class="ident">Students</span><span class="punct">(</span><span class="ident">name</span><span class="punct">);</span></code></pre>
+      </div>
+
+      <p>Querying the indexed column:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Search Indexed Column</span>
+          <span class="code-tag">SELECT</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="ident">student_id</span><span class="punct">,</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">branch</span>
+<span class="kw">FROM</span> <span class="ident">Students</span>
+<span class="kw">WHERE</span> <span class="ident">name</span> <span class="op">=</span> <span class="str">'Rahul'</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>name</th>
+              <th>branch</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td>CSE</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The index helps with name-based lookups, but the query optimizer ultimately decides whether to use it based on table size and cost estimates.</p>
+
+      <!-- Educational Visual 1: Search Comparison -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: Search Comparison (Scan vs. Index)</div>
+        <div class="compare-grid">
+          <div class="compare-card scan">
+            <div class="compare-title">Full Table Scan (Without Index)</div>
+            <div>Scans every row sequentially from start to end until all records are inspected.</div>
+          </div>
+          <div class="compare-card index">
+            <div class="compare-title">Index Lookup (With Index)</div>
+            <div>Jumps directly to 'Rahul' via sorted index tree pointers without examining irrelevant rows.</div>
+          </div>
+        </div>
+        <div class="visual-note">* Conceptual illustration &mdash; actual execution depends on data distribution and optimizer decisions.</div>
+      </div>
+
+      <!-- Educational Visual 2: Index Lookup Flow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: Index Lookup Execution Flow</div>
+        <div class="flow-pipeline">
+          <div class="flow-step one">
+            <div class="flow-step-header">1. User Query</div>
+            <div><code>SELECT ... WHERE name = 'Rahul';</code></div>
+          </div>
+          <div class="flow-step two">
+            <div class="flow-step-header">2. Index Lookup</div>
+            <div><code>idx_students_name</code> locates key <code>'Rahul'</code> &rarr; finds row pointer <code>#101</code>.</div>
+          </div>
+          <div class="flow-step three">
+            <div class="flow-step-header">3. Matching Row Retrieved</div>
+            <div>Fetches matching student row <code>(101, Rahul, CSE)</code> from table storage.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section B: Query Performance and EXPLAIN -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> Query Performance &amp; EXPLAIN</h2>
+      <p><strong>Query performance</strong> measures how efficiently the database retrieves or modifies records. While indexes can speed up queries by reducing scanned data, they consume extra storage and can slow down <code>INSERT</code>, <code>UPDATE</code>, and <code>DELETE</code> operations because index trees must be updated.</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Inspect Execution Plan</span>
+          <span class="code-tag explain">EXPLAIN</span>
+        </div>
+        <pre><code><span class="kw">EXPLAIN</span>
+<span class="kw">SELECT</span> <span class="ident">student_id</span><span class="punct">,</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">branch</span>
+<span class="kw">FROM</span> <span class="ident">Students</span>
+<span class="kw">WHERE</span> <span class="ident">name</span> <span class="op">=</span> <span class="str">'Rahul'</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <p>The <code>EXPLAIN</code> command reveals the database execution plan, indicating whether an index or full table scan is planned. Plan structures and field names vary by database engine.</p>
+
+      <!-- Educational Visual 3: Performance Trade-offs -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 3: Performance Trade-offs (Reads vs. Writes)</div>
+        <div class="compare-grid">
+          <div class="compare-card reads">
+            <div class="compare-title">&#10004; Read Advantages</div>
+            <div>Fast lookups on selective <code>WHERE</code> clauses, joins, and <code>ORDER BY</code> sorting.</div>
+          </div>
+          <div class="compare-card writes">
+            <div class="compare-title">&#9888; Write &amp; Storage Costs</div>
+            <div>Consumes additional disk/RAM space; slows down inserts and updates due to index maintenance.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Good Practices Section -->
+      <div class="card-tip">
+        <div class="card-tip-title">&#9733; Good Indexing Practices</div>
+        <ul class="bullet-list" style="margin-bottom:0;">
+          <li>Index columns frequently used for selective searches or joins.</li>
+          <li>Avoid creating unnecessary indexes on rarely queried columns.</li>
+          <li>Use <code>EXPLAIN</code> to inspect and verify query execution plans.</li>
+          <li>Measure performance on representative, production-like datasets.</li>
+        </ul>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

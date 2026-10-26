@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 8: Aggregate Functions &amp; GROUP BY | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand / Relational Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      --warn-card-bg: #FEF2F2;
+      --warn-card-border: #FECACA;
+      --warn-card-title: #DC2626;
+      --warn-card-text: #991B1B;
+
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #15803D;
+      --success-card-text: #166534;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Highlight Notification Cards */
+    .card-def {
+      background-color: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .card-def p {
+      color: var(--def-card-text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card-tip {
+      background-color: var(--tip-card-bg);
+      border: 1px solid var(--tip-card-border);
+      border-left: 4px solid var(--tip-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-tip-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--tip-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tip p {
+      color: var(--tip-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    .card-warn {
+      background-color: var(--warn-card-bg);
+      border: 1px solid var(--warn-card-border);
+      border-left: 4px solid var(--warn-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-warn-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--warn-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-warn p {
+      color: var(--warn-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* Bullet Lists */
+    .bullet-list {
+      margin: 0 0 12px 0;
+      padding-left: 20px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .bullet-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 12px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.fn {
+      background: #D97706;
+    }
+
+    .code-tag.group {
+      background: #7C3AED;
+    }
+
+    .code-tag.err {
+      background: #DC2626;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .str { color: var(--str-color); }
+    .num { color: var(--num-color); }
+
+    /* Visual Educational Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Summary Metric Grid */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .metric-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748B;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0284C7;
+      margin: 2px 0;
+      font-family: ui-monospace, monospace;
+    }
+
+    .metric-sub {
+      font-size: 10.5px;
+      color: #475569;
+    }
+
+    /* Group Buckets Layout */
+    .bucket-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .bucket-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .bucket-card.ai { border-top: 3px solid #7C3AED; }
+    .bucket-card.cse { border-top: 3px solid #0284C7; }
+    .bucket-card.it { border-top: 3px solid #059669; }
+
+    .bucket-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .bucket-card.ai .bucket-title { color: #7C3AED; }
+    .bucket-card.cse .bucket-title { color: #0284C7; }
+    .bucket-card.it .bucket-title { color: #059669; }
+
+    .bucket-item {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Pipeline Step Cards */
+    .pipeline-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 10px 0;
+    }
+
+    .pipeline-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .pipeline-num {
+      font-weight: 700;
+      color: #0284C7;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .pipeline-desc {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .metric-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .bucket-grid {
+        grid-template-columns: 1fr;
+      }
+      .pipeline-step {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 8</span>
+      <h1 class="hero-title">Aggregate Functions &amp; GROUP BY</h1>
+      <p class="hero-desc">Summarize and categorize data using SQL mathematical functions and grouping to generate meaningful branch-wise reports.</p>
+    </header>
+
+    <!-- Section A: Aggregate Functions -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> What Are Aggregate Functions?</h2>
+      <p>An aggregate function performs a mathematical calculation across multiple rows of a table and returns a single summary value. Instead of inspecting each record individually, aggregate functions compute totals, averages, and extremes across entire datasets.</p>
+
+      <p>Throughout this lesson, we use our college <code>Students</code> table recording student exam marks:</p>
+
+      <!-- Sample Students Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>name</th>
+              <th>branch</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td>CSE</td>
+              <td class="td-num">80</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td>Priya</td>
+              <td>AI</td>
+              <td class="td-num">90</td>
+            </tr>
+            <tr>
+              <td class="td-num">103</td>
+              <td>Aman</td>
+              <td>CSE</td>
+              <td class="td-num">70</td>
+            </tr>
+            <tr>
+              <td class="td-num">104</td>
+              <td>Neha</td>
+              <td>AI</td>
+              <td class="td-num">85</td>
+            </tr>
+            <tr>
+              <td class="td-num">105</td>
+              <td>Arjun</td>
+              <td>IT</td>
+              <td class="td-num">75</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p><strong>The Five Core Aggregate Functions:</strong></p>
+
+      <!-- Functions Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 25%;">Function</th>
+              <th style="width: 75%;">Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>COUNT()</code></td>
+              <td>Counts rows or non-NULL values, depending on the expression</td>
+            </tr>
+            <tr>
+              <td><code>SUM()</code></td>
+              <td>Adds numeric values together into a total</td>
+            </tr>
+            <tr>
+              <td><code>AVG()</code></td>
+              <td>Calculates the mathematical average of numeric values</td>
+            </tr>
+            <tr>
+              <td><code>MAX()</code></td>
+              <td>Returns the highest value in the column</td>
+            </tr>
+            <tr>
+              <td><code>MIN()</code></td>
+              <td>Returns the lowest value in the column</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-def">
+        <p><strong>Row Count vs. Value Count:</strong> <code>COUNT(*)</code> counts all rows in the table. In contrast, <code>COUNT(column_name)</code> counts only rows where that specific column contains a non-NULL value.</p>
+      </div>
+    </section>
+
+    <!-- Section B: Practical Aggregate Queries -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> Practical Aggregate Queries</h2>
+      <p>Let us execute three essential aggregation queries on our college dataset:</p>
+
+      <p><strong>1. Count All Students:</strong></p>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Count Total Rows</span>
+          <span class="code-tag fn">COUNT</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="fn">COUNT</span><span class="punct">(*)</span> <span class="kw">AS</span> <span class="ident">total_students</span>
+<span class="kw">FROM</span> <span class="ident">Students</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table 1 -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">total_students</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <code>COUNT(*)</code> function counts all five student rows in the table, and <code>AS</code> assigns a clear alias to the output column.</p>
+
+      <p><strong>2. Calculate Average Marks:</strong></p>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Calculate Marks Mean</span>
+          <span class="code-tag fn">AVG</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="fn">AVG</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">average_marks</span>
+<span class="kw">FROM</span> <span class="ident">Students</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table 2 -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">average_marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">80</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>The <code>AVG()</code> function adds all student scores (80 + 90 + 70 + 85 + 75 = 400) and divides by 5, producing an average score of 80.</p>
+
+      <p><strong>3. Find Highest and Lowest Marks:</strong></p>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Find Extremes</span>
+          <span class="code-tag fn">MAX / MIN</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span>
+    <span class="fn">MAX</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">highest_marks</span><span class="punct">,</span>
+    <span class="fn">MIN</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">lowest_marks</span>
+<span class="kw">FROM</span> <span class="ident">Students</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table 3 -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">highest_marks</th>
+              <th class="td-num">lowest_marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">90</td>
+              <td class="td-num">70</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>You can combine multiple aggregate functions in a single query: <code>MAX</code> finds Priya's top score of 90, while <code>MIN</code> identifies Aman's score of 70.</p>
+
+      <!-- Educational Visual 1: Summary of Marks -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: Marks Dataset (80, 90, 70, 85, 75) Summarized</div>
+        <div class="metric-grid">
+          <div class="metric-card">
+            <div class="metric-label">Count</div>
+            <div class="metric-val">5</div>
+            <div class="metric-sub">Total Students</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Average</div>
+            <div class="metric-val">80</div>
+            <div class="metric-sub">400 &divide; 5 Marks</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Maximum</div>
+            <div class="metric-val" style="color:#059669;">90</div>
+            <div class="metric-sub">Priya (AI)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Minimum</div>
+            <div class="metric-val" style="color:#D97706;">70</div>
+            <div class="metric-sub">Aman (CSE)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section C: GROUP BY -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">C</span> What Is GROUP BY?</h2>
+      <p>While aggregate functions normally collapse an entire table into a single number, real-world reporting often requires summaries for different categories.</p>
+
+      <p>The <code>GROUP BY</code> clause groups rows sharing the same value so aggregate functions can calculate a separate summary for each group.</p>
+
+      <p><strong>College Example:</strong> The college dean wants to see the total number of students and their average marks for each branch:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Branch-Wise Summary</span>
+          <span class="code-tag group">GROUP BY</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span>
+    <span class="ident">branch</span><span class="punct">,</span>
+    <span class="fn">COUNT</span><span class="punct">(*)</span> <span class="kw">AS</span> <span class="ident">total_students</span><span class="punct">,</span>
+    <span class="fn">AVG</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">average_marks</span>
+<span class="kw">FROM</span> <span class="ident">Students</span>
+<span class="kw">GROUP BY</span> <span class="ident">branch</span>
+<span class="kw">ORDER BY</span> <span class="ident">branch</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>branch</th>
+              <th class="td-num">total_students</th>
+              <th class="td-num">average_marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AI</td>
+              <td class="td-num">2</td>
+              <td class="td-num">87.5</td>
+            </tr>
+            <tr>
+              <td>CSE</td>
+              <td class="td-num">2</td>
+              <td class="td-num">75</td>
+            </tr>
+            <tr>
+              <td>IT</td>
+              <td class="td-num">1</td>
+              <td class="td-num">75</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Educational Visual 2: GROUP BY Separation -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: Separating Students into Branch Groups</div>
+        <div class="bucket-grid">
+          <div class="bucket-card ai">
+            <div class="bucket-title">AI Branch (2 Students)</div>
+            <div class="bucket-item">&bull; Priya: 90 marks</div>
+            <div class="bucket-item">&bull; Neha: 85 marks</div>
+          </div>
+          <div class="bucket-card cse">
+            <div class="bucket-title">CSE Branch (2 Students)</div>
+            <div class="bucket-item">&bull; Rahul: 80 marks</div>
+            <div class="bucket-item">&bull; Aman: 70 marks</div>
+          </div>
+          <div class="bucket-card it">
+            <div class="bucket-title">IT Branch (1 Student)</div>
+            <div class="bucket-item">&bull; Arjun: 75 marks</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Educational Visual 3: Group Summary Calculation -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 3: Each Branch Group Forms One Summary Row</div>
+        <div class="table-wrap" style="margin: 0; background: #FFFFFF;">
+          <table>
+            <thead>
+              <tr>
+                <th>Branch Group</th>
+                <th>Aggregation Calculation</th>
+                <th class="td-num">Summary Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>AI</strong></td>
+                <td>COUNT: 2 students &bull; AVG: (90 + 85) &divide; 2</td>
+                <td class="td-num"><strong>2 students &bull; 87.5 avg</strong></td>
+              </tr>
+              <tr>
+                <td><strong>CSE</strong></td>
+                <td>COUNT: 2 students &bull; AVG: (80 + 70) &divide; 2</td>
+                <td class="td-num"><strong>2 students &bull; 75.0 avg</strong></td>
+              </tr>
+              <tr>
+                <td><strong>IT</strong></td>
+                <td>COUNT: 1 student &bull; AVG: 75 &divide; 1</td>
+                <td class="td-num"><strong>1 student &bull; 75.0 avg</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p><strong>Query Execution Breakdown:</strong></p>
+      <ul class="bullet-list">
+        <li><code>GROUP BY branch</code> creates one group per branch.</li>
+        <li><code>COUNT(*)</code> counts students within each branch group.</li>
+        <li><code>AVG(marks)</code> computes the average score within each branch group.</li>
+        <li><code>ORDER BY branch</code> sorts the resulting rows alphabetically.</li>
+      </ul>
+    </section>
+
+    <!-- Section D: Important Rule & Quick Revision -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">D</span> Important Rule &amp; Quick Revision</h2>
+      <p>When writing grouped queries, SQL enforces a fundamental structural rule:</p>
+
+      <div class="card-warn">
+        <div class="card-warn-title">&#9888; The GROUP BY Rule</div>
+        <p>Every column listed in your <code>SELECT</code> clause must either appear in the <code>GROUP BY</code> clause or be enclosed inside an aggregate function (such as <code>COUNT()</code> or <code>AVG()</code>).</p>
+      </div>
+
+      <p><strong>Common Beginner Mistake:</strong></p>
+      <div class="code-card">
+        <div class="code-header">
+          <span>Invalid Grouped Query (Causes SQL Error)</span>
+          <span class="code-tag err">ERROR</span>
+        </div>
+        <pre><code><span class="kw">SELECT</span> <span class="ident">branch</span><span class="punct">,</span> <span class="ident">name</span><span class="punct">,</span> <span class="fn">AVG</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span>
+<span class="kw">FROM</span> <span class="ident">Students</span>
+<span class="kw">GROUP BY</span> <span class="ident">branch</span><span class="punct">;</span></code></pre>
+      </div>
+      <p>This query fails because the AI branch contains two students (Priya and Neha). Since you grouped by branch, SQL cannot choose which individual student name to display on the single summary row! To fix it, remove <code>name</code> from the <code>SELECT</code> list.</p>
+
+      <!-- Educational Visual 4: Query-to-Output Flow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 4: Grouped Query Execution Flow</div>
+        <div class="pipeline-grid">
+          <div class="pipeline-step">
+            <span class="pipeline-num">Step 1 &bull; FROM</span>
+            <span class="pipeline-desc">Load <code>Students</code> table on storage (5 rows).</span>
+          </div>
+          <div class="pipeline-step" style="border-left-color: #7C3AED;">
+            <span class="pipeline-num" style="color:#7C3AED;">Step 2 &bull; GROUP BY</span>
+            <span class="pipeline-desc">Partition rows into branch buckets (AI, CSE, IT).</span>
+          </div>
+          <div class="pipeline-step" style="border-left-color: #D97706;">
+            <span class="pipeline-num" style="color:#D97706;">Step 3 &bull; AGGREGATE</span>
+            <span class="pipeline-desc">Compute <code>COUNT(*)</code> and <code>AVG(marks)</code> for each bucket.</span>
+          </div>
+          <div class="pipeline-step" style="border-left-color: #059669;">
+            <span class="pipeline-num" style="color:#059669;">Step 4 &bull; SELECT</span>
+            <span class="pipeline-desc">Produce clean 3-row branch summary output table.</span>
+          </div>
+        </div>
+      </div>
+
+      <p><strong>3 Concise Takeaways:</strong></p>
+      <ul class="bullet-list">
+        <li><strong>Aggregates Summarize Rows:</strong> Functions like <code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, and <code>MIN</code> collapse multiple records into a single result.</li>
+        <li><strong>GROUP BY Partitions Data:</strong> It creates subsets of rows so calculations happen independently per category.</li>
+        <li><strong>Match Non-Aggregated Columns:</strong> Any unaggregated column in <code>SELECT</code> must be included in your <code>GROUP BY</code> list.</li>
+      </ul>
+
+      <!-- Remember This Box -->
+      <div class="card-tip">
+        <div class="card-tip-title">&#9733; Remember This</div>
+        <p><strong>Aggregate = Math on Rows, GROUP BY = Categories.</strong> Together, they transform raw student lists into executive summary reports!</p>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

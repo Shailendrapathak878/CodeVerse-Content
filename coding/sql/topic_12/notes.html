@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 12: Common Table Expressions (CTEs) | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - SQL CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Page Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography Colors */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* Primary Brand Accent */
+      --primary-accent: #0284C7;
+      --primary-accent-hover: #0369A1;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0284C7;
+
+      /* Semantic Highlight Cards */
+      --def-card-bg: #F0F9FF;
+      --def-card-border: #BAE6FD;
+      --def-card-title: #0284C7;
+      --def-card-text: #0369A1;
+
+      --tip-card-bg: #FFFBEB;
+      --tip-card-border: #FDE68A;
+      --tip-card-title: #D97706;
+      --tip-card-text: #92400E;
+
+      --success-card-bg: #F0FDF4;
+      --success-card-border: #BBF7D0;
+      --success-card-title: #15803D;
+      --success-card-text: #166534;
+
+      /* Code Blocks & Syntax */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #0369A1;
+      --ident-color: #0F172A;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #7C3AED;
+      --fn-color: #D97706;
+      --comment-color: #64748B;
+    }
+
+    /* Universal Responsive Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Highlight Notification Cards */
+    .card-def {
+      background-color: var(--def-card-bg);
+      border: 1px solid var(--def-card-border);
+      border-left: 4px solid var(--def-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .card-def p {
+      color: var(--def-card-text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .card-tip {
+      background-color: var(--tip-card-bg);
+      border: 1px solid var(--tip-card-border);
+      border-left: 4px solid var(--tip-card-title);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 14px 0;
+    }
+
+    .card-tip-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--tip-card-title);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tip p {
+      color: var(--tip-card-text);
+      margin: 0;
+      font-size: 13.5px;
+    }
+
+    /* Bullet Lists */
+    .bullet-list {
+      margin: 0 0 12px 0;
+      padding-left: 20px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    .bullet-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    /* Responsive Tables */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 12px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 8px 10px;
+      border-bottom: 2px solid var(--card-border);
+      white-space: normal;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:nth-child(even) {
+      background-color: #F8FAFC;
+    }
+
+    tbody tr:hover {
+      background-color: #F0F9FF;
+    }
+
+    .td-num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* SQL Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 12px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #0284C7;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .code-tag.cte {
+      background: #0D9488;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13.5px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #0369A1;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 700; }
+    .ident { color: var(--ident-color); font-weight: 600; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+
+    /* Visual Educational Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Flow Steps Pipeline */
+    .flow-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 8px 0;
+    }
+
+    .flow-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 4px solid var(--primary-accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .flow-step.define {
+      border-left-color: #0D9488;
+      background: #F0FDFA;
+    }
+
+    .flow-step.store {
+      border-left-color: #7C3AED;
+      background: #FAF5FF;
+    }
+
+    .flow-step.consume {
+      border-left-color: #0284C7;
+      background: #F0F9FF;
+    }
+
+    .flow-step.output {
+      border-left-color: #059669;
+      background: #F0FDF4;
+    }
+
+    .flow-header {
+      font-weight: 700;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+    }
+
+    .flow-step.define .flow-header { color: #0D9488; }
+    .flow-step.store .flow-header { color: #7C3AED; }
+    .flow-step.consume .flow-header { color: #0284C7; }
+    .flow-step.output .flow-header { color: #059669; }
+
+    .flow-desc {
+      color: var(--text-primary);
+      font-size: 12.5px;
+    }
+
+    /* Badges */
+    .badge-pass {
+      background: #DCFCE7;
+      color: #166534;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #BBF7D0;
+    }
+
+    .badge-filter {
+      background: #FEE2E2;
+      color: #991B1B;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #FECACA;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <span class="hero-badge">SQL Foundations &bull; Topic 12</span>
+      <h1 class="hero-title">Common Table Expressions (CTEs)</h1>
+      <p class="hero-desc">Write cleaner, modular SQL by creating temporary named result sets using the WITH clause.</p>
+    </header>
+
+    <!-- Section A: What is a CTE? -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">A</span> What Is a CTE?</h2>
+      <p>A <strong>CTE (Common Table Expression)</strong> is a temporary named result set defined using the <code>WITH</code> keyword. It exists only for the single SQL statement that follows it (such as <code>SELECT</code>, <code>INSERT</code>, <code>UPDATE</code>, or <code>DELETE</code>).</p>
+
+      <p>CTEs make complex queries easier to read and maintain by breaking them into simple, logical steps instead of deeply nested subqueries.</p>
+
+      <p><strong>Real-Life Analogy:</strong> First prepare a list of students who scored at least 80, then use that list to display the final results.</p>
+
+      <p>We use our college <code>Students</code> table throughout this lesson:</p>
+
+      <!-- Sample Students Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="td-num">student_id</th>
+              <th>name</th>
+              <th>branch</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="td-num">101</td>
+              <td>Rahul</td>
+              <td>CSE</td>
+              <td class="td-num">80</td>
+            </tr>
+            <tr>
+              <td class="td-num">102</td>
+              <td>Priya</td>
+              <td>AI</td>
+              <td class="td-num">90</td>
+            </tr>
+            <tr>
+              <td class="td-num">103</td>
+              <td>Aman</td>
+              <td>CSE</td>
+              <td class="td-num">70</td>
+            </tr>
+            <tr>
+              <td class="td-num">104</td>
+              <td>Neha</td>
+              <td>AI</td>
+              <td class="td-num">85</td>
+            </tr>
+            <tr>
+              <td class="td-num">105</td>
+              <td>Arjun</td>
+              <td>IT</td>
+              <td class="td-num">75</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section B: Example 1 — Create and Use a CTE -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">B</span> Example 1 &mdash; Create and Use a CTE</h2>
+      <p>Here we create a CTE named <code>HighScorers</code> to find students with marks &ge; 80, then sort them by marks descending:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Define and Query a CTE</span>
+          <span class="code-tag cte">WITH CLAUSE</span>
+        </div>
+        <pre><code><span class="kw">WITH</span> <span class="ident">HighScorers</span> <span class="kw">AS</span> <span class="punct">(</span>
+    <span class="kw">SELECT</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">branch</span><span class="punct">,</span> <span class="ident">marks</span>
+    <span class="kw">FROM</span> <span class="ident">Students</span>
+    <span class="kw">WHERE</span> <span class="ident">marks</span> <span class="op">&gt;=</span> <span class="num">80</span>
+<span class="punct">)</span>
+<span class="kw">SELECT</span> <span class="ident">name</span><span class="punct">,</span> <span class="ident">branch</span><span class="punct">,</span> <span class="ident">marks</span>
+<span class="kw">FROM</span> <span class="ident">HighScorers</span>
+<span class="kw">ORDER BY</span> <span class="ident">marks</span> <span class="kw">DESC</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>name</th>
+              <th>branch</th>
+              <th class="td-num">marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Priya</td>
+              <td>AI</td>
+              <td class="td-num">90</td>
+            </tr>
+            <tr>
+              <td>Neha</td>
+              <td>AI</td>
+              <td class="td-num">85</td>
+            </tr>
+            <tr>
+              <td>Rahul</td>
+              <td>CSE</td>
+              <td class="td-num">80</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Visual 1: CTE Workflow -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 1: CTE Execution Workflow</div>
+        <div class="flow-grid">
+          <div class="flow-step define">
+            <div class="flow-header">1. WITH Defines Named Result</div>
+            <div class="flow-desc"><code>WITH HighScorers AS (...)</code> defines the temporary named result set.</div>
+          </div>
+          <div class="flow-step store">
+            <div class="flow-header">2. Temporary Result Held</div>
+            <div class="flow-desc">Stores query result temporarily in memory for the single statement that follows.</div>
+          </div>
+          <div class="flow-step consume">
+            <div class="flow-header">3. Outer Query Reads CTE</div>
+            <div class="flow-desc"><code>SELECT ... FROM HighScorers</code> reads the named set like a table and sorts it.</div>
+          </div>
+          <div class="flow-step output">
+            <div class="flow-header">4. Final Output</div>
+            <div class="flow-desc">Returns final student results (Priya 90, Neha 85, Rahul 80). CTE is released.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual 2: Step-by-Step Data Transformation -->
+      <div class="visual-box">
+        <div class="visual-title">&#9670; Visual 2: Step-by-Step Data Flow (Students &rarr; HighScorers &rarr; Final)</div>
+        <div class="table-wrap" style="margin: 0; background: #FFFFFF;">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th class="td-num">Marks</th>
+                <th>marks &ge; 80</th>
+                <th>CTE Status</th>
+                <th>Final Rank</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#F0FDF4;">
+                <td><strong>Priya</strong></td>
+                <td class="td-num">90</td>
+                <td>90 &ge; 80 (True)</td>
+                <td><span class="badge-pass">Included</span></td>
+                <td><strong>1st (90)</strong></td>
+              </tr>
+              <tr style="background:#F0FDF4;">
+                <td><strong>Neha</strong></td>
+                <td class="td-num">85</td>
+                <td>85 &ge; 80 (True)</td>
+                <td><span class="badge-pass">Included</span></td>
+                <td><strong>2nd (85)</strong></td>
+              </tr>
+              <tr style="background:#F0FDF4;">
+                <td><strong>Rahul</strong></td>
+                <td class="td-num">80</td>
+                <td>80 &ge; 80 (True)</td>
+                <td><span class="badge-pass">Included</span></td>
+                <td><strong>3rd (80)</strong></td>
+              </tr>
+              <tr style="opacity: 0.65; background:#FEF2F2;">
+                <td>Arjun</td>
+                <td class="td-num">75</td>
+                <td>75 &ge; 80 (False)</td>
+                <td><span class="badge-filter">Filtered Out</span></td>
+                <td>&mdash;</td>
+              </tr>
+              <tr style="opacity: 0.65; background:#FEF2F2;">
+                <td>Aman</td>
+                <td class="td-num">70</td>
+                <td>70 &ge; 80 (False)</td>
+                <td><span class="badge-filter">Filtered Out</span></td>
+                <td>&mdash;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p><strong>Explanation:</strong></p>
+      <ul class="bullet-list">
+        <li><code>WITH HighScorers AS (...)</code> defines the CTE.</li>
+        <li>The inner query selects students with marks of at least <code>80</code>.</li>
+        <li>The outer query reads from <code>HighScorers</code> and sorts the results.</li>
+        <li>The CTE is not a permanent table.</li>
+      </ul>
+    </section>
+
+    <!-- Section C: Example 2 — CTE with Aggregate Results -->
+    <section class="content-card">
+      <h2 class="section-title"><span class="sec-badge">C</span> Example 2 &mdash; CTE with Aggregate Results</h2>
+      <p>A CTE can also simplify multi-step aggregate queries:</p>
+
+      <div class="code-card">
+        <div class="code-header">
+          <span>Branch Averages CTE</span>
+          <span class="code-tag cte">WITH CLAUSE</span>
+        </div>
+        <pre><code><span class="kw">WITH</span> <span class="ident">BranchAverage</span> <span class="kw">AS</span> <span class="punct">(</span>
+    <span class="kw">SELECT</span> <span class="ident">branch</span><span class="punct">,</span> <span class="fn">AVG</span><span class="punct">(</span><span class="ident">marks</span><span class="punct">)</span> <span class="kw">AS</span> <span class="ident">avg_marks</span>
+    <span class="kw">FROM</span> <span class="ident">Students</span>
+    <span class="kw">GROUP BY</span> <span class="ident">branch</span>
+<span class="punct">)</span>
+<span class="kw">SELECT</span> <span class="ident">branch</span><span class="punct">,</span> <span class="ident">avg_marks</span>
+<span class="kw">FROM</span> <span class="ident">BranchAverage</span>
+<span class="kw">WHERE</span> <span class="ident">avg_marks</span> <span class="op">&gt;=</span> <span class="num">80</span>
+<span class="kw">ORDER BY</span> <span class="ident">branch</span><span class="punct">;</span></code></pre>
+      </div>
+
+      <!-- Expected Output Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>branch</th>
+              <th class="td-num">avg_marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>AI</td>
+              <td class="td-num">87.5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>The CTE calculates each branch's average marks first (AI: 87.5, CSE: 75.0, IT: 75.0). The outer query then keeps only branches whose average is at least 80.</p>
+
+      <!-- Quick Revision & Takeaways Card -->
+      <div class="card-tip">
+        <div class="card-tip-title">&#9733; Quick Revision &amp; Takeaways</div>
+        <p><strong>1. Single-Query Scope:</strong> The CTE exists only for the immediate query that follows it.<br><strong>2. Clean Readability:</strong> Replaces hard-to-read nested subqueries with linear steps.<br><strong>3. Non-Persistent:</strong> No table or storage overhead is stored in the database.</p>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
