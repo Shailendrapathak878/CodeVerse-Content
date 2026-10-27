@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 25: Smart Pointers &amp; Modern C++ | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - C++ CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* C++ Royal Blue Accent */
+      --primary-accent: #00599C;
+      --primary-accent-hover: #00447C;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0369A1;
+
+      /* Code Tokens */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #00599C;
+      --pre-color: #B45309;
+      --type-color: #7C3AED;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #0F172A;
+      --fn-color: #0369A1;
+      --comment-color: #64748B;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Bullet Lists */
+    .bullet-list {
+      margin: 8px 0 10px 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    /* Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #00599C;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #00599C;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .pre-dir { color: var(--pre-color); font-weight: 700; }
+    .type { color: var(--type-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 600; }
+    .ident { color: #0F172A; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+    .comment { color: var(--comment-color); font-style: italic; }
+
+    /* Output Card */
+    .output-card {
+      background: #F1F5F9;
+      border: 1px solid var(--code-border);
+      border-left: 4px solid #059669;
+      border-radius: 6px;
+      margin: 10px 0;
+      padding: 10px 14px;
+    }
+
+    .output-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #059669;
+      margin-bottom: 4px;
+    }
+
+    .output-content {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      color: #0F172A;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    /* Visual Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Visual 1: Memory Hazards Grid */
+    .hazards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .hazard-card {
+      background: #FFFFFF;
+      border: 1px solid #FECACA;
+      border-top: 3px solid #DC2626;
+      border-radius: 6px;
+      padding: 9px 8px;
+      font-size: 11.5px;
+      text-align: center;
+    }
+
+    .hazard-card strong {
+      color: #DC2626;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* Visual 2: RAII Pipeline */
+    .raii-pipeline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 8px;
+    }
+
+    .raii-step {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 6px;
+      text-align: center;
+      flex: 1;
+      font-size: 11.5px;
+    }
+
+    .raii-step.init { border-top: 3px solid #00599C; }
+    .raii-step.use { border-top: 3px solid #7C3AED; }
+    .raii-step.destroy { border-top: 3px solid #059669; }
+
+    /* Visual 3: Ownership Models Comparison */
+    .models-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .model-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 11.5px;
+    }
+
+    .model-card.unique { border-top: 3px solid #00599C; }
+    .model-card.shared { border-top: 3px solid #7C3AED; }
+    .model-card.weak { border-top: 3px solid #059669; }
+
+    .model-card strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .model-card.unique strong { color: #00599C; }
+    .model-card.shared strong { color: #7C3AED; }
+    .model-card.weak strong { color: #059669; }
+
+    /* Visual 4: Ownership Transfer */
+    .transfer-box {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 10px;
+    }
+
+    .transfer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 6px;
+      margin: 6px 0;
+      font-size: 12px;
+    }
+
+    .ptr-badge {
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-family: ui-monospace, monospace;
+      font-weight: 700;
+      font-size: 11.5px;
+    }
+
+    .ptr-badge.owner { background: #E0F2FE; color: #0369A1; border: 1px solid #BAE6FD; }
+    .ptr-badge.null { background: #F1F5F9; color: #94A3B8; border: 1px dashed #CBD5E1; }
+    .ptr-badge.res { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+
+    /* Visual 5 & 6: Shared and Weak Diagrams */
+    .shared-flow-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .shared-flow-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+    }
+
+    .shared-flow-card.live { border-top: 3px solid #00599C; }
+    .shared-flow-card.free { border-top: 3px solid #059669; }
+
+    .shared-flow-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Table Styling */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 10px 0 12px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 7px 6px;
+      border-bottom: 2px solid var(--card-border);
+      font-size: 11.5px;
+    }
+
+    td {
+      padding: 6px 6px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Visual 8: Modern Features Grid */
+    .modern-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .modern-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-left: 3px solid #00599C;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11.5px;
+    }
+
+    .modern-card strong {
+      color: #00599C;
+    }
+
+    /* Visual 9: Common Mistakes */
+    .mistakes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mistake-card {
+      background: #FFFFFF;
+      border: 1px solid #FECACA;
+      border-top: 3px solid #DC2626;
+      border-radius: 6px;
+      padding: 9px 8px;
+      font-size: 11.5px;
+    }
+
+    .mistake-card strong {
+      color: #DC2626;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* Interactive Callout Boxes */
+    .think-box {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-left: 4px solid #16A34A;
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .think-title {
+      font-weight: 700;
+      color: #166534;
+      margin-bottom: 3px;
+    }
+
+    .quiz-box {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-left: 4px solid #00599C;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .quiz-title {
+      font-weight: 700;
+      color: #00599C;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    details {
+      margin-top: 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    summary {
+      font-weight: 600;
+      font-size: 12.5px;
+      color: #00599C;
+      cursor: pointer;
+    }
+
+    .mobile-only { display: none; }
+    .desktop-only { display: block; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .mobile-only { display: block; }
+      .desktop-only { display: none; }
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .raii-pipeline {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .pipe-arrow.desktop-only {
+        display: none;
+      }
+      .pipe-arrow.mobile-only {
+        display: block;
+        text-align: center;
+        margin: 2px 0;
+      }
+      .hazards-grid, .models-grid, .shared-flow-grid, .modern-grid, .mistakes-grid {
+        grid-template-columns: 1fr;
+      }
+      pre {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      th, td {
+        font-size: 10.5px;
+        padding: 5px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <div class="hero-badge">C++ Foundations &bull; Topic 25</div>
+      <h1 class="hero-title">Smart Pointers &amp; Modern C++</h1>
+      <p class="hero-desc">Master modern C++ memory ownership with unique_ptr, shared_ptr, and weak_ptr, and write clean, leak-free software using RAII and modern language idioms.</p>
+    </header>
+
+    <!-- PART A: WHY SMART POINTERS? -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">A</span>
+        Part A — Why Smart Pointers?
+      </h2>
+
+      <p>Dynamic memory in classic C++ relies on manual <code>new</code> and <code>delete</code>. While powerful, manually tracking heap addresses invites severe memory bugs: <strong>memory leaks</strong> when a programmer forgets <code>delete</code>, <strong>dangling pointers</strong> when accessing freed addresses, and <strong>double deletion</strong> crashes when deleting the same address twice.</p>
+
+      <p>In production applications, manual cleanup frequently fails because an unexpected exception, early return statement, or branching logic bypasses the <code>delete</code> line entirely. Modern C++ solves this architectural flaw by tying dynamic memory directly to stack object lifetimes.</p>
+
+      <!-- VISUAL 1: THREE POINTER MEMORY HAZARDS -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 1: Three Manual Memory Hazards</div>
+        <div class="hazards-grid">
+          <div class="hazard-card">
+            <strong>1. Memory Leak</strong>
+            <span>Allocated heap memory is never freed, exhausting RAM over time.</span>
+          </div>
+          <div class="hazard-card">
+            <strong>2. Dangling Pointer</strong>
+            <span>Pointer still references an address after it was freed elsewhere.</span>
+          </div>
+          <div class="hazard-card">
+            <strong>3. Double Deletion</strong>
+            <span>Calling <code>delete</code> twice on one address corrupts the heap and crashes.</span>
+          </div>
+        </div>
+      </div>
+
+      <p>A <strong>smart pointer</strong> is a lightweight class wrapper around a raw pointer that automates deallocation through <strong>RAII (Resource Acquisition Is Initialization)</strong>. The resource is acquired during construction and released automatically in the destructor when the wrapper exits scope.</p>
+
+      <p>Think of renting an apartment with a smart lease caretaker: the moment your lease duration ends, the caretaker cleans up and returns the keys automatically. You never risk forgetting to hand in the keys. Smart pointers provide that exact automatic cleanup and are available through the standard <code>&lt;memory&gt;</code> header.</p>
+
+      <!-- VISUAL 2: RAII LIFECYCLE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 2: The RAII Automatic Cleanup Lifecycle</div>
+        <div class="raii-pipeline">
+          <div class="raii-step init">
+            <strong style="color: #00599C;">1. Constructor</strong><br>
+            <span>Acquires heap memory</span>
+          </div>
+          <div class="pipe-arrow desktop-only" style="color: #00599C; font-weight: 700;">&rarr;</div>
+          <div class="pipe-arrow mobile-only" style="color: #00599C; font-weight: 700;">&darr;</div>
+          <div class="raii-step use">
+            <strong style="color: #7C3AED;">2. In-Scope Usage</strong><br>
+            <span>Operates via <code>-&gt;</code> and <code>*</code></span>
+          </div>
+          <div class="pipe-arrow desktop-only" style="color: #00599C; font-weight: 700;">&rarr;</div>
+          <div class="pipe-arrow mobile-only" style="color: #00599C; font-weight: 700;">&darr;</div>
+          <div class="raii-step destroy">
+            <strong style="color: #059669;">3. Destructor</strong><br>
+            <span>Automatically frees memory</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 1: RAW VS RAII -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 1: Scoped Automatic Cleanup via RAII</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="kw">class</span> <span class="type">Resource</span> <span class="punct">{</span>
+<span class="kw">public</span><span class="op">:</span>
+    <span class="fn">Resource</span><span class="punct">()</span> <span class="punct">{</span> <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Resource acquired\n"</span><span class="punct">;</span> <span class="punct">}</span>
+    <span class="op">~</span><span class="fn">Resource</span><span class="punct">()</span> <span class="punct">{</span> <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Resource destroyed automatically\n"</span><span class="punct">;</span> <span class="punct">}</span>
+    <span class="type">void</span> <span class="fn">work</span><span class="punct">()</span> <span class="punct">{</span> <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Resource in use\n"</span><span class="punct">;</span> <span class="punct">}</span>
+<span class="punct">};</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="punct">{</span>
+        <span class="comment">// Inner scope: object destroyed automatically on scope exit</span>
+        <span class="type">Resource</span> <span class="ident">r</span><span class="punct">;</span>
+        <span class="ident">r</span><span class="punct">.</span><span class="fn">work</span><span class="punct">();</span>
+    <span class="punct">}</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Scope exited safely.\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Resource acquired<br>Resource in use<br>Resource destroyed automatically<br>Scope exited safely.</div>
+      </div>
+    </section>
+
+    <!-- PART B: THE THREE ESSENTIAL SMART POINTERS -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">B</span>
+        Part B — The Three Essential Smart Pointers
+      </h2>
+
+      <p>Modern C++ provides three standardized smart pointers, each expressing clear ownership semantics:</p>
+
+      <ul class="bullet-list">
+        <li><code>std::unique_ptr</code>: Exclusive ownership. Exactly one pointer owns the heap object. Its copy constructor is explicitly deleted to prevent duplicate owners, but ownership can be transferred using <code>std::move</code>. Prefer <code>std::make_unique</code> (C++14) because it guarantees exception safety and avoids raw <code>new</code> expressions.</li>
+        <li><code>std::shared_ptr</code>: Shared ownership. Multiple pointers reference the same object alongside an internal control block tracking the active reference count. Memory is freed only when the last owner releases ownership. The <code>use_count()</code> method inspects the active reference tally for demonstration, though production logic should avoid branching on it.</li>
+        <li><code>std::weak_ptr</code>: Non-owning observer. Observes a <code>shared_ptr</code> target without incrementing the ownership count. In cyclic graphs or parent-child trees, two <code>shared_ptr</code> objects pointing to each other prevent the count from ever reaching zero; substituting one link with <code>weak_ptr</code> breaks the cycle and eliminates silent leaks.</li>
+      </ul>
+
+      <!-- VISUAL 3: OWNERSHIP MODELS COMPARISON -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 3: The Three Ownership Models</div>
+        <div class="models-grid">
+          <div class="model-card unique">
+            <strong>std::unique_ptr</strong>
+            <span>Sole owner (1:1). Private locker key. Cannot be duplicated.</span>
+          </div>
+          <div class="model-card shared">
+            <strong>std::shared_ptr</strong>
+            <span>Shared owners (N:1). Shared family account with ref-count.</span>
+          </div>
+          <div class="model-card weak">
+            <strong>std::weak_ptr</strong>
+            <span>Non-owning observer. Guest spectator observing status.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 2: UNIQUE_PTR -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 2: Exclusive Ownership with unique_ptr</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;memory&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="kw">class</span> <span class="type">Device</span> <span class="punct">{</span>
+<span class="kw">public</span><span class="op">:</span>
+    <span class="type">string</span> <span class="ident">name</span><span class="punct">;</span>
+    <span class="fn">Device</span><span class="punct">(</span><span class="type">string</span> <span class="ident">n</span><span class="punct">)</span> <span class="op">:</span> <span class="ident">name</span><span class="punct">(</span><span class="ident">n</span><span class="punct">)</span> <span class="punct">{</span> <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="ident">name</span> <span class="op">&lt;&lt;</span> <span class="str">" connected\n"</span><span class="punct">;</span> <span class="punct">}</span>
+    <span class="op">~</span><span class="fn">Device</span><span class="punct">()</span> <span class="punct">{</span> <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="ident">name</span> <span class="op">&lt;&lt;</span> <span class="str">" disconnected\n"</span><span class="punct">;</span> <span class="punct">}</span>
+<span class="punct">};</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="punct">{</span>
+        <span class="kw">auto</span> <span class="ident">dev</span> <span class="op">=</span> <span class="ident">make_unique</span><span class="op">&lt;</span><span class="type">Device</span><span class="op">&gt;</span><span class="punct">(</span><span class="str">"Sensor-A"</span><span class="punct">);</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Active: "</span> <span class="op">&lt;&lt;</span> <span class="ident">dev</span><span class="op">-&gt;</span><span class="ident">name</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="punct">}</span> <span class="comment">// dev destroyed automatically here</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Main continues.\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Sensor-A connected<br>Active: Sensor-A<br>Sensor-A disconnected<br>Main continues.</div>
+      </div>
+
+      <!-- VISUAL 4: OWNERSHIP TRANSFER -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 4: Ownership Transfer via std::move</div>
+        <div class="transfer-box">
+          <div class="transfer-row">
+            <span><strong>Before:</strong></span>
+            <span class="ptr-badge owner">ptr1 (Owner)</span>
+            <span>&rarr;</span>
+            <span class="ptr-badge res">Heap [100]</span>
+            <span class="ptr-badge null">ptr2 (nullptr)</span>
+          </div>
+          <div class="transfer-row">
+            <span><strong>After move:</strong></span>
+            <span class="ptr-badge null">ptr1 (nullptr)</span>
+            <span>&rarr;</span>
+            <span class="ptr-badge res">Heap [100]</span>
+            <span class="ptr-badge owner">ptr2 (New Owner)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 3: MOVE OWNERSHIP -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 3: Transferring unique_ptr with std::move</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;memory&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="kw">auto</span> <span class="ident">ptr1</span> <span class="op">=</span> <span class="ident">make_unique</span><span class="op">&lt;</span><span class="type">int</span><span class="op">&gt;</span><span class="punct">(</span><span class="num">100</span><span class="punct">);</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"ptr1 value: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="ident">ptr1</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+
+    <span class="comment">// Transfer ownership: ptr1 becomes null</span>
+    <span class="kw">auto</span> <span class="ident">ptr2</span> <span class="op">=</span> <span class="ident">move</span><span class="punct">(</span><span class="ident">ptr1</span><span class="punct">);</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"ptr2 value: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="ident">ptr2</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">if</span> <span class="punct">(</span><span class="ident">ptr1</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="punct">)</span> <span class="punct">{</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"ptr1 is now null!\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">ptr1 value: 100<br>ptr2 value: 100<br>ptr1 is now null!</div>
+      </div>
+
+      <!-- VISUAL 5: SHARED OWNERSHIP -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 5: Reference Counting in std::shared_ptr</div>
+        <div class="shared-flow-grid">
+          <div class="shared-flow-card live">
+            <strong style="color: #00599C;">Multiple Owners (use_count &gt; 0)</strong>
+            <span>sp1 and sp2 point to one object. Control block ref-count = 2. Object remains alive.</span>
+          </div>
+          <div class="shared-flow-card free">
+            <strong style="color: #059669;">Final Owner Leaves (use_count == 0)</strong>
+            <span>When the last owner goes out of scope, ref-count hits 0 and memory is deallocated.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 4: SHARED_PTR -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 4: shared_ptr &amp; Reference Counting</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;memory&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="kw">auto</span> <span class="ident">sp1</span> <span class="op">=</span> <span class="ident">make_shared</span><span class="op">&lt;</span><span class="type">int</span><span class="op">&gt;</span><span class="punct">(</span><span class="num">42</span><span class="punct">);</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Initial count: "</span> <span class="op">&lt;&lt;</span> <span class="ident">sp1</span><span class="punct">.</span><span class="fn">use_count</span><span class="punct">()</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+
+    <span class="punct">{</span>
+        <span class="kw">auto</span> <span class="ident">sp2</span> <span class="op">=</span> <span class="ident">sp1</span><span class="punct">;</span> <span class="comment">// Increments count to 2</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Inner scope count: "</span> <span class="op">&lt;&lt;</span> <span class="ident">sp1</span><span class="punct">.</span><span class="fn">use_count</span><span class="punct">()</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"sp2 value: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="ident">sp2</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="punct">}</span> <span class="comment">// sp2 exits scope: count decrements to 1</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"After inner scope count: "</span> <span class="op">&lt;&lt;</span> <span class="ident">sp1</span><span class="punct">.</span><span class="fn">use_count</span><span class="punct">()</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Initial count: 1<br>Inner scope count: 2<br>sp2 value: 42<br>After inner scope count: 1</div>
+      </div>
+
+      <!-- VISUAL 6: WEAK_PTR OBSERVATION -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 6: Safe Observation with std::weak_ptr</div>
+        <div class="transfer-box">
+          <div class="transfer-row">
+            <span><strong>Alive Object:</strong></span>
+            <span><code>observer.lock()</code></span>
+            <span>&rarr;</span>
+            <span class="ptr-badge owner">temporary shared_ptr (Safe Access)</span>
+          </div>
+          <div class="transfer-row">
+            <span><strong>Freed Object:</strong></span>
+            <span><code>observer.expired() == true</code></span>
+            <span>&rarr;</span>
+            <span class="ptr-badge null">returns nullptr (Prevents Crash)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 5: WEAK_PTR -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 5: Observing with weak_ptr and lock()</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;memory&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="type">weak_ptr</span><span class="op">&lt;</span><span class="type">int</span><span class="op">&gt;</span> <span class="ident">observer</span><span class="punct">;</span>
+    <span class="punct">{</span>
+        <span class="kw">auto</span> <span class="ident">sharedObj</span> <span class="op">=</span> <span class="ident">make_shared</span><span class="op">&lt;</span><span class="type">int</span><span class="op">&gt;</span><span class="punct">(</span><span class="num">250</span><span class="punct">);</span>
+        <span class="ident">observer</span> <span class="op">=</span> <span class="ident">sharedObj</span><span class="punct">;</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Shared count: "</span> <span class="op">&lt;&lt;</span> <span class="ident">sharedObj</span><span class="punct">.</span><span class="fn">use_count</span><span class="punct">()</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+
+        <span class="kw">if</span> <span class="punct">(</span><span class="kw">auto</span> <span class="ident">locked</span> <span class="op">=</span> <span class="ident">observer</span><span class="punct">.</span><span class="fn">lock</span><span class="punct">())</span> <span class="punct">{</span>
+            <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Observed value: "</span> <span class="op">&lt;&lt;</span> <span class="op">*</span><span class="ident">locked</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+        <span class="punct">}</span>
+    <span class="punct">}</span> <span class="comment">// sharedObj destroyed here</span>
+
+    <span class="kw">if</span> <span class="punct">(</span><span class="ident">observer</span><span class="punct">.</span><span class="fn">expired</span><span class="punct">())</span> <span class="punct">{</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Resource expired! Cannot lock.\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Shared count: 1<br>Observed value: 250<br>Resource expired! Cannot lock.</div>
+      </div>
+
+      <!-- VISUAL 7: COMPARISON TABLE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 7: Smart Pointer Comparison Matrix</div>
+        <div class="table-wrap" style="margin: 0;">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 22%;">Pointer</th>
+                <th style="width: 20%;">Ownership</th>
+                <th style="width: 18%;">Can Copy?</th>
+                <th style="width: 22%;">Typical Use</th>
+                <th style="width: 18%;">Key Caution</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>unique_ptr</code></td>
+                <td>Exclusive (1:1)</td>
+                <td>No (Move only)</td>
+                <td>Default heap owner</td>
+                <td>Cannot copy</td>
+              </tr>
+              <tr>
+                <td><code>shared_ptr</code></td>
+                <td>Shared (N:1)</td>
+                <td>Yes (increments)</td>
+                <td>Shared resources</td>
+                <td>Cyclic leaks</td>
+              </tr>
+              <tr>
+                <td><code>weak_ptr</code></td>
+                <td>None (Observer)</td>
+                <td>Yes (no count)</td>
+                <td>Break cycles / cache</td>
+                <td>Must lock()</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PART C: MODERN C++ FEATURES -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">C</span>
+        Part C — Modern C++ Features
+      </h2>
+
+      <p>Modern C++ (introduced in C++11 and expanded in C++14) fundamentally modernized language idioms. While C++11 introduced move semantics, <code>nullptr</code>, <code>auto</code>, and <code>shared_ptr</code>, C++14 completed the model by providing <code>std::make_unique</code> and relaxed <code>constexpr</code> functions evaluated entirely at compile time.</p>
+
+      <ul class="bullet-list">
+        <li><code>auto</code> (C++11): Deduces variable types at compile time, eliminating redundant type declarations.</li>
+        <li><code>nullptr</code> (C++11): Strongly-typed pointer literal replacing ambiguous <code>0</code> and <code>NULL</code> macros.</li>
+        <li>Range-based <code>for</code> (C++11): Traverses collections cleanly without manual iterator indices.</li>
+        <li>Move Semantics &amp; <code>std::move</code> (C++11): Enables transferring expensive resources between objects instead of deep copying. Note that <code>std::move</code> does not move data itself; it casts an lvalue to an rvalue reference to enable move constructors.</li>
+        <li><code>std::make_unique</code> (C++14): Allocates heap memory cleanly with exception safety.</li>
+      </ul>
+
+      <!-- VISUAL 8: MODERN C++ QUICK-REFERENCE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 8: Modern C++ Core Toolkit</div>
+        <div class="modern-grid">
+          <div class="modern-card">
+            <strong>auto keyword:</strong><br>
+            <span>Deduces types at compile time cleanly without typing overhead.</span>
+          </div>
+          <div class="modern-card">
+            <strong>nullptr literal:</strong><br>
+            <span>Type-safe null pointer preventing ambiguous function overloads.</span>
+          </div>
+          <div class="modern-card">
+            <strong>Range-based for:</strong><br>
+            <span>Iterates through containers safely without index boundaries.</span>
+          </div>
+          <div class="modern-card">
+            <strong>std::move:</strong><br>
+            <span>Casts to rvalue reference to enable efficient ownership theft.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 6: MODERN COMBINATION -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 6: Modern C++ Features Combined</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;memory&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;vector&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;algorithm&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="kw">struct</span> <span class="type">Student</span> <span class="punct">{</span>
+    <span class="type">string</span> <span class="ident">name</span><span class="punct">;</span>
+    <span class="type">int</span> <span class="ident">score</span><span class="punct">;</span>
+<span class="punct">};</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="comment">// Vector of unique_ptr managing Student objects</span>
+    <span class="type">vector</span><span class="op">&lt;</span><span class="type">unique_ptr</span><span class="op">&lt;</span><span class="type">Student</span><span class="op">&gt;&gt;</span> <span class="ident">roster</span><span class="punct">;</span>
+    <span class="ident">roster</span><span class="punct">.</span><span class="fn">push_back</span><span class="punct">(</span><span class="ident">make_unique</span><span class="op">&lt;</span><span class="type">Student</span><span class="op">&gt;</span><span class="punct">(</span><span class="type">Student</span><span class="punct">{</span><span class="str">"Alice"</span><span class="punct">,</span> <span class="num">95</span><span class="punct">}));</span>
+    <span class="ident">roster</span><span class="punct">.</span><span class="fn">push_back</span><span class="punct">(</span><span class="ident">make_unique</span><span class="op">&lt;</span><span class="type">Student</span><span class="op">&gt;</span><span class="punct">(</span><span class="type">Student</span><span class="punct">{</span><span class="str">"Bob"</span><span class="punct">,</span> <span class="num">72</span><span class="punct">}));</span>
+    <span class="ident">roster</span><span class="punct">.</span><span class="fn">push_back</span><span class="punct">(</span><span class="ident">make_unique</span><span class="op">&lt;</span><span class="type">Student</span><span class="op">&gt;</span><span class="punct">(</span><span class="type">Student</span><span class="punct">{</span><span class="str">"Charlie"</span><span class="punct">,</span> <span class="num">88</span><span class="punct">}));</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Class Roster:\n"</span><span class="punct">;</span>
+    <span class="kw">for</span> <span class="punct">(</span><span class="kw">const auto</span><span class="op">&amp;</span> <span class="ident">s</span> <span class="op">:</span> <span class="ident">roster</span><span class="punct">)</span> <span class="punct">{</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"  "</span> <span class="op">&lt;&lt;</span> <span class="ident">s</span><span class="op">-&gt;</span><span class="ident">name</span> <span class="op">&lt;&lt;</span> <span class="str">": "</span> <span class="op">&lt;&lt;</span> <span class="ident">s</span><span class="op">-&gt;</span><span class="ident">score</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+
+    <span class="comment">// Lambda with STL count_if</span>
+    <span class="type">int</span> <span class="ident">passed</span> <span class="op">=</span> <span class="fn">count_if</span><span class="punct">(</span><span class="ident">roster</span><span class="punct">.</span><span class="fn">begin</span><span class="punct">(),</span> <span class="ident">roster</span><span class="punct">.</span><span class="fn">end</span><span class="punct">(),</span>
+        <span class="punct">[](</span><span class="kw">const</span> <span class="type">unique_ptr</span><span class="op">&lt;</span><span class="type">Student</span><span class="op">&gt;&amp;</span> <span class="ident">s</span><span class="punct">)</span> <span class="punct">{</span> <span class="kw">return</span> <span class="ident">s</span><span class="op">-&gt;</span><span class="ident">score</span> <span class="op">&gt;=</span> <span class="num">75</span><span class="punct">;</span> <span class="punct">});</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Students scoring &gt;= 75: "</span> <span class="op">&lt;&lt;</span> <span class="ident">passed</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Class Roster:<br>&nbsp;&nbsp;Alice: 95<br>&nbsp;&nbsp;Bob: 72<br>&nbsp;&nbsp;Charlie: 88<br>Students scoring &gt;= 75: 2</div>
+      </div>
+
+      <!-- VISUAL 9: COMMON MISTAKES -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 9: Common Smart Pointer Mistakes</div>
+        <div class="mistakes-grid">
+          <div class="mistake-card">
+            <strong>1. Copying unique_ptr</strong>
+            <span><code>unique_ptr</code> cannot be copied. Use <code>std::move</code> to transfer ownership explicitly.</span>
+          </div>
+          <div class="mistake-card">
+            <strong>2. Circular shared_ptr Cycles</strong>
+            <span>Two objects holding <code>shared_ptr</code> to each other leak memory. Break cycles with <code>weak_ptr</code>.</span>
+          </div>
+          <div class="mistake-card">
+            <strong>3. Direct weak_ptr Access</strong>
+            <span><code>weak_ptr</code> has no <code>-&gt;</code> operator. Always call <code>.lock()</code> before reading.</span>
+          </div>
+          <div class="mistake-card">
+            <strong>4. Dereferencing nullptr</strong>
+            <span>Always check <code>if (ptr != nullptr)</code> before dereferencing moved or reset pointers.</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="think-box">
+        <div class="think-title">&star; Which Pointer Would You Choose?</div>
+        <span>Managing an exclusive rendering engine or database handle? Use <code>std::unique_ptr</code> as your default. Sharing a cached texture asset across multiple sprites? Choose <code>std::shared_ptr</code>. Tracking active enemies in a game without keeping dead ones alive? Use <code>std::weak_ptr</code>.</span>
+      </div>
+    </section>
+
+    <!-- SECTION D: QUICK KNOWLEDGE CHECK -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">D</span>
+        Quick Knowledge Check
+      </h2>
+
+      <div class="quiz-box">
+        <div class="quiz-title">&quest; Test Your Understanding</div>
+        <ol style="margin: 6px 0 10px 0; padding-left: 20px; font-size: 13.5px; color: #334155; line-height: 1.5;">
+          <li>Why can't you copy a <code>std::unique_ptr</code> to another variable?</li>
+          <li>What happens to a heap object when its <code>shared_ptr</code> reference count reaches 0?</li>
+          <li>How does <code>std::weak_ptr</code> avoid circular memory leaks?</li>
+          <li>What does <code>ptr1</code> contain after executing <code>auto ptr2 = std::move(ptr1);</code>?</li>
+          <li>Why must you call <code>.lock()</code> on a <code>weak_ptr</code> before accessing the underlying object?</li>
+        </ol>
+
+        <details>
+          <summary>&blacktriangleright; Click to View Answers</summary>
+          <div style="margin-top: 8px; font-size: 13px; color: #334155; line-height: 1.5;">
+            <p><strong>1.</strong> Exclusive ownership forbids duplication to prevent multiple pointers from deleting the same memory twice.</p>
+            <p><strong>2.</strong> The control block detects zero owners and immediately deallocates the managed heap object.</p>
+            <p><strong>3.</strong> It observes the object without incrementing the reference count, allowing parent-child nodes to be freed properly.</p>
+            <p><strong>4.</strong> <code>ptr1</code> is set to <code>nullptr</code> because ownership was transferred to <code>ptr2</code>.</p>
+            <p><strong>5.</strong> It safely checks if the resource is still alive and returns a valid temporary <code>shared_ptr</code>, preventing dangling reads.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>

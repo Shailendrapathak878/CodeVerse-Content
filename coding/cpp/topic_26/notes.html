@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 26: Move Semantics, Concurrency &amp; Modern C++ | CodeVerse</title>
+  <style>
+    /* ==========================================================================
+       CODEVERSE MODERN DESIGN SYSTEM - C++ CURRICULUM (LIGHT MODE ONLY)
+       Zero External CDNs | Offline-First System Fonts | Fully Responsive
+       ========================================================================== */
+
+    :root {
+      /* Base Surfaces */
+      --bg-page: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --card-border: #E2E8F0;
+      --card-soft-bg: #F1F5F9;
+      --card-shadow: 0 4px 12px 0 rgba(15, 23, 42, 0.05);
+
+      /* Typography */
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      --heading-color: #0F172A;
+
+      /* C++ Royal Blue Accent */
+      --primary-accent: #00599C;
+      --primary-accent-hover: #00447C;
+      --primary-badge-bg: #E0F2FE;
+      --primary-badge-text: #0369A1;
+
+      /* Code Tokens */
+      --code-bg: #F8FAFC;
+      --code-border: #CBD5E1;
+      --code-text: #0F172A;
+      --kw-color: #00599C;
+      --pre-color: #B45309;
+      --type-color: #7C3AED;
+      --str-color: #059669;
+      --num-color: #D97706;
+      --op-color: #0F172A;
+      --fn-color: #0369A1;
+      --comment-color: #64748B;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      max-width: 100vw;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .main-container {
+      max-width: 840px;
+      margin: 0 auto;
+      padding: 24px 16px 80px 16px;
+    }
+
+    /* Hero Banner */
+    .hero-banner {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px 22px;
+      margin-bottom: 22px;
+      box-shadow: var(--card-shadow);
+      border-top: 4px solid var(--primary-accent);
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background-color: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      margin-bottom: 10px;
+    }
+
+    .hero-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--heading-color);
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }
+
+    .hero-desc {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    /* Content Cards */
+    .content-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px 18px;
+      margin-bottom: 20px;
+      box-shadow: var(--card-shadow);
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--heading-color);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 2px solid var(--card-soft-bg);
+      padding-bottom: 8px;
+    }
+
+    .section-title .sec-badge {
+      background: var(--primary-badge-bg);
+      color: var(--primary-badge-text);
+      font-size: 12px;
+      font-weight: 700;
+      width: 24px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+
+    p {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+    }
+
+    p:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* Bullet Lists */
+    .bullet-list {
+      margin: 8px 0 10px 0;
+      padding-left: 18px;
+      color: var(--text-secondary);
+    }
+
+    .bullet-list li {
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+
+    /* Code Blocks */
+    .code-card {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      background: #E2E8F0;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--code-border);
+    }
+
+    .code-tag {
+      background: #00599C;
+      color: #FFFFFF;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow-x: auto !important;
+      max-width: 100%;
+      box-sizing: border-box;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: var(--code-bg);
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: #F1F5F9;
+      color: #00599C;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      border: 1px solid #E2E8F0;
+    }
+
+    .kw { color: var(--kw-color); font-weight: 700; }
+    .pre-dir { color: var(--pre-color); font-weight: 700; }
+    .type { color: var(--type-color); font-weight: 700; }
+    .fn { color: var(--fn-color); font-weight: 600; }
+    .ident { color: #0F172A; }
+    .punct { color: #64748B; }
+    .num { color: var(--num-color); }
+    .op { color: var(--op-color); font-weight: 700; }
+    .str { color: var(--str-color); }
+    .comment { color: var(--comment-color); font-style: italic; }
+
+    /* Output Card */
+    .output-card {
+      background: #F1F5F9;
+      border: 1px solid var(--code-border);
+      border-left: 4px solid #059669;
+      border-radius: 6px;
+      margin: 10px 0;
+      padding: 10px 14px;
+    }
+
+    .output-header {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #059669;
+      margin-bottom: 4px;
+    }
+
+    .output-content {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 13px;
+      color: #0F172A;
+      font-weight: 600;
+      line-height: 1.45;
+    }
+
+    /* Visual Containers */
+    .visual-box {
+      background: #F8FAFC;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 10px;
+      margin: 14px 0;
+    }
+
+    .visual-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #475569;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Visual 1: Copy vs Move Flow */
+    .copy-move-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .cm-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+    }
+
+    .cm-card.copy { border-top: 3px solid #64748B; }
+    .cm-card.move { border-top: 3px solid #00599C; }
+
+    .cm-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Visual 2: Lvalue vs Rvalue */
+    .lvalue-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .lval-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+      text-align: center;
+    }
+
+    .lval-card.lval { border-top: 3px solid #00599C; }
+    .lval-card.rval { border-top: 3px solid #7C3AED; }
+
+    .lval-card strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* Visual 3: std::move Cast */
+    .move-cast-box {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+    }
+
+    .cast-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 6px 0;
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .cast-badge {
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid #CBD5E1;
+    }
+
+    .cast-badge.lval { background: #E0F2FE; color: #0369A1; border-color: #BAE6FD; }
+    .cast-badge.fn { background: #F3E8FF; color: #7E22CE; border-color: #E9D5FF; }
+    .cast-badge.rval { background: #DCFCE7; color: #166534; border-color: #BBF7D0; }
+
+    .cast-arrow {
+      color: #64748B;
+      font-size: 14px;
+      display: inline-block;
+    }
+
+    /* Visual 4: Concurrency Timeline */
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .time-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+    }
+
+    .time-card.seq { border-top: 3px solid #64748B; }
+    .time-card.con { border-top: 3px solid #00599C; }
+
+    .time-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Visual 5: Race vs Mutex */
+    .race-mutex-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .rm-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+    }
+
+    .rm-card.race { border-top: 3px solid #DC2626; }
+    .rm-card.mutex { border-top: 3px solid #059669; }
+
+    .rm-card strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* Visual 6: Thread vs Async */
+    .thread-async-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .ta-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 10px 8px;
+      font-size: 11.5px;
+      text-align: center;
+    }
+
+    .ta-card.th { border-top: 3px solid #00599C; }
+    .ta-card.as { border-top: 3px solid #7C3AED; }
+
+    .ta-card strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* Visual 7: Modern Features Toolkit */
+    .modern-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .modern-card {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-top: 3px solid #00599C;
+      border-radius: 6px;
+      padding: 8px 8px;
+      font-size: 11px;
+    }
+
+    .modern-card strong {
+      color: #00599C;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Visual 8: Capstone Map */
+    .capstone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .cap-step {
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 6px;
+      text-align: center;
+      font-size: 11px;
+    }
+
+    .cap-step strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .cap-step.s1 { border-top: 3px solid #64748B; color: #475569; }
+    .cap-step.s2 { border-top: 3px solid #00599C; color: #00599C; }
+    .cap-step.s3 { border-top: 3px solid #7C3AED; color: #7C3AED; }
+    .cap-step.s4 { border-top: 3px solid #059669; color: #059669; }
+
+    /* Table Styling */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 10px 0 12px 0;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: #FFFFFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 12px;
+      table-layout: fixed;
+    }
+
+    th {
+      background-color: #F1F5F9;
+      color: var(--text-primary);
+      font-weight: 600;
+      padding: 7px 6px;
+      border-bottom: 2px solid var(--card-border);
+      font-size: 11.5px;
+    }
+
+    td {
+      padding: 6px 6px;
+      border-bottom: 1px solid #F1F5F9;
+      color: var(--text-secondary);
+      font-size: 11px;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Interactive Callout Boxes */
+    .think-box {
+      background: #F0FDF4;
+      border: 1px solid #BBF7D0;
+      border-left: 4px solid #16A34A;
+      border-radius: 6px;
+      padding: 9px 12px;
+      margin: 12px 0;
+      font-size: 13px;
+    }
+
+    .think-title {
+      font-weight: 700;
+      color: #166534;
+      margin-bottom: 3px;
+    }
+
+    .quiz-box {
+      background: #F8FAFC;
+      border: 1px solid #CBD5E1;
+      border-left: 4px solid #00599C;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0;
+    }
+
+    .quiz-title {
+      font-weight: 700;
+      color: #00599C;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    details {
+      margin-top: 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+    }
+
+    summary {
+      font-weight: 600;
+      font-size: 12.5px;
+      color: #00599C;
+      cursor: pointer;
+    }
+
+    .mobile-only { display: none; }
+    .desktop-only { display: block; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 640px) {
+      .mobile-only { display: block; }
+      .desktop-only { display: none; }
+      .hero-title {
+        font-size: 20px;
+      }
+      .section-title {
+        font-size: 16.5px;
+      }
+      .content-card {
+        padding: 16px 12px;
+      }
+      .copy-move-grid, .lvalue-grid, .timeline-grid, .race-mutex-grid, .thread-async-grid, .modern-grid, .capstone-grid {
+        grid-template-columns: 1fr;
+      }
+      .cast-row {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .cast-arrow {
+        transform: rotate(90deg);
+      }
+      pre {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      th, td {
+        font-size: 10.5px;
+        padding: 5px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+      <div class="hero-badge">C++ Foundations &bull; Topic 26 (Final)</div>
+      <h1 class="hero-title">Move Semantics, Concurrency &amp; Modern C++</h1>
+      <p class="hero-desc">Complete your C++ mastery by exploring high-performance move semantics, multi-threaded concurrency with mutex synchronization, and cutting-edge modern language features.</p>
+    </header>
+
+    <!-- PART A: MOVE SEMANTICS -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">A</span>
+        Part A — Move Semantics
+      </h2>
+
+      <p>When working with objects that manage heap resources—such as <code>std::vector</code> or <code>std::string</code>—copying duplicates entire heap buffers. Deep copies consume significant CPU cycles and allocate redundant memory. <strong>Move semantics</strong> solve this performance bottleneck by transferring internal resource pointers from a source object directly to a destination object, eliminating heap reallocations.</p>
+
+      <p>Think of changing houses: rather than manufacturing duplicate furniture for your new home, you simply transfer ownership of your existing furniture. In C++, moving steals ownership pointers instantaneously.</p>
+
+      <!-- VISUAL 1: COPY VS MOVE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 1: Copying vs. Moving Memory Flow</div>
+        <div class="copy-move-grid">
+          <div class="cm-card copy">
+            <strong style="color: #64748B;">Copy Semantics (Duplication)</strong>
+            <span>Allocates fresh heap memory and duplicates every element. Both objects remain active and independent.</span>
+          </div>
+          <div class="cm-card move">
+            <strong style="color: #00599C;">Move Semantics (Transfer)</strong>
+            <span>Transfers the existing heap pointer to the destination. Leaves the source empty or unspecified without reallocating.</span>
+          </div>
+        </div>
+      </div>
+
+      <p>Understanding move semantics requires distinguishing lvalues from rvalues:</p>
+
+      <ul class="bullet-list">
+        <li><strong>Lvalue:</strong> An expression with an identifiable memory address and persistent name (e.g., variable <code>x</code>). An lvalue reference is written as <code>T&amp;</code>.</li>
+        <li><strong>Rvalue:</strong> A temporary, ephemeral value without a persistent identity (e.g., literals like <code>42</code> or temporaries like <code>x + y</code>). An rvalue reference is written as <code>T&amp;&amp;</code>.</li>
+      </ul>
+
+      <!-- VISUAL 2: LVALUE VS RVALUE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 2: Lvalues vs. Rvalues &amp; References</div>
+        <div class="lvalue-grid">
+          <div class="lval-card lval">
+            <strong style="color: #00599C;">Lvalue (T&amp;)</strong>
+            <span>Persistent named entity with an address.<br><code>string s = "data";</code></span>
+          </div>
+          <div class="lval-card rval">
+            <strong style="color: #7C3AED;">Rvalue (T&amp;&amp;)</strong>
+            <span>Disposable temporary value expiring immediately.<br><code>string("temp")</code></span>
+          </div>
+        </div>
+      </div>
+
+      <p>The standard utility <code>std::move</code> (from <code>&lt;utility&gt;</code>) does not physically move data by itself. Instead, it is an unconditional cast that converts an lvalue into an rvalue reference (<code>static_cast&lt;T&amp;&amp;&gt;</code>), signaling that the object's resources may be safely pilfered by a move constructor or move assignment operator.</p>
+
+      <!-- VISUAL 3: STD::MOVE CAST -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 3: How std::move Enables Move Overloads</div>
+        <div class="move-cast-box">
+          <div class="cast-row">
+            <span class="cast-badge lval">Named lvalue (var)</span>
+            <span class="cast-arrow">&rarr;</span>
+            <span class="cast-badge fn">std::move(var)</span>
+            <span class="cast-arrow">&rarr;</span>
+            <span class="cast-badge rval">rvalue reference (T&amp;&amp;)</span>
+          </div>
+          <div style="font-size: 11px; color: #64748B; margin-top: 4px;">Enables move constructor selection without moving data directly.</div>
+        </div>
+      </div>
+
+      <!-- TABLE: COPY VS MOVE -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 20%;">Operation</th>
+              <th style="width: 25%;">Typical Cost</th>
+              <th style="width: 30%;">Source Object State</th>
+              <th style="width: 25%;">Common Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Copy</strong></td>
+              <td>O(N) heap allocation</td>
+              <td>Completely unchanged</td>
+              <td>Preserving original data</td>
+            </tr>
+            <tr>
+              <td><strong>Move</strong></td>
+              <td>O(1) pointer swap</td>
+              <td>Valid but unspecified</td>
+              <td>Returning large containers</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Move constructors and move assignment operators accept an rvalue reference (<code>Type&amp;&amp; other</code>) and steal heap pointers in $O(1)$ constant time, leaving the donor object with null or zeroed pointers. Standard library types like <code>std::vector</code>, <code>std::string</code>, and <code>std::unique_ptr</code> are fully move-enabled, allowing functions to return massive collections by value without performance degradation.</p>
+
+      <p>A moved-from object remains in a valid but unspecified state. It is legally safe to assign a new value to it or let its destructor run, but you should never rely on its remaining contents unless specifically guaranteed by that class contract.</p>
+
+      <div class="think-box">
+        <div class="think-title">&star; Practical Scenario: Copying vs. Moving</div>
+        <span>Passing an image buffer to an archive function where the caller never needs it again? Use <code>std::move</code> to eliminate an expensive image copy. Storing an element in a collection while continuing to modify the original variable? Keep standard copy semantics to maintain two independent states.</span>
+      </div>
+
+      <!-- CODE EXAMPLE 1: COPY VS MOVE -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 1: Copy vs. Move with std::string</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;string&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;utility&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="type">string</span> <span class="ident">original</span> <span class="op">=</span> <span class="str">"Large payload data block"</span><span class="punct">;</span>
+
+    <span class="comment">// 1. Copying: duplicates memory</span>
+    <span class="type">string</span> <span class="ident">copied</span> <span class="op">=</span> <span class="ident">original</span><span class="punct">;</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Copied: \""</span> <span class="op">&lt;&lt;</span> <span class="ident">copied</span> <span class="op">&lt;&lt;</span> <span class="str">"\"\n"</span><span class="punct">;</span>
+
+    <span class="comment">// 2. Moving: transfers buffer ownership</span>
+    <span class="type">string</span> <span class="ident">moved</span> <span class="op">=</span> <span class="fn">move</span><span class="punct">(</span><span class="ident">original</span><span class="punct">);</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Moved:  \""</span> <span class="op">&lt;&lt;</span> <span class="ident">moved</span> <span class="op">&lt;&lt;</span> <span class="str">"\"\n"</span><span class="punct">;</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Original is empty: "</span> <span class="op">&lt;&lt;</span> <span class="ident">boolalpha</span> <span class="op">&lt;&lt;</span> <span class="ident">original</span><span class="punct">.</span><span class="fn">empty</span><span class="punct">()</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Copied: "Large payload data block"<br>Moved:  "Large payload data block"<br>Original is empty: true</div>
+      </div>
+
+      <!-- CODE EXAMPLE 2: CUSTOM MOVE CONSTRUCTOR -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 2: Custom Move Constructor</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;utility&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="kw">class</span> <span class="type">Buffer</span> <span class="punct">{</span>
+<span class="kw">public</span><span class="op">:</span>
+    <span class="type">int</span><span class="op">*</span> <span class="ident">data</span><span class="punct">;</span>
+    <span class="type">int</span> <span class="ident">size</span><span class="punct">;</span>
+
+    <span class="fn">Buffer</span><span class="punct">(</span><span class="type">int</span> <span class="ident">s</span><span class="punct">)</span> <span class="op">:</span> <span class="ident">size</span><span class="punct">(</span><span class="ident">s</span><span class="punct">),</span> <span class="ident">data</span><span class="punct">(</span><span class="kw">new</span> <span class="type">int</span><span class="punct">[</span><span class="ident">s</span><span class="punct">])</span> <span class="punct">{</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Allocated buffer of size "</span> <span class="op">&lt;&lt;</span> <span class="ident">size</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+
+    <span class="op">~</span><span class="fn">Buffer</span><span class="punct">()</span> <span class="punct">{</span> <span class="kw">delete</span><span class="punct">[]</span> <span class="ident">data</span><span class="punct">;</span> <span class="punct">}</span>
+
+    <span class="comment">// Move constructor steals pointer and nulls the source</span>
+    <span class="fn">Buffer</span><span class="punct">(</span><span class="type">Buffer</span><span class="op">&amp;&amp;</span> <span class="ident">other</span><span class="punct">)</span> <span class="kw">noexcept</span> <span class="op">:</span> <span class="ident">data</span><span class="punct">(</span><span class="ident">other</span><span class="punct">.</span><span class="ident">data</span><span class="punct">),</span> <span class="ident">size</span><span class="punct">(</span><span class="ident">other</span><span class="punct">.</span><span class="ident">size</span><span class="punct">)</span> <span class="punct">{</span>
+        <span class="ident">other</span><span class="punct">.</span><span class="ident">data</span> <span class="op">=</span> <span class="kw">nullptr</span><span class="punct">;</span>
+        <span class="ident">other</span><span class="punct">.</span><span class="ident">size</span> <span class="op">=</span> <span class="num">0</span><span class="punct">;</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Move constructor: transferred ownership\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+
+    <span class="fn">Buffer</span><span class="punct">(</span><span class="kw">const</span> <span class="type">Buffer</span><span class="op">&amp;</span><span class="punct">)</span> <span class="op">=</span> <span class="kw">delete</span><span class="punct">;</span>
+<span class="punct">};</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="type">Buffer</span> <span class="ident">b1</span><span class="punct">(</span><span class="num">100</span><span class="punct">);</span>
+    <span class="type">Buffer</span> <span class="ident">b2</span> <span class="op">=</span> <span class="fn">move</span><span class="punct">(</span><span class="ident">b1</span><span class="punct">);</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"b2 size: "</span> <span class="op">&lt;&lt;</span> <span class="ident">b2</span><span class="punct">.</span><span class="ident">size</span> <span class="op">&lt;&lt;</span> <span class="str">", b1 is null: "</span> <span class="op">&lt;&lt;</span> <span class="ident">boolalpha</span> <span class="op">&lt;&lt;</span> <span class="punct">(</span><span class="ident">b1</span><span class="punct">.</span><span class="ident">data</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="punct">)</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Allocated buffer of size 100<br>Move constructor: transferred ownership<br>b2 size: 100, b1 is null: true</div>
+      </div>
+    </section>
+
+    <!-- PART B: CONCURRENCY IN C++ -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">B</span>
+        Part B — Concurrency in C++
+      </h2>
+
+      <p>Concurrency enables multiple tasks to make progress over overlapping time periods. While <strong>parallelism</strong> executes tasks simultaneously across distinct physical CPU cores, <strong>concurrency</strong> is the broader concept of structuring programs to handle multiple interleaved activities.</p>
+
+      <!-- VISUAL 4: TIMELINE -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 4: Sequential vs. Concurrent Task Progress</div>
+        <div class="timeline-grid">
+          <div class="time-card seq">
+            <strong style="color: #64748B;">Sequential (Single-Thread)</strong>
+            <span>Task 1 completes entirely before Task 2 starts. Long tasks block all progress.</span>
+          </div>
+          <div class="time-card con">
+            <strong style="color: #00599C;">Concurrent (Multi-Thread)</strong>
+            <span>Tasks overlap execution across time slices or cores, improving system responsiveness.</span>
+          </div>
+        </div>
+      </div>
+
+      <p>The <code>&lt;thread&gt;</code> header provides <code>std::thread</code>. A thread object must be joined (<code>.join()</code>) or detached (<code>.detach()</code>) before its destructor runs; destroying a joinable thread crashes the program via <code>std::terminate()</code>. Always call <code>.join()</code> to safely await completion.</p>
+
+      <!-- CODE EXAMPLE 3: THREAD -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 3: Worker Thread Execution &amp; join()</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;thread&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;string&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">void</span> <span class="fn">printWorker</span><span class="punct">(</span><span class="kw">const</span> <span class="type">string</span><span class="op">&amp;</span> <span class="ident">task</span><span class="punct">,</span> <span class="type">int</span> <span class="ident">id</span><span class="punct">)</span> <span class="punct">{</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Worker executing: "</span> <span class="op">&lt;&lt;</span> <span class="ident">task</span> <span class="op">&lt;&lt;</span> <span class="str">" #"</span> <span class="op">&lt;&lt;</span> <span class="ident">id</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+<span class="punct">}</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Main thread launching worker...\n"</span><span class="punct">;</span>
+
+    <span class="type">thread</span> <span class="ident">worker</span><span class="punct">(</span><span class="ident">printWorker</span><span class="punct">,</span> <span class="str">"DataSync"</span><span class="punct">,</span> <span class="num">1</span><span class="punct">);</span>
+    <span class="ident">worker</span><span class="punct">.</span><span class="fn">join</span><span class="punct">();</span> <span class="comment">// Awaits worker completion</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Worker joined. Main thread exiting.\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Main thread launching worker...<br>Worker executing: DataSync #1<br>Worker joined. Main thread exiting.</div>
+      </div>
+
+      <p>When multiple threads modify shared variables simultaneously, a <strong>race condition</strong> occurs, causing corrupt results. Think of two students writing in the same attendance book at the same second. A <code>std::mutex</code> (mutual exclusion) from <code>&lt;mutex&gt;</code> ensures only one thread writes at a time, and <code>std::lock_guard</code> manages locking automatically via RAII.</p>
+
+      <!-- VISUAL 5: RACE VS MUTEX -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 5: Race Condition vs. Mutex Protection</div>
+        <div class="race-mutex-grid">
+          <div class="rm-card race">
+            <strong style="color: #DC2626;">Unsynchronized (Race Condition)</strong>
+            <span>Threads A and B overwrite the counter simultaneously, corrupting the final tally.</span>
+          </div>
+          <div class="rm-card mutex">
+            <strong style="color: #059669;">Synchronized (std::mutex + lock_guard)</strong>
+            <span>Mutex grants exclusive access. Thread B waits until Thread A releases the lock.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 4: MUTEX -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 4: Mutex Protection with std::lock_guard</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;thread&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;mutex&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="ident">sharedCounter</span> <span class="op">=</span> <span class="num">0</span><span class="punct">;</span>
+<span class="type">mutex</span> <span class="ident">counterMutex</span><span class="punct">;</span>
+
+<span class="type">void</span> <span class="fn">increment</span><span class="punct">(</span><span class="type">int</span> <span class="ident">times</span><span class="punct">)</span> <span class="punct">{</span>
+    <span class="kw">for</span> <span class="punct">(</span><span class="type">int</span> <span class="ident">i</span> <span class="op">=</span> <span class="num">0</span><span class="punct">;</span> <span class="ident">i</span> <span class="op">&lt;</span> <span class="ident">times</span><span class="punct">;</span> <span class="op">++</span><span class="ident">i</span><span class="punct">)</span> <span class="punct">{</span>
+        <span class="type">lock_guard</span><span class="op">&lt;</span><span class="type">mutex</span><span class="op">&gt;</span> <span class="ident">lock</span><span class="punct">(</span><span class="ident">counterMutex</span><span class="punct">);</span>
+        <span class="op">++</span><span class="ident">sharedCounter</span><span class="punct">;</span>
+    <span class="punct">}</span>
+<span class="punct">}</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="type">thread</span> <span class="ident">t1</span><span class="punct">(</span><span class="ident">increment</span><span class="punct">,</span> <span class="num">5000</span><span class="punct">);</span>
+    <span class="type">thread</span> <span class="ident">t2</span><span class="punct">(</span><span class="ident">increment</span><span class="punct">,</span> <span class="num">5000</span><span class="punct">);</span>
+    <span class="ident">t1</span><span class="punct">.</span><span class="fn">join</span><span class="punct">();</span>
+    <span class="ident">t2</span><span class="punct">.</span><span class="fn">join</span><span class="punct">();</span>
+
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Final synchronized counter: "</span> <span class="op">&lt;&lt;</span> <span class="ident">sharedCounter</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Final synchronized counter: 10000</div>
+      </div>
+
+      <p>For return-value tasks, <code>std::async</code> (from <code>&lt;future&gt;</code>) runs a function asynchronously and returns a <code>std::future</code>. Calling <code>.get()</code> awaits completion and retrieves the computed result seamlessly.</p>
+
+      <p><strong>Concurrency Overhead Warning:</strong> Spawning threads does not automatically accelerate every algorithm. Creating threads incurs operating system scheduling overhead, cache synchronization costs, and context switching. Concurrency delivers significant gains for I/O-bound tasks and heavy parallel calculations, but tiny tasks run faster sequentially.</p>
+
+      <div class="think-box">
+        <div class="think-title">&star; Practical Scenario: Safely Updating Shared Data</div>
+        <span>Multiple worker threads reporting live sensor telemetry to a central database? Wrap the shared telemetry map with a <code>std::mutex</code> and use <code>std::lock_guard</code> inside the update function. If threads only read immutable configuration data without writing, no mutex lock is needed.</span>
+      </div>
+
+      <!-- VISUAL 6: THREAD VS ASYNC -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 6: std::thread vs. std::async</div>
+        <div class="thread-async-grid">
+          <div class="ta-card th">
+            <strong style="color: #00599C;">std::thread</strong>
+            <span>Low-level thread control. Requires manual synchronization and explicit <code>.join()</code>.</span>
+          </div>
+          <div class="ta-card as">
+            <strong style="color: #7C3AED;">std::async</strong>
+            <span>High-level task abstraction. Manages background execution and returns a <code>std::future</code>.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 5: ASYNC -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 5: Background Calculation with std::async</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;future&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">int</span> <span class="fn">computeSum</span><span class="punct">(</span><span class="type">int</span> <span class="ident">a</span><span class="punct">,</span> <span class="type">int</span> <span class="ident">b</span><span class="punct">)</span> <span class="punct">{</span>
+    <span class="kw">return</span> <span class="ident">a</span> <span class="op">+</span> <span class="ident">b</span><span class="punct">;</span>
+<span class="punct">}</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Launching async task...\n"</span><span class="punct">;</span>
+    <span class="type">future</span><span class="op">&lt;</span><span class="type">int</span><span class="op">&gt;</span> <span class="ident">task</span> <span class="op">=</span> <span class="fn">async</span><span class="punct">(</span><span class="ident">computeSum</span><span class="punct">,</span> <span class="num">40</span><span class="punct">,</span> <span class="num">2</span><span class="punct">);</span>
+
+    <span class="comment">// get() blocks until ready and retrieves value</span>
+    <span class="type">int</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">task</span><span class="punct">.</span><span class="fn">get</span><span class="punct">();</span>
+    <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Result from future: "</span> <span class="op">&lt;&lt;</span> <span class="ident">result</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Launching async task...<br>Result from future: 42</div>
+      </div>
+    </section>
+
+    <!-- PART C: MODERN C++ FEATURES -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">C</span>
+        Part C — Modern C++ Features &amp; Curriculum Capstone
+      </h2>
+
+      <p>Modern C++ builds on standards introduced progressively over time:</p>
+
+      <ul class="bullet-list">
+        <li><strong>C++11 Foundations:</strong> Revolutionized C++ with move semantics, multi-threading (<code>std::thread</code>), inline lambdas, automatic type deduction (<code>auto</code>), type-safe <code>nullptr</code>, smart pointers, and scoped enumerations (<code>enum class</code>).</li>
+        <li><strong>C++14 Refinements:</strong> Completed modern ownership with <code>std::make_unique</code>, enabled generic lambdas, and relaxed compile-time <code>constexpr</code> functions.</li>
+        <li><strong>C++17 Productivity:</strong> Added structured bindings (<code>auto [k, v]</code>) for clean pair and tuple unpacking, and introduced <code>std::optional</code> to model presence or absence without sentinel null pointers.</li>
+      </ul>
+
+      <p>Modern features like <code>constexpr</code> shift calculations from runtime to compile time, executing mathematical tables and lookups during compilation for zero runtime cost. Meanwhile, <code>enum class</code> enforces strong typing and scope boundaries, preventing accidental implicit conversions to integers.</p>
+
+      <!-- VISUAL 7: MODERN FEATURES TOOLKIT -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 7: Modern C++ Essential Features</div>
+        <div class="modern-grid">
+          <div class="modern-card">
+            <strong>auto</strong>
+            <span>Compile-time type deduction.</span>
+          </div>
+          <div class="modern-card">
+            <strong>nullptr</strong>
+            <span>Type-safe null pointer literal.</span>
+          </div>
+          <div class="modern-card">
+            <strong>Range-for</strong>
+            <span>Bounds-free collection iteration.</span>
+          </div>
+          <div class="modern-card">
+            <strong>auto [a, b]</strong>
+            <span>C++17 structured bindings.</span>
+          </div>
+          <div class="modern-card">
+            <strong>std::optional</strong>
+            <span>Represents value or absence.</span>
+          </div>
+          <div class="modern-card">
+            <strong>enum class</strong>
+            <span>Scoped, strongly-typed enums.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 6: MODERN COMBINATION -->
+      <div class="code-card">
+        <div class="code-header">
+          <span>Example 6: Structured Bindings &amp; std::optional</span>
+          <span class="code-tag">C++</span>
+        </div>
+        <pre><span class="pre-dir">#include</span> <span class="str">&lt;iostream&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;string&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;optional&gt;</span>
+<span class="pre-dir">#include</span> <span class="str">&lt;utility&gt;</span>
+<span class="kw">using namespace</span> <span class="ident">std</span><span class="punct">;</span>
+
+<span class="type">optional</span><span class="op">&lt;</span><span class="type">pair</span><span class="op">&lt;</span><span class="type">string</span><span class="punct">,</span> <span class="type">int</span><span class="op">&gt;&gt;</span> <span class="fn">lookupStudent</span><span class="punct">(</span><span class="type">int</span> <span class="ident">id</span><span class="punct">)</span> <span class="punct">{</span>
+    <span class="kw">if</span> <span class="punct">(</span><span class="ident">id</span> <span class="op">==</span> <span class="num">101</span><span class="punct">)</span> <span class="kw">return</span> <span class="fn">make_pair</span><span class="punct">(</span><span class="str">"Alice"</span><span class="punct">,</span> <span class="num">95</span><span class="punct">);</span>
+    <span class="kw">return</span> <span class="ident">nullopt</span><span class="punct">;</span> <span class="comment">// Represents empty result safely</span>
+<span class="punct">}</span>
+
+<span class="type">int</span> <span class="fn">main</span><span class="punct">()</span> <span class="punct">{</span>
+    <span class="kw">auto</span> <span class="ident">res</span> <span class="op">=</span> <span class="fn">lookupStudent</span><span class="punct">(</span><span class="num">101</span><span class="punct">);</span>
+    <span class="kw">if</span> <span class="punct">(</span><span class="ident">res</span><span class="punct">.</span><span class="fn">has_value</span><span class="punct">())</span> <span class="punct">{</span>
+        <span class="comment">// C++17 Structured Bindings: unpack pair fields</span>
+        <span class="kw">auto</span> <span class="punct">[</span><span class="ident">name</span><span class="punct">,</span> <span class="ident">score</span><span class="punct">]</span> <span class="op">=</span> <span class="op">*</span><span class="ident">res</span><span class="punct">;</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Found: "</span> <span class="op">&lt;&lt;</span> <span class="ident">name</span> <span class="op">&lt;&lt;</span> <span class="str">" with score: "</span> <span class="op">&lt;&lt;</span> <span class="ident">score</span> <span class="op">&lt;&lt;</span> <span class="str">"\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+
+    <span class="kw">auto</span> <span class="ident">missing</span> <span class="op">=</span> <span class="fn">lookupStudent</span><span class="punct">(</span><span class="num">999</span><span class="punct">);</span>
+    <span class="kw">if</span> <span class="punct">(</span><span class="op">!</span><span class="ident">missing</span><span class="punct">.</span><span class="fn">has_value</span><span class="punct">())</span> <span class="punct">{</span>
+        <span class="ident">cout</span> <span class="op">&lt;&lt;</span> <span class="str">"Student 999 not found in database.\n"</span><span class="punct">;</span>
+    <span class="punct">}</span>
+    <span class="kw">return</span> <span class="num">0</span><span class="punct">;</span>
+<span class="punct">}</span></pre>
+      </div>
+
+      <div class="output-card">
+        <div class="output-header">Output</div>
+        <div class="output-content">Found: Alice with score: 95<br>Student 999 not found in database.</div>
+      </div>
+
+      <!-- VISUAL 8: CAPSTONE JOURNEY -->
+      <div class="visual-box">
+        <div class="visual-title">&diams; Visual 8: Your Complete 26-Topic C++ Mastery Journey</div>
+        <div class="capstone-grid">
+          <div class="cap-step s1">
+            <strong>1. Foundations</strong>
+            <span>Syntax, loops, functions, memory &amp; pointers</span>
+          </div>
+          <div class="cap-step s2">
+            <strong>2. OOP &amp; Classes</strong>
+            <span>Encapsulation, inheritance, polymorphism</span>
+          </div>
+          <div class="cap-step s3">
+            <strong>3. Templates &amp; STL</strong>
+            <span>Containers, iterators, lambdas &amp; algorithms</span>
+          </div>
+          <div class="cap-step s4">
+            <strong>4. Modern Systems</strong>
+            <span>RAII, files, smart pointers, move &amp; threads</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="think-box">
+        <div class="think-title">&star; Congratulations, C++ Developer!</div>
+        <span>You have progressed from writing basic <code>cout</code> statements to architecting high-performance, memory-safe, multi-threaded C++ applications. Apply these principles of RAII, ownership, and synchronization to build robust modern software with confidence!</span>
+      </div>
+    </section>
+
+    <!-- SECTION D: QUICK KNOWLEDGE CHECK -->
+    <section class="content-card">
+      <h2 class="section-title">
+        <span class="sec-badge">D</span>
+        Quick Knowledge Check
+      </h2>
+
+      <div class="quiz-box">
+        <div class="quiz-title">&quest; Final Curriculum Knowledge Check</div>
+        <ol style="margin: 6px 0 10px 0; padding-left: 20px; font-size: 13.5px; color: #334155; line-height: 1.5;">
+          <li>What is the primary performance benefit of move semantics over copy semantics?</li>
+          <li>Does <code>std::move(x)</code> physically move data by itself?</li>
+          <li>What happens if a <code>std::thread</code> object is destroyed while still joinable?</li>
+          <li>Why is <code>std::lock_guard</code> preferred over manually calling <code>.lock()</code> and <code>.unlock()</code>?</li>
+          <li>Which C++ standard introduced structured bindings (<code>auto [a, b]</code>)?</li>
+        </ol>
+
+        <details>
+          <summary>&blacktriangleright; Click to View Answers</summary>
+          <div style="margin-top: 8px; font-size: 13px; color: #334155; line-height: 1.5;">
+            <p><strong>1.</strong> Move semantics transfer resource pointers in $O(1)$ time, eliminating expensive $O(N)$ deep heap reallocations.</p>
+            <p><strong>2.</strong> No. It is an unconditional cast that converts an lvalue to an rvalue reference, enabling move constructors.</p>
+            <p><strong>3.</strong> The program calls <code>std::terminate()</code> and crashes immediately.</p>
+            <p><strong>4.</strong> It uses RAII to guarantee the mutex is unlocked even if an exception is thrown or an early return occurs.</p>
+            <p><strong>5.</strong> C++17 introduced structured bindings.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </div>
+
+</body>
+</html>
