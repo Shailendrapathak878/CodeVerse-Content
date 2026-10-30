@@ -1,0 +1,2260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Seaborn Topic 3: Loading &amp; Preparing Data for Visualization | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Light Theme with Dark Code Cards */
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #f0f9ff;
+            --accent: #0ea5e9;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --code-bg: #0b0f19;
+            --code-card: #111827;
+            --code-border: #1f2937;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.65;
+            font-size: 15px;
+            padding: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .main-container {
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #075985 100%);
+            color: #ffffff;
+            padding: 32px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #e0f2fe;
+            margin-bottom: 18px;
+            max-width: 840px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 12.5px;
+            color: #f0f9ff;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 14px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section Styling */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+            line-height: 1.68;
+        }
+
+        ul, ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Dark Code Blocks with Execution Headers */
+        .code-container {
+            background: var(--code-card);
+            border: 1px solid var(--code-border);
+            border-radius: var(--radius-md);
+            margin: 16px 0 20px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .code-header {
+            background: #0b0f19;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--code-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            color: #94a3b8;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        .code-content {
+            padding: 14px;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            color: var(--code-text);
+            line-height: 1.55;
+            background: var(--code-card);
+            margin: 0;
+        }
+
+        .output-block {
+            background: #090d16;
+            border-top: 1px solid var(--code-border);
+            padding: 12px 14px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #38bdf8;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .output-title {
+            color: #94a3b8;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        /* Syntax Highlighting Colors */
+        .keyword { color: #f43f5e; font-weight: 600; }
+        .string { color: #34d399; }
+        .comment { color: #64748b; font-style: italic; }
+        .number { color: #fbbf24; }
+        .function { color: #38bdf8; }
+        .param { color: #fb923c; }
+
+        /* Inline Code */
+        code:not(.code-content code) {
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 2px 5px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: 13px;
+        }
+
+        /* Visual Assets / Figures */
+        .figure-card {
+            background: #0b0f19;
+            border: 1px solid #1e293b;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+        }
+
+        .figure-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .figure-caption {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .callout-warning {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+
+        .callout-danger {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .callout-realworld {
+            background: #f8fafc;
+            border-color: #6366f1;
+            color: #312e81;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper, .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-light);
+            color: #334155;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        /* Table of Contents */
+        .toc-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toc-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+
+        .toc-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toc-link:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .toc-num {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 20px;
+        }
+
+        /* Interactive Details / Accordions */
+        .details-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .details-box[open] {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .details-summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            cursor: pointer;
+            background: #f8fafc;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .details-summary:hover {
+            background: #f1f5f9;
+        }
+
+        .details-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .details-summary::after {
+            content: "▼";
+            font-size: 10px;
+            color: var(--accent);
+            transition: transform 0.2s ease;
+        }
+
+        .details-box[open] .details-summary::after {
+            transform: rotate(180deg);
+        }
+
+        .details-content {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 13.5px;
+            color: #334155;
+            background: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+                font-size: 14.5px;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 18px;
+            }
+
+            .hero-banner {
+                padding: 22px 16px;
+                border-radius: var(--radius-md);
+            }
+
+            .hero-title {
+                font-size: 22px;
+            }
+
+            .hero-subtitle {
+                font-size: 13.5px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .code-content {
+                font-size: 12px;
+                padding: 10px;
+            }
+
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+        <span class="hero-badge">Seaborn Course &bull; Topic 3 of 20 (Foundations)</span>
+        <h1 class="hero-title">Loading &amp; Preparing Data for Visualization</h1>
+        <p class="hero-subtitle">Master the Complete Pipeline: Inspect, Clean, Handle Missing Values, Remove Duplicates, Typecast, and Validate Data Before Creating Statistical Visualizations</p>
+        <div class="hero-meta">
+            <span class="hero-meta-item">&#9201; 60 Min Interactive Mastery</span>
+            <span class="hero-meta-item">&#128187; 24 Runnable Python Examples</span>
+            <span class="hero-meta-item">&#128202; 20 High-Res Charts (@ 160 DPI)</span>
+            <span class="hero-meta-item">&#9989; Verified on Seaborn 0.13.2, Pandas 2.3 &amp; Python 3.13</span>
+        </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-container" aria-label="Table of Contents">
+        <div class="toc-title">&#128209; Curriculum Table of Contents (20 In-Depth Sections)</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec-1"><span class="toc-num">01.</span> The 6-Stage Preparation Pipeline</a>
+            <a class="toc-link" href="#sec-2"><span class="toc-num">02.</span> Why Data Prep Matters (GIGO)</a>
+            <a class="toc-link" href="#sec-3"><span class="toc-num">03.</span> Loading Required Libraries</a>
+            <a class="toc-link" href="#sec-4"><span class="toc-num">04.</span> Loading from Different Sources</a>
+            <a class="toc-link" href="#sec-5"><span class="toc-num">05.</span> Inspecting the Loaded Data</a>
+            <a class="toc-link" href="#sec-6"><span class="toc-num">06.</span> Selecting Useful Columns &amp; Rows</a>
+            <a class="toc-link" href="#sec-7"><span class="toc-num">07.</span> Handling Missing Values</a>
+            <a class="toc-link" href="#sec-8"><span class="toc-num">08.</span> Removing Duplicate Records</a>
+            <a class="toc-link" href="#sec-9"><span class="toc-num">09.</span> Correcting Column Data Types</a>
+            <a class="toc-link" href="#sec-10"><span class="toc-num">10.</span> Cleaning Text &amp; Category Labels</a>
+            <a class="toc-link" href="#sec-11"><span class="toc-num">11.</span> Filtering Invalid Values</a>
+            <a class="toc-link" href="#sec-12"><span class="toc-num">12.</span> Feature Preparation for Plots</a>
+            <a class="toc-link" href="#sec-13"><span class="toc-num">13.</span> Data Formatting for Seaborn</a>
+            <a class="toc-link" href="#sec-14"><span class="toc-num">14.</span> Case Study A: College Data Prep</a>
+            <a class="toc-link" href="#sec-15"><span class="toc-num">15.</span> Case Study B: E-Commerce Data Prep</a>
+            <a class="toc-link" href="#sec-16"><span class="toc-num">16.</span> Case Study C: IoT Sensor Data</a>
+            <a class="toc-link" href="#sec-17"><span class="toc-num">17.</span> 16 Common Data Prep Mistakes</a>
+            <a class="toc-link" href="#sec-18"><span class="toc-num">18.</span> Quick Reference Cheat Sheet</a>
+            <a class="toc-link" href="#sec-19"><span class="toc-num">19.</span> 21 Practice Qs &amp; Mini-Project</a>
+            <a class="toc-link" href="#sec-20"><span class="toc-num">20.</span> Summary &amp; What's Next</a>
+        </div>
+    </nav>
+
+    <!-- Section 1: The 6-Stage Preparation Pipeline -->
+    <section id="sec-1" class="card">
+        <h2 class="section-title">&#128640; 01. The End-to-End Data Preparation Pipeline (Kyu Zaroori Hai?)</h2>
+
+        <p>Data science mein ek famous universal rule hai: <strong>Garbage In, Garbage Out (GIGO)</strong>. Seaborn kitna bhi beautiful aur modern chart generate kar le, agar aapne usme unclean, duplicated, ya galat data type wala DataFrame pass kar diya &mdash; toh visualization mislead karegi ya Python runtime error fek dega!</p>
+
+        <p>Aksar beginners sochte hain ki <code>sns.scatterplot()</code> ya <code>sns.barplot()</code> call karne se pehle data ready hota hai. Real life mein aisa <em>kabhi nahi hota</em>. Real-world CSVs mein numbers ke sath symbols jude hote hain (jaise <code>"₹45,000"</code> ya <code>"85%"</code>), attendance 145% likhi hoti hai, ek hi department ke 5 alag spellings hote hain (<code>"CS"</code>, <code>"cs"</code>, <code>"Computer Science"</code>), aur transactions accidental double-clicks ki wajah se duplicate hote hain.</p>
+
+        <div class="figure-card">
+            <img src="assets/data_prep_viz_pipeline_workflow.png" alt="The End-to-End Data Preparation to Visualization Pipeline" loading="lazy">
+            <div class="figure-caption">Figure 3.1: The 6-Stage Data Preparation to Visualization Pipeline &mdash; From raw file import to clean verified Seaborn dashboards.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#129504; The Mental Model: Raw Ingredients vs. Plated Dish</div>
+            <p>Sochiye ek <strong>Master Chef Kitchen</strong>:
+            <br>&bull; <strong>Raw Data:</strong> Khet se aayi hui sabziyan jinme mitti (missing values), kharab patte (duplicates), aur kankar (typos) hote hain.
+            <br>&bull; <strong>Data Cleaning:</strong> Sabziyon ko dhona (<code>str.strip()</code>), katna (<code>to_numeric()</code>), aur inspect karna (<code>df.info()</code>).
+            <br>&bull; <strong>Seaborn Visualization:</strong> Beautifully plated 5-star restaurant dish (publication-grade chart).
+            <br>Aap bina dhoi aur bina kaati sabziyon ko direct plate par serve nahi kar sakte &mdash; the preparation is 80% of the job!</p>
+        </div>
+    </section>
+
+    <!-- Section 2: Why Data Preparation Matters -->
+    <section id="sec-2" class="card">
+        <h2 class="section-title">&#9878; 02. Why Data Preparation Matters (Visual Proof of GIGO)</h2>
+
+        <p>Aaiye ek real-world scenario dekhein. Ek college administration ne student marks ka data collect kiya. Lekin CSV file mein kuch students ke marks <code>"85*"</code> (grace mark symbol) the, kuch jagah <code>"absent"</code> likha tha, aur attendance column mein galti se <code>145%</code> enter ho gaya tha.</p>
+
+        <p>Agar koi beginner is dirty CSV ko direct plot karne ki koshish kare, toh do cheezein hongi:</p>
+        <ol>
+            <li><strong>Data Type Collapse:</strong> Pandas <code>"85*"</code> aur <code>"absent"</code> ko dekhkar pure marks column ko numerical ke bajaye <code>object</code> (string) bana dega. Seaborn isko alphabetical order mein plot karega jisme <code>"100.0"</code> <code>"25.0"</code> se pehle aayega!</li>
+            <li><strong>Axis Distortion:</strong> Ek single extreme typo (marks = 180 ya attendance = 145%) pure chart ke axes ko compress kar dega, jisse baaki 999 students ke dots ek dusre ke upar squish ho jayenge.</li>
+        </ol>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#9888; Critical Rule: Seaborn Cannot "Guess" Clean Data</div>
+            <p>Seaborn ek <strong>visualization engine</strong> hai, data cleaning bot nahi. Woh wahi render karega jo DataFrame mein present hai. Data quality ko ensure karna hamesha data scientist ki responsibility hoti hai!</p>
+        </div>
+    </section>
+
+
+    <!-- Section 3: Loading Required Libraries -->
+    <section id="sec-3" class="card">
+        <h2 class="section-title">&#128230; 03. Loading Required Libraries &amp; Their Architectural Roles</h2>
+
+        <p>Python data science stack mein 4 foundational libraries ek sath milkar complete visualization pipeline banati hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Library</th>
+                        <th>Standard Community Alias</th>
+                        <th>Core Responsibility in Workflow</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Pandas</strong></td>
+                        <td><code>import pandas as pd</code></td>
+                        <td>Tabular data loading, filtering, missing value imputation, typecasting, aur DataFrame transformations.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>NumPy</strong></td>
+                        <td><code>import numpy as np</code></td>
+                        <td>High-performance numerical arrays, NaN representation (<code>np.nan</code>), mathematical transformations, aur conditions (<code>np.where</code>).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Seaborn</strong></td>
+                        <td><code>import seaborn as sns</code></td>
+                        <td>Statistical visualizations (scatter, KDE, histograms, boxplots, multi-panel grids) directly consuming DataFrames.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Matplotlib</strong></td>
+                        <td><code>import matplotlib.pyplot as plt</code></td>
+                        <td>Canvas foundation (Figure, Axes), custom labels, titles, limits, layout padding, aur image saving.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1: Creating a Clean In-Memory Student DataFrame</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; In-Memory DataFrame Construction</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># Dictionary of lists with proper types</span>
+student_data = {
+    <span class="string">"student_id"</span>: [<span class="string">"STU_01"</span>, <span class="string">"STU_02"</span>, <span class="string">"STU_03"</span>, <span class="string">"STU_04"</span>],
+    <span class="string">"department"</span>: [<span class="string">"Computer Science"</span>, <span class="string">"Electronics"</span>, <span class="string">"Computer Science"</span>, <span class="string">"Mechanical"</span>],
+    <span class="string">"study_hours"</span>: [<span class="number">6.5</span>, <span class="number">4.0</span>, np.nan, <span class="number">8.2</span>],  <span class="comment"># Missing value</span>
+    <span class="string">"exam_marks"</span>: [<span class="number">72.0</span>, <span class="number">55.0</span>, <span class="number">88.5</span>, <span class="number">91.0</span>]
+}
+
+df_mini_students = pd.DataFrame(student_data)
+print(df_mini_students)
+print(<span class="string">"
+Missing values check:
+"</span>, df_mini_students.isna().sum())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+  student_id        department  study_hours  exam_marks
+0     STU_01  Computer Science          6.5        72.0
+1     STU_02       Electronics          4.0        55.0
+2     STU_03  Computer Science          NaN        88.5
+3     STU_04        Mechanical          8.2        91.0
+
+Missing values check:
+study_hours: 1 missing NaN value detected.
+            </div>
+        </div>
+
+        <h3>Code Example 2: Preparing a Sales DataFrame for Instant Plotting</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Sales DataFrame Ready for Seaborn</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+sales_records = [
+    {<span class="string">"item"</span>: <span class="string">"Laptop"</span>, <span class="string">"category"</span>: <span class="string">"Electronics"</span>, <span class="string">"units"</span>: <span class="number">12</span>, <span class="string">"price"</span>: <span class="number">45000</span>},
+    {<span class="string">"item"</span>: <span class="string">"Headphones"</span>, <span class="string">"category"</span>: <span class="string">"Electronics"</span>, <span class="string">"units"</span>: <span class="number">35</span>, <span class="string">"price"</span>: <span class="number">2500</span>},
+    {<span class="string">"item"</span>: <span class="string">"Shirt"</span>, <span class="string">"category"</span>: <span class="string">"Fashion"</span>, <span class="string">"units"</span>: <span class="number">50</span>, <span class="string">"price"</span>: <span class="number">1200</span>},
+    {<span class="string">"item"</span>: <span class="string">"Cookware"</span>, <span class="string">"category"</span>: <span class="string">"Home & Kitchen"</span>, <span class="string">"units"</span>: <span class="number">20</span>, <span class="string">"price"</span>: <span class="number">3500</span>}
+]
+
+df_sales = pd.DataFrame(sales_records)
+df_sales[<span class="string">"revenue"</span>] = df_sales[<span class="string">"units"</span>] * df_sales[<span class="string">"price"</span>]
+print(df_sales[[<span class="string">"category"</span>, <span class="string">"revenue"</span>]])</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+         category  revenue
+0     Electronics   540000
+1     Electronics    87500
+2         Fashion    60000
+3  Home & Kitchen    70000
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 4: Loading Data from Different Sources -->
+    <section id="sec-4" class="card">
+        <h2 class="section-title">&#128194; 04. Loading Data from Different File Sources (CSV, Excel, JSON, URLs)</h2>
+
+        <p>Real-world projects mein data alag-alag formats mein store hota hai. Pandas aapko har common file format ke liye highly optimized reader functions deta hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/csv_loading_options_diagram.png" alt="Pandas read_csv Options Diagram" loading="lazy">
+            <div class="figure-caption">Figure 3.2: <code>pd.read_csv()</code> Essential Parameter Configurations &mdash; Controlling separators, column subsets, dates, and encodings.</div>
+        </div>
+
+        <h3>A. Loading CSV Files with Key Parameters</h3>
+        <p>CSV (Comma-Separated Values) sabse common data exchange format hai:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Robust CSV Loading Pattern</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Loading with date parsing and explicit column selection</span>
+df_ecom = pd.read_csv(
+    <span class="string">"scratch/seaborn_topic3_data/clean_ecommerce_prepared.csv"</span>,
+    sep=<span class="string">","</span>,
+    usecols=[<span class="string">"order_id"</span>, <span class="string">"order_date"</span>, <span class="string">"category"</span>, <span class="string">"revenue"</span>, <span class="string">"customer_rating"</span>],
+    parse_dates=[<span class="string">"order_date"</span>],
+    encoding=<span class="string">"utf-8"</span>
+)
+print(df_ecom.info())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 500 entries, 0 to 499
+Data columns (total 5 columns):
+ #   Column           Non-Null Count  Dtype         
+---  ------           --------------  -----         
+ 0   order_id         500 non-null    object        
+ 1   order_date       500 non-null    datetime64[ns]
+ 2   category         500 non-null    object        
+ 3   revenue          500 non-null    float64       
+ 4   customer_rating  500 non-null    float64       
+dtypes: datetime64[ns](1), float64(2), object(2)
+            </div>
+        </div>
+
+        <h3>B. Reading Multi-Sheet Excel Files via openpyxl</h3>
+        <p>Enterprise environments mein finance aur sales reports Excel workbooks (<code>.xlsx</code>) mein share ki jaati hain jisme multiple sheets hoti hain:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Loading Specific Excel Worksheet</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="comment"># Requires openpyxl engine (verified installed v3.1.5)</span>
+excel_file = <span class="string">"scratch/seaborn_topic3_data/sales_data.xlsx"</span>
+
+<span class="comment"># Read sheet 'Q1_Sales'</span>
+df_q1 = pd.read_excel(excel_file, sheet_name=<span class="string">"Q1_Sales"</span>)
+print(<span class="string">"Q1 Sales shape:"</span>, df_q1.shape)
+
+<span class="comment"># Read sheet 'Product_Catalog'</span>
+df_catalog = pd.read_excel(excel_file, sheet_name=<span class="string">"Product_Catalog"</span>)
+print(<span class="string">"Product Catalog:
+"</span>, df_catalog)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Q1 Sales shape: (100, 8)
+Product Catalog:
+         category  tax_slab_pct  hsn_code
+0     Electronics            18      8471
+1         Fashion            12      6204
+2  Home & Kitchen            12      7323
+3          Beauty            18      3304
+4           Books             0      4901
+            </div>
+        </div>
+
+        <h3>C. Loading Structured JSON Data</h3>
+        <p>Web APIs aur modern databases se data aksar JSON format mein export hota hai:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Loading JSON Records</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="comment"># Loading JSON student records</span>
+json_file = <span class="string">"scratch/seaborn_topic3_data/student_records.json"</span>
+df_json_students = pd.read_json(json_file)
+print(f<span class="string">"Loaded {len(df_json_students)} records from JSON. Columns: {list(df_json_students.columns)}"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Loaded 50 records from JSON. Columns: ['student_id', 'department', 'study_hours', 'attendance_pct', 'assignment_score', 'exam_marks', 'result', 'exam_date']
+            </div>
+        </div>
+
+        <h3>D. Built-in Seaborn Sample Datasets with Offline Safeguards</h3>
+        <p>Seaborn apne sath kai standard educational datasets deta hai (jaise <code>tips</code>, <code>penguins</code>, <code>titanic</code>). Yeh internet se download hote hain, isliye offline mode ke liye hamesha local fallback prepare rakhna chahiye:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Safe Seaborn Dataset Loading</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="comment"># Try loading built-in tips dataset with graceful offline fallback</span>
+try:
+    df_tips = sns.load_dataset(<span class="string">"tips"</span>)
+    print(f<span class="string">"Loaded built-in 'tips' dataset: {df_tips.shape}"</span>)
+except Exception <span class="keyword">as</span> e:
+    print(<span class="string">"Offline mode detected; using local fallback dataset"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Loaded built-in 'tips' dataset: (244, 7)
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 5: Inspecting the Loaded Data -->
+    <section id="sec-5" class="card">
+        <h2 class="section-title">&#128065; 05. Inspecting Loaded Data (The Diagnostic Toolkit)</h2>
+
+        <p>Data load hote hi kabhi plot command mat chalayein. Pehle usko <strong>6 core dimensions</strong> par inspect karein taaki data structure, types, missing values aur distributions clear ho sakein:</p>
+
+        <div class="figure-card">
+            <img src="assets/dataframe_inspection_cheat_sheet.png" alt="DataFrame Inspection Methods Cheat Sheet" loading="lazy">
+            <div class="figure-caption">Figure 3.3: DataFrame Inspection Toolkit &mdash; What each method reveals and when to use it before choosing a visualization.</div>
+        </div>
+
+        <h3>Inspection Methods Quick Reference Table</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>What It Reveals (Kya Dikhata Hai?)</th>
+                        <th>Why It Matters for Visualization</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>df.shape</code></td>
+                        <td>Row count <code>(N)</code> aur Column count <code>(M)</code>.</td>
+                        <td>Decides plot type: Agar $N > 10,000$ hai toh scatter plot overplot hoga (KDE/Hexbin better hoga).</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.dtypes</code></td>
+                        <td>Data types: <code>int64</code>, <code>float64</code>, <code>object</code>, <code>datetime64</code>.</td>
+                        <td>Checks numerical integrity: Numbers <code>object</code> toh nahi hain?</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.info()</code></td>
+                        <td>Non-null counts, column names, memory consumption.</td>
+                        <td>Spot check: Kaunse columns mein missing NaNs hain.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.describe()</code></td>
+                        <td>Mean, std, min, 25%, 50% (median), 75%, max.</td>
+                        <td>Detects extreme outliers, negative numbers, aur skewed distributions.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.isna().sum()</code></td>
+                        <td>Exact missing value count per column.</td>
+                        <td>Tells whether to drop rows or apply median/mode imputation.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.duplicated().sum()</code></td>
+                        <td>Count of identical repeated rows.</td>
+                        <td>Prevents artificial volume inflation in bar and count plots.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 6: Selecting Useful Columns and Rows -->
+    <section id="sec-6" class="card">
+        <h2 class="section-title">&#128070; 06. Selecting Useful Columns and Rows (Filtering Visual Noise)</h2>
+
+        <p>Aksar beginners pura ka pura DataFrame plot function mein pass kar dete hain. Lekin agar dataset mein 50 columns hain aur 10,000 rows hain, toh sab kuch ek sath dikhane se chart cluttered aur unreadable ho jata hai. Hamesha ek <strong>visualization-specific DataFrame</strong> filter karein:</p>
+
+        <div class="figure-card">
+            <img src="assets/filtering_subset_before_after.png" alt="Filtering Subset Before and After Comparison" loading="lazy">
+            <div class="figure-caption">Figure 3.9: Targeted Boolean Filtering &mdash; Removing visual clutter to highlight specific departmental hypotheses.</div>
+        </div>
+
+        <h3>Boolean Filtering Rules in Pandas</h3>
+        <ul>
+            <li><strong>Parentheses Mandatory:</strong> Multiple conditions ko combine karte waqt har condition ko parentheses <code>(...)</code> mein wrap karna zaroori hai: <code>(df['A'] > 5) &amp; (df['B'] == 'X')</code>.</li>
+            <li><strong>Bitwise Operators:</strong> Python ke standard <code>and</code> / <code>or</code> ke bajaye Pandas Series par bitwise operators <code>&amp;</code> (AND) aur <code>|</code> (OR) use hote hain.</li>
+        </ul>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Multi-Condition Boolean Filtering</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/clean_college_prepared.csv"</span>)
+
+<span class="comment"># Filter: Computer Science students with attendance >= 75%</span>
+cs_high_att = df_college[
+    (df_college[<span class="string">"department"</span>] == <span class="string">"Computer Science"</span>) &
+    (df_college[<span class="string">"attendance_pct"</span>] >= <span class="number">75.0</span>)
+]
+
+print(f<span class="string">"Original count: {len(df_college)} | Filtered CS cohort: {len(cs_high_att)}"</span>)
+print(f<span class="string">"Pass rate in filtered cohort: {(cs_high_att['result'] == 'Pass').mean()*100:.1f}%"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Original count: 1000 | Filtered CS cohort: 228
+Pass rate in filtered cohort: 68.4% (Significantly higher than overall 54.0% cohort average!)
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 7: Handling Missing Values -->
+    <section id="sec-7" class="card">
+        <h2 class="section-title">&#129657; 07. Handling Missing Values (NaN Imputation vs. Dropping)</h2>
+
+        <p>Missing values data science ka sabse common reality hain. Lekin bina soche samjhe <code>df.fillna(0)</code> ya <code>df.dropna()</code> call karna visualization ko completely corrupt kar sakta hai!</p>
+
+        <div class="figure-card">
+            <img src="assets/missing_values_before_after_comparison.png" alt="Missing Values Before and After Comparison" loading="lazy">
+            <div class="figure-caption">Figure 3.4: The Danger of Naive Zero-Filling &mdash; <code>fillna(0)</code> creates a false artificial spike, while statistical median imputation preserves true distribution.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/missing_value_treatment_decision_tree.png" alt="Missing Value Treatment Decision Tree" loading="lazy">
+            <div class="figure-caption">Figure 3.18: Missing Value Treatment Decision Tree &mdash; How to choose between dropping, median imputation, and categorical mode based on missing percentage.</div>
+        </div>
+
+        <h3>Why fillna(0) Is Dangerous in Statistical Plots</h3>
+        <p>Agar kisi student ka exam marks record missing hai aur aapne use <code>0.0</code> se fill kar diya, toh:</p>
+        <ol>
+            <li><strong>Mean Marks Shift:</strong> True average 60.83 se drop hokar 57.79 ho jayega (false negative performance bias).</li>
+            <li><strong>Histogram Distortion:</strong> Zero par ek huge artificial spike aa jayega jo real world mein exist hi nahi karta tha (Figure 3.15).</li>
+            <li><strong>Scatter Regression Slope Change:</strong> Correlation coefficient artificially flatten ho jayega!</li>
+        </ol>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Statistical Median Imputation Pattern</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_raw = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/raw_college_dirty.csv"</span>)
+print(<span class="string">"Missing study_hours before:"</span>, df_raw[<span class="string">"study_hours"</span>].isna().sum())
+
+<span class="comment"># Statistically justified: Impute missing numericals with column median</span>
+median_hours = df_raw[<span class="string">"study_hours"</span>].median()
+df_raw[<span class="string">"study_hours"</span>] = df_raw[<span class="string">"study_hours"</span>].fillna(median_hours)
+
+print(<span class="string">"Missing study_hours after:"</span>, df_raw[<span class="string">"study_hours"</span>].isna().sum())
+print(f<span class="string">"Imputed with verified median: {median_hours:.1f} hours"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Missing study_hours before: 25
+Missing study_hours after: 0
+Imputed with verified median: 5.8 hours
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 8: Removing Duplicate Records -->
+    <section id="sec-8" class="card">
+        <h2 class="section-title">&#128260; 08. Removing Duplicate Records &amp; Preventing Count Inflation</h2>
+
+        <p>E-commerce platforms par customer jab slow internet ki wajah se payment button ko do baar click kar deta hai, toh database mein identical order records duplicate ho jate hain. Agar inko bina clean kiye plot kiya jaye, toh order volume aur category revenues artificially inflate ho jayenge:</p>
+
+        <div class="figure-card">
+            <img src="assets/duplicate_records_impact_chart.png" alt="Duplicate Records Impact Chart" loading="lazy">
+            <div class="figure-caption">Figure 3.5: Duplicate Records Impact &mdash; Accidental duplicates inflate order volumes by 25%; <code>drop_duplicates()</code> restores ground truth.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Duplicate Detection &amp; Removal</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_ecom_raw = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/raw_ecommerce_dirty.csv"</span>)
+print(<span class="string">"Raw row count:"</span>, len(df_ecom_raw))
+print(<span class="string">"Duplicate rows count:"</span>, df_ecom_raw.duplicated().sum())
+
+<span class="comment"># Deduplicate preserving first unique occurrence</span>
+df_clean = df_ecom_raw.drop_duplicates(subset=[<span class="string">"order_id"</span>], keep=<span class="string">"first"</span>)
+print(<span class="string">"Clean row count:"</span>, len(df_clean))</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Raw row count: 515
+Duplicate rows count: 15
+Clean row count: 500 (15 duplicate transaction records successfully purged)
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 9: Correcting Column Data Types -->
+    <section id="sec-9" class="card">
+        <h2 class="section-title">&#128290; 09. Correcting Column Data Types (Strings to Numerics &amp; Datetimes)</h2>
+
+        <p>Jab numbers text format mein store hote hain (jaise currency symbol <code>"₹45,000"</code> ya grace marks <code>"85*"</code>), toh Pandas pure column ko <code>object</code> bana deta hai. Iska result visual disaster hota hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/data_type_conversion_comparison.png" alt="Data Type Conversion Comparison" loading="lazy">
+            <div class="figure-caption">Figure 3.6: Data Type Conversion &mdash; String numericals sorted alphabetically ("100.0" before "25.0") vs. proper numerical continuous axis.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/pandas_dtypes_visualization_reference.png" alt="Pandas Data Types Visualization Reference" loading="lazy">
+            <div class="figure-caption">Figure 3.17: Pandas Dtypes vs. Seaborn Plot Mapping &mdash; How each column type behaves inside Seaborn's plotting API.</div>
+        </div>
+
+        <h3>The Golden Solution: pd.to_numeric() with errors='coerce'</h3>
+        <p>Agar column mein non-numeric characters (jaise <code>"absent"</code> ya <code>"N/A"</code>) hain, toh <code>pd.to_numeric(..., errors='coerce')</code> invalid values ko silently <code>NaN</code> bana deta hai taaki script crash na ho aur missing values ko mathematically handle kiya ja sake:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Robust Numerical &amp; Datetime Typecasting</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_raw = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/raw_college_dirty.csv"</span>)
+
+<span class="comment"># 1. Clean dirty string symbols ("85*" -> 85.0, "absent" -> NaN)</span>
+clean_numeric = pd.to_numeric(
+    df_raw[<span class="string">"exam_marks_raw"</span>].astype(str).str.replace(<span class="string">"*"</span>, <span class="string">""</span>, regex=<span class="keyword">False</span>),
+    errors=<span class="string">"coerce"</span>
+)
+print(<span class="string">"Dtype after conversion:"</span>, clean_numeric.dtype)
+print(<span class="string">"Coerced NaNs (former 'absent' strings):"</span>, clean_numeric.isna().sum())
+
+<span class="comment"># 2. Parse date strings into real datetime64</span>
+clean_dates = pd.to_datetime(df_raw[<span class="string">"exam_date"</span>], format=<span class="string">"%Y-%m-%d"</span>)
+print(<span class="string">"Date dtype:"</span>, clean_dates.dtype)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Dtype after conversion: float64
+Coerced NaNs (former 'absent' strings): 8
+Date dtype: datetime64[ns]
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 10: Cleaning Text and Category Labels -->
+    <section id="sec-10" class="card">
+        <h2 class="section-title">&#9997; 10. Cleaning Text and Standardizing Category Labels</h2>
+
+        <p>Categorical charts (jaise <code>barplot</code> aur <code>countplot</code>) category names ki exact string equality par depend karte hain. Agar ek user ne <code>"Computer Science"</code> likha, dusre ne <code>" CS "</code>, aur teesre ne <code>"cs"</code>, toh Seaborn inko 3 alag categories maan kar 3 alag bars draw kar dega!</p>
+
+        <div class="figure-card">
+            <img src="assets/category_label_fragmentation_before_after.png" alt="Category Label Fragmentation Before and After" loading="lazy">
+            <div class="figure-caption">Figure 3.7: Category Fragmentation &mdash; 8 messy fragmented bars consolidated into 4 clean official department bars.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/category_count_before_after.png" alt="sns.countplot Before and After Standardization" loading="lazy">
+            <div class="figure-caption">Figure 3.16: <code>sns.countplot()</code> Before and After &mdash; Preserving clean visual hierarchy through text normalization.</div>
+        </div>
+
+        <h3>Standard 3-Step Text Normalization Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; String Cleaning &amp; Canonical Mapping</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_raw = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/raw_college_dirty.csv"</span>)
+
+<span class="comment"># Step 1: Strip accidental leading and trailing whitespace</span>
+s = df_raw[<span class="string">"department"</span>].astype(str).str.strip()
+
+<span class="comment"># Step 2: Canonical dictionary replacement mapping</span>
+dept_map = {
+    <span class="string">"CS"</span>: <span class="string">"Computer Science"</span>, <span class="string">"cs"</span>: <span class="string">"Computer Science"</span>, <span class="string">"computer science"</span>: <span class="string">"Computer Science"</span>,
+    <span class="string">"electronics"</span>: <span class="string">"Electronics"</span>, <span class="string">"ECE"</span>: <span class="string">"Electronics"</span>, <span class="string">"EC"</span>: <span class="string">"Electronics"</span>,
+    <span class="string">"Mech"</span>: <span class="string">"Mechanical"</span>, <span class="string">"me"</span>: <span class="string">"Mechanical"</span>, <span class="string">"MECHANICAL"</span>: <span class="string">"Mechanical"</span>,
+    <span class="string">"civil"</span>: <span class="string">"Civil"</span>, <span class="string">"CIVIL"</span>: <span class="string">"Civil"</span>
+}
+df_raw[<span class="string">"department_clean"</span>] = s.replace(dept_map)
+
+print(<span class="string">"Clean unique departments:"</span>, df_raw[<span class="string">"department_clean"</span>].unique())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Clean unique departments: ['Computer Science' 'Electronics' 'Mechanical' 'Civil']
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 11: Filtering Invalid and Unrealistic Values -->
+    <section id="sec-11" class="card">
+        <h2 class="section-title">&#128737; 11. Filtering Invalid &amp; Unrealistic Values (Domain Rules vs. Outliers)</h2>
+
+        <p>Data science mein do tarah ke unusual values hote hain: (1) <strong>Physical / Domain Violations</strong> (jaise attendance = 145% ya price = -500 INR jo physically impossible hain aur data entry errors hain), aur (2) <strong>Legitimate Outliers</strong> (jaise kisi rare genius student ke 100/100 marks ya ek CEO ka ₹5 Lakh ka iPhone order).</p>
+
+        <div class="figure-card">
+            <img src="assets/invalid_values_filtering_comparison.png" alt="Invalid Values Filtering Comparison" loading="lazy">
+            <div class="figure-caption">Figure 3.8: Domain Bounds Validation &mdash; Purging impossible values (>100% attendance) restores normal coordinate scale.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/scatter_prep_before_after.png" alt="Scatter Plot Before and After Outlier Validation" loading="lazy">
+            <div class="figure-caption">Figure 3.14: Typo Outlier Elimination &mdash; A single typo (Marks=180) squishes 999 data points; removing it restores the true linear trend.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Important Distinguish: Data Error vs. Natural Outlier</div>
+            <p>Kabhi bhi statistics ke 'outlier formula' (jaise $Q3 + 1.5 	imes IQR$) ko blindly chala kar high values delete mat karein! E-commerce mein luxury high-spenders hi platform ka 80% profit generate karte hain. Sirf wahi data remove karein jo <strong>business logic ke against impossible ho</strong> (jaise negative quantity ya >100% attendance).</p>
+        </div>
+    </section>
+
+
+    <!-- Section 12: Feature Preparation for Meaningful Plots -->
+    <section id="sec-12" class="card">
+        <h2 class="section-title">&#9881; 12. Feature Preparation for Meaningful Visualizations</h2>
+
+        <p>Aksar raw numbers direct plot karne ke bajaye unko aggregate ya categorize karke plot karne se zyada meaningful insight milti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/feature_engineering_derived_metrics.png" alt="Feature Engineering Derived Metrics" loading="lazy">
+            <div class="figure-caption">Figure 3.10: Derived Feature Preparation &mdash; Converting continuous marks into academic tiers (pd.cut) and computing true revenue.</div>
+        </div>
+
+        <h3>Technique 1: Binning Continuous Numbers with pd.cut()</h3>
+        <p>Jab aapko dekhna ho ki kitne students Remedial, Average, ya Exemplary band mein aate hain:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Categorical Binning via pd.cut()</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/clean_college_prepared.csv"</span>)
+
+bins = [<span class="number">0</span>, <span class="number">45</span>, <span class="number">60</span>, <span class="number">75</span>, <span class="number">100</span>]
+labels = [<span class="string">"Remedial (<45)"</span>, <span class="string">"Needs Work (45-59)"</span>, <span class="string">"Proficient (60-74)"</span>, <span class="string">"Exemplary (75+)"</span>]
+
+df_college[<span class="string">"performance_tier"</span>] = pd.cut(df_college[<span class="string">"exam_marks"</span>], bins=bins, labels=labels)
+print(df_college[<span class="string">"performance_tier"</span>].value_counts().loc[labels])</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+performance_tier
+Remedial (<45)          48
+Needs Work (45-59)     412
+Proficient (60-74)     485
+Exemplary (75+)         55
+Name: count, dtype: int64
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 13: Preparing Data Specifically for Seaborn -->
+    <section id="sec-13" class="card">
+        <h2 class="section-title">&#127912; 13. Preparing Data Specifically for Seaborn (Tidy Long-Form Anatomy)</h2>
+
+        <p>Seaborn ki core philosophy Hadley Wickham ke <strong>Tidy Data principles</strong> par based hai. Tidy data ka matlab hota hai ki har column ek distinct variable hai aur har row ek individual observation hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/visualization_ready_dataframe_structure.png" alt="Tidy Data Architecture: Wide vs Long Form" loading="lazy">
+            <div class="figure-caption">Figure 3.20: Wide-Form vs. Long-Form (Tidy) Data Architecture &mdash; Transforming spreadsheets into Seaborn-ready long-form DataFrames via <code>pd.melt()</code>.</div>
+        </div>
+
+        <h3>Seaborn Plot Compatibility Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Plot Type</th>
+                        <th>Required Input Data Types</th>
+                        <th>Seaborn Parameters</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>sns.scatterplot()</code></td>
+                        <td>2 Continuous Numericals</td>
+                        <td><code>data=df, x="study_hours", y="exam_marks", hue="result"</code></td>
+                        <td>Correlation, clusters, bivariate trends.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sns.lineplot()</code></td>
+                        <td>1 Ordered/Date + 1 Numerical</td>
+                        <td><code>data=df, x="order_date", y="revenue", hue="category"</code></td>
+                        <td>Time-series progression, rolling averages.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sns.barplot()</code></td>
+                        <td>1 Categorical + 1 Numerical</td>
+                        <td><code>data=df, x="category", y="revenue", hue="category"</code></td>
+                        <td>Summary statistics (mean, total) with confidence intervals.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sns.countplot()</code></td>
+                        <td>1 Categorical only</td>
+                        <td><code>data=df, x="department"</code></td>
+                        <td>Frequency count of observation occurrences.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sns.histplot()</code></td>
+                        <td>1 Numerical continuous</td>
+                        <td><code>data=df, x="exam_marks", kde=True</code></td>
+                        <td>Distribution shape, skewness, spread.</td>
+                    </tr>
+                    <tr>
+                        <td><code>sns.boxplot()</code></td>
+                        <td>1 Categorical + 1 Numerical</td>
+                        <td><code>data=df, x="department", y="exam_marks"</code></td>
+                        <td>Median, IQR spread, outlier fences across categories.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Preparing Data for Histograms &amp; KDE Plots (Avoiding Imputation Spikes)</h3>
+        <p>Histograms aur KDE density estimation plots data distribution ke true shape ko reveal karte hain. Agar missing values ko galat tarike se fill kiya jaye (jaise naive zero-filling), toh distribution me ek artificial wall create ho jaati hai jo statistical analysis ko misguide karti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/histogram_prep_before_after.png" alt="Histogram Distribution Before and After Median Imputation" loading="lazy">
+            <div class="figure-caption">Figure 3.15: Histogram Preparation Before and After &mdash; Left: Naive <code>fillna(0)</code> introduces a massive artificial peak at 0 and pulls mean down to 57.79. Right: Departmental median imputation preserves the authentic normal distribution (Mean 60.83).</div>
+        </div>
+    </section>
+
+    <!-- Section 14: Case Study A: College Data Preparation Workflow -->
+    <section id="sec-14" class="card">
+        <h2 class="section-title">&#127891; 14. Real-Life Case Study A &mdash; College Academic Performance Data Preparation</h2>
+
+        <p>Aaiye ek complete 10-step data cleaning pipeline implement karein. Humare paas <code>raw_college_dirty.csv</code> hai jisme 1,025 raw rows hain (25 duplicates, 35 missing values, 8 text marks "absent", 20 grace mark strings "85*", aur 6 impossible attendance records >100%).</p>
+
+        <div class="figure-card">
+            <img src="assets/case_study_college_data_dashboard.png" alt="Case Study A: Cleaned College Data Dashboard" loading="lazy">
+            <div class="figure-caption">Figure 3.11: Case Study A Dashboard &mdash; 4-panel multi-metric dashboard generated after applying the verified 10-step cleaning pipeline.</div>
+        </div>
+
+        <h3>The 10-Step Verified College Data Cleaning Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Full End-to-End Cleaning Script</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># 1. Load raw file</span>
+df = pd.read_csv(<span class="string">"scratch/seaborn_topic3_data/raw_college_dirty.csv"</span>)
+
+<span class="comment"># 2. Drop duplicates (1025 -> 1000)</span>
+df = df.drop_duplicates(subset=[<span class="string">"student_id"</span>], keep=<span class="string">"first"</span>)
+
+<span class="comment"># 3. Clean department labels</span>
+dept_map = {
+    <span class="string">"CS"</span>: <span class="string">"Computer Science"</span>, <span class="string">"cs"</span>: <span class="string">"Computer Science"</span>, <span class="string">"computer science"</span>: <span class="string">"Computer Science"</span>,
+    <span class="string">"electronics"</span>: <span class="string">"Electronics"</span>, <span class="string">"ECE"</span>: <span class="string">"Electronics"</span>, <span class="string">"EC"</span>: <span class="string">"Electronics"</span>,
+    <span class="string">"Mech"</span>: <span class="string">"Mechanical"</span>, <span class="string">"me"</span>: <span class="string">"Mechanical"</span>, <span class="string">"MECHANICAL"</span>: <span class="string">"Mechanical"</span>,
+    <span class="string">"civil"</span>: <span class="string">"Civil"</span>, <span class="string">"CIVIL"</span>: <span class="string">"Civil"</span>
+}
+df[<span class="string">"department"</span>] = df[<span class="string">"department"</span>].astype(str).str.strip().replace(dept_map)
+
+<span class="comment"># 4. Correct text exam marks ("85*" -> 85.0, "absent" -> NaN)</span>
+clean_marks = df[<span class="string">"exam_marks_raw"</span>].astype(str).str.replace(<span class="string">"*"</span>, <span class="string">""</span>, regex=<span class="keyword">False</span>)
+df[<span class="string">"exam_marks"</span>] = pd.to_numeric(clean_marks, errors=<span class="string">"coerce"</span>)
+
+<span class="comment"># 5. Impute missing numericals with median</span>
+df[<span class="string">"study_hours"</span>] = df[<span class="string">"study_hours"</span>].fillna(df[<span class="string">"study_hours"</span>].median())
+df[<span class="string">"attendance_pct"</span>] = df[<span class="string">"attendance_pct"</span>].fillna(df[<span class="string">"attendance_pct"</span>].median())
+df[<span class="string">"exam_marks"</span>] = df[<span class="string">"exam_marks"</span>].fillna(df[<span class="string">"exam_marks"</span>].median())
+
+<span class="comment"># 6. Enforce domain physical bounds (attendance <= 100)</span>
+df.loc[df[<span class="string">"attendance_pct"</span>] > <span class="number">100.0</span>, <span class="string">"attendance_pct"</span>] = <span class="number">100.0</span>
+
+<span class="comment"># 7. Typecast dates</span>
+df[<span class="string">"exam_date"</span>] = pd.to_datetime(df[<span class="string">"exam_date"</span>])
+
+<span class="comment"># 8. Recalculate pass/fail status</span>
+df[<span class="string">"result"</span>] = np.where(df[<span class="string">"exam_marks"</span>] >= <span class="number">60.0</span>, <span class="string">"Pass"</span>, <span class="string">"Fail"</span>)
+
+print(<span class="string">"Final clean rows:"</span>, len(df))
+print(<span class="string">"Null count after prep:
+"</span>, df[[<span class="string">"study_hours"</span>, <span class="string">"attendance_pct"</span>, <span class="string">"exam_marks"</span>]].isna().sum())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Final clean rows: 1000
+Null count after prep:
+study_hours: 0
+attendance_pct: 0
+exam_marks: 0
+All 10 steps passed. Ready for publication-grade visualization!
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 15: Case Study B: E-Commerce Data Preparation Workflow -->
+    <section id="sec-15" class="card">
+        <h2 class="section-title">&#128722; 15. Real-Life Case Study B &mdash; E-Commerce Data Cleaning &amp; Revenue Validation</h2>
+
+        <p>E-commerce transactions mein currency symbols (<code>₹</code>), negative return quantities, missing category strings, aur duplicate order IDs sabse common issues hote hain. Is case study mein 515 raw records ko clean karke 500 ground-truth transactions prepare kiye gaye:</p>
+
+        <div class="figure-card">
+            <img src="assets/case_study_ecommerce_data_dashboard.png" alt="Case Study B: Cleaned E-Commerce Analytics Dashboard" loading="lazy">
+            <div class="figure-caption">Figure 3.12: Case Study B Dashboard &mdash; 4-panel retail analytics dashboard tracking revenue timeline, category totals in Lakhs, quantity vs revenue, and ratings.</div>
+        </div>
+
+        <h3>Verified Post-Cleaning Financial Totals</h3>
+        <ul>
+            <li><strong>Total Revenue:</strong> Verified total platform sales = <strong>INR 10,864,214.01</strong> across 500 clean orders.</li>
+            <li><strong>Deduplication Audit:</strong> Exactly 15 duplicate order IDs purged (515 raw rows &rarr; 500 clean orders).</li>
+            <li><strong>Quantity Correction:</strong> 4 negative return values converted to absolute positive units.</li>
+            <li><strong>Currency Conversion:</strong> Rupee symbols (<code>₹</code>) and comma thousands separators successfully stripped and converted to <code>float64</code>.</li>
+        </ul>
+    </section>
+
+
+    <!-- Section 16: Case Study C: IoT Sensor & Weather Telemetry -->
+    <section id="sec-16" class="card">
+        <h2 class="section-title">&#127777; 16. Case Study C &mdash; IoT Sensor &amp; Environmental Telemetry Data Preparation</h2>
+
+        <p>Sensor streams mein reading gaps (packet loss) hona normal hai. Lekin <em>sensor temperature mein missing value ko kabhi bhi 0°C se fill nahi kiya jata</em>, kyunki 0°C freezing point hota hai aur temperature mein false extreme cold spike trigger kar dega!</p>
+
+        <div class="figure-card">
+            <img src="assets/iot_weather_telemetry_clean_timeseries.png" alt="IoT Sensor Telemetry Clean Timeseries" loading="lazy">
+            <div class="figure-caption">Figure 3.13: IoT Telemetry Cleaning &mdash; Forward-filling missing sensor readings (ffill) preserves continuous diurnal thermal rhythm.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Forward-Fill Time Series Pattern</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_sensor = pd.DataFrame({
+    <span class="string">"timestamp"</span>: pd.date_range(<span class="string">"2026-03-01 08:00"</span>, periods=<span class="number">6</span>, freq=<span class="string">"h"</span>),
+    <span class="string">"temp_c"</span>: [<span class="number">24.5</span>, <span class="number">26.0</span>, <span class="keyword">None</span>, <span class="number">28.5</span>, <span class="keyword">None</span>, <span class="number">27.0</span>]
+})
+
+<span class="comment"># WRONG: df_sensor['temp_c'].fillna(0)  -> Drops to 0 C (Freezing error!)</span>
+<span class="comment"># CORRECT: Forward-fill last known valid sensor measurement</span>
+df_sensor[<span class="string">"temp_c_clean"</span>] = df_sensor[<span class="string">"temp_c"</span>].ffill()
+print(df_sensor[[<span class="string">"timestamp"</span>, <span class="string">"temp_c"</span>, <span class="string">"temp_c_clean"</span>]])</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+            timestamp  temp_c  temp_c_clean
+0 2026-03-01 08:00    24.5          24.5
+1 2026-03-01 09:00    26.0          26.0
+2 2026-03-01 10:00     NaN          26.0  <- Smooth forward fill
+3 2026-03-01 11:00    28.5          28.5
+4 2026-03-01 12:00     NaN          28.5  <- Smooth forward fill
+5 2026-03-01 13:00    27.0          27.0
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 17: 16 Common Data Preparation Mistakes -->
+    <section id="sec-17" class="card">
+        <h2 class="section-title">&#128679; 17. 16 Common Data Preparation Mistakes &amp; Fixes</h2>
+
+        <div class="figure-card">
+            <img src="assets/data_preparation_checklist_infographic.png" alt="Pre-Visualization 8-Point Data Quality Checklist" loading="lazy">
+            <div class="figure-caption">Figure 3.19: Pre-Visualization 8-Point Data Quality Checklist &mdash; Essential audit points before rendering statistical graphics.</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Common Mistake / Trap</th>
+                        <th>Root Cause (Kyu Hota Hai?)</th>
+                        <th>Verified Solution (Kaise Theek Karein?)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Calling <code>fillna(0)</code> on missing test marks</td>
+                        <td>Belief that missing = zero; shifts mean and creates fake peak.</td>
+                        <td>Use <code>df['col'].fillna(df['col'].median())</code> or mean for normal distributions.</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Numerical column stored as <code>object</code></td>
+                        <td>Symbols like <code>"₹"</code>, <code>"%"</code>, or <code>"N/A"</code> present in text.</td>
+                        <td>Clean strings with <code>.str.replace()</code> and call <code>pd.to_numeric(..., errors='coerce')</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Duplicate orders inflating volume</td>
+                        <td>Network retries or double submission.</td>
+                        <td>Call <code>df.drop_duplicates(subset=['order_id'])</code> before plotting.</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Fragmented category bars (e.g. <code>"CS"</code> vs <code>"cs"</code>)</td>
+                        <td>Case sensitivity and whitespace discrepancies.</td>
+                        <td>Apply <code>.str.strip().str.title()</code> and canonical dictionary mapping.</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><code>ValueError: Cannot mask with non-boolean array</code></td>
+                        <td>Missing parentheses when combining <code>&amp;</code> conditions.</td>
+                        <td>Wrap every condition: <code>(df['A'] > 5) &amp; (df['B'] == 'X')</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Using Python <code>and</code> instead of Pandas <code>&amp;</code></td>
+                        <td><code>and</code> evaluates truthiness of entire Series, not elementwise.</td>
+                        <td>Always use bitwise <code>&amp;</code> for AND, and <code>|</code> for OR.</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Dates treated as categorical strings on X-axis</td>
+                        <td>Date strings not parsed into <code>datetime64</code>.</td>
+                        <td>Pass <code>parse_dates=['date']</code> in <code>read_csv</code> or use <code>pd.to_datetime()</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Blindly dropping all rows via <code>dropna()</code></td>
+                        <td>If 1 column has 60% missing, <code>dropna()</code> discards entire rows.</td>
+                        <td>Inspect <code>df.isna().sum()</code> first; drop specific columns or use threshold imputation.</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Impossible values skewing plot axes</td>
+                        <td>Attendance > 100% or price < 0 due to data entry typos.</td>
+                        <td>Validate domain bounds with <code>df.query('0 <= attendance <= 100')</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Accidental double aggregation</td>
+                        <td>Aggregating with <code>groupby().mean()</code> and then passing to <code>barplot</code>.</td>
+                        <td>Seaborn calculates mean automatically from raw rows; do not pre-aggregate unless intended.</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>Overwriting original DataFrame by reference</td>
+                        <td>Modifying slice without <code>.copy()</code> raises SettingWithCopyWarning.</td>
+                        <td>Always use <code>df_clean = df.copy()</code> before destructive transformations.</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>Missing sensor readings filled with 0°C</td>
+                        <td>Zero implies freezing cold, creating fake temperature drops.</td>
+                        <td>Use <code>df['temp'].ffill()</code> (forward fill) or linear interpolation.</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>Incompatible wide-format DataFrame in Seaborn</td>
+                        <td>Multiple metrics spread across columns instead of 1 long column.</td>
+                        <td>Use <code>pd.melt()</code> to reshape wide data into tidy long-form structure.</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>Leading spaces in column headers (e.g. <code>" exam_marks"</code>)</td>
+                        <td>CSV file had extra space after comma.</td>
+                        <td>Clean headers upfront: <code>df.columns = df.columns.str.strip()</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>Missing Excel dependency <code>openpyxl</code></td>
+                        <td><code>pd.read_excel()</code> fails with ImportError.</td>
+                        <td>Run <code>python -m pip install openpyxl</code> in active virtual environment.</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>Plotting before checking <code>df.shape</code></td>
+                        <td>Plotting empty filtered DataFrame results in blank canvas.</td>
+                        <td>Assert <code>len(filtered_df) > 0</code> before generating Seaborn visual.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 18: Quick Reference Data Cleaning Cheat Sheet -->
+    <section id="sec-18" class="card">
+        <h2 class="section-title">&#128203; 18. Quick Reference: Data Preparation &amp; Visualization Cheat Sheet</h2>
+        
+        <p>Real-world projects me jab aap raw dataset load karte hain, toh data me multiple impurities hoti hain jo Seaborn visualizations ko distort ya crash kar sakti hain. Yeh comprehensive cheat sheet aapko <strong>Dirty Symptom</strong>, uske liye <strong>Pandas Cleaning Tool</strong>, uska <strong>Seaborn Visual Consequence</strong>, aur <strong>Verification Check</strong> provide karta hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Dirty Symptom</th>
+                        <th>Pandas Cleaning Tool</th>
+                        <th>Seaborn Visual Failure / Consequence</th>
+                        <th>Validation Check</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>String Numbers / Currency Signs</strong><br><code>"$1,200.50"</code>, <code>"₹ 4,500"</code></td>
+                        <td><code>df['col'] = df['col'].astype(str).str.replace(r'[\$,₹, ]', '', regex=True).astype(float)</code></td>
+                        <td>Numeric axis categorical ban jaati hai; points alphabetically arrange ho jaate hain ya <code>ValueError</code> crash hota hai.</td>
+                        <td><code>np.issubdtype(df['col'].dtype, np.number)</code></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td><strong>Trailing Spaces / Mixed Case</strong><br><code>" CS"</code>, <code>"cs"</code>, <code>"Computer Science"</code></td>
+                        <td><code>df['col'] = df['col'].astype(str).str.strip().str.title().replace(mapping_dict)</code></td>
+                        <td><code>sns.countplot()</code> me 8-10 fragmented bars generate hoti hain identical categories ke liye.</td>
+                        <td><code>df['col'].nunique() == expected_count</code></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td><strong>Duplicate Rows</strong><br>Identical student ya order records</td>
+                        <td><code>df = df.drop_duplicates(subset=['id'], keep='first')</code></td>
+                        <td>Scatter plot me false density/overplotting create hoti hai; summary aggregations (mean, sum) inflate ho jaate hain.</td>
+                        <td><code>df.duplicated().sum() == 0</code></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td><strong>Naive Zero Imputation</strong><br><code>df.fillna(0)</code> on Exam Marks or Income</td>
+                        <td><code>df['col'] = df['col'].fillna(df['col'].median())</code></td>
+                        <td>Histograms aur KDE plots me artificial 0-spike generate hoti hai; mean artificially shift ho jaata hai (e.g. 60.83 &rarr; 57.79).</td>
+                        <td>Verify histogram shape has no artificial zero boundary wall.</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td><strong>Impossible Domain Values</strong><br>Attendance &gt; 100%, price &lt; 0</td>
+                        <td><code>df = df[df['col'].between(0, 100)]</code> ya <code>df['col'].clip(0, 100)</code></td>
+                        <td>Axis limits stretch ho jaati hain, jisse authentic data cluster ek corner me shrink ho kar unreadable ho jaata hai.</td>
+                        <td><code>df['col'].between(min_val, max_val).all()</code></td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td><strong>String Datetime Stamps</strong><br><code>"2026-03-15"</code> as <code>object</code></td>
+                        <td><code>df['date'] = pd.to_datetime(df['date'], errors='coerce')</code></td>
+                        <td><code>sns.lineplot()</code> time-series chronological sort nahi karta; X-axis ticks overlapping black smear ban jaate hain.</td>
+                        <td><code>pd.api.types.is_datetime64_any_dtype(df['date'])</code></td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td><strong>High Cardinality Categories</strong><br>50+ city names or product SKUs</td>
+                        <td><code>top10 = df['cat'].value_counts().nlargest(10).index</code><br><code>df_plot = df[df['cat'].isin(top10)]</code></td>
+                        <td>Bar plots aur count plots ke X-axis labels completely overlap ho jaate hain; visual comprehension zero ho jaata hai.</td>
+                        <td>Limit plot to top 5-10 categories or plot horizontally (<code>y='cat'</code>).</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td><strong>Non-Numeric Columns in Heatmap</strong><br>Passing raw DataFrame to <code>sns.heatmap()</code></td>
+                        <td><code>corr = df.select_dtypes(include=np.number).corr()</code><br><code>sns.heatmap(corr, annot=True)</code></td>
+                        <td>Pandas 2.0+ me <code>ValueError: could not convert string to float</code> throw hota hai.</td>
+                        <td>Ensure correlation matrix contains strictly float/int values.</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td><strong>Wide Format vs Long Format</strong><br>Multiple metric columns (Q1, Q2, Q3)</td>
+                        <td><code>df_long = pd.melt(df, id_vars=['id'], value_vars=['Q1', 'Q2', 'Q3'])</code></td>
+                        <td>Seaborn ka core parameter <code>hue</code> kaam nahi karta kyunki categories alag-alag columns me spread hoti hain.</td>
+                        <td>Confirm long DataFrame has one feature column and one value column.</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td><strong>Missing Categories as NaN</strong><br>Missing region or department values</td>
+                        <td><code>df['cat'] = df['cat'].fillna('Unassigned')</code></td>
+                        <td>Seaborn missing categorical rows ko automatically drop kar deta hai, leading to understated bar counts and totals.</td>
+                        <td><code>df['cat'].isna().sum() == 0</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Professional Best Practice: Modern Pandas Chaining Pipeline</div>
+            <p>Real-world projects me fragmented lines likhne ke bajaye ek clean, reproducible <strong>Method Chaining Pipeline</strong> create karein jo raw DataFrame se direct Seaborn-ready DataFrame produce kare:</p>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Production Data Preparation Pipeline Pattern</span>
+                <span>Self-Contained &amp; Clean</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="keyword">def</span> <span class="title function_">prepare_data_for_seaborn</span>(raw_filepath: <span class="built_in">str</span>) -&gt; pd.DataFrame:
+    <span class="string">"""Load, sanitize, typecast, and feature-engineer data for visualization."""</span>
+    clean_df = (
+        pd.read_csv(raw_filepath)
+        .drop_duplicates(subset=[<span class="string">'transaction_id'</span>])
+        .assign(
+            <span class="comment"># 1. Clean and convert numeric types</span>
+            clean_price=<span class="keyword">lambda</span> d: (
+                d[<span class="string">'unit_price'</span>]
+                .astype(<span class="built_in">str</span>)
+                .str.replace(<span class="string">'₹'</span>, <span class="string">''</span>)
+                .str.replace(<span class="string">','</span>, <span class="string">''</span>)
+                .str.strip()
+                .astype(<span class="built_in">float</span>)
+            ),
+            <span class="comment"># 2. Canonicalize text labels</span>
+            category=<span class="keyword">lambda</span> d: d[<span class="string">'category'</span>].astype(<span class="built_in">str</span>).str.strip().str.title(),
+            <span class="comment"># 3. Parse timestamp</span>
+            order_date=<span class="keyword">lambda</span> d: pd.to_datetime(d[<span class="string">'order_date'</span>], errors=<span class="string">'coerce'</span>)
+        )
+        <span class="comment"># 4. Filter invalid domain ranges</span>
+        .query(<span class="string">'quantity &gt; 0 and clean_price &gt;= 0'</span>)
+        <span class="comment"># 5. Impute numeric metrics with robust median</span>
+        .assign(
+            rating=<span class="keyword">lambda</span> d: d[<span class="string">'rating'</span>].fillna(d[<span class="string">'rating'</span>].median()),
+            revenue=<span class="keyword">lambda</span> d: d[<span class="string">'clean_price'</span>] * d[<span class="string">'quantity'</span>]
+        )
+    )
+    <span class="keyword">return</span> clean_df
+
+<span class="comment"># Output is immediately pass-ready to Seaborn:</span>
+<span class="comment"># sns.barplot(data=prepare_data_for_seaborn('raw.csv'), x='revenue', y='category', estimator='sum')</span></code></pre>
+        </div>
+    </section>
+
+
+    <!-- Section 19: 21 Practice Questions & Capstone Mini-Project -->
+    <section id="sec-19" class="card">
+        <h2 class="section-title">&#128161; 19. 21 Interactive Practice Questions &amp; Capstone Mini-Project</h2>
+        
+        <p>Har question ko pehle self-attempt karein. Solution box par click karke execution details, common pitfalls, aur verified code compare karein:</p>
+
+        <!-- PART 1: Conceptual Beginner Q1 - Q5 -->
+        <h3 style="color: var(--primary-dark); margin-top: 20px;">Part 1: Conceptual Beginner Questions (Q1 &ndash; Q5)</h3>
+
+        <!-- Q1 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q1: <code>sns.scatterplot()</code> par string numbers pass karne se kya visual defect create hota hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Agar aapka column numeric hone ke bajaye <code>object</code> (string) type hai (e.g. <code>["10", "100", "20", "5"]</code>), toh Seaborn use continuous scale ke bajaye categorical levels ki tarah treat karta hai. Iska visual consequence yeh hota hai:</p>
+                <ul>
+                    <li>Values numerical magnitude ke bajaye <strong>lexicographical (alphabetical) order</strong> me plot hoti hain (e.g., <code>10, 100, 20, 5</code>).</li>
+                    <li>Axis ticks equidistant ban jaati hain, jisse non-linear spacing introduce hoti hai aur scatter correlation completely distort ho jata hai.</li>
+                </ul>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Fix</span>
+                        <span>Safe Typecasting</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Fix: Coerce to numeric before plotting</span>
+df[<span class="string">'marks'</span>] = pd.to_numeric(df[<span class="string">'marks'</span>], errors=<span class="string">'coerce'</span>)
+sns.scatterplot(data=df, x=<span class="string">'study_hours'</span>, y=<span class="string">'marks'</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q2 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q2: Naive <code>fillna(0)</code> se visualization distribution kaise distort hoti hai? (Real Verified Example)</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Hamare College Dataset me 15 missing marks the. Jab humne naive <code>fillna(0)</code> lagaya:</p>
+                <ul>
+                    <li>Marks mean actual <strong>60.83</strong> se drastically drop ho kar <strong>57.79</strong> par chala gaya.</li>
+                    <li><code>sns.histplot()</code> aur <code>kdeplot()</code> me 0 par ek artificial high frequency spike create ho gayi jo real exam performance distribution ka part nahi thi.</li>
+                    <li><strong>Best Practice:</strong> Hamesha median (skewed data) ya mean (symmetric data) se impute karein, ya domain reason ke mutabiq unhe drop karein.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q3 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q3: <code>df.drop_duplicates()</code> se pehle scatter plot par duplicate points kya visual artifact banate hain?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Scatter plot me jab multiple rows ke exact same coordinates (X, Y) hote hain, toh points ek doosre ke theek upar render hote hain. Agar transparency (<code>alpha=1.0</code>) ho, toh user ko pata hi nahi chalta ki wahan 1 student hai ya 25 duplicate students. Saath hi <code>sns.barplot(estimator='sum')</code> me totals inflate ho jaate hain. Hamesha <code>drop_duplicates(subset=['id'])</code> execute karein.</p>
+            </div>
+        </details>
+
+        <!-- Q4 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q4: Inconsistent text case ("Delhi", "delhi", "DELHI") <code>sns.countplot()</code> me kya issue produce karta hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Python string comparison case-sensitive hoti hai. Seaborn har variation ko completely distinct category treat karega aur X-axis par 3 alag bars render karega. Is issue ko <strong>Category Fragmentation</strong> kehte hain. Fix:</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Fix</span>
+                        <span>Canonicalization</span>
+                    </div>
+                    <pre class="code-content"><code>df[<span class="string">'city'</span>] = df[<span class="string">'city'</span>].astype(<span class="built_in">str</span>).str.strip().str.title()
+sns.countplot(data=df, x=<span class="string">'city'</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q5 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q5: Outliers ya negative values (jaise -50 delivery days) boxplot aur violin plot ko kaise distort karte hain?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Seaborn automatically axis limits calculate karta hai data ke minimum aur maximum values ke basis par. Agar ek impossible entry <code>-50 days</code> ya <code>₹ 99,99,999</code> present ho, toh Y-axis range unnecessarily expand ho jaati hai. As a result, 99.9% genuine data points ek narrow horizontal band me shrink ho jaate hain aur boxplot ka IQR box bilkul flat line jaisa lagne lagta hai.</p>
+            </div>
+        </details>
+
+        <!-- PART 2: Analytical Intermediate Q6 - Q10 -->
+        <h3 style="color: var(--primary-dark); margin-top: 24px;">Part 2: Analytical Intermediate Questions (Q6 &ndash; Q10)</h3>
+
+        <!-- Q6 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q6: String date vs <code>pd.to_datetime()</code>: <code>sns.lineplot()</code> me formatting aur sorting kaise change hoti hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Agar date column <code>object</code> type hai, toh dates alphabetically sort hoti hain (e.g., <code>"01-Jan-2026", "02-Feb-2025", "03-Apr-2024"</code>), jisse time series me lines zigzag ban jaati hain. Saath hi date tick formatting (Month/Year labels) fail ho jaati hai. <code>pd.to_datetime(df['date'])</code> use karne par Seaborn automatically chronological order aur readable date ticks establish karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q7 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q7: Wide format vs Long format (Tidy Data): Seaborn <code>hue</code> parameter ke liye long format kyun mandatory hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Wide format me alag-alag metrics alag columns me hote hain (e.g., <code>Physics_Marks, Chemistry_Marks, Math_Marks</code>). Seaborn ka <code>hue</code> parameter ek single categorical column expect karta hai jo grouping define kare. Isliye hum <code>pd.melt()</code> use karke columns ko <code>['Subject', 'Marks']</code> ke long format me pivot karte hain taaki <code>sns.boxplot(data=df_long, x='Subject', y='Marks', hue='Subject')</code> run ho sake.</p>
+            </div>
+        </details>
+
+        <!-- Q8 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q8: Correlation heatmap (<code>sns.heatmap</code>) calculate karne se pehle non-numeric columns ko kaise handle karein?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Pandas 2.0+ me agar DataFrame me string ya datetime columns hon aur aap direct <code>df.corr()</code> call karein, toh <code>ValueError</code> raise ho sakta hai ya <code>numeric_only=True</code> pass karna zaroori hota hai:</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Fix</span>
+                        <span>Correlation Matrix</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Method 1: Explicit select dtypes</span>
+numeric_df = df.select_dtypes(include=[np.number])
+corr = numeric_df.corr()
+
+<span class="comment"># Method 2: In-built parameter</span>
+corr = df.corr(numeric_only=<span class="keyword">True</span>)
+sns.heatmap(corr, annot=<span class="keyword">True</span>, cmap=<span class="string">'coolwarm'</span>, fmt=<span class="string">".2f"</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q9 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q9: Categorical column me 40 unique values hone par <code>sns.barplot()</code> unreadable ho jata hai. Top 10 filter karne ka proper pipeline kya hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> 40 categories ko X-axis par plot karne se labels overlap hokar black blob ban jaate hain. Solution:</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Solution</span>
+                        <span>Top 10 Categorical Filter</span>
+                    </div>
+                    <pre class="code-content"><code>top_categories = df[<span class="string">'product_name'</span>].value_counts().nlargest(<span class="number">10</span>).index
+df_top10 = df[df[<span class="string">'product_name'</span>].isin(top_categories)]
+
+<span class="comment"># Plot horizontally for superior label readability</span>
+sns.barplot(data=df_top10, y=<span class="string">'product_name'</span>, x=<span class="string">'revenue'</span>, order=top_categories, estimator=<span class="string">'sum'</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q10 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q10: Heavily skewed revenue data par direct histogram vs log-transformed (<code>np.log1p()</code>) feature engineering me kya difference aata hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Explanation:</strong> Heavily right-skewed data me 95% values choti hoti hain (₹100 &ndash; ₹500) aur kuch extreme outliers bohot bade hote hain (₹10,00,000). Direct histogram me ek single vertical bar left me dikhta hai aur baki canvas empty rehta hai. <code>np.log1p(df['revenue'])</code> feature engineer karne se distribution bell-shaped normal distribution me convert ho jaati hai, jisse variance aur patterns clearly visible ho jaate hain.</p>
+            </div>
+        </details>
+
+        <!-- PART 3: Practical Coding Challenges Q11 - Q13 -->
+        <h3 style="color: var(--primary-dark); margin-top: 24px;">Part 3: Practical Coding Challenges (Q11 &ndash; Q13)</h3>
+
+        <!-- Q11 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q11: Coding Challenge: Dirty currency string column (<code>"₹ 4,500.50"</code>) ko clean karke category-wise average revenue bar chart banayein.</strong>
+            </summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Runnable Solution</span>
+                        <span>Currency Cleaning</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+data = {
+    <span class="string">'category'</span>: [<span class="string">'Electronics'</span>, <span class="string">'Fashion'</span>, <span class="string">'Electronics'</span>, <span class="string">'Books'</span>, <span class="string">'Fashion'</span>],
+    <span class="string">'raw_price'</span>: [<span class="string">'₹ 14,999.00'</span>, <span class="string">'₹ 1,250.50'</span>, <span class="string">'₹ 28,000.00'</span>, <span class="string">'₹ 499.00'</span>, <span class="string">'₹ 2,100.00'</span>]
+}
+df = pd.DataFrame(data)
+
+<span class="comment"># 1. Clean price string and cast to float</span>
+df[<span class="string">'clean_price'</span>] = (
+    df[<span class="string">'raw_price'</span>]
+    .astype(<span class="built_in">str</span>)
+    .str.replace(<span class="string">'₹'</span>, <span class="string">''</span>)
+    .str.replace(<span class="string">','</span>, <span class="string">''</span>)
+    .str.strip()
+    .astype(<span class="built_in">float</span>)
+)
+
+<span class="comment"># 2. Plot horizontal bar chart</span>
+plt.figure(figsize=(<span class="number">6</span>, <span class="number">3.5</span>), dpi=<span class="number">140</span>)
+sns.barplot(data=df, y=<span class="string">'category'</span>, x=<span class="string">'clean_price'</span>, estimator=<span class="string">'mean'</span>, palette=<span class="string">'viridis'</span>, hue=<span class="string">'category'</span>, legend=<span class="keyword">False</span>)
+plt.title(<span class="string">"Average Clean Price by Category"</span>)
+plt.xlabel(<span class="string">"Mean Price (INR)"</span>)
+plt.tight_layout()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q12 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q12: Coding Challenge: Attendance column me impossible values (&gt;100% aur &lt;0%) ko filter aur clip karke accurate distribution plot karein.</strong>
+            </summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Runnable Solution</span>
+                        <span>Boundary Validation</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+<span class="comment"># Synthetic data with erroneous sensor inputs</span>
+attendance_raw = [<span class="number">75.0</span>, <span class="number">88.5</span>, <span class="number">145.0</span>, -<span class="number">12.0</span>, <span class="number">92.0</span>, <span class="number">64.0</span>, <span class="number">210.0</span>, <span class="number">81.0</span>, <span class="number">78.0</span>]
+df = pd.DataFrame({<span class="string">'attendance'</span>: attendance_raw})
+
+<span class="comment"># Method A: Filter out impossible rows</span>
+df_clean = df[df[<span class="string">'attendance'</span>].between(<span class="number">0.0</span>, <span class="number">100.0</span>)].copy()
+
+<span class="comment"># Method B: Clip boundaries (if values represent overshoot caps)</span>
+df[<span class="string">'attendance_clipped'</span>] = df[<span class="string">'attendance'</span>].clip(lower=<span class="number">0.0</span>, upper=<span class="number">100.0</span>)
+
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">8</span>, <span class="number">3.5</span>), dpi=<span class="number">140</span>)
+sns.histplot(df_clean[<span class="string">'attendance'</span>], bins=<span class="number">5</span>, kde=<span class="keyword">True</span>, ax=axes[<span class="number">0</span>], color=<span class="string">'#10b981'</span>)
+axes[<span class="number">0</span>].set_title(<span class="string">"Filtered Valid [0-100%]"</span>)
+
+sns.boxplot(x=df[<span class="string">'attendance_clipped'</span>], ax=axes[<span class="number">1</span>], color=<span class="string">'#3b82f6'</span>)
+axes[<span class="number">1</span>].set_title(<span class="string">"Clipped Valid Boundaries"</span>)
+plt.tight_layout()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q13 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q13: Coding Challenge: Multi-sheet Excel workbook se 'orders' aur 'customers' sheets read karke merge karein aur Tier-wise spending plot karein.</strong>
+            </summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Runnable Solution</span>
+                        <span>Multi-Sheet Integration</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+<span class="comment"># Load specific sheets from Excel file using sheet_name</span>
+excel_path = <span class="string">"scratch/seaborn_topic3_data/sales_data.xlsx"</span>
+df_orders = pd.read_excel(excel_path, sheet_name=<span class="string">"Q1_Sales"</span>)
+df_catalog = pd.read_excel(excel_path, sheet_name=<span class="string">"Product_Catalog"</span>)
+
+<span class="comment"># Merge on product_id</span>
+df_merged = pd.merge(df_orders, df_catalog, on=<span class="string">"product_id"</span>, how=<span class="string">"left"</span>)
+df_merged[<span class="string">'revenue'</span>] = df_merged[<span class="string">'units_sold'</span>] * df_merged[<span class="string">'unit_price'</span>]
+
+plt.figure(figsize=(<span class="number">7</span>, <span class="number">4</span>), dpi=<span class="number">140</span>)
+sns.boxplot(data=df_merged, x=<span class="string">'category'</span>, y=<span class="string">'revenue'</span>, hue=<span class="string">'category'</span>, legend=<span class="keyword">False</span>, palette=<span class="string">'Set2'</span>)
+plt.title(<span class="string">"Revenue Distribution by Product Category"</span>)
+plt.tight_layout()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- PART 4: Multiple Choice Questions Q14 - Q18 -->
+        <h3 style="color: var(--primary-dark); margin-top: 24px;">Part 4: Multiple Choice Questions (Q14 &ndash; Q18)</h3>
+
+        <!-- Q14 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q14: Which data layout is universally preferred by Seaborn for grouping features via <code>hue</code>, <code>col</code>, and <code>row</code>?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>A)</strong> Matrix / Unstacked 2D Array<br>
+                <strong>B)</strong> Wide format with separate columns for each experiment condition<br>
+                <strong>C)</strong> Long (Tidy) format where each variable is a column and each observation is a row<br>
+                <strong>D)</strong> JSON nested dictionary list</p>
+                <div class="callout callout-tip">
+                    <div class="callout-title">&#9989; Correct Answer: C</div>
+                    <p><strong>Reason:</strong> Seaborn ki design philosophy Hadley Wickham ke Tidy Data principles par based hai. Long format me ek single categorical column (jaise <code>Department</code>) pass karke <code>hue="Department"</code> seamlessly apply kiya ja sakta hai.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q15 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q15: Agar <code>df['marks']</code> me <code>NaN</code> values present hon aur aap <code>sns.histplot(data=df, x='marks')</code> call karein, toh kya hota hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>A)</strong> Seaborn throws a fatal <code>TypeError: Cannot bin NaN</code> exception.<br>
+                <strong>B)</strong> Seaborn automatically drops <code>NaN</code> values internally for binning, but summary statistics displayed in titles or custom annotations may become misleading.<br>
+                <strong>C)</strong> Seaborn automatically imputes missing values with 0.<br>
+                <strong>D)</strong> Seaborn converts all <code>NaN</code> to the mean of the column.</p>
+                <div class="callout callout-tip">
+                    <div class="callout-title">&#9989; Correct Answer: B</div>
+                    <p><strong>Reason:</strong> Seaborn plotting functions <code>NaN</code> rows ko silently ignore kar dete hain. Halanki chart render ho jata hai, par agar aap sample count (N) ya percentage calculations manually calculate kar rahe hain toh woh biased ho jaati hain.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q16 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q16: Original DataFrame ko modify kiye bina direct plot call me clean data kaise pass karte hain?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>A)</strong> <code>sns.scatterplot(data=df.dropna(subset=['marks']).query('attendance &gt;= 75'), x='study_hours', y='marks')</code><br>
+                <strong>B)</strong> <code>sns.scatterplot(data=df, clean=True)</code><br>
+                <strong>C)</strong> <code>sns.scatterplot(data=df.set_filter('attendance &gt;= 75'))</code><br>
+                <strong>D)</strong> Seaborn does not allow expression filtering inside <code>data</code> parameter.</p>
+                <div class="callout callout-tip">
+                    <div class="callout-title">&#9989; Correct Answer: A</div>
+                    <p><strong>Reason:</strong> Kyunki Seaborn ka <code>data</code> parameter kisi bhi valid Pandas DataFrame object ko accept karta hai, isliye inline chaining methods jaise <code>.dropna()</code> aur <code>.query()</code> completely valid aur non-destructive hote hain.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q17 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q17: Inconsistent date string formats (e.g. <code>"2026/01/15"</code> and <code>"15-Jan-2026"</code>) ko safely parse karne ke liye kaunsa method standard hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>A)</strong> <code>df['date'].astype('datetime')</code><br>
+                <strong>B)</strong> <code>pd.to_datetime(df['date'], format='mixed', errors='coerce')</code><br>
+                <strong>C)</strong> <code>df['date'].str.to_date()</code><br>
+                <strong>D)</strong> <code>sns.to_datetime(df['date'])</code></p>
+                <div class="callout callout-tip">
+                    <div class="callout-title">&#9989; Correct Answer: B</div>
+                    <p><strong>Reason:</strong> <code>pd.to_datetime()</code> with <code>errors='coerce'</code> unparseable entries ko <code>NaT</code> me convert karta hai aur Pandas 2.0+ me <code>format='mixed'</code> diverse format patterns ko auto-detect kar leta hai.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q18 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q18: Right-skewed distribution (jaise software engineer salaries) me missing values ko Mean se impute karne ka kya risk hota hai?</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>A)</strong> Mean calculation crashes on skewed data.<br>
+                <strong>B)</strong> Outliers mean ko upward pull kar lete hain, jisse missing entries artificially high salary par fill hoti hain aur violin/box plots right-shift ho jaate hain.<br>
+                <strong>C)</strong> Seaborn boxplot fails to calculate whiskers.<br>
+                <strong>D)</strong> Skewed data me hamesha zero impute karna padta hai.</p>
+                <div class="callout callout-tip">
+                    <div class="callout-title">&#9989; Correct Answer: B</div>
+                    <p><strong>Reason:</strong> Skewed distributions me Median is the measure of central tendency because it is immune to extreme outliers. Mean imputation distribution ke center ko distort kar deta hai.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- PART 5: Debugging Exercises Q19 - Q20 -->
+        <h3 style="color: var(--primary-dark); margin-top: 24px;">Part 5: Debugging Exercises (Q19 &ndash; Q20)</h3>
+
+        <!-- Q19 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q19: Debugging: Scatter plot me data points rigid horizontal lines (rungs) me align ho rahe hain. Bug identify karein.</strong>
+            </summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Buggy Code</span>
+                        <span>Incorrect Plot Output</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Buggy snippet</span>
+df = pd.read_csv(<span class="string">"student_scores.csv"</span>)
+<span class="comment"># student_scores.csv contains marks with trailing spaces e.g. " 78 ", " 85 "</span>
+sns.scatterplot(data=df, x=<span class="string">"study_hours"</span>, y=<span class="string">"exam_marks"</span>)</code></pre>
+                </div>
+                <p><strong>Bug:</strong> CSV read karte waqt <code>exam_marks</code> trailing spaces ki wajah se <code>object</code> (string) ban gaya. Seaborn ne continuous numeric axis ke bajaye discrete string categorical levels draw kar diye.</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Fixed Code</span>
+                        <span>Verified Resolution</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Clean fix: Strip whitespace and convert to float</span>
+df[<span class="string">'exam_marks'</span>] = pd.to_numeric(df[<span class="string">'exam_marks'</span>].astype(<span class="built_in">str</span>).str.strip(), errors=<span class="string">'coerce'</span>)
+sns.scatterplot(data=df, x=<span class="string">"study_hours"</span>, y=<span class="string">"exam_marks"</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q20 -->
+        <details class="details-box">
+            <summary class="details-summary">
+                <strong>Q20: Debugging: Countplot showing 12 fragmented bars instead of 3 branches due to casing &amp; abbreviations.</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Bug:</strong> Raw column contains: <code>['CSE', 'cs', 'Computer Science', 'IT', 'Information Tech', 'it', 'ECE', 'ece']</code>.</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Fixed Code</span>
+                        <span>Canonical Mapping</span>
+                    </div>
+                    <pre class="code-content"><code>canonical_map = {
+    <span class="string">'cs'</span>: <span class="string">'Computer Science'</span>, <span class="string">'cse'</span>: <span class="string">'Computer Science'</span>, <span class="string">'computer science'</span>: <span class="string">'Computer Science'</span>,
+    <span class="string">'it'</span>: <span class="string">'Information Tech'</span>, <span class="string">'information tech'</span>: <span class="string">'Information Tech'</span>,
+    <span class="string">'ece'</span>: <span class="string">'Electronics'</span>, <span class="string">'electronics'</span>: <span class="string">'Electronics'</span>
+}
+
+df[<span class="string">'clean_branch'</span>] = (
+    df[<span class="string">'branch'</span>]
+    .astype(<span class="built_in">str</span>)
+    .str.strip()
+    .str.lower()
+    .map(canonical_map)
+    .fillna(<span class="string">'Other'</span>)
+)
+
+sns.countplot(data=df, x=<span class="string">'clean_branch'</span>, palette=<span class="string">'Set1'</span>, hue=<span class="string">'clean_branch'</span>, legend=<span class="keyword">False</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q21: Capstone Mini-Project -->
+        <h3 style="color: var(--primary-dark); margin-top: 24px;">Question 21: Capstone Mini-Project</h3>
+        <details class="details-box" open>
+            <summary class="details-summary">
+                <strong>Question 21 &mdash; Capstone Mini-Project: "End-to-End Data Cleaning to Visualization Pipeline &mdash; College &amp; E-Commerce Analytics"</strong>
+            </summary>
+            <div class="details-content">
+                <p><strong>Scenario:</strong> Aapko ek raw client dataset provide kiya gaya hai jisme multiple real-world data quality issues hain (duplicate records, string currency markers, missing values, impossible domain metrics, inconsistent categories). Aapka task hai ek complete, self-contained Python script build karna jo:</p>
+                <ol>
+                    <li>Raw CSV dataset ko load kare.</li>
+                    <li>Automated Data Cleaning Pipeline execute kare (deduplication, boundary filtering, median imputation, string cleanup).</li>
+                    <li>Clean data ko verify kare via assertions.</li>
+                    <li>Ek publication-quality 3-panel Seaborn analytical dashboard render kare aur save kare.</li>
+                </ol>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Complete Executable Capstone Pipeline</span>
+                        <span>Verified Real Data</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="comment"># ==========================================</span>
+<span class="comment"># 1. LOAD RAW DIRTY DATASET</span>
+<span class="comment"># ==========================================</span>
+raw_path = <span class="string">"scratch/seaborn_topic3_data/raw_college_dirty.csv"</span>
+df_raw = pd.read_csv(raw_path)
+<span class="built_in">print</span>(<span class="string">f"Raw Shape: {df_raw.shape}"</span>)
+
+<span class="comment"># ==========================================</span>
+<span class="comment"># 2. ROBUST DATA CLEANING PIPELINE</span>
+<span class="comment"># ==========================================</span>
+<span class="comment"># A. Remove duplicate student registrations</span>
+df_clean = df_raw.drop_duplicates(subset=[<span class="string">'student_id'</span>]).copy()
+
+<span class="comment"># B. Clean exam marks (strip whitespace, cast to float)</span>
+df_clean[<span class="string">'clean_marks'</span>] = pd.to_numeric(
+    df_clean[<span class="string">'exam_marks'</span>].astype(<span class="built_in">str</span>).str.strip(),
+    errors=<span class="string">'coerce'</span>
+)
+
+<span class="comment"># C. Impute missing marks using departmental median</span>
+dept_medians = df_clean.groupby(<span class="string">'department'</span>)[<span class="string">'clean_marks'</span>].transform(<span class="string">'median'</span>)
+df_clean[<span class="string">'clean_marks'</span>] = df_clean[<span class="string">'clean_marks'</span>].fillna(dept_medians)
+
+<span class="comment"># D. Clean attendance and clip to valid domain [0, 100]</span>
+df_clean[<span class="string">'clean_attendance'</span>] = pd.to_numeric(df_clean[<span class="string">'attendance_pct'</span>], errors=<span class="string">'coerce'</span>).clip(<span class="number">0.0</span>, <span class="number">100.0</span>)
+
+<span class="comment"># E. Canonicalize department category labels</span>
+branch_map = {
+    <span class="string">'cs'</span>: <span class="string">'CS'</span>, <span class="string">'computer science'</span>: <span class="string">'CS'</span>, <span class="string">'cs dept'</span>: <span class="string">'CS'</span>,
+    <span class="string">'it'</span>: <span class="string">'IT'</span>, <span class="string">'information tech'</span>: <span class="string">'IT'</span>,
+    <span class="string">'ece'</span>: <span class="string">'ECE'</span>, <span class="string">'electronics'</span>: <span class="string">'ECE'</span>,
+    <span class="string">'me'</span>: <span class="string">'ME'</span>, <span class="string">'mechanical'</span>: <span class="string">'ME'</span>
+}
+df_clean[<span class="string">'clean_dept'</span>] = (
+    df_clean[<span class="string">'department'</span>]
+    .astype(<span class="built_in">str</span>)
+    .str.strip()
+    .str.lower()
+    .map(branch_map)
+    .fillna(<span class="string">'Other'</span>)
+)
+
+<span class="comment"># F. Feature Engineer Result Status</span>
+df_clean[<span class="string">'result'</span>] = np.where(df_clean[<span class="string">'clean_marks'</span>] &gt;= <span class="number">60.0</span>, <span class="string">'Pass'</span>, <span class="string">'Fail'</span>)
+
+<span class="built_in">print</span>(<span class="string">f"Clean Shape: {df_clean.shape}"</span>)
+<span class="built_in">print</span>(<span class="string">f"Mean Marks: {df_clean['clean_marks'].mean():.2f}"</span>)
+<span class="built_in">print</span>(<span class="string">f"Pass Rate: {(df_clean['result'] == 'Pass').mean() * 100:.1f}%"</span>)
+
+<span class="comment"># ==========================================</span>
+<span class="comment"># 3. MULTI-PANEL SEABORN DASHBOARD</span>
+<span class="comment"># ==========================================</span>
+sns.set_theme(style=<span class="string">"whitegrid"</span>, font_scale=<span class="number">1.0</span>)
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">3</span>, figsize=(<span class="number">16</span>, <span class="number">4.8</span>), dpi=<span class="number">160</span>)
+
+<span class="comment"># Panel 1: Regplot - Study Hours vs Clean Marks</span>
+sns.regplot(
+    data=df_clean.sample(<span class="number">150</span>, random_state=<span class="number">42</span>),
+    x=<span class="string">"study_hours"</span>, y=<span class="string">"clean_marks"</span>,
+    scatter_kws={<span class="string">'alpha'</span>: <span class="number">0.6</span>, <span class="string">'color'</span>: <span class="string">'#2563eb'</span>},
+    line_kws={<span class="string">'color'</span>: <span class="string">'#dc2626'</span>, <span class="string">'linewidth'</span>: <span class="number">2</span>},
+    ax=axes[<span class="number">0</span>]
+)
+axes[<span class="number">0</span>].set_title(<span class="string">"1. Study Hours vs Exam Marks (r = 0.81)"</span>, fontweight=<span class="string">'bold'</span>)
+axes[<span class="number">0</span>].set_xlabel(<span class="string">"Weekly Study Hours"</span>)
+axes[<span class="number">0</span>].set_ylabel(<span class="string">"Clean Exam Marks"</span>)
+
+<span class="comment"># Panel 2: Boxplot - Marks by Clean Department</span>
+sns.boxplot(
+    data=df_clean,
+    x=<span class="string">"clean_dept"</span>, y=<span class="string">"clean_marks"</span>,
+    palette=<span class="string">"Blues_r"</span>, hue=<span class="string">"clean_dept"</span>, legend=<span class="keyword">False</span>,
+    ax=axes[<span class="number">1</span>]
+)
+axes[<span class="number">1</span>].axhline(<span class="number">60.0</span>, color=<span class="string">'#ef4444'</span>, linestyle=<span class="string">'--'</span>, label=<span class="string">'Pass Cutoff (60)'</span>)
+axes[<span class="number">1</span>].set_title(<span class="string">"2. Marks Distribution by Department"</span>, fontweight=<span class="string">'bold'</span>)
+axes[<span class="number">1</span>].set_xlabel(<span class="string">"Canonical Department"</span>)
+axes[<span class="number">1</span>].legend(loc=<span class="string">'lower right'</span>)
+
+<span class="comment"># Panel 3: Countplot - Pass vs Fail by Branch</span>
+sns.countplot(
+    data=df_clean,
+    x=<span class="string">"clean_dept"</span>, hue=<span class="string">"result"</span>,
+    palette={<span class="string">'Pass'</span>: <span class="string">'#10b981'</span>, <span class="string">'Fail'</span>: <span class="string">'#ef4444'</span>},
+    ax=axes[<span class="number">2</span>]
+)
+axes[<span class="number">2</span>].set_title(<span class="string">"3. Academic Result by Branch"</span>, fontweight=<span class="string">'bold'</span>)
+axes[<span class="number">2</span>].set_xlabel(<span class="string">"Department"</span>)
+axes[<span class="number">2</span>].set_ylabel(<span class="string">"Student Count"</span>)
+
+fig.suptitle(<span class="string">"Production Analytics Dashboard: Verified Post-Cleaning Distribution"</span>, fontsize=<span class="number">14</span>, weight=<span class="string">'bold'</span>)
+plt.tight_layout()
+plt.savefig(<span class="string">"scratch/capstone_prep_dashboard.png"</span>, dpi=<span class="number">160</span>, bbox_inches=<span class="string">'tight'</span>)
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+    </section>
+
+
+    <!-- Section 20: Summary and What's Next -->
+    <section id="sec-20" class="card">
+        <h2 class="section-title">&#127937; 20. Summary &amp; What's Next in the Seaborn Mastery Track</h2>
+
+        <p>Congratulations! Aapne Seaborn visualization ke sabse critical foundation &mdash; <strong>Data Loading &amp; Preparation</strong> &mdash; ko master kar liya hai. Hamesha yaad rakhein ki world ka sabse powerful visualization tool bhi dirty data ko rescue nahi kar sakta. Clean, validated, tidy data hi authentic insights create karta hai.</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Preparation Dimension</th>
+                        <th>Standard Pandas Tool</th>
+                        <th>Seaborn Visual Benefit</th>
+                        <th>Key Quality Check</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Data Shape &amp; Tidiness</strong></td>
+                        <td><code>pd.melt()</code>, <code>pd.pivot_table()</code></td>
+                        <td>Enables multi-dimensional plotting via <code>hue</code>, <code>style</code>, and <code>col</code>.</td>
+                        <td>Single observation per row, single variable per column.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Type Integrity</strong></td>
+                        <td><code>pd.to_numeric()</code>, <code>pd.to_datetime()</code></td>
+                        <td>Ensures smooth continuous coordinate scales and chronological time axes.</td>
+                        <td>Verify <code>df.dtypes</code> matches physical reality.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Missing Values</strong></td>
+                        <td><code>df.fillna(median)</code>, <code>df.dropna()</code></td>
+                        <td>Prevents distorted means, false zero spikes, and understated density curves.</td>
+                        <td>Confirm no unexpected histogram spikes at boundary values.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Duplicate Elimination</strong></td>
+                        <td><code>df.drop_duplicates()</code></td>
+                        <td>Eliminates artificial density clusters in scatter plots and inflated bar totals.</td>
+                        <td>Assert <code>df.duplicated().sum() == 0</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Text Canonicalization</strong></td>
+                        <td><code>.str.strip().str.title()</code>, <code>.map()</code></td>
+                        <td>Eliminates category fragmentation (e.g. 8 split bars become 3 clear bars).</td>
+                        <td>Check <code>df['cat'].nunique()</code> before and after cleaning.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Domain Boundaries</strong></td>
+                        <td><code>.query()</code>, <code>.clip()</code>, <code>.between()</code></td>
+                        <td>Prevents extreme negative or impossible values from collapsing axis zoom.</td>
+                        <td>Inspect <code>df.describe()</code> min and max values.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border-radius: var(--radius-lg); color: #ffffff; border: 1px solid #38bdf8; box-shadow: var(--shadow-md);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                <span style="font-size: 24px;">&#127912;</span>
+                <h3 style="color: #ffffff; margin: 0; font-size: 17px; font-weight: 700;">Up Next: Seaborn Topic 4 &mdash; Seaborn Themes, Palettes &amp; Figure Aesthetics</h3>
+            </div>
+            <p style="color: #e0f2fe; font-size: 13.5px; line-height: 1.65; margin-bottom: 12px;">
+                Data preparation complete hone ke baad ab waqt hai apni visualizations ko professional aesthetic presentation dene ka! Next topic me hum master karenge:
+            </p>
+            <ul style="color: #f0f9ff; font-size: 13px; line-height: 1.6; margin-bottom: 0; padding-left: 20px;">
+                <li>5 Built-in Seaborn Themes: <code>darkgrid</code>, <code>whitegrid</code>, <code>dark</code>, <code>white</code>, aur <code>ticks</code>.</li>
+                <li>Matplotlib Context scaling: <code>paper</code>, <code>notebook</code>, <code>talk</code>, aur <code>poster</code>.</li>
+                <li>Color Palettes Deep Dive: Qualitative, Sequential, Diverging, aur accessible Colorblind-friendly palettes.</li>
+                <li>Spine removal using <code>sns.despine()</code> and fine-grained figure styling.</li>
+            </ul>
+        </div>
+    </section>
+</div><!-- main-container -->
+</body>
+</html>

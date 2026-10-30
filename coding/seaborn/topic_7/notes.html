@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 7: Box Plots in Seaborn — Five-Number Summary, Quartiles, Whisker Rules & Outlier Analytics</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 14px;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+
+    .toc-card h3 {
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+    }
+
+    .toc-link:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateX(4px);
+    }
+
+    .toc-number {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styles */
+    section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 26px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent-indigo);
+      margin: 22px 0 12px 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* Highlight Badges & Callout Boxes */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 4px solid;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .callout-info {
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.06);
+    }
+
+    .callout-warning {
+      border-color: var(--accent-amber);
+      background-color: rgba(251, 191, 36, 0.06);
+    }
+
+    .callout-danger {
+      border-color: var(--accent-rose);
+      background-color: rgba(244, 63, 94, 0.06);
+    }
+
+    .callout-success {
+      border-color: var(--accent-green);
+      background-color: rgba(52, 211, 153, 0.06);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info .callout-title { color: var(--accent-blue); }
+    .callout-warning .callout-title { color: var(--accent-amber); }
+    .callout-danger .callout-title { color: var(--accent-rose); }
+    .callout-success .callout-title { color: var(--accent-green); }
+
+    /* Code Blocks */
+    .code-container {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .code-badge {
+      font-weight: 600;
+      color: var(--accent-indigo);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      max-width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: #e2e8f0;
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code, td code {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+
+    /* Output Blocks */
+    .output-block {
+      background-color: #060913;
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0 18px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: #94a3b8;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    /* Image Wrapper */
+    .figure-wrapper {
+      margin: 24px 0;
+      text-align: center;
+      background-color: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-caption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--accent-blue);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Accordion Details */
+    details.accordion {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      background-color: rgba(129, 140, 248, 0.04);
+    }
+
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    /* Math Formula Display */
+    .math-formula {
+      background-color: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin: 14px 0;
+      font-family: var(--font-mono);
+      color: var(--accent-blue);
+      font-size: 0.96rem;
+      text-align: center;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="topic-badge">Topic 7 &bull; Seaborn Mastery</div>
+    <h1>Box Plots in Seaborn: <code>sns.boxplot()</code></h1>
+    <p>Understand data distributions through quartiles, five-number summaries, and John Tukey's 1.5 &times; IQR whisker rule without assuming a normal distribution.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span>Module:</span> <strong>Distribution Visualization</strong></div>
+      <div class="hero-meta-item"><span>Estimated Reading:</span> <strong>35 Mins</strong></div>
+      <div class="hero-meta-item"><span>Hands-on Code:</span> <strong>20+ Runnable Examples</strong></div>
+      <div class="hero-meta-item"><span>Visual Assets:</span> <strong>20 Verified Charts</strong></div>
+    </div>
+  </header>
+
+  <!-- Table of Contents -->
+  <nav class="toc-card" aria-label="Table of Contents">
+    <h3>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      Curriculum Index &bull; 20 Core Modules
+    </h3>
+    <div class="toc-grid">
+      <a href="#sec-1" class="toc-link"><span class="toc-number">01</span> Intro: Why Mean & Std Dev Lie</a>
+      <a href="#sec-2" class="toc-link"><span class="toc-number">02</span> The 5-Number Summary & Fences</a>
+      <a href="#sec-3" class="toc-link"><span class="toc-number">03</span> <code>sns.boxplot()</code> Core Syntax</a>
+      <a href="#sec-4" class="toc-link"><span class="toc-number">04</span> Reading Box Plot Anatomy</a>
+      <a href="#sec-5" class="toc-link"><span class="toc-number">05</span> Aesthetics & Horizontal Layout</a>
+      <a href="#sec-6" class="toc-link"><span class="toc-number">06</span> Group Comparisons with <code>hue</code></a>
+      <a href="#sec-7" class="toc-link"><span class="toc-number">07</span> Outlier Detection & <code>showfliers</code></a>
+      <a href="#sec-8" class="toc-link"><span class="toc-number">08</span> Whisker Rules: 1.5 vs 3.0 vs %</a>
+      <a href="#sec-9" class="toc-link"><span class="toc-number">09</span> Overlays: Box + Strip Plot</a>
+      <a href="#sec-10" class="toc-link"><span class="toc-number">10</span> Box Plot vs Histogram</a>
+      <a href="#sec-11" class="toc-link"><span class="toc-number">11</span> Box Plot vs KDE Plot</a>
+      <a href="#sec-12" class="toc-link"><span class="toc-number">12</span> Box Plot vs Violin Plot</a>
+      <a href="#sec-13" class="toc-link"><span class="toc-number">13</span> Styling, Theme & Grid Polish</a>
+      <a href="#sec-14" class="toc-link"><span class="toc-number">14</span> Case Study 1: Tech Salaries</a>
+      <a href="#sec-15" class="toc-link"><span class="toc-number">15</span> Case Study 2: Delivery Latency</a>
+      <a href="#sec-16" class="toc-link"><span class="toc-number">16</span> Case Study 3: IoT Sensor Drifts</a>
+      <a href="#sec-17" class="toc-link"><span class="toc-number">17</span> 12+ Common Pitfalls & Fixes</a>
+      <a href="#sec-18" class="toc-link"><span class="toc-number">18</span> Quick Reference Cheat Sheet</a>
+      <a href="#sec-19" class="toc-link"><span class="toc-number">19</span> 21 Practice Questions & Project</a>
+      <a href="#sec-20" class="toc-link"><span class="toc-number">20</span> Summary & Topic 8 Teaser</a>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       SECTION 1: Introduction to Box Plots
+       ========================================== -->
+  <section id="sec-1">
+    <h2><span class="toc-number">01</span> Introduction: Why Mean &amp; Standard Deviation Lie</h2>
+    <p>Jab aap kisi numerical column ka distribution samajhne ki koshish karte hain, toh traditional statistics humein do metrics sikhata hai: <strong>Mean (&mu;)</strong> aur <strong>Standard Deviation (&sigma;)</strong>. Lekin real-world data science mein ek simple rule yaad rakhiye: <em>Mean is an extreme-value magnet!</em> Ek single billionaire pure neighborhood ki average income ko 100 guna distort kar sakta hai.</p>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Real-Life Scenario: The Salary Trap</div>
+      <p>Maan lijiye ek startup mein 10 junior engineers kaam karte hain jinki monthly salary &approx; ₹40,000 hai. Ab company mein ek celebrity AI Architect join karta hai jiska compensation ₹25,00,000 per month hai! Agar HR report karegi: <em>"Hamari company ka average salary ₹2,63,600 hai!"</em>, toh kya yeh sach batata hai junior engineers ki ground reality ka? Bilkul nahi! Mean complete distortion represent karta hai.</p>
+    </div>
+
+    <p>Isi problem ko solve karne ke liye 1977 mein legendary statistician <strong>John W. Tukey</strong> ne <strong>Box-and-Whisker Plot</strong> invent kiya tha. Box plot data ko summarize karne ke liye parametric statistics (mean/std) ke bajaye <strong>Non-Parametric Order Statistics (Ranked Quantiles)</strong> use karta hai.</p>
+
+    <h3>Box Plot Ki Core Superpowers</h3>
+    <ul>
+      <li><strong>Outlier Robustness:</strong> Extreme values median ko bilkul hilane nahi pati kyunki median middle rank par baitha hota hai.</li>
+      <li><strong>5-Number Summary at a Glance:</strong> Ek hi compact box mein minimum, lower quartile (Q1), median (Q2), upper quartile (Q3), aur maximum display ho jaata hai.</li>
+      <li><strong>Multi-Category Comparison:</strong> Ek single plot canvas par aap 10 alag-alag departments, delivery partners, ya machine sensors ke distributions ko side-by-side compare kar sakte hain without clutter.</li>
+      <li><strong>Skewness Detection:</strong> Median line box ke middle se kis taraf shift hai aur kaunsa whisker lamba hai, yeh distribution ki asymmetry (left-skew vs right-skew) instantly reveal kar deta hai.</li>
+    </ul>
+
+    <div class="figure-wrapper">
+      <img src="assets/boxplot_anatomy_diagram.png" alt="Anatomy of a Box Plot in Seaborn" loading="lazy">
+      <div class="figure-caption">Figure 7.1: Anatomy of a Box Plot &mdash; Median line, Interquartile Range (IQR) box, Tukey fences, whiskers, and flier outliers.</div>
+    </div>
+
+    <h3>First Code Example: Mean vs Median Sensitivity</h3>
+    <p>Aaiye code run karke dekhte hain ki jab dataset mein ek outlier enter karta hai toh Mean aur Median kaise behave karte hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; NumPy &amp; Pandas</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import numpy as np
+import pandas as pd
+
+# 10 employees with normal salary + 1 executive outlier
+clean_salaries = np.array([38000, 39000, 40000, 41000, 41500, 42000, 43000, 44000, 45000, 46000])
+with_outlier = np.append(clean_salaries, [2500000])
+
+print(f"Clean Data   -> Mean: ₹{clean_salaries.mean():,.2f} | Median: ₹{np.median(clean_salaries):,.2f}")
+print(f"With Outlier -> Mean: ₹{with_outlier.mean():,.2f} | Median: ₹{np.median(with_outlier):,.2f}")</code></pre>
+    </div>
+
+    <div class="output-block">
+      <div class="output-label">Terminal Execution Output</div>
+Clean Data   -&gt; Mean: ₹41,950.00 | Median: ₹41,750.00
+With Outlier -&gt; Mean: ₹265,409.09 | Median: ₹42,000.00
+    </div>
+
+    <p>Notice the magic! Outlier add hote hi <strong>Mean</strong> ₹41,950 se jump karke ₹2,65,409 ho gaya (6.3&times; jump!), jabki <strong>Median</strong> sirf ₹41,750 se ₹42,000 hua (sirf ₹250 ka difference!). Box plots isiliye real-world analytics ka foundational pillar hain.</p>
+  </section>
+
+  <!-- ==========================================
+       SECTION 2: Five-Number Summary & Fences
+       ========================================== -->
+  <section id="sec-2">
+    <h2><span class="toc-number">02</span> The 5-Number Summary &amp; Tukey Fences Math</h2>
+    <p>Box plot ka har ek graphic element kisi na kisi exact mathematical metric ko represent karta hai. Is mathematics ko bolte hain <strong>Five-Number Summary</strong> plus <strong>Tukey's Fences</strong>. Chaliye isko step-by-step calculate karte hain hamare foundational 11-number dataset ke saath:</p>
+
+    <div class="math-formula">
+      Dataset: [12, 15, 18, 20, 22, 24, 26, 28, 30, 35, 80] &nbsp;(n = 11)
+    </div>
+
+    <h3>Step 1: Finding the Median (Q2 / 50th Percentile)</h3>
+    <p>Dataset ko pehle ascending order mein sort kiya jata hai. Kyunki <i>n = 11</i> ek odd number hai, exact middle element position <i>(n + 1) / 2 = 12 / 2 = 6th</i> element hoga:</p>
+    <ul>
+      <li>1st: 12, 2nd: 15, 3rd: 18, 4th: 20, 5th: 22</li>
+      <li><strong>6th element = 24.0 &rarr; Median (Q2)</strong></li>
+      <li>7th: 26, 8th: 28, 9th: 30, 10th: 35, 11th: 80</li>
+    </ul>
+
+    <h3>Step 2: Calculating Quartiles Q1 and Q3</h3>
+    <p>Dataset ko do equal halves mein divide kiya jata hai:</p>
+    <ul>
+      <li><strong>Lower Half:</strong> <code>[12, 15, 18, 20, 22]</code> &rarr; Median of lower half = <strong>19.0 (Q1 / 25th percentile)</strong></li>
+      <li><strong>Upper Half:</strong> <code>[26, 28, 30, 35, 80]</code> &rarr; Median of upper half = <strong>29.0 (Q3 / 75th percentile)</strong></li>
+    </ul>
+
+    <h3>Step 3: Calculating IQR (Interquartile Range)</h3>
+    <div class="math-formula">
+      <i>IQR = Q<sub>3</sub> &minus; Q<sub>1</sub> = 29.0 &minus; 19.0 = 10.0</i>
+    </div>
+    <p>IQR represent karta hai aapke dataset ke middle 50% population ka spread. Box plot ka rectangular box precisely <i>Q<sub>1</sub></i> se <i>Q<sub>3</sub></i> tak faila hota hai, aur box ki length exact <i>IQR</i> hoti hai.</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/quartile_median_calculation_diagram.png" alt="Quartile and Median Calculation Diagram" loading="lazy">
+      <div class="figure-caption">Figure 7.2: Step-by-Step 5-Number Summary &amp; Quartile Partitioning for n = 11.</div>
+    </div>
+
+    <h3>Step 4: Tukey's 1.5 &times; IQR Fences (The Golden Rule)</h3>
+    <p>John Tukey ne outlier identify karne ke liye boundary lines define ki jinko <strong>Fences</strong> kaha jaata hai:</p>
+    <div class="math-formula">
+      <i>Lower Fence = Q<sub>1</sub> &minus; 1.5 &times; IQR = 19.0 &minus; (1.5 &times; 10.0) = 4.0</i><br>
+      <i>Upper Fence = Q<sub>3</sub> + 1.5 &times; IQR = 29.0 + (1.5 &times; 10.0) = 44.0</i>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">The #1 Beginner Misconception: Whisker Length!</div>
+      <p>90% beginners yeh galat sochte hain ki whisker direct <i>Upper Fence (44.0)</i> tak extend hota hai! <strong>Yeh galat hai.</strong> Whisker kabhi theoretical fence tak draw nahi hota agar wahan data point hi na ho! Whisker <em>fence ke andar ke sabse extreme actual observed data point</em> par aakar ruk jaata hai!</p>
+      <p>Hamare dataset mein 44.0 se chhota sabse bada point <strong>35.0</strong> hai. Isiliye Upper Whisker <strong>35.0</strong> par rukega! Aur 80.0 kyunki fence (44.0) ke bahar chala gaya, isiliye usko whisker se alag karke ek standalone point (Flier) ke roop mein plot kiya jaata hai.</p>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/iqr_outlier_fence_illustration.png" alt="Tukey Fences vs Whisker Limits" loading="lazy">
+      <div class="figure-caption">Figure 7.3: Tukey Fences vs Actual Observed Whisker Limits &mdash; Why Upper Whisker stops at 35.0 while 80.0 becomes an outlier marker.</div>
+    </div>
+
+    <details class="accordion">
+      <summary>Deep Dive: Why specifically 1.5 &times; IQR? Why not 1.0 or 2.0?</summary>
+      <div class="accordion-content">
+        <p>John Tukey ne <i>1.5 &times; IQR</i> ko mathematically tune kiya tha. Normal distribution (Bell Curve) ke andar:</p>
+        <ul>
+          <li><i>IQR &approx; 1.349 &times; &sigma;</i> hota hai.</li>
+          <li><i>Q<sub>1</sub> &minus; 1.5 &times; IQR &approx; &mu; &minus; 2.698 &times; &sigma;</i></li>
+          <li><i>Q<sub>3</sub> + 1.5 &times; IQR &approx; &mu; + 2.698 &times; &sigma;</i></li>
+        </ul>
+        <p>Ek standard Gaussian distribution mein &plusmn;2.7&sigma; ke bahar sirf <strong>0.7%</strong> data points aate hain (p &approx; 0.007). Agar Tukey <i>1.0 &times; IQR</i> rakhte, toh normal distribution ke lagbhag 5% valid data points bina wajah outlier flag ho jaate (False Positives). Agar <i>2.0 &times; IQR</i> rakhte, toh genuine anomalous outliers pakad mein nahi aate. <strong>1.5 is the mathematically balanced sweet spot!</strong></p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 3: sns.boxplot() Core Syntax & Parameters
+       ========================================== -->
+  <section id="sec-3">
+    <h2><span class="toc-number">03</span> <code>sns.boxplot()</code> Syntax &amp; Core Parameters</h2>
+    <p>Seaborn mein box plot generate karne ke liye standard function <code>sns.boxplot()</code> hota hai. Seaborn 0.13+ architecture mein yeh function categorical coordinates aur wide/long form data frames ko natively support karta hai.</p>
+
+    <div class="math-formula">
+      <code>sns.boxplot(data=None, *, x=None, y=None, hue=None, order=None, hue_order=None, orient=None, color=None, palette=None, saturation=0.75, fill=True, dodge='auto', width=0.8, gap=0, whis=1.5, formatter=None, linecolor='auto', linewidth=None, fliersize=None, hue_norm=None, native_scale=False, log_scale=None, boxprops=None, flierprops=None, medianprops=None, meanprops=None, whiskerprops=None, capprops=None, showmeans=False, showcaps=True, showbox=True, showfliers=True, **kwargs)</code>
+    </div>
+
+    <h3>Master Parameter Reference Table</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Data Science Purpose &amp; Hinglish Explanation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>data</code></td>
+            <td>DataFrame / Array</td>
+            <td><code>None</code></td>
+            <td>Source dataset jisme se columns extract kiye jayenge (Tidy Long-form ya Wide-form).</td>
+          </tr>
+          <tr>
+            <td><code>x, y</code></td>
+            <td>str / Series</td>
+            <td><code>None</code></td>
+            <td>Variable mappings. Agar categorical variable <code>x</code> par hai toh vertical plot banega; agar <code>y</code> par hai toh horizontal.</td>
+          </tr>
+          <tr>
+            <td><code>hue</code></td>
+            <td>str</td>
+            <td><code>None</code></td>
+            <td>Sub-grouping variable jo har category ke box ko sub-segments mein split (dodge) karta hai.</td>
+          </tr>
+          <tr>
+            <td><code>order, hue_order</code></td>
+            <td>list</td>
+            <td><code>None</code></td>
+            <td>Categories aur hue levels ki exact visual rendering sequence control karta hai.</td>
+          </tr>
+          <tr>
+            <td><code>orient</code></td>
+            <td>'v' | 'h' | 'x' | 'y'</td>
+            <td><code>None</code></td>
+            <td>Explicit orientation. Default mein Seaborn data type detect karke auto-select karta hai.</td>
+          </tr>
+          <tr>
+            <td><code>palette</code></td>
+            <td>str / dict / list</td>
+            <td><code>None</code></td>
+            <td>Color palette for boxes (e.g. <code>'Set2'</code>, <code>['#38bdf8', '#fbbf24']</code>).</td>
+          </tr>
+          <tr>
+            <td><code>width</code></td>
+            <td>float</td>
+            <td><code>0.8</code></td>
+            <td>Box body ki visual thickness (fraction of category bin space).</td>
+          </tr>
+          <tr>
+            <td><code>gap</code></td>
+            <td>float</td>
+            <td><code>0</code></td>
+            <td>Seaborn 0.13+ feature: hue boxes ke beech ka spacing ratio (e.g. <code>0.1</code>).</td>
+          </tr>
+          <tr>
+            <td><code>whis</code></td>
+            <td>float / tuple</td>
+            <td><code>1.5</code></td>
+            <td>Whisker reach factor. Standard 1.5&times;IQR, ya conservative 3.0, ya percentile tuple <code>(5, 95)</code>.</td>
+          </tr>
+          <tr>
+            <td><code>showfliers</code></td>
+            <td>bool</td>
+            <td><code>True</code></td>
+            <td>Agar <code>False</code> ho, toh outlier marker glyphs hide ho jaate hain (whiskers unaffected).</td>
+          </tr>
+          <tr>
+            <td><code>flierprops</code></td>
+            <td>dict</td>
+            <td><code>None</code></td>
+            <td>Outlier markers ke aesthetics (marker, markerfacecolor, markeredgecolor, markersize).</td>
+          </tr>
+          <tr>
+            <td><code>medianprops</code></td>
+            <td>dict</td>
+            <td><code>None</code></td>
+            <td>Center median line ka color, linewidth aur styling dictionary.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Complete Code Example: Basic Single-Column Boxplot</h3>
+    <p>Aaiye student exam scores ka simple univariate box plot banate hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+# Load verified college marks dataset
+df = pd.read_csv("scratch/seaborn_topic7_data/college_exam_scores.csv")
+
+fig, ax = plt.subplots(figsize=(7, 6))
+sns.boxplot(y=df['exam_marks'], ax=ax, color='#0284c7', width=0.35,
+            boxprops=dict(edgecolor='#38bdf8', linewidth=1.8),
+            medianprops=dict(color='#f59e0b', linewidth=2.5),
+            flierprops=dict(marker='o', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=6))
+
+ax.set_ylabel("Exam Marks (Out of 100)", fontsize=11, fontweight='bold')
+ax.set_title("Distribution of Student Exam Marks (n=180)", fontsize=13, fontweight='bold')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/basic_exam_marks_boxplot.png" alt="Basic Exam Marks Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.4: Univariate Vertical Box Plot of Student Exam Marks with highlighted Median and Mean anchor.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 4: Reading Every Component of a Box Plot
+       ========================================== -->
+  <section id="sec-4">
+    <h2><span class="toc-number">04</span> Reading Every Component of a Box Plot</h2>
+    <p>Jab koi stakeholder ya interviewer aapke saamne ek box plot rakhta hai, toh aapko usse ek story ki tarah padhna aana chahiye. Box plot ko read karne ka exact 4-step framework yeh hai:</p>
+
+    <div class="callout callout-info">
+      <div class="callout-title">The 4-Step Box Plot Decoding Framework</div>
+      <ol>
+        <li><strong>Step 1: Check the Center (Median / Q2):</strong> Box ke andar ki median line dekhiye. Yeh distribution ka typical value batati hai.</li>
+        <li><strong>Step 2: Check the Spread (IQR / Box Height):</strong> Box kitna chhota ya bada hai? Chhota box matlab data consistent hai; bada box matlab high variance hai.</li>
+        <li><strong>Step 3: Check Symmetry &amp; Skewness:</strong> Kya median line box ke ekdum center mein hai? Agar median niche (Q1 ke paas) hai aur upper whisker lamba hai, toh data <em>Right-Skewed (Positive Skew)</em> hai. Agar median upar (Q3 ke paas) hai, toh data <em>Left-Skewed (Negative Skew)</em> hai.</li>
+        <li><strong>Step 4: Audit Outlier Risk (Fliers):</strong> Box whiskers ke bahar kitne dots hain? Dots kis direction mein hain? Outliers high side par hain ya low side par?</li>
+      </ol>
+    </div>
+
+    <h3>Case Study: E-Commerce Delivery Latency</h3>
+    <p>Aaiye delivery time dataset ko ek horizontal box plot mein visualize karke 45-minute guaranteed customer SLA ke against evaluate karte hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_deliv = pd.read_csv("scratch/seaborn_topic7_data/ecommerce_deliveries.csv")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.boxplot(x=df_deliv['delivery_time_mins'], ax=ax, color='#6366f1', width=0.4,
+            medianprops=dict(color='#fbbf24', linewidth=2.5),
+            flierprops=dict(marker='d', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=7))
+
+# Draw business SLA reference line
+ax.axvline(45.0, color='#ef4444', linestyle='--', linewidth=2, label='45m Guaranteed SLA')
+ax.set_xlabel("Delivery Time (minutes)", fontsize=11, fontweight='bold')
+ax.set_title("E-Commerce Order Delivery Times (n=300)", fontsize=13, fontweight='bold')
+ax.legend()
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/basic_delivery_time_boxplot.png" alt="Basic Delivery Time Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.5: Horizontal Box Plot of Delivery Times with SLA benchmark line at 45 minutes.</div>
+    </div>
+
+    <div class="output-block">
+      <div class="output-label">Statistical Decoding from Verified Output</div>
+- Overall Median: 35.8 mins (Customers typically receive orders within 36 mins)
+- IQR (Spread): Q1 = 28.5 mins, Q3 = 46.2 mins (IQR = 17.7 mins)
+- Right-Skewed Tail: Upper whisker reaches ~63 mins with severe outlier deliveries at 82, 88, 92, 98 mins!
+- Business Action: Even though 50% orders are completed in 36m, upper 25% breach the 45m SLA limit.
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 5: Aesthetics & Horizontal Layout
+       ========================================== -->
+  <section id="sec-5">
+    <h2><span class="toc-number">05</span> Customizing Aesthetics &amp; Orientation: Vertical vs Horizontal</h2>
+    <p>Jab aapke categorical groups ke naam lambe hote hain (jaise <em>"Junior Data Analyst"</em>, <em>"Senior Machine Learning Scientist"</em>, <em>"Lead Site Reliability Engineer"</em>), toh standard vertical box plot mein x-axis par label collision ho jaata hai. Labels aapas mein overlap ho jaate hain ya unhe 45&deg; rotate karna padta hai jo padhne mein mushkil hota hai.</p>
+
+    <h3>The Horizontal Orientation Fix</h3>
+    <p>Seaborn mein horizontal plot banana bahut simple hai: bas numerical variable ko <code>x</code> par aur categorical variable ko <code>y</code> par pass kar dijiye!</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_salary = pd.read_csv("scratch/seaborn_topic7_data/tech_salaries_demo.csv")
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+# Vertical plot (requires x-tick rotation)
+sns.boxplot(data=df_salary, x='role', y='monthly_salary_inr', hue='role', legend=False,
+            ax=ax1, palette=['#0284c7', '#6366f1', '#10b981'],
+            flierprops=dict(marker='o', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=6))
+ax1.set_xticklabels(ax1.get_xticklabels(), rotation=20, ha='right')
+ax1.set_title("Vertical Box Plot (Rotated Labels)")
+
+# Horizontal plot (effortless natural reading)
+sns.boxplot(data=df_salary, y='role', x='monthly_salary_inr', hue='role', legend=False,
+            ax=ax2, palette=['#0284c7', '#6366f1', '#10b981'],
+            flierprops=dict(marker='o', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=6))
+ax2.set_title("Horizontal Box Plot (Effortless Reading)")
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/horizontal_vs_vertical_boxplot.png" alt="Horizontal vs Vertical Boxplot Comparison" loading="lazy">
+      <div class="figure-caption">Figure 7.6: Side-by-side comparison &mdash; Vertical orientation with rotated labels vs clean horizontal orientation.</div>
+    </div>
+
+    <h3>Comparing Medians Across Ranked Categories</h3>
+    <p>Jab aap multi-category box plot banate hain, toh unhe arbitrary order mein rakhne ke bajaye <strong>median ke according sort</strong> karna sabse powerful best practice hoti hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Ranked Category Ordering</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code># Compute sorted order by median delivery time
+sorted_partners = df_deliv.groupby('partner')['delivery_time_mins'].median().sort_values().index.tolist()
+
+fig, ax = plt.subplots(figsize=(10, 5.5))
+sns.boxplot(data=df_deliv, x='partner', y='delivery_time_mins', order=sorted_partners,
+            palette={'HyperRoute': '#10b981', 'QuickDrop': '#0284c7', 'SpeedyKart': '#f43f5e'},
+            ax=ax, width=0.45, medianprops=dict(color='#ffffff', linewidth=2.5))
+
+ax.axhline(45, color='#fbbf24', linestyle='--', linewidth=1.8, label='SLA Limit (45 mins)')
+ax.set_title("Partners Ranked by Median Speed (Fastest to Slowest)")
+ax.legend()
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/group_medians_comparison_boxplot.png" alt="Group Medians Comparison Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.7: Group Medians Comparison &mdash; Partners ranked cleanly with direct median value badges.</div>
+    </div>
+
+    <details class="accordion">
+      <summary>Pro Tip: How to use custom widths and border styling in Seaborn boxplots?</summary>
+      <div class="accordion-content">
+        <p>Aap standard Matplotlib box properties dictionaries pass kar sakte hain:</p>
+        <ul>
+          <li><code>boxprops=dict(edgecolor='#38bdf8', linewidth=1.5, alpha=0.85)</code> &mdash; Box border color aur transparency.</li>
+          <li><code>whiskerprops=dict(color='#94a3b8', linewidth=1.5, linestyle='--')</code> &mdash; Whiskers ko dashed ya custom color dena.</li>
+          <li><code>capprops=dict(color='#94a3b8', linewidth=2.0)</code> &mdash; Whisker caps ki thickness set karna.</li>
+          <li><code>medianprops=dict(color='#fbbf24', linewidth=3.0)</code> &mdash; Center median line ko prominent highlight karna.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 6: Comparing Distributions with hue
+       ========================================== -->
+  <section id="sec-6">
+    <h2><span class="toc-number">06</span> Comparing Distributions Across Categories with <code>hue</code></h2>
+    <p>Data science mein single-variable box plot se zyada valuable hota hai <strong>Multi-Category Segmentation</strong>. Jab aapko ek hi view mein multiple cohorts compare karne hote hain, toh Seaborn ka <code>hue</code> parameter game-changer ban jaata hai.</p>
+
+    <h3>Part 1: Primary Group Comparison (Section A vs B vs C)</h3>
+    <p>Pehle dekhte hain ki college sections (A, B, C) ke exam scores ka overall behavior kaisa hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_college = pd.read_csv("scratch/seaborn_topic7_data/college_exam_scores.csv")
+
+fig, ax = plt.subplots(figsize=(10, 5.5))
+sec_palette = {'Section A': '#10b981', 'Section B': '#38bdf8', 'Section C': '#f59e0b'}
+
+sns.boxplot(data=df_college, x='section', y='exam_marks', palette=sec_palette, ax=ax, width=0.45,
+            medianprops=dict(color='#ffffff', linewidth=2.5),
+            flierprops=dict(marker='o', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=7))
+
+ax.set_title("Performance Analysis Across College Sections (Variance & Outlier Profile)")
+ax.set_xlabel("Academic Section")
+ax.set_ylabel("Final Exam Marks")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/college_sections_abc_boxplot.png" alt="College Sections ABC Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.8: Comparing Exam Performance Across Sections &mdash; High-performing tight Section A vs diverse Section B vs low-scoring Section C with severe failure outliers.</div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Academic Section</th>
+            <th>Median Marks</th>
+            <th>IQR Spread</th>
+            <th>Min Whisker</th>
+            <th>Max Whisker</th>
+            <th>Identified Outliers</th>
+            <th>Pedagogical Takeaway</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Section A</strong></td>
+            <td><strong>73.6</strong></td>
+            <td>6.62</td>
+            <td>63.2</td>
+            <td>86.1</td>
+            <td><em>None (0)</em></td>
+            <td>Consistent high performers, disciplined study habits.</td>
+          </tr>
+          <tr>
+            <td><strong>Section B</strong></td>
+            <td><strong>67.75</strong></td>
+            <td>7.72</td>
+            <td>54.8</td>
+            <td>82.1</td>
+            <td><code>45.0, 50.1, 50.7, 85.0, 90.2</code></td>
+            <td>High variance with both genius outliers and struggling students.</td>
+          </tr>
+          <tr>
+            <td><strong>Section C</strong></td>
+            <td><strong>66.25</strong></td>
+            <td>16.75</td>
+            <td>46.3</td>
+            <td>88.1</td>
+            <td><code>18.0, 22.0</code></td>
+            <td>Wide inequality gap; severe bottom failure outliers need intervention.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Part 2: Two-Factor Sub-segmentation with <code>hue</code></h3>
+    <p>Ab agar humein delivery partners ko unke <strong>Meal Slot (Lunch vs Dinner)</strong> ke basis par break karna ho, toh <code>hue='meal_type'</code> use karenge. Seaborn automatically side-by-side dodged boxes render kar deta hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2 Sub-grouping</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>df_deliv = pd.read_csv("scratch/seaborn_topic7_data/ecommerce_deliveries.csv")
+
+fig, ax = plt.subplots(figsize=(11, 5.5))
+sns.boxplot(data=df_deliv, x='partner', y='delivery_time_mins', hue='meal_type',
+            palette=['#38bdf8', '#fbbf24'], ax=ax, width=0.55, gap=0.08,
+            medianprops=dict(color='#ffffff', linewidth=2),
+            flierprops=dict(marker='d', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=6))
+
+ax.axhline(45, color='#ef4444', linestyle=':', linewidth=1.8, label='45m SLA Target')
+ax.set_title("Delivery Time Breakdown by Fleet and Meal Slot (Using hue='meal_type')")
+ax.legend(title='Meal Slot')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/delivery_partners_comparison_boxplot.png" alt="Delivery Partners Comparison with Hue" loading="lazy">
+      <div class="figure-caption">Figure 7.9: Two-factor segmentation &mdash; Delivery fleet partner on x-axis, separated into Lunch vs Dinner boxes via <code>hue='meal_type'</code> with <code>gap=0.08</code>.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 7: Outlier Detection & showfliers
+       ========================================== -->
+  <section id="sec-7">
+    <h2><span class="toc-number">07</span> Outlier Detection, Styling &amp; <code>showfliers</code> Mechanics</h2>
+    <p>Machine Learning and Data Cleaning workflows mein box plots outlier detection ke liye sabse pehla exploratory tool hote hain. Lekin outliers ko visually kaise style karein, aur kab unhe hide karein?</p>
+
+    <h3>Customizing Outlier Appearance with <code>flierprops</code></h3>
+    <p>By default, Seaborn outliers ko chhote black circles ke roop mein render karta hai jo dark theme ya dense charts par easily miss ho sakte hain. <code>flierprops</code> dictionary use karke hum unhe prominent highlight kar sakte hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Custom flierprops</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>flier_styling = {
+    'marker': 'D',               # Diamond marker
+    'markerfacecolor': '#f43f5e', # Bright crimson red
+    'markeredgecolor': '#fecdd3', # Soft pink stroke
+    'markersize': 8,             # High visibility
+    'markeredgewidth': 1.5
+}
+
+fig, ax = plt.subplots(figsize=(9, 5.5))
+sns.boxplot(data=df_college, x='section', y='exam_marks', ax=ax,
+            palette=['#0284c7', '#6366f1', '#10b981'],
+            flierprops=flier_styling, width=0.45)
+
+ax.set_title("Custom Outlier Styling via flierprops (Prominent Red Diamonds)")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/outliers_visible_markers_boxplot.png" alt="Outliers Visible Markers Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.10: Prominent outlier highlighting using custom diamond glyphs with <code>flierprops</code>.</div>
+    </div>
+
+    <h3>The <code>showfliers=False</code> Option: Truth vs Misunderstanding</h3>
+    <p>Agar aapko executive presentation ke liye clean chart banana hai jisme extreme outlier dots se chart ka scale distort na ho, toh aap <code>showfliers=False</code> use kar sakte hain.</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">Critical Insight: Does showfliers=False delete data?</div>
+      <p><strong>Absolutely NOT!</strong> Yeh bahut common misconception hai. Setting <code>showfliers=False</code> does <em>NOT</em> filter or remove rows from your DataFrame! Whisker lengths, median lines, aur quartile box boundaries <strong>100% same rehte hain</strong>. Sirf un isolated dots ka visual rendering suppress hota hai.</p>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; showfliers Comparison</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+# showfliers=True (default)
+sns.boxplot(data=df_deliv, x='partner', y='delivery_time_mins', ax=ax1,
+            palette='Blues_d', showfliers=True)
+ax1.set_title("showfliers=True (Default)")
+
+# showfliers=False (clean presentation)
+sns.boxplot(data=df_deliv, x='partner', y='delivery_time_mins', ax=ax2,
+            palette='Blues_d', showfliers=False)
+ax2.set_title("showfliers=False (Outliers Hidden, Geometry Intact)")
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/outliers_hidden_markers_boxplot.png" alt="Outliers Hidden Markers Comparison" loading="lazy">
+      <div class="figure-caption">Figure 7.11: Side-by-side proof &mdash; <code>showfliers=False</code> hides flier markers while leaving whisker endpoints and quartile boundaries completely untouched.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 8: Whisker Rules (whis Parameter)
+       ========================================== -->
+  <section id="sec-8">
+    <h2><span class="toc-number">08</span> Custom Whisker Rules: <code>whis=1.5</code> vs <code>3.0</code> vs Percentiles</h2>
+    <p>By default, <code>sns.boxplot()</code> John Tukey ke 1.5&times;IQR rule ko follow karta hai. Lekin kya aap jante hain ki <code>whis</code> parameter ko aap customize kar sakte hain different analytical use-cases ke liye?</p>
+
+    <h3>The 3 Major Modes of <code>whis</code></h3>
+    <ol>
+      <li><strong>Standard Tukey (<code>whis=1.5</code>):</strong> Fences = <i>[Q1 &minus; 1.5&times;IQR, Q3 + 1.5&times;IQR]</i>. Flags mild and extreme outliers. Standard exploratory analysis ke liye ideal.</li>
+      <li><strong>Conservative Tukey (<code>whis=3.0</code>):</strong> Fences = <i>[Q1 &minus; 3.0&times;IQR, Q3 + 3.0&times;IQR]</i>. Tukey ne ise <em>"Far Outliers"</em> ya <em>"Extreme Outliers"</em> kaha tha. Yeh setting normal variance ko ignore karke sirf severe anomalies ko isolate karti hai.</li>
+      <li><strong>Percentile Whiskers (<code>whis=(5, 95)</code>):</strong> Whiskers ko IQR fences ke bajaye direct 5th percentile aur 95th percentile par terminate karta hai. Financial risk modeling aur SLA tail analysis mein yeh standard technique hai.</li>
+    </ol>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; whis Parameter In Depth</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>sec_b = df_college[df_college['section'] == 'Section B']['exam_marks']
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+
+# Mode 1: whis=1.5
+sns.boxplot(y=sec_b, ax=ax1, color='#0284c7', whis=1.5)
+ax1.set_title("whis=1.5 (Standard: 5 outliers flagged)")
+
+# Mode 2: whis=3.0
+sns.boxplot(y=sec_b, ax=ax2, color='#6366f1', whis=3.0)
+ax2.set_title("whis=3.0 (Conservative: Far Outliers only)")
+
+# Mode 3: whis=(5, 95)
+sns.boxplot(y=sec_b, ax=ax3, color='#10b981', whis=(5, 95))
+ax3.set_title("whis=(5, 95) (Percentile Reach: 5% to 95%)")
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/whisker_settings_comparison_boxplot.png" alt="Whisker Settings Comparison Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.12: Comparing Whisker Reach Rules &mdash; Standard 1.5&times;IQR vs Conservative 3.0&times;IQR vs Direct Percentile Reach <code>(5, 95)</code>.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 9: Box Plot + Strip Plot Overlays
+       ========================================== -->
+  <section id="sec-9">
+    <h2><span class="toc-number">09</span> The Gold Standard: Box Plot Overlaid with Strip Plot</h2>
+    <p>Box plots ki sabse badi weakness yeh hoti hai ki woh <strong>Sample Size (N)</strong> aur <strong>Data Point Density</strong> ko chupate hain. Chahe aapke group mein sirf 5 data points hon ya 5,000 data points hon, box plot dekhne mein bilkul ek jaisa lagta hai!</p>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">The Danger of the "Ghost Distribution"</div>
+      <p>Agar Section A mein 100 students hain aur Section B mein sirf 4 students hain, toh bina raw points dekhe aap dono ke boxes ko compare karke galat statistical conclusions nikaal sakte hain. 4 points ka box statistical fluke ho sakta hai!</p>
+    </div>
+
+    <h3>The Solution: Overlaying <code>sns.stripplot()</code></h3>
+    <p>Professional data scientists box plot ke upar ek jittered <code>sns.stripplot()</code> overlay karte hain with transparency (<code>alpha=0.6</code>). Is combination ko bolte hain <strong>"The Best of Both Worlds"</strong> &mdash; summary quantiles bhi mil jaate hain aur underlying raw data density bhi transparently visible hoti hai!</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Box + Strip Overlay</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_college = pd.read_csv("scratch/seaborn_topic7_data/college_exam_scores.csv")
+
+fig, ax = plt.subplots(figsize=(10, 5.5))
+
+# Step 1: Draw clean base box plot with showfliers=False
+# (Crucial: Hide fliers to avoid plotting outlier dots twice!)
+sns.boxplot(data=df_college, x='section', y='exam_marks', ax=ax,
+            palette=['#1e293b', '#1e293b', '#1e293b'],
+            boxprops=dict(edgecolor='#94a3b8', linewidth=1.5),
+            medianprops=dict(color='#38bdf8', linewidth=2.5),
+            showfliers=False)
+
+# Step 2: Overlay jittered points with high transparency
+sns.stripplot(data=df_college, x='section', y='exam_marks', ax=ax,
+              palette=['#34d399', '#38bdf8', '#fbbf24'],
+              jitter=0.25, size=6, alpha=0.65, edgecolor='#0f172a', linewidth=0.5)
+
+ax.set_title("The Best of Both Worlds: Box Plot Overlaid with Strip Plot")
+ax.set_xlabel("Academic Section")
+ax.set_ylabel("Exam Marks")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/boxplot_with_stripplot_overlay.png" alt="Boxplot with Stripplot Overlay" loading="lazy">
+      <div class="figure-caption">Figure 7.13: Combined Box + Strip Plot Overlay &mdash; Summary quartiles anchor the layout while individual points reveal exact sample support and density clustering.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 10: Box Plot vs Histogram (Bimodal Trap)
+       ========================================== -->
+  <section id="sec-10">
+    <h2><span class="toc-number">10</span> Box Plot vs Histogram: When to Use Which &amp; The Bimodal Trap</h2>
+    <p>Histograms aur Box Plots dono continuous variables ke distributions study karne ke liye use hote hain. Lekin unka primary purpose alag hota hai, aur box plot ki ek bohot dangerous limitation hoti hai jise har data analyst ko jaan lena chahiye.</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">The Bimodal Blindspot (Dangerous Pitfall!)</div>
+      <p>Box plots <strong>multimodality ko completely chupate hain!</strong> Agar aapke data mein do alag-alag groups hain (e.g. customer groups jinka peak 30 aur 70 par hai), toh histogram do distinct pahad (peaks) dikhayega. Lekin box plot median ko theek unke beech ke khali gaddhe (50) par rakh dega, aur box ko chouda bana dega &mdash; giving you ZERO indication that there are two separate clusters!</p>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Bimodal Demonstration</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+np.random.seed(42)
+bimodal_data = np.concatenate([np.random.normal(30, 5, 200), np.random.normal(70, 5, 200)])
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+# 1. Histogram + KDE
+sns.histplot(bimodal_data, kde=True, ax=ax1, color='#38bdf8', bins=25)
+ax1.set_title("Histogram + KDE: Clearly Reveals Two Peaks!")
+
+# 2. Box Plot
+sns.boxplot(x=bimodal_data, ax=ax2, color='#f59e0b')
+ax2.set_title("Box Plot: Completely Blinds You to Bimodality!")
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/boxplot_vs_histogram_comparison.png" alt="Box Plot vs Histogram Comparison" loading="lazy">
+      <div class="figure-caption">Figure 7.14: The Bimodal Trap &mdash; Histogram reveals twin clusters at 30 and 70, while the Box Plot misleads you into thinking it is a single wide distribution.</div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature / Requirement</th>
+            <th>Histogram (<code>sns.histplot</code>)</th>
+            <th>Box Plot (<code>sns.boxplot</code>)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Comparing 10+ Groups</strong></td>
+            <td>Cluttered &amp; messy (overlapping bars).</td>
+            <td><strong>Winner!</strong> Clean, compact side-by-side boxes.</td>
+          </tr>
+          <tr>
+            <td><strong>Revealing Multimodal Peaks</strong></td>
+            <td><strong>Winner!</strong> Peaks and valleys are obvious.</td>
+            <td>Fails completely (hides dips and peaks).</td>
+          </tr>
+          <tr>
+            <td><strong>Exact Five-Number Summary</strong></td>
+            <td>Hard to read exact median and quartiles.</td>
+            <td><strong>Winner!</strong> Exact median and IQR lines drawn.</td>
+          </tr>
+          <tr>
+            <td><strong>Outlier Flagging via Fences</strong></td>
+            <td>Visual tail only; no exact mathematical fences.</td>
+            <td><strong>Winner!</strong> Explicit Tukey 1.5&times;IQR outlier markers.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 11: Box Plot vs KDE Plot
+       ========================================== -->
+  <section id="sec-11">
+    <h2><span class="toc-number">11</span> Box Plot vs KDE Plot: Density Curves vs Quantile Anchors</h2>
+    <p>Topic 5 mein humne <strong>Kernel Density Estimation (KDE)</strong> plots padhe the. KDE curve data ki smooth continuous probability density show karta hai, jabki Box Plot discrete summary quantiles draw karta hai.</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/boxplot_vs_kde_comparison.png" alt="Box Plot vs KDE Comparison" loading="lazy">
+      <div class="figure-caption">Figure 7.15: Continuous Probability Shape (KDE) vs Exact Quantile Anchors (Box Plot) on the same delivery partner data.</div>
+    </div>
+
+    <h3>When to Pair KDE with Box Plots</h3>
+    <ul>
+      <li>Use <strong>KDE</strong> when you need to understand skewness shape, tail decay rate, and probability mass.</li>
+      <li>Use <strong>Box Plot</strong> when you need executive-ready SLAs (e.g. <em>"75% orders are delivered under 36.5 minutes"</em>).</li>
+      <li>Use <strong>Both</strong> during exploratory data analysis (EDA): KDE for shape discovery, Box Plot for outlier isolation.</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 12: Box Plot vs Violin Plot
+       ========================================== -->
+  <section id="sec-12">
+    <h2><span class="toc-number">12</span> Box Plot vs Violin Plot: Revealing Multimodal Secrets</h2>
+    <p>Agar aapko Box Plot ka compact summary bhi chahiye aur Histogram/KDE ki peak-detection capability bhi chahiye, toh Seaborn ka <code>sns.violinplot()</code> perfect solution hai. Violin plot box plot aur mirrored KDE curve ka hybrid combination hota hai!</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/boxplot_vs_violinplot_comparison.png" alt="Box Plot vs Violin Plot Comparison" loading="lazy">
+      <div class="figure-caption">Figure 7.16: Box Plot vs Violin Plot on Normal, Skewed, and Bimodal distributions &mdash; Notice how the violin waist instantly catches the bimodal dip.</div>
+    </div>
+
+    <details class="accordion">
+      <summary>Decision Rule: When should you choose Violin Plot over Box Plot?</summary>
+      <div class="accordion-content">
+        <p>Choose <strong>Violin Plot</strong> if:</p>
+        <ul>
+          <li>Aapko suspect hai ki data mein multi-modal distributions (multiple clusters) ho sakte hain.</li>
+          <li>Sample size sufficient hai (<i>N &gt; 100</i>), taaki KDE curve reliably smooth ban sake.</li>
+        </ul>
+        <p>Stick to <strong>Box Plot</strong> if:</p>
+        <ul>
+          <li>Aapke non-technical business stakeholders standard box plots se familiar hain aur violin plots se confuse ho sakte hain.</li>
+          <li>Dataset small hai (<i>N &lt; 50</i>), jahan KDE curve artificial bumps create kar deta hai.</li>
+          <li>Aapko exact Tukey outlier fences calculate karke flagging report karni hai.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 13: Formatting, Polish & Presentation
+       ========================================== -->
+  <section id="sec-13">
+    <h2><span class="toc-number">13</span> Styling, Theme &amp; Production Polish</h2>
+    <p>Production dashboards aur research reports ke liye raw Seaborn charts kafi nahi hote. Chart ko clear titles, readable ticks, desaturated gridlines, aur proper figure margins ke saath polish karna zaroori hai.</p>
+
+    <h3>Production Polish Checklist</h3>
+    <ul>
+      <li><strong>Theme Configuration:</strong> Use <code>sns.set_theme(style='darkgrid', palette='deep')</code> ya custom Matplotlib rcParams.</li>
+      <li><strong>Spine Control:</strong> Desaturate outer borders (<code>sns.despine(top=True, right=True)</code>) taaki chart clean lage.</li>
+      <li><strong>Tick Label Formatting:</strong> Financial numbers par rupee/dollar currency formatters (e.g. <code>₹{x:,.0f}</code>) apply karein.</li>
+      <li><strong>Reference Benchmark Lines:</strong> Key business thresholds (SLAs, pass criteria, median targets) ko <code>ax.axhline()</code> ya <code>ax.axvline()</code> ke zariye dashed lines se mark karein.</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 14: Case Study 1 - Tech Salaries
+       ========================================== -->
+  <section id="sec-14">
+    <h2><span class="toc-number">14</span> Real-World Case Study 1: Tech Salaries &amp; Seniority Tiers</h2>
+    <p>Ek leading tech consultancy apne HR compensation structure ko audit kar rahi hai across 3 core data roles: <strong>Junior Data Analyst</strong>, <strong>Senior Data Scientist</strong>, aur <strong>ML Engineering Lead</strong>. Company dekhna chahti hai ki compensation spread kaisa hai aur kya koi unexplainable pay disparity ya executive bonus outliers exist karte hain.</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Case Study 1 Code</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_salary = pd.read_csv("scratch/seaborn_topic7_data/tech_salaries_demo.csv")
+
+role_order = ['Junior Data Analyst', 'Senior Data Scientist', 'ML Engineering Lead']
+sal_pal = {'Junior Data Analyst': '#38bdf8', 'Senior Data Scientist': '#818cf8', 'ML Engineering Lead': '#f43f5e'}
+
+fig, ax = plt.subplots(figsize=(11, 6))
+sns.boxplot(data=df_salary, x='role', y='monthly_salary_inr', order=role_order, palette=sal_pal,
+            ax=ax, width=0.45, medianprops=dict(color='#ffffff', linewidth=2.5),
+            flierprops=dict(marker='D', markerfacecolor='#facc15', markeredgecolor='#ffffff', markersize=8))
+
+ax.set_title("Tech Salary Spread by Seniority Tier (Variance Expands with Seniority)")
+ax.set_ylabel("Monthly Compensation (₹ INR)")
+ax.set_xlabel("Job Title / Seniority")
+ax.yaxis.set_major_formatter('₹{x:,.0f}')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_salary_distribution_boxplot.png" alt="Tech Salary Distribution Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.17: Tech Compensation Spread &mdash; Notice how IQR variance expands dramatically from Junior (&plusmn;₹9.2k) to ML Lead (&plusmn;₹35.1k), accompanied by executive retention bonus fliers.</div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Role / Seniority Tier</th>
+            <th>Median Salary</th>
+            <th>IQR Spread</th>
+            <th>Lower Whisker</th>
+            <th>Upper Whisker</th>
+            <th>Flier Outliers</th>
+            <th>Business Analysis</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Junior Data Analyst</strong></td>
+            <td><strong>₹42,800</strong></td>
+            <td>₹9,225</td>
+            <td>₹28,000</td>
+            <td>₹58,400</td>
+            <td><em>None</em></td>
+            <td>Standardized entry-level band; tight compensation control.</td>
+          </tr>
+          <tr>
+            <td><strong>Senior Data Scientist</strong></td>
+            <td><strong>₹96,900</strong></td>
+            <td>₹17,725</td>
+            <td>₹65,000</td>
+            <td>₹129,100</td>
+            <td><code>₹185,000, ₹210,000</code></td>
+            <td>Two high outliers represent specialized domain niches (GenAI/Quant).</td>
+          </tr>
+          <tr>
+            <td><strong>ML Engineering Lead</strong></td>
+            <td><strong>₹146,400</strong></td>
+            <td>₹35,050</td>
+            <td>₹98,000</td>
+            <td>₹198,800</td>
+            <td><code>₹290,000</code></td>
+            <td>Widest spread (IQR=₹35k); massive executive signing bonus outlier.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 15: Case Study 2 - API Latency
+       ========================================== -->
+  <section id="sec-15">
+    <h2><span class="toc-number">15</span> Real-World Case Study 2: Cloud API vs Edge Latency Auditing</h2>
+    <p>Ek IoT automotive platform connected cars se telemetry data collect karta hai. Architecture team ne 3 network pipelines test kiye: <strong>Edge Gateway A (Local LAN)</strong>, <strong>Edge Gateway B (Cellular 4G/5G)</strong>, aur <strong>Cloud Monolith API</strong>. Objective yeh tha ki p50 median aur p99 tail latency ko 50ms aur 100ms SLAs ke against evaluate kiya jaye.</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Case Study 2 Code</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_lat = pd.read_csv("scratch/seaborn_topic7_data/iot_api_latency.csv")
+order = ['Edge Gateway A (LAN)', 'Edge Gateway B (Cellular)', 'Cloud Monolith API']
+
+fig, ax = plt.subplots(figsize=(11, 6))
+sns.boxplot(data=df_lat, x='architecture', y='latency_ms', order=order,
+            palette=['#10b981', '#f59e0b', '#f43f5e'], ax=ax, width=0.45,
+            medianprops=dict(color='#ffffff', linewidth=2.5),
+            flierprops=dict(marker='o', markerfacecolor='#ffffff', markeredgecolor='#f43f5e', markersize=6))
+
+ax.axhline(50, color='#38bdf8', linestyle='--', linewidth=1.8, label='Optimal Target (50 ms)')
+ax.axhline(100, color='#ef4444', linestyle=':', linewidth=1.8, label='Max Critical SLA (100 ms)')
+ax.set_title("IoT Cloud & Edge API Latency Benchmark")
+ax.set_ylabel("Roundtrip Latency (ms)")
+ax.legend()
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_api_latency_boxplot.png" alt="API Latency Benchmark Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.18: Network Architecture Latency Audit &mdash; LAN Edge stays comfortably under 25ms, while Cloud Monolith exhibits severe tail latencies breaching 350ms!</div>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Architecture Decision Recommendation</div>
+      <p>Cloud Monolith ka median (111.15ms) hi critical 100ms SLA ke upar baitha hai, aur upper whisker 198.4ms tak jaata hai with severe tail outliers up to 385ms! Safety-critical automotive decisions ke liye LAN Edge Gateway (median 17.9ms, max whisker 23.5ms) deploy karna mandatory hai.</p>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 16: Case Study 3 - IoT Sensor Calibration
+       ========================================== -->
+  <section id="sec-16">
+    <h2><span class="toc-number">16</span> Real-World Case Study 3: Industrial Sensor Drift &amp; Diagnostics</h2>
+    <p>Manufacturing plant mein 4 high-speed CNC machines ke core temperatures monitor kiye jaa rahe hain. Safe operating band <strong>65&deg;C to 75&deg;C</strong> hai. 80&deg;C par Warning alert hai, aur 90&deg;C par Emergency Shutdown hai.</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_iot_sensor_boxplot.png" alt="IoT Sensor Calibration Boxplot" loading="lazy">
+      <div class="figure-caption">Figure 7.19: Machine Core Temperature Diagnostics &mdash; Machine 1 is perfectly calibrated, Machine 2 suffers steady calibration drift, Machine 3 has a broken chiller (high variance), and Machine 4 suffers dangerous thermal spike outliers!</div>
+    </div>
+
+    <h3>Sensor Diagnostic Profiles</h3>
+    <ul>
+      <li><strong>Machine 1 (Calibrated):</strong> Box ekdum green safe band ke beech mein hai (Median 70&deg;C, tight IQR &approx; 2.8&deg;C). Perfect operations.</li>
+      <li><strong>Machine 2 (Drifting High):</strong> Box ka median 83&deg;C par shift ho chuka hai (above Warning line), lekin variance tight hai. Iska matlab sensor ka calibration offset kharab hai ya friction badh raha hai.</li>
+      <li><strong>Machine 3 (Faulty Chiller):</strong> Box bohot lamba (tall) hai (IQR &approx; 11&deg;C). Yeh cooling system ke oscillation ya failing temperature regulation ko indicate karta hai.</li>
+      <li><strong>Machine 4 (Thermal Spikes):</strong> Normal box toh 69&deg;C par hai, lekin 5 severe red diamond outliers 95&deg;C se 108&deg;C tak reach kar rahe hain &mdash; triggering emergency shutdown risks!</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 17: 12+ Common Pitfalls & Fixes
+       ========================================== -->
+  <section id="sec-17">
+    <h2><span class="toc-number">17</span> 12+ Common Pitfalls, Silent Bugs &amp; How to Fix Them</h2>
+    <p>Box plots generate karte waqt data analysts aksar chhoti-chhoti mistakes karte hain jo either code ko crash kar deti hain ya statistical interpretations ko completely invert kar deti hain. Yahan 12 most critical pitfalls ka complete field guide diya gaya hai:</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pitfall &amp; Silent Bug Scenario</th>
+            <th>Danger / Incorrect Interpretation</th>
+            <th>The Correct Code &amp; Mental Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Believing Whiskers Reach Theoretical Fences</strong></td>
+            <td>Reporting that whiskers extend to <i>Q3 + 1.5&times;IQR</i> even when no data exists there.</td>
+            <td>Whiskers stop at the <em>most extreme observed data point</em> inside fences. Do not assume fence equals whisker.</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Thinking <code>showfliers=False</code> Cleans Data</strong></td>
+            <td>Believing that setting <code>showfliers=False</code> drops outliers from analysis or models.</td>
+            <td><code>showfliers=False</code> is purely cosmetic; DataFrame rows remain untouched. Filter rows with pandas if needed.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Double-Plotting Outliers with Stripplot Overlay</strong></td>
+            <td>Overlaying <code>sns.stripplot()</code> over default boxplot plots outlier dots twice!</td>
+            <td>Always pass <code>showfliers=False</code> to <code>sns.boxplot()</code> when overlaying <code>stripplot</code> or <code>swarmplot</code>.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Missing Bimodal Distributions (The Twin Peaks Trap)</strong></td>
+            <td>Conflating a bimodal distribution with a wide unimodal spread.</td>
+            <td>Always pair box plots with <code>sns.histplot(kde=True)</code> or use <code>sns.violinplot()</code> to verify peak count.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Passing Numerical Column to <code>x</code> When Grouping by <code>y</code></strong></td>
+            <td>Accidental vertical orientation with cramped unreadable labels.</td>
+            <td>For long categorical labels, always pass category column to <code>y</code> and continuous value to <code>x</code>.</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Inverting <code>order</code> vs <code>hue_order</code></strong></td>
+            <td>Visual chaos where sub-groups mismatch across legend entries.</td>
+            <td>Use <code>order</code> for primary axis categories and <code>hue_order</code> strictly for the <code>hue</code> variable.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Unformatted Large Numbers on Axes</strong></td>
+            <td>Stakeholders struggle to read <code>1500000</code> vs <code>150000</code>.</td>
+            <td>Use Matplotlib ticker formatters: <code>ax.yaxis.set_major_formatter('₹{x:,.0f}')</code>.</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Assuming Small Samples are Normally Distributed</strong></td>
+            <td>Building box plots on <i>N &lt; 10</i> observations where quantiles are unstable.</td>
+            <td>If sample size is small (<i>N &lt; 20</i>), overlay raw points (<code>sns.stripplot</code>) and report N explicitly.</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>Ignoring NaN / Missing Values</strong></td>
+            <td>Pandas silently drops NaNs, which might distort category sample representation.</td>
+            <td>Check missing values count with <code>df.isnull().sum()</code> before drawing box plots.</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><strong>Hardcoding Colors Without <code>hue</code> Assignment in Seaborn 0.13+</strong></td>
+            <td>Getting <code>FutureWarning: Passing palette without assigning hue is deprecated</code>.</td>
+            <td>Pass <code>hue=category_col, legend=False</code> when applying a custom categorical palette to single-variable plots.</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><strong>Overlapping Hue Boxes Due to Missing Gap</strong></td>
+            <td>Sub-group boxes touch each other and look cluttered.</td>
+            <td>Use Seaborn 0.13+ <code>gap=0.08</code> or <code>gap=0.1</code> for modern breathe-in spacing between hue clusters.</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td><strong>Truncating Outlier Tail with Inappropriate <code>ylim</code></strong></td>
+            <td>Cropping the y-axis cuts off high outliers, giving a false sense of safety.</td>
+            <td>Always set <code>ylim</code> generously beyond the maximum outlier or use <code>ax.autoscale()</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 18: Quick Reference Cheat Sheet
+       ========================================== -->
+  <section id="sec-18">
+    <h2><span class="toc-number">18</span> Seaborn Box Plot Quick Reference &amp; Cheat Sheet</h2>
+    <p>Yeh master reference table aapke daily work aur coding interviews ke liye ek instant copy-paste companion hai:</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Analytical Goal</th>
+            <th>Seaborn 0.13+ Code Snippet</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Standard Vertical Boxplot</strong></td>
+            <td><code>sns.boxplot(data=df, x='category', y='value', palette='Set2')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Horizontal Boxplot (Long Labels)</strong></td>
+            <td><code>sns.boxplot(data=df, y='category', x='value', palette='deep')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Two-Factor Dodged Hue Plot</strong></td>
+            <td><code>sns.boxplot(data=df, x='dept', y='salary', hue='gender', gap=0.1)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Custom Diamond Outlier Styling</strong></td>
+            <td><code>sns.boxplot(..., flierprops=dict(marker='D', markerfacecolor='red', markersize=7))</code></td>
+          </tr>
+          <tr>
+            <td><strong>Clean Presentation (Hide Outlier Dots)</strong></td>
+            <td><code>sns.boxplot(..., showfliers=False)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Extreme Outliers Only (3.0&times;IQR)</strong></td>
+            <td><code>sns.boxplot(..., whis=3.0)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Percentile Whiskers (5th to 95th)</strong></td>
+            <td><code>sns.boxplot(..., whis=(5, 95))</code></td>
+          </tr>
+          <tr>
+            <td><strong>Box + Strip Plot Overlay</strong></td>
+            <td><code>sns.boxplot(..., showfliers=False); sns.stripplot(..., alpha=0.6, jitter=0.2)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Show Mean Point Inside Box</strong></td>
+            <td><code>sns.boxplot(..., showmeans=True, meanprops=dict(marker='^', markerfacecolor='green'))</code></td>
+          </tr>
+          <tr>
+            <td><strong>Rank Categories by Median</strong></td>
+            <td><code>order = df.groupby('cat')['val'].median().sort_values().index; sns.boxplot(..., order=order)</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 19: 21 Practice Questions & Capstone
+       ========================================== -->
+  <section id="sec-19">
+    <h2><span class="toc-number">19</span> 21 Practice Questions, Exercises &amp; Capstone Project</h2>
+    <p>Apni understanding ko test karne ke liye niche diye gaye 21 curated questions solve kijiye. Har question mein real-world industry logic aur step-by-step verified explanations included hain.</p>
+
+    <!-- Q1 to Q21 Accordions -->
+    <details class="accordion">
+      <summary>Q1: Five-number summary mein kaunse 5 specific metrics calculate hote hain?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Minimum, First Quartile (Q1 / 25th percentile), Median (Q2 / 50th percentile), Third Quartile (Q3 / 75th percentile), and Maximum (ya whisker upper boundary).</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q2: Agar dataset [10, 20, 30, 40, 50, 60, 70] ho, toh median aur IQR calculate kijiye.</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong></p>
+        <ul>
+          <li><i>n = 7</i> (odd). Middle element = 4th element = <strong>40 (Median)</strong>.</li>
+          <li>Lower half: <code>[10, 20, 30]</code> &rarr; Q1 = <strong>20</strong>.</li>
+          <li>Upper half: <code>[50, 60, 70]</code> &rarr; Q3 = <strong>60</strong>.</li>
+          <li><i>IQR = Q3 &minus; Q1 = 60 &minus; 20 = <strong>40</strong></i>.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q3: Tukey's 1.5 &times; IQR rule ke according Lower Fence aur Upper Fence ka exact formula kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong></p>
+        <div class="math-formula">
+          <i>Lower Fence = Q1 &minus; 1.5 &times; IQR</i><br>
+          <i>Upper Fence = Q3 + 1.5 &times; IQR</i>
+        </div>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q4: Kya whisker theoretical fence tak draw hota hai? Explain with example.</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Nahi!</strong> Whisker theoretical fence tak tabhi draw hota hai jab exact fence value par koi data point exist karta ho. Otherwise, whisker <em>fence ke andar ke sabse extreme actual observed data point</em> par aakar ruk jaata hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q5: <code>showfliers=False</code> pass karne par DataFrame ki rows delete hoti hain ya nahi?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Bilkul nahi.</strong> <code>showfliers=False</code> sirf Matplotlib canvas par outlier dots ki visual visibility ko hide karta hai. Data frame ki koi row remove nahi hoti aur whisker boundaries 100% same rehti hain.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q6: Jab category names bohot lambe hon toh vertical plot ki jagah horizontal plot kaise banate hain?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Categorical column ko <code>y</code> variable par aur numerical column ko <code>x</code> variable par pass karke: <code>sns.boxplot(data=df, y='job_title', x='monthly_salary')</code>.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q7: Box plot ke upar <code>sns.stripplot</code> overlay karte waqt kaunsi critical mistake avoid karni chahiye?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Agar aap <code>sns.boxplot</code> mein <code>showfliers=False</code> set nahi karenge, toh box plot ke flier dots aur strip plot ke raw dots dono ek ke upar ek draw honge (double plotting), jisse points artificially dense aur darker dikhenge!</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q8: Box plot kis type ke data distribution ko detect karne mein fail ho jaata hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Bimodal aur Multimodal distributions.</strong> Box plot do alag-alag peaks ko ek wide continuous spread ki tarah summarize kar deta hai aur median ko dono peaks ke beech ke khali dip mein place kar deta hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q9: <code>whis=3.0</code> set karne par box plot kaisa behave karta hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Whisker reach 3.0&times;IQR tak extend ho jaati hai. Isse normal variance ke mild outliers flag nahi hote; sirf <em>Extreme / Far Outliers</em> hi visual dots ke roop mein appear hote hain.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q10: Seaborn 0.13+ mein <code>gap</code> parameter ka kya role hota hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Jab <code>hue</code> variable use karke dodged sub-groups draw kiye jaate hain, toh <code>gap=0.1</code> parameter adjacent hue boxes ke beech clean visual space add karta hai taaki bars aapas mein chipke na rahein.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q11: Outlier markers ko red diamond shape dene ke liye kaunsa parameter use karenge?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <code>flierprops=dict(marker='D', markerfacecolor='#f43f5e', markeredgecolor='#ffffff', markersize=8)</code>.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q12: Agar box plot mein median line bottom quartile (Q1) ke bohot paas ho aur upper whisker bohot lamba ho, toh distribution ka skewness kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Right-Skewed (Positively Skewed)</strong> distribution. Data mein high values ki taraf lambi tail exist karti hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q13: Agar median line upper quartile (Q3) ke paas ho aur lower whisker lamba ho, toh skewness kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <strong>Left-Skewed (Negatively Skewed)</strong> distribution. Majority values high hain, aur low values ki taraf lambi tail hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q14: Categories ko unke median value ke according sort karke plot kaise karenge?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Groupby karke medians sort karein aur order pass karein:</p>
+        <pre><code>sorted_order = df.groupby('category')['value'].median().sort_values().index
+sns.boxplot(data=df, x='category', y='value', order=sorted_order)</code></pre>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q15: Box plot ke andar Mean value kaise display ki jaati hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <code>showmeans=True</code> pass karein aur <code>meanprops=dict(marker='^', markerfacecolor='green', markersize=8)</code> ke zariye marker style customize karein.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q16: Financial risk modeling mein standard 1.5&times;IQR fences ke bajaye percentile whiskers kaise set karte hain?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <code>whis=(5, 95)</code> ya <code>whis=(1, 99)</code> tuple pass karke.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q17: Mean aur Standard Deviation ke comparison mein Median aur IQR ko "Robust Statistics" kyun kaha jaata hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Kyunki unka breakdown point 50% hota hai. Ek single massive outlier mean ko infinitely pull kar sakta hai, lekin median aur middle 50% IQR par single extreme value ka koi farak nahi padta.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q18: Seaborn 0.13+ mein single-variable boxplot par palette pass karne se warning kyun aati hai aur uska clean fix kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Seaborn 0.13+ enforce karta hai ki agar <code>palette</code> use ho toh <code>hue</code> defined hona chahiye. Clean fix: <code>hue='category_col', legend=False</code> pass karein.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q19: Box plot vs Violin plot: kab Violin plot prefer karna chahiye?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Jab dataset bada ho (<i>N &gt; 100</i>) aur suspect ho ki distribution bimodal ya complex multi-peaked ho sakta hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q20: Box plot width ko adjust karne ke liye kaunsa parameter use hota hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> <code>width=0.45</code> (default is <code>0.8</code>).</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q21: Capstone Mini-Project: Automated Outlier Auditor &amp; Boxplot Pipeline</summary>
+      <div class="accordion-content">
+        <p><strong>Industry Pipeline Implementation:</strong> Yeh automated function kisi bhi DataFrame column ka 5-number summary calculate karta hai, outliers extract karta hai, aur polished boxplot generate karta hai:</p>
+        <pre><code>import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def audit_column_distribution(df, col_name, category_col=None):
+    # Five-number summary calculations
+    q1 = df[col_name].quantile(0.25)
+    med = df[col_name].median()
+    q3 = df[col_name].quantile(0.75)
+    iqr = q3 - q1
+    lf = q1 - 1.5 * iqr
+    uf = q3 + 1.5 * iqr
+    
+    outliers = df[(df[col_name] < lf) | (df[col_name] > uf)][col_name]
+    
+    print(f"=== DISTRIBUTION AUDIT: {col_name} ===")
+    print(f"Q1: {q1:.2f} | Median: {med:.2f} | Q3: {q3:.2f} | IQR: {iqr:.2f}")
+    print(f"Fences: [{lf:.2f}, {uf:.2f}]")
+    print(f"Outlier Count: {len(outliers)} ({len(outliers)/len(df)*100:.1f}%)")
+    
+    fig, ax = plt.subplots(figsize=(8, 5))
+    if category_col:
+        sns.boxplot(data=df, x=category_col, y=col_name, ax=ax, palette='Set2')
+    else:
+        sns.boxplot(y=df[col_name], ax=ax, color='#0284c7', width=0.4)
+    ax.set_title(f"Box Plot Audit: {col_name}")
+    plt.tight_layout()
+    return fig</code></pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 20: Summary & Topic 8 Teaser
+       ========================================== -->
+  <section id="sec-20">
+    <h2><span class="toc-number">20</span> Summary, Concept Blueprint &amp; Topic 8 Preview</h2>
+    <p>Badhaai ho! Aapne Seaborn Topic 7 mein Box Plots ki core theory, John Tukey's 1.5&times;IQR fences, multi-category segmentation, outlier styling, whisker reach rules, aur strip plot overlays ko complete depth ke saath master kar liya hai.</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/final_concept_revision_diagram.png" alt="Seaborn Box Plots Mastery Mind Map" loading="lazy">
+      <div class="figure-caption">Figure 7.20: The 7 Golden Rules &amp; Architectural Mastery Blueprint for Seaborn Box Plots.</div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Key Mastery Takeaways</div>
+      <ul>
+        <li><strong>Median &amp; IQR:</strong> Data ke central tendency aur spread ko outliers se distort hone se bachate hain.</li>
+        <li><strong>Tukey's Fences:</strong> <i>Q1 &minus; 1.5&times;IQR</i> aur <i>Q3 + 1.5&times;IQR</i> mathematical boundary define karte hain, lekin whiskers actual observed data point par rukte hain.</li>
+        <li><strong>The Best Pairing:</strong> Box plot ke upar <code>sns.stripplot(alpha=0.6)</code> overlay karna data science ka gold standard hai.</li>
+      </ul>
+    </div>
+
+    <h3>Upcoming Next: Topic 8 &mdash; Violin Plots &amp; Advanced Distributions</h3>
+    <p>Agli class mein hum explore karenge <strong>Violin Plots (<code>sns.violinplot</code>)</strong>! Hum dekhenge ki kaise Violin plots Box Plots ke 5-number quantiles aur KDE density curves ko merge karke multimodality, bimodal peaks, aur cluster density ko seamlessly reveal karte hain.</p>
+  </section>
+
+</div>
+
+<script>
+  function copyCode(button) {
+    const pre = button.parentElement.nextElementSibling;
+    const code = pre.querySelector('code') || pre;
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      const originalText = button.innerText;
+      button.innerText = 'Copied!';
+      button.style.color = '#34d399';
+      button.style.borderColor = '#34d399';
+      setTimeout(() => {
+        button.innerText = originalText;
+        button.style.color = '';
+        button.style.borderColor = '';
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

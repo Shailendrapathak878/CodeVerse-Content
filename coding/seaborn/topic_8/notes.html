@@ -1,0 +1,1850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 8: Violin Plots in Seaborn — Kernel Density Estimation, Multimodal Detection, Split Violins & Categorical Distributions</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 14px;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+
+    .toc-card h3 {
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .toc-link:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateX(4px);
+    }
+
+    .toc-number {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styles */
+    section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 26px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent-indigo);
+      margin: 22px 0 12px 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* Highlight Badges & Callout Boxes */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 4px solid;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .callout-info {
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.06);
+    }
+
+    .callout-warning {
+      border-color: var(--accent-amber);
+      background-color: rgba(251, 191, 36, 0.06);
+    }
+
+    .callout-danger {
+      border-color: var(--accent-rose);
+      background-color: rgba(244, 63, 94, 0.06);
+    }
+
+    .callout-success {
+      border-color: var(--accent-green);
+      background-color: rgba(52, 211, 153, 0.06);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info .callout-title { color: var(--accent-blue); }
+    .callout-warning .callout-title { color: var(--accent-amber); }
+    .callout-danger .callout-title { color: var(--accent-rose); }
+    .callout-success .callout-title { color: var(--accent-green); }
+
+    /* Code Blocks */
+    .code-container {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .code-badge {
+      font-weight: 600;
+      color: var(--accent-indigo);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      max-width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code, td code {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+
+    /* Output Blocks */
+    .output-block {
+      background-color: var(--bg-code);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0 18px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .output-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    /* Image Wrapper */
+    .figure-wrapper {
+      margin: 24px 0;
+      text-align: center;
+      background-color: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-caption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--accent-blue);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Accordion Details */
+    details.accordion {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      background-color: rgba(129, 140, 248, 0.04);
+    }
+
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    /* Math Formula Display */
+    .math-formula {
+      background-color: rgba(56, 189, 248, 0.05);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      padding: 12px 18px;
+      margin: 14px 0;
+      font-family: var(--font-mono);
+      color: var(--accent-blue);
+      font-size: 0.96rem;
+      text-align: center;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="topic-badge">Topic 8 &bull; Seaborn Mastery</div>
+    <h1>Violin Plots in Seaborn: <code>sns.violinplot()</code></h1>
+    <p>Discover the true shape of numerical data distributions by combining Kernel Density Estimation (KDE) with internal box plots, uncovering bimodal secrets, and mastering split violins.</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item"><span>Module:</span> <strong>Distribution Visualization</strong></div>
+      <div class="hero-meta-item"><span>Estimated Reading:</span> <strong>35 Mins</strong></div>
+      <div class="hero-meta-item"><span>Hands-on Code:</span> <strong>20+ Runnable Examples</strong></div>
+      <div class="hero-meta-item"><span>Visual Assets:</span> <strong>20 Verified Charts</strong></div>
+    </div>
+  </header>
+
+  <!-- Table of Contents -->
+  <nav class="toc-card" aria-label="Table of Contents">
+    <h3>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+      Curriculum Index &bull; 20 Core Modules
+    </h3>
+    <div class="toc-grid">
+      <a href="#sec-1" class="toc-link"><span class="toc-number">01</span> <span class="toc-text">Section A: Violin Plot Kya Hota Hai?</span></a>
+      <a href="#sec-2" class="toc-link"><span class="toc-number">02</span> <span class="toc-text">Section B: KDE Statistics &amp; Smooth Bumps</span></a>
+      <a href="#sec-3" class="toc-link"><span class="toc-number">03</span> <span class="toc-text">Section C: sns.violinplot() Core Syntax</span></a>
+      <a href="#sec-4" class="toc-link"><span class="toc-number">04</span> <span class="toc-text">Section D: How to Read the Violin Shape</span></a>
+      <a href="#sec-5" class="toc-link"><span class="toc-number">05</span> <span class="toc-text">Section E: Bandwidth &amp; cut Smoothing</span></a>
+      <a href="#sec-6" class="toc-link"><span class="toc-number">06</span> <span class="toc-text">Section F: Customizing Aesthetics &amp; Orientation</span></a>
+      <a href="#sec-7" class="toc-link"><span class="toc-number">07</span> <span class="toc-text">Section G: Group Comparisons with hue</span></a>
+      <a href="#sec-8" class="toc-link"><span class="toc-number">08</span> <span class="toc-text">Section H: Split Violins for Binary Groups</span></a>
+      <a href="#sec-9" class="toc-link"><span class="toc-number">09</span> <span class="toc-text">Section I: Violin vs Box Plot Secrets</span></a>
+      <a href="#sec-10" class="toc-link"><span class="toc-number">10</span> <span class="toc-text">Violin vs Histogram &amp; KDE</span></a>
+      <a href="#sec-11" class="toc-link"><span class="toc-number">11</span> <span class="toc-text">Violin vs ECDF Cumulative Curves</span></a>
+      <a href="#sec-12" class="toc-link"><span class="toc-number">12</span> <span class="toc-text">Overlays: Violin + Strip Plot</span></a>
+      <a href="#sec-13" class="toc-link"><span class="toc-number">13</span> <span class="toc-text">Styling, Theme &amp; Spine Control</span></a>
+      <a href="#sec-14" class="toc-link"><span class="toc-number">14</span> <span class="toc-text">Section J: Case Study 1 &mdash; College Marks</span></a>
+      <a href="#sec-15" class="toc-link"><span class="toc-number">15</span> <span class="toc-text">Case Study 2 &mdash; Delivery Operations</span></a>
+      <a href="#sec-16" class="toc-link"><span class="toc-number">16</span> <span class="toc-text">Case Study 3 &amp; 4 &mdash; Spend &amp; API Latency</span></a>
+      <a href="#sec-17" class="toc-link"><span class="toc-number">17</span> <span class="toc-text">Section K: 12+ Pitfalls &amp; Debugging</span></a>
+      <a href="#sec-18" class="toc-link"><span class="toc-number">18</span> <span class="toc-text">Quick Reference Cheat Sheet</span></a>
+      <a href="#sec-19" class="toc-link"><span class="toc-number">19</span> <span class="toc-text">Section L: 21 Practice Questions &amp; Project</span></a>
+      <a href="#sec-20" class="toc-link"><span class="toc-number">20</span> <span class="toc-text">Summary &amp; Topic 9 Preview</span></a>
+    </div>
+  </nav>
+
+  <!-- ==========================================
+       SECTION 1: Section A - Violin Plot Kya Hota Hai?
+       ========================================== -->
+  <section id="sec-1">
+    <h2><span class="toc-number">01</span> Section A: Violin Plot Kya Hota Hai?</h2>
+    
+    <div class="callout callout-info">
+      <div class="callout-title">Relatable Opening Question</div>
+      <p><em>"Section A aur Section B ke students ke marks ka median lagbhag similar hai (71.3 vs 72.4). Kya dono sections mein marks ka distribution bhi same hai?"</em></p>
+    </div>
+
+    <p>Agar aap sirf <strong>Mean</strong> aur <strong>Median</strong> dekhkar faisla le lenge, toh aapka answer hoga: <em>"Haan, dono sections ki performance lagbhag barabar hai!"</em> Lekin real-world data science mein yeh sabse bada dhokha ho sakta hai.</p>
+
+    <p>Jab aap unhi marks ka <strong>Violin Plot</strong> dekhenge, toh aapke hosh udd jayenge! Section A mein students ka score ek single concentrated cluster mein hai (lagbhag sabhi 68–75 ke beech hain). Lekin Section B mein classroom do tukdo mein polarized hai: 50% students struggle kar rahe hain 55 ke aas-paas (Peak 1), aur 50% top students 85 ke aas-paas hain (Peak 2)! Dono ka median same 72 hai, lekin dono classrooms ki teaching requirement 100% alag hai!</p>
+
+    <h3>Violin Plot Ki Definition Aur Shape</h3>
+    <p>Ek <strong>Violin Plot</strong> do classical statistical charts ka perfect hybrid combination hota hai:</p>
+    <ol>
+      <li><strong>Kernel Density Estimation (KDE):</strong> Data ke probability density curve ko vertically draw karke horizontally mirror kar diya jaata hai (creating the outer curvy violin body).</li>
+      <li><strong>Box Plot Core:</strong> Violin ke center spine par ek miniature box plot baitha hota hai jisme thick black bar <strong>Interquartile Range (IQR)</strong> batata hai, white center dot <strong>Median</strong> batata hai, aur thin black lines extreme whisker values batati hain.</li>
+    </ol>
+
+    <div class="figure-wrapper">
+      <img src="assets/violin_anatomy_annotated.png" alt="Anatomy of a Violin Plot in Seaborn" loading="lazy">
+      <div class="figure-caption">Figure 8.1: Complete Anatomy of a Violin Plot &mdash; Mirrored KDE density contours, wide mode bulges, narrow density waists, and central miniature box plot anchors.</div>
+    </div>
+
+    <h3>Violin Ki Width Kya Batati Hai?</h3>
+    <p>Violin plot ka sabse important rule yaad rakhiye: <strong>Violin ki horizontal width kisi value range ki Estimated Probability Density represent karti hai, exact observation count nahi!</strong></p>
+    <ul>
+      <li><strong>Wide Region (Bulge):</strong> Jis point par violin sabse zyada chouda (wide) hota hai, wahan data values sabse zyada concentrated hoti hain (Distribution ka Mode / Peak).</li>
+      <li><strong>Narrow Region (Waist):</strong> Jahan violin patla ho jata hai, wahan data points bohot rare ya absent hote hain.</li>
+      <li><strong>Tapering Tails:</strong> Upar aur niche ke patle edges distribution ke extreme tail ranges show karte hain.</li>
+    </ul>
+
+    <h3>Two Relatable Real-World Questions a Violin Plot Answers</h3>
+    <ul>
+      <li><strong>E-Commerce Delivery Operations:</strong> <em>"Kya delivery partner QuickDrop ke orders ek consistent time (~30 mins) par deliver hote hain, ya highway traffic ke waqt do alag peaks ban jaate hain (25 mins vs 55 mins)?"</em></li>
+      <li><strong>FinTech Customer Spending:</strong> <em>"Regular aur VIP customers ke order amounts mein kya sirf median ka fark hai, ya VIP customers mein ek second luxury purchase peak exist karta hai?"</em></li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 2: Section B - Statistics Behind a Violin Plot
+       ========================================== -->
+  <section id="sec-2">
+    <h2><span class="toc-number">02</span> Section B: Understanding KDE Statistics &amp; The "Smooth Bump" Analogy</h2>
+    <p>Violin plot padhne se pehle students ko lagta hai ki yeh curved shape kahan se aayi. Iske peeche jo core statistical algorithm kaam karta hai use kehte hain <strong>Kernel Density Estimation (KDE)</strong>.</p>
+
+    <h3>The Smooth Bump Analogy (Intuitive Explanation)</h3>
+    <p>Imagine kijiye aapke paas 9 students ke test marks hain: <code>[22, 25, 27, 30, 31, 33, 48, 50, 52]</code>. Agar aap har student ke score par ek ret ka chhota sa smooth dher (Gaussian bump / Kernel) rakh dein:</p>
+    <ul>
+      <li>Jahan 4–5 students ke marks ek doosre ke bohot paas hain (30, 31, 33), wahan ret ke saare chhote bumps aapas mein judkar ek <strong>bada pahad (prominent peak)</strong> bana lenge!</li>
+      <li>Jahan 35 se 45 ke beech koi student nahi hai, wahan zameen flat rahegi (dip / waist).</li>
+      <li>Aur jahan 48, 50, 52 par agla group hai, wahan ek doosra pahad ban jayega!</li>
+    </ul>
+
+    <p>Jab in saare bumps ko mathematically add (sum) kar diya jaata hai, toh humein ek continuous smooth density curve milta hai. Phir Seaborn is curve ko dono taraf mirror kar deta hai, aur ban jaata hai aapka <strong>Violin Plot</strong>!</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/density_vs_frequency_concept.png" alt="KDE Smooth Bump Summation and Violin Mirroring" loading="lazy">
+      <div class="figure-caption">Figure 8.2: The Smooth Bump Analogy &mdash; Dotted Gaussian kernels over raw observations sum into the blue continuous KDE curve, which is mirrored vertically to forge the violin body.</div>
+    </div>
+
+    <h3>The 4 Essential Distribution Archetypes</h3>
+    <p>Real-life datasets mein aapko violin plots 4 primary shapes mein dikhenge:</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/four_distribution_shapes_comparison.png" alt="Four Distribution Shapes in Violin Plots" loading="lazy">
+      <div class="figure-caption">Figure 8.3: The Four Classic Distribution Archetypes &mdash; Symmetric Bell Curve, Right-Skewed Long Tail, Left-Skewed Cap, and Bimodal Twin Peaks.</div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Archetype</th>
+            <th>Visual Violin Anatomy</th>
+            <th>Statistical Meaning</th>
+            <th>Real-World Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Symmetric Normal</strong></td>
+            <td>Equal width on both sides of center; median sits in the exact middle bulge.</td>
+            <td>Mean &approx; Median; variance is evenly distributed without skew.</td>
+            <td>Calibrated factory machinery, adult heights, standardized IQ tests.</td>
+          </tr>
+          <tr>
+            <td><strong>Right-Skewed (Positive)</strong></td>
+            <td>Bulbous base at low values; long thin neck tapering upwards.</td>
+            <td>Mean &gt; Median; majority values low, few extreme high outliers pull the tail.</td>
+            <td>Customer order spending, website API latencies, software engineer salaries.</td>
+          </tr>
+          <tr>
+            <td><strong>Left-Skewed (Negative)</strong></td>
+            <td>Bulbous top at high values; long thin stem tapering downwards.</td>
+            <td>Mean &lt; Median; majority perform well, few severe failures pull the lower tail.</td>
+            <td>Easy college exam marks, airline on-time arrival scores, product satisfaction ratings.</td>
+          </tr>
+          <tr>
+            <td><strong>Bimodal (Two Peaks)</strong></td>
+            <td>Hourglass waist; two distinct wide bulges with a narrow bridge in between.</td>
+            <td>Data contains two distinct hidden sub-populations with different means!</td>
+            <td>Rush hour vs non-rush hour delivery times, mixed junior/senior developer salaries.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details class="accordion">
+      <summary>Deep Dive: Individual Observations vs Underlying Distribution vs Estimated Density</summary>
+      <div class="accordion-content">
+        <p>Yeh teen terms beginner data scientists aksar aapas mein mix kar dete hain:</p>
+        <ol>
+          <li><strong>Individual Observations:</strong> Aapka raw data (e.g. 100 students ke exact exam marks).</li>
+          <li><strong>Underlying Population Distribution:</strong> Woh theoretical true probability distribution jahan se data generate hua hai (jo humein directly kabhi 100% pata nahi hota).</li>
+          <li><strong>Estimated Density (The Violin):</strong> KDE algorithm dwara banayi gayi smooth approximation! Yeh sample data aur chosen smoothing bandwidth par depend karti hai. Isiliye violin shape ko divine truth nahi, balki ek intelligent mathematical estimation samjhein.</li>
+        </ol>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 3: sns.violinplot() Core Syntax & Parameters
+       ========================================== -->
+  <section id="sec-3">
+    <h2><span class="toc-number">03</span> Section C: <code>sns.violinplot()</code> Syntax &amp; Master Parameter Guide</h2>
+    <p>Seaborn mein violin plot generate karne ke liye standard function <code>sns.violinplot()</code> hota hai. Seaborn 0.13+ architecture mein is function ne kai legacy parameters ko modernize kiya hai (jaise <code>scale</code> ko <code>density_norm</code> se replace karna aur modern <code>gap</code> support add karna).</p>
+
+    <div class="math-formula">
+      <code>sns.violinplot(data=None, *, x=None, y=None, hue=None, order=None, hue_order=None, orient=None, color=None, palette=None, saturation=0.75, fill=True, inner='box', split=False, width=0.8, dodge='auto', gap=0, linewidth=None, linecolor='auto', cut=2, gridsize=100, bw_method='scott', bw_adjust=1, density_norm='area', common_norm=False, inner_kws=None, ax=None, **kwargs)</code>
+    </div>
+
+    <h3>Master Parameter Reference Table (Seaborn 0.13.2 Verified)</h3>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Parameter</th>
+            <th>Type</th>
+            <th>Default</th>
+            <th>Data Science Purpose &amp; Hinglish Explanation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>data</code></td>
+            <td>DataFrame / Array</td>
+            <td><code>None</code></td>
+            <td>Input dataset (Tidy long-form ya Wide-form tabular data).</td>
+          </tr>
+          <tr>
+            <td><code>x, y</code></td>
+            <td>str / Series</td>
+            <td><code>None</code></td>
+            <td>Variables mapping. Agar categorical variable <code>x</code> par hai toh vertical plot banega; agar <code>y</code> par hai toh horizontal.</td>
+          </tr>
+          <tr>
+            <td><code>hue</code></td>
+            <td>str</td>
+            <td><code>None</code></td>
+            <td>Sub-grouping variable jo violins ko subgroups mein divide ya split karta hai.</td>
+          </tr>
+          <tr>
+            <td><code>inner</code></td>
+            <td>'box' | 'quart' | 'point' | 'stick' | None</td>
+            <td><code>'box'</code></td>
+            <td>Violin ke center spine par internal indicators draw karta hai: miniature box plot, dashed quartile lines, individual points, ya clean blank.</td>
+          </tr>
+          <tr>
+            <td><code>split</code></td>
+            <td>bool</td>
+            <td><code>False</code></td>
+            <td><strong>Game-Changer:</strong> Jab <code>hue</code> mein exactly 2 levels hote hain, toh <code>split=True</code> unhe ek single violin ke left aur right halves mein merge kar deta hai!</td>
+          </tr>
+          <tr>
+            <td><code>density_norm</code></td>
+            <td>'area' | 'count' | 'width'</td>
+            <td><code>'area'</code></td>
+            <td>Seaborn 0.13+ standard (replaces deprecated <code>scale</code>). Controls how violin widths are scaled across groups.</td>
+          </tr>
+          <tr>
+            <td><code>bw_adjust</code></td>
+            <td>float</td>
+            <td><code>1.0</code></td>
+            <td>Bandwidth multiplier factor. <code>&lt; 1.0</code> under-smooths (shows fine peaks); <code>&gt; 1.0</code> over-smooths.</td>
+          </tr>
+          <tr>
+            <td><code>cut</code></td>
+            <td>float</td>
+            <td><code>2.0</code></td>
+            <td>KDE curve ko observed min/max ke kitne bandwidth units aage tak extrapolate karna hai. Set <code>cut=0</code> to strictly stop at data bounds.</td>
+          </tr>
+          <tr>
+            <td><code>gap</code></td>
+            <td>float</td>
+            <td><code>0</code></td>
+            <td>Seaborn 0.13+ feature: hue violins ke beech ka visual space (e.g. <code>gap=0.08</code>).</td>
+          </tr>
+          <tr>
+            <td><code>common_norm</code></td>
+            <td>bool</td>
+            <td><code>False</code></td>
+            <td>Agar <code>True</code> ho, toh saare violins ki density ko globally normalize kiya jaata hai.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Example 1: College Exam Marks (Univariate Vertical Violin)</h3>
+    <p>Aaiye student exam performance ka basic violin plot draw karke center median aur quartile boundaries dekhte hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Seaborn 0.13.2</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_college = pd.read_csv("scratch/seaborn_topic8_data/college_exam_multimodal.csv")
+
+fig, ax = plt.subplots(figsize=(7, 6))
+sns.violinplot(y=df_college['exam_marks'], ax=ax, color='#0284c7', inner='box', cut=2, width=0.4)
+
+med_m = df_college['exam_marks'].median()
+ax.set_ylabel("Exam Marks (Out of 100)", fontsize=11, fontweight='bold')
+ax.set_title("Distribution of Student Exam Marks (n=300)", fontsize=13, fontweight='bold')
+ax.set_xticks([0])
+ax.set_xticklabels(["College Cohort"])
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/basic_exam_marks_violin.png" alt="Basic Exam Marks Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.4: Univariate Vertical Violin Plot of Student Exam Marks with internal miniature box plot and white median point.</div>
+    </div>
+
+    <h3>Example 2: E-Commerce Delivery Times (Horizontal Violin)</h3>
+    <p>Horizontal layout banakar 45-minute guaranteed SLA threshold ke saath delivery latency check karte hain:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Horizontal Violin</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>df_deliv = pd.read_csv("scratch/seaborn_topic8_data/ecommerce_deliveries_shifts.csv")
+
+fig, ax = plt.subplots(figsize=(10, 5))
+sns.violinplot(x=df_deliv['delivery_time_mins'], ax=ax, color='#6366f1', inner='box', cut=2, width=0.45)
+
+ax.axvline(45.0, color='#ef4444', linestyle='--', linewidth=2, label='45m Guaranteed SLA')
+ax.set_xlabel("Delivery Time (minutes)", fontsize=11, fontweight='bold')
+ax.set_title("E-Commerce Order Delivery Times (n=360)", fontsize=13, fontweight='bold')
+ax.legend()
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/basic_delivery_time_violin.png" alt="Horizontal Delivery Time Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.5: Horizontal Violin Plot of Delivery Times with SLA benchmark line at 45 minutes.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 4: Section D - How to Read Violin Shape
+       ========================================== -->
+  <section id="sec-4">
+    <h2><span class="toc-number">04</span> Section D: How to Read the Violin Shape &amp; Decode Its Anatomy</h2>
+    <p>Violin plot dekhne mein khoobsurat lagta hai, lekin ek professional data analyst ki nazar uske geometry mein छिपे statistical signals ko dhundti hai. Yahan 4 critical components diye gaye hain:</p>
+
+    <div class="callout callout-info">
+      <div class="callout-title">The 4-Step Violin Decoding Framework</div>
+      <ol>
+        <li><strong>Peak Count (Modality):</strong> Violin mein kitne bulges (choude pet) hain? Ek bulge ka matlab <em>Unimodal</em> (single homogeneous group); do bulges ka matlab <em>Bimodal</em> (two hidden sub-groups with different averages); teen ya zyada ka matlab <em>Multimodal</em>.</li>
+        <li><strong>Waist Tightness (Density Dip):</strong> Do bulges ke beech ka waist kitna patla hai? Jitna zyada patla hoga, utna hi strong segregation hai dono groups ke beech.</li>
+        <li><strong>Symmetry vs Skew:</strong> Kya median line ke upar aur niche violin ka shape mirror image hai? Agar upar lamba stem hai, toh right-skewed tail hai.</li>
+        <li><strong>Internal Box Summary:</strong> White center dot median batata hai. Thick black bar middle 50% data (IQR) ki exact physical limits batata hai.</li>
+      </ol>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Crucial Reminder: Density vs Frequency</div>
+      <p>Violin plot ki width <strong>relative probability density</strong> batati hai, exact student count nahi! Agar Section A mein 1,000 students hain aur Section B mein sirf 50 students hain, default setting (<code>density_norm='area'</code>) mein dono violins ki total width barabar dikhegi kyunki har violin ka area 1.0 par normalize hota hai. Kabhi yeh mat samajhiye ki chouda violin matlab zyada data points!</p>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 5: Section E - Bandwidth & Cut Smoothing
+       ========================================== -->
+  <section id="sec-5">
+    <h2><span class="toc-number">05</span> Section E: Understanding KDE Bandwidth (<code>bw_adjust</code>) &amp; The <code>cut</code> Parameter</h2>
+    <p>Violin plot ka sabse sensitive hissa hota hai <strong>Bandwidth Smoothing</strong>. KDE curve kitna smooth hoga, yeh bandwidth parameter decide karta hai. Seaborn 0.13+ mein hum ise <code>bw_adjust</code> parameter ke zariye fine-tune karte hain.</p>
+
+    <h3>1. The <code>bw_adjust</code> Parameter (Smoothing Multiplier)</h3>
+    <ul>
+      <li><code>bw_adjust=1.0</code> (Default): Balanced automatic Scott's rule bandwidth.</li>
+      <li><code>bw_adjust &lt; 1.0</code> (e.g. <code>0.35</code>): <strong>Under-smoothed.</strong> Bumps bohot patle ho jaate hain jisse random sampling noise bhi artificial peaks ke roop mein appear ho sakti hai.</li>
+      <li><code>bw_adjust &gt; 1.0</code> (e.g. <code>2.5</code>): <strong>Over-smoothed.</strong> Excessive smoothing do genuine peaks ke beech ke dip ko mita deti hai, making bimodal data falsely appear unimodal!</li>
+    </ul>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Bandwidth Sensitivity Demonstration</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>sec_b = df_college[df_college['section'] == 'Section B']['exam_marks']
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(15, 5))
+
+# 1. Under-smoothed
+sns.violinplot(y=sec_b, ax=ax1, color='#38bdf8', bw_adjust=0.35)
+ax1.set_title("bw_adjust = 0.35 (Under-Smoothed)
+Noisy & Distracting Jaggies")
+
+# 2. Balanced
+sns.violinplot(y=sec_b, ax=ax2, color='#10b981', bw_adjust=1.0)
+ax2.set_title("bw_adjust = 1.0 (Balanced Default)
+Accurately reveals both modes (55 & 85)")
+
+# 3. Over-smoothed
+sns.violinplot(y=sec_b, ax=ax3, color='#f43f5e', bw_adjust=2.5)
+ax3.set_title("bw_adjust = 2.5 (Over-Smoothed)
+Masks the dip; falsely appears unimodal!")
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/kde_bandwidth_smoothing_comparison.png" alt="KDE Bandwidth Smoothing Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.6: The Bandwidth Dilemma &mdash; Comparing under-smoothed noise (0.35) vs balanced ground-truth bimodality (1.0) vs over-smoothed mode masking (2.5).</div>
+    </div>
+
+    <h3>2. The <code>cut</code> Parameter: Bounded Variables Alert</h3>
+    <p>By default, Seaborn ka <code>cut=2</code> setting KDE tails ko extreme observed values ke <strong>2 bandwidth units aage tak extend</strong> kar deta hai. Iska side-effect yeh hota hai ki agar exam marks 0 se 100 ke beech hain, toh violin &minus;5 ya +105 tak reach karta hua dikhayi de sakta hai!</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">The Bounded Variable Trap</div>
+      <p>Exam marks, ages, ya positive delivery times jaise physical variables ke liye KDE tails impossible negative values ya &gt;100% values dikha sakti hain. Is problem ka clean solution hai: <strong><code>cut=0</code></strong> set karein! Yeh violin ko strictly dataset ke observed minimum aur maximum par terminate kar deta hai.</p>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/cut_parameter_tail_comparison.png" alt="Cut Parameter Tail Extrapolation Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.7: The <code>cut</code> Parameter &mdash; <code>cut=0</code> strictly binds the violin within observed data limits, whereas <code>cut=2</code> extrapolates smooth tails past actual min/max boundaries.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 6: Customizing Aesthetics & Orientation
+       ========================================== -->
+  <section id="sec-6">
+    <h2><span class="toc-number">06</span> Section F: Customizing Aesthetics, Orientation &amp; Inner Indicators</h2>
+    <p>Professional dashboards aur client reports ke liye default violin plots ko customize karna zaroori hota hai. Yahan do major customization techniques di gayi hain: <strong>Orientation Control</strong> aur <strong>Inner Indicator Selection</strong>.</p>
+
+    <h3>1. Horizontal vs Vertical Orientation</h3>
+    <p>Jab aapke categories ke naam lambe hote hain (jaise customer membership tiers: <em>"Regular Member"</em>, <em>"Gold Tier"</em>, <em>"VIP Corporate"</em>), toh horizontal violin plot banana best practice hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Horizontal vs Vertical</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_spend = pd.read_csv("scratch/seaborn_topic8_data/customer_spending_tiers.csv")
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5.5))
+
+# Vertical plot
+sns.violinplot(data=df_spend, x='tier', y='spend_inr', hue='tier', legend=False,
+               ax=ax1, palette=['#0284c7', '#6366f1', '#f43f5e'], width=0.55)
+ax1.set_title("Vertical Violin Plot (X = Category)")
+ax1.yaxis.set_major_formatter('₹{x:,.0f}')
+
+# Horizontal plot (natural readability)
+sns.violinplot(data=df_spend, y='tier', x='spend_inr', hue='tier', legend=False,
+               ax=ax2, palette=['#0284c7', '#6366f1', '#f43f5e'], width=0.55)
+ax2.set_title("Horizontal Violin Plot (Y = Category)")
+ax2.xaxis.set_major_formatter('₹{x:,.0f}')
+
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/vertical_vs_horizontal_violin.png" alt="Vertical vs Horizontal Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.8: Vertical vs Horizontal Layout &mdash; Clean horizontal orientation eliminates text rotation on category axes.</div>
+    </div>
+
+    <h3>2. The Four Modes of the <code>inner</code> Parameter</h3>
+    <p>Violin plot ke center spine par kya draw hoga, yeh <code>inner</code> parameter decide karta hai:</p>
+    <ul>
+      <li><code>inner='box'</code> (Default): Miniature box plot with white median dot and thick IQR bar.</li>
+      <li><code>inner='quart'</code>: Three dashed lines representing Q1 (25%), Median (50%), and Q3 (75%). Bohot clean aur modern look deta hai!</li>
+      <li><code>inner='point'</code>: Saare individual raw observations ko scatter dots ke roop mein center spine par plot karta hai. Small datasets ke liye ideal.</li>
+      <li><code>inner=None</code>: Koi internal lines ya box nahi hote; violin hollow dikhta hai, focusing purely on continuous density shape.</li>
+    </ul>
+
+    <div class="figure-wrapper">
+      <img src="assets/inner_parameter_variations.png" alt="Inner Parameter Variations Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.9: Comparing all 4 <code>inner</code> modes &mdash; 'box' (default) vs 'quart' (dashed lines) vs 'point' (scatter dots) vs None (pure density envelope).</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 7: Group Comparisons using hue
+       ========================================== -->
+  <section id="sec-7">
+    <h2><span class="toc-number">07</span> Section G: Group Comparisons Using <code>hue</code> &amp; Modern <code>gap</code></h2>
+    <p>Multi-category segmentation violin plots ki sabse badi strength hai. Hum multiple groups ko side-by-side compare kar sakte hain aur <code>hue</code> variable ke zariye sub-cohorts mein drill-down kar sakte hain.</p>
+
+    <h3>Part 1: Primary Cohort Comparison (College Sections A, B, C)</h3>
+    <p>Aaiye teen academic sections ko compare karte hain jahan Section A aur B ka median lagbhag same hai, lekin distribution bilkul alag hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Multi-Section Comparison</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>df_college = pd.read_csv("scratch/seaborn_topic8_data/college_exam_multimodal.csv")
+
+fig, ax = plt.subplots(figsize=(11, 6))
+sec_pal = {'Section A': '#10b981', 'Section B': '#38bdf8', 'Section C': '#f59e0b'}
+
+sns.violinplot(data=df_college, x='section', y='exam_marks', hue='section', legend=False,
+               palette=sec_pal, ax=ax, width=0.55, inner='box')
+
+ax.set_title("Performance Analysis Across College Sections: Unimodal vs Bimodal vs Skewed")
+ax.set_xlabel("Academic Section")
+ax.set_ylabel("Final Exam Marks")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/college_sections_multimodal_violin.png" alt="College Sections Multimodal Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.10: Answering the Opening Question &mdash; Section A (Unimodal 71.3) vs Section B (Bimodal twin-peaks at 55 and 85, median 72.4) vs Section C (Right-skewed 59.1).</div>
+    </div>
+
+    <h3>Part 2: Sub-segmentation with <code>hue</code> and <code>gap</code></h3>
+    <p>Seaborn 0.13+ mein <code>gap=0.08</code> use karke dodged sub-violins ke beech clean professional breathing room add kiya jaata hai:</p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Grouped Hue with gap</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>df_deliv = pd.read_csv("scratch/seaborn_topic8_data/ecommerce_deliveries_shifts.csv")
+
+fig, ax = plt.subplots(figsize=(11, 5.5))
+sns.violinplot(data=df_deliv, x='partner', y='delivery_time_mins', hue='meal_type',
+               palette=['#38bdf8', '#fbbf24'], ax=ax, width=0.6, gap=0.08, inner='quart')
+
+ax.axhline(45, color='#ef4444', linestyle='--', linewidth=1.8, label='45m Guaranteed SLA')
+ax.set_title("Delivery Times by Fleet and Meal Slot (Using hue='meal_type' with gap=0.08)")
+ax.legend(title='Meal Slot')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/delivery_partners_hue_grouped.png" alt="Delivery Partners Hue Grouped Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.11: Grouped Violins with <code>gap=0.08</code> &mdash; Delivery partners broken down by Lunch vs Dinner meal slots with dashed quartile indicators.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 8: Split Violins for Binary Groups
+       ========================================== -->
+  <section id="sec-8">
+    <h2><span class="toc-number">08</span> Section H: Split Violins for Binary Groups (<code>split=True</code>)</h2>
+    <p>Agar aapke <code>hue</code> variable mein <strong>exactly 2 categories</strong> hain (jaise <em>Lunch vs Dinner</em>, <em>Male vs Female</em>, <em>Treatment vs Control</em>), toh do alag-alag violins draw karne ki bajaye Seaborn unhe ek hi violin ke <strong>Left Half</strong> aur <strong>Right Half</strong> mein split kar sakta hai!</p>
+
+    <div class="callout callout-success">
+      <div class="callout-title">The Superpower of split=True</div>
+      <ul>
+        <li><strong>50% Space Saving:</strong> Chart ka width half ho jaata hai, making it compact and clean.</li>
+        <li><strong>Direct Side-by-Side Comparison:</strong> Dono groups ki density curves ek hi center axis par chipki hoti hain, jisse peaks aur tails ka difference instantly notice hota hai.</li>
+      </ul>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Split Violin Demonstration</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>fig, ax = plt.subplots(figsize=(11, 5.5))
+
+# split=True requires exactly 2 hue levels
+sns.violinplot(data=df_deliv, x='partner', y='delivery_time_mins', hue='meal_type',
+               split=True, palette=['#38bdf8', '#f59e0b'], ax=ax, width=0.55, inner='quart')
+
+ax.axhline(45, color='#ef4444', linestyle=':', linewidth=2, label='45m SLA Target')
+ax.set_title("Split Violin Plot: Direct Half-to-Half Comparison (Lunch vs Dinner)")
+ax.legend(title='Meal Slot (Left=Lunch, Right=Dinner)', loc='upper left')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/split_violin_delivery_comparison.png" alt="Split Violin Delivery Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.12: Split Violin Plot &mdash; Left half displays Lunch deliveries, right half displays Dinner deliveries. Notice how HyperRoute's dinner half reveals the bimodal highway detour peak!</div>
+    </div>
+
+    <h3>Split Violin Example 2: Gender Distribution Within College Sections</h3>
+    <p>Aaiye student exam performance mein Male vs Female distributions ko academic sections ke andar split karke compare karte hain:</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/split_violin_student_gender.png" alt="Split Violin Student Gender Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.13: Split Violin for Gender Comparison &mdash; Left half (Male) vs Right half (Female) performance distributions within Sections A, B, and C.</div>
+    </div>
+
+    <details class="accordion">
+      <summary>Technical Gotcha: What happens if hue has 3 or more levels when split=True?</summary>
+      <div class="accordion-content">
+        <p>Seaborn <code>ValueError: split=True can only be used with a hue variable that has exactly two levels!</code> throw kar dega. Ek violin sirf do sides (Left and Right) afford kar sakta hai. Agar 3 levels hain (e.g. Morning, Afternoon, Evening), toh standard grouped violins (<code>split=False</code>) use karein.</p>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 9: Violin Plots vs Box Plots
+       ========================================== -->
+  <section id="sec-9">
+    <h2><span class="toc-number">09</span> Section I: Violin Plots vs Box Plots &amp; The Bimodal Revelation</h2>
+    <p>Topic 7 mein humne Box Plots padhe the. Box plots 5-number summary (Min, Q1, Median, Q3, Max) ke liye best hote hain, lekin unki sabse badi kamzori yeh hai ki <strong>woh multimodality ko completely mita dete hain</strong>.</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">The Bimodal Secret Revealed!</div>
+      <p>Agar aap Section B ke marks ka Box Plot banayenge, toh aapko ek wide box dikhega jiska median center mein 72.4 par baitha hoga. Box plot ko dekhkar koi bhi insaan yeh nahi bata sakta ki 70 par koi student hi nahi hai &mdash; wahan ek khali dip hai! Lekin Violin Plot dekhte hi hourglass waist aur dono modes (55 aur 85) instantly clear ho jaate hain.</p>
+    </div>
+
+    <div class="figure-wrapper">
+      <img src="assets/violin_vs_box_plot_comparison.png" alt="Violin Plot vs Box Plot Comparison on Bimodal Data" loading="lazy">
+      <div class="figure-caption">Figure 8.14: The Bimodal Revelation &mdash; Box plot on the left places the median line in the empty dip (72.4) with zero indication of clustering, whereas the Violin plot on the right clearly separates the twin peaks at 55 and 85!</div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Analytical Requirement</th>
+            <th>Box Plot (<code>sns.boxplot</code>)</th>
+            <th>Violin Plot (<code>sns.violinplot</code>)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Revealing Multimodal Peaks</strong></td>
+            <td>Fails completely (masks dips and modes).</td>
+            <td><strong>Winner!</strong> Hourglass bulges expose clusters clearly.</td>
+          </tr>
+          <tr>
+            <td><strong>Compact Group Comparison (15+ categories)</strong></td>
+            <td><strong>Winner!</strong> Clean, narrow rectangular boxes.</td>
+            <td>Can become crowded and visually heavy.</td>
+          </tr>
+          <tr>
+            <td><strong>Outlier Detection via Tukey Fences</strong></td>
+            <td><strong>Winner!</strong> Explicit flier dots beyond 1.5&times;IQR.</td>
+            <td>Shows smooth tapering tails (no explicit fence markers).</td>
+          </tr>
+          <tr>
+            <td><strong>Small Datasets (N &lt; 30)</strong></td>
+            <td><strong>Winner!</strong> Quantiles are stable and safe.</td>
+            <td>KDE may create false artificial bumps!</td>
+          </tr>
+          <tr>
+            <td><strong>Executive Audience Familiarity</strong></td>
+            <td><strong>Winner!</strong> Universally understood by managers.</td>
+            <td>Requires a 30-second explanation of width = density.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 10: Violin vs Histogram & KDE
+       ========================================== -->
+  <section id="sec-10">
+    <h2><span class="toc-number">10</span> Violin Plot vs Histogram &amp; KDE Curves</h2>
+    <p>Histograms aur KDE curves distribution ke shape ko x-axis par count ya vertical density ke roop mein show karte hain. Violin Plot usi KDE curve ko 90&deg; rotate karke horizontally mirror kar deta hai:</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/violin_vs_histogram_kde_comparison.png" alt="Violin Plot vs Histogram and KDE Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.15: Direct Comparison &mdash; Histogram + KDE curve along the horizontal axis vs Mirrored Violin Plot along the vertical axis on identical bimodal data.</div>
+    </div>
+
+    <h3>When to Choose Which</h3>
+    <ul>
+      <li>Use <strong>Histogram + KDE (<code>sns.histplot</code>)</strong> jab aapko single variable ka exact bin counts aur probability curve dekhna ho.</li>
+      <li>Use <strong>Violin Plot (<code>sns.violinplot</code>)</strong> jab aapko 3 se 8 categories ke distributions ko side-by-side compare karna ho bina kisi visual clutter ke.</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 11: Violin vs ECDF Plots
+       ========================================== -->
+  <section id="sec-11">
+    <h2><span class="toc-number">11</span> Violin Plot vs ECDF Cumulative Curves</h2>
+    <p>Topic 6 mein humne <strong>Empirical Cumulative Distribution Functions (ECDF)</strong> padhe the. ECDF aur Violin plots ek doosre ke perfect complementary partners hote hain:</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/violin_vs_ecdf_comparison.png" alt="Violin Plot vs ECDF Comparison" loading="lazy">
+      <div class="figure-caption">Figure 8.16: Complementary Insights &mdash; Violin Plot highlights density peaks and clusters, while ECDF directly answers threshold questions like <em>"What percentage of deliveries meet the 45-minute SLA?"</em></div>
+    </div>
+
+    <ul>
+      <li><strong>Violin Plot</strong> answer karta hai: <em>"Where do the values cluster?"</em> (Mode &amp; density discovery).</li>
+      <li><strong>ECDF Plot</strong> answer karta hai: <em>"What exact fraction of data falls below threshold X?"</em> (SLA compliance &amp; percentile auditing).</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 12: Overlays - Violin + Strip Plot
+       ========================================== -->
+  <section id="sec-12">
+    <h2><span class="toc-number">12</span> The Small-Sample Safeguard: Violin Overlaid with Strip Plot</h2>
+    <p>Jab aapke dataset mein observations kam hoti hain (<i>N &lt; 30</i>), toh KDE smoothing par blindly trust karna dangerous ho sakta hai. KDE chhota sample hone par bhi ek smooth elegant curve draw kar deta hai, jisse misleading illusion create hota hai.</p>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">The Small-Sample Remedy</div>
+      <p>Hollow violin (<code>inner=None</code>) ke upar ek jittered <code>sns.stripplot(alpha=0.6)</code> overlay karein. Isse students aur stakeholders ko summary shape bhi milta hai aur underlying data points ki exact sample strength bhi transparently dikhti hai!</p>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Violin + Strip Overlay</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic8_data/college_exam_multimodal.csv")
+
+fig, ax = plt.subplots(figsize=(10, 5.5))
+
+# 1. Base hollow violin
+sns.violinplot(data=df, x='section', y='exam_marks', ax=ax,
+               palette=['#1e293b', '#1e293b', '#1e293b'],
+               linewidth=1.5, linecolor='#64748b', inner=None)
+
+# 2. Overlay jittered points
+sns.stripplot(data=df, x='section', y='exam_marks', ax=ax,
+              palette=['#34d399', '#38bdf8', '#fbbf24'],
+              jitter=0.25, size=5, alpha=0.6, edgecolor='#0f172a', linewidth=0.5)
+
+ax.set_title("Violin Plot Overlaid with Strip Plot (Density + Raw Sample Transparency)")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 13: Formatting & Production Polish
+       ========================================== -->
+  <section id="sec-13">
+    <h2><span class="toc-number">13</span> Styling, Themes &amp; Production Dashboard Polish</h2>
+    <p>Professional reports ke liye chart formatting bohot zaroori hai:</p>
+    <ul>
+      <li><strong>Spine Removal:</strong> Outer borders ko desaturate karein: <code>sns.despine(top=True, right=True)</code>.</li>
+      <li><strong>Currency &amp; Percentile Formatters:</strong> Large financial numbers par tick formatters (e.g. <code>ax.yaxis.set_major_formatter('₹{x:,.0f}')</code>) apply karein.</li>
+      <li><strong>Benchmark Lines:</strong> SLAs, warning levels, aur targets ko <code>ax.axhline(linestyle='--', linewidth=1.8)</code> ke zariye prominently highlight karein.</li>
+    </ul>
+  </section>
+
+  <!-- ==========================================
+       SECTION 14: Case Study 1 - College Exam Marks
+       ========================================== -->
+  <section id="sec-14">
+    <h2><span class="toc-number">14</span> Section J &bull; Case Study 1: College Exam Multimodal Performance</h2>
+    
+    <div class="callout callout-info">
+      <div class="callout-title">1. The Real-Life Question</div>
+      <p><em>"College administration report karti hai ki Section A aur Section B dono ka median score &approx; 71–72 marks hai. Lekin faculty complaint kar rahi hai ki Section B mein padhana mushkil ho raha hai. Kya violin plot se hidden distribution difference reveal ho sakta hai?"</em></p>
+    </div>
+
+    <h3>2. Dataset Description</h3>
+    <p>Synthetic demonstration dataset containing 300 students (100 in Section A, 100 in Section B, 100 in Section C) with attributes: <code>student_id</code>, <code>section</code>, <code>gender</code>, and <code>exam_marks</code> (out of 100). (Dataset generated reproducibly via NumPy with seed 42).</p>
+
+    <h3>3. Complete Python Code</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Case Study 1 Script</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic8_data/college_exam_multimodal.csv")
+
+fig, ax = plt.subplots(figsize=(11, 6))
+palette = {'Section A': '#10b981', 'Section B': '#38bdf8', 'Section C': '#f59e0b'}
+
+sns.violinplot(data=df, x='section', y='exam_marks', hue='section', legend=False,
+               palette=palette, ax=ax, width=0.55, inner='box')
+
+ax.set_title("Performance Analysis Across College Sections (Unimodal vs Bimodal vs Skewed)")
+ax.set_ylabel("Final Exam Marks (Out of 100)")
+ax.set_xlabel("Academic Section")
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <h3>4. Verified Statistical Metrics</h3>
+    <div class="output-block">
+      <div class="output-label">Genuine Computed Summary (Python 3.13 verified)</div>
+- Section A: Median = 71.25 | Mean = 71.38 | Std = 5.45 | IQR = 6.07 | Skewness = -0.18 (Unimodal Bell)
+- Section B: Median = 72.35 | Mean = 70.11 | Std = 16.10 | IQR = 30.75 | Skewness = -0.02 (BIMODAL)
+- Section C: Median = 59.10 | Mean = 60.94 | Std = 7.04 | IQR = 9.52 | Skewness = +0.63 (Right-Skewed)
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Visual Evidence Reference</div>
+      <p>Refer to <strong><a href="#sec-7" style="color: var(--accent-blue); text-decoration: underline;">Figure 8.10 (Section 7: College Sections Multimodal Violin)</a></strong> for the visual chart: Section A exhibits a tight unimodal bell curve (IQR = 6.07), while Section B exhibits the classic bimodal hourglass with twin modes at 55 and 85.</p>
+    </div>
+
+    <h3>5. Visual Evidence &amp; Pedagogical Interpretation</h3>
+    <p>Violin plot dekhte hi ground reality crystal clear ho jaati hai! Section A mein students homogeneous hain (tight IQR = 6.07). Lekin Section B ka violin ek <strong>hourglass shape</strong> banata hai jisme 55 marks par ek bada bulge hai aur 85 marks par doosra bulge hai! Center mein (70–75) density bohot kam hai. Faculty ko ek classroom mein do alag-alag tracks chalane pad rahe hain, jise ek standard box plot ya median kabhi reveal nahi kar sakta tha!</p>
+
+    <h3>6. Limitations &amp; Next Investigation</h3>
+    <p>Violin plot distribution ki shape toh bata deta hai, lekin yeh nahi batata ki Section B ke kaunse specific students kis track se belong karte hain. Next step: attendance, assignment submission history, aur pre-requisite quiz scores ke saath correlation check karein.</p>
+  </section>
+
+  <!-- ==========================================
+       SECTION 15: Case Study 2 - Delivery Operations
+       ========================================== -->
+  <section id="sec-15">
+    <h2><span class="toc-number">15</span> Section J &bull; Case Study 2: E-Commerce Delivery Shift Diagnostics</h2>
+    
+    <div class="callout callout-info">
+      <div class="callout-title">1. The Real-Life Question</div>
+      <p><em>"E-commerce logistics head dekhna chahte hain ki 3 delivery partners (QuickDrop, SpeedyKart, HyperRoute) ka delivery latency lunch aur dinner shifts mein kaisa behave karta hai, aur kya koi fleet dinner time par highway traffic bottleneck face karti hai?"</em></p>
+    </div>
+
+    <h3>2. Dataset Description</h3>
+    <p>Synthetic demonstration dataset containing 360 food delivery orders across 3 fleet partners, segmented into <code>Lunch</code> (60 orders) and <code>Dinner</code> (60 orders) with guaranteed 45m SLA benchmark.</p>
+
+    <h3>3. Python Code with Split Violin</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-badge">Python 3.13 &bull; Split Violin Shift Analysis</span>
+        <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+      </div>
+      <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df_deliv = pd.read_csv("scratch/seaborn_topic8_data/ecommerce_deliveries_shifts.csv")
+
+fig, ax = plt.subplots(figsize=(11, 5.5))
+sns.violinplot(data=df_deliv, x='partner', y='delivery_time_mins', hue='meal_type',
+               split=True, palette=['#38bdf8', '#f59e0b'], ax=ax, width=0.55, inner='quart')
+
+ax.axhline(45, color='#ef4444', linestyle=':', linewidth=2, label='45m Guaranteed SLA')
+ax.set_title("Split Violin Plot: Direct Half-to-Half Comparison (Lunch vs Dinner)")
+ax.legend(title='Meal Slot (Left=Lunch, Right=Dinner)', loc='upper left')
+plt.tight_layout()
+plt.show()</code></pre>
+    </div>
+
+    <h3>4. Verified Metrics &amp; Operational Takeaway</h3>
+    <div class="output-block">
+      <div class="output-label">Genuine Computed Shift Medians</div>
+- QuickDrop: Lunch Median = 27.4 mins | Dinner Median = 33.1 mins (Healthy, &lt; 45m SLA)
+- SpeedyKart: Lunch Median = 40.8 mins | Dinner Median = 45.3 mins (Critical SLA breach at dinner!)
+- HyperRoute: Lunch Median = 24.6 mins | Dinner Median = 37.4 mins (Dinner half shows bimodal peak at 52m due to bridge bottleneck!)
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Visual Evidence Reference</div>
+      <p>Refer to <strong><a href="#sec-8" style="color: var(--accent-blue); text-decoration: underline;">Figure 8.12 (Section 8: Split Violin Plot: Lunch vs Dinner)</a></strong> for the visual chart: Left half (Lunch) shows fast, predictable delivery times, while HyperRoute's right half (Dinner) splits into two distinct modes due to bridge detour bottlenecks.</p>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 16: Case Study 3 & 4 - Spend & Latency
+       ========================================== -->
+  <section id="sec-16">
+    <h2><span class="toc-number">16</span> Section J &bull; Case Studies 3 &amp; 4: Customer Spending &amp; Microservice Latency</h2>
+
+    <h3>Case Study 3: Customer Spending Tiers (Synthetic FinTech Data)</h3>
+    <p>FinTech analytics team ne 300 customers ka spending audit kiya across Regular, Gold, aur VIP tiers. Regular tier ka median ₹455 hai with tight variance; Gold tier ka median ₹1,435 hai; VIP tier ka median ₹3,420 hai lekin mean ₹4,157 tak chala jaata hai kyunki violin ka upper neck ₹8,500 tak stretch hota hai (luxury purchases).</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_customer_spending_violin.png" alt="Customer Spending Distribution Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.17: Customer Spending Distribution &mdash; Regular vs Gold vs VIP tiers showing expanding variance and luxury purchase tails.</div>
+    </div>
+
+    <h3>Case Study 4: API Microservice Latency (Cache-Hit vs Cache-Miss)</h3>
+    <p>Cloud SRE team ne 300 user profile requests ka latency audit kiya. Cache-Hit requests ek single tight peak (~18ms) par execute hoti hain, jabki Cache-Miss requests bimodal clusters dikhati hain (database read at ~140ms aur network timeout recovery at ~260ms), breaching both the 50ms and 100ms SLAs!</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_api_latency_violin.png" alt="API Response Latency Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.18: API Latency Bimodality &mdash; Cache-Hit unimodal peak vs Cache-Miss dual clusters breaching critical SLAs.</div>
+    </div>
+
+    <h3>Bonus Industrial Telemetry: IoT Motor Vibration Frequencies</h3>
+    <p>Industrial manufacturing plant mein 4 high-speed motors ke vibration frequencies monitor kiye gaye. Motor C mein do peaks dikhayi dete hain (44 Hz aur 68 Hz), jo dangerous <em>Harmonic Resonance</em> ko flag karte hain!</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/case_study_iot_vibration_sensor_violin.png" alt="IoT Vibration Sensor Diagnostics Violin Plot" loading="lazy">
+      <div class="figure-caption">Figure 8.19: IoT Sensor Diagnostics &mdash; Motor C's bimodal violin exposes harmonic resonance requiring immediate preventative shutdown.</div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 17: Section K - 12+ Common Pitfalls & Fixes
+       ========================================== -->
+  <section id="sec-17">
+    <h2><span class="toc-number">17</span> Section K: 12+ Common Pitfalls, Silent Bugs &amp; Debugging Guide</h2>
+    <p>Violin plots interpret karte waqt data scientists aur students aksar fatal mistakes karte hain. Yahan 12 most frequent pitfalls aur unka verified resolution guide diya gaya hai:</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Pitfall &amp; Silent Bug Scenario</th>
+            <th>Danger / Incorrect Statistical Interpretation</th>
+            <th>The Correct Code &amp; Mental Fix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>Assuming Width Equals Observation Count</strong></td>
+            <td>Believing a wider violin means more data points collected.</td>
+            <td>Width represents <em>relative probability density</em>, not count. A group with N=20 can have the same width as N=2,000!</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>Treating Every Small Bump as a Sub-population</strong></td>
+            <td>Over-interpreting random sampling noise as distinct customer clusters.</td>
+            <td>Check sample size. If <i>N &lt; 50</i>, increase <code>bw_adjust=1.2</code> or overlay <code>sns.stripplot</code> to verify sample support.</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Ignoring <code>cut</code> on Bounded Variables</strong></td>
+            <td>Exam marks showing negative percentages (&minus;5%) or ages reaching 130!</td>
+            <td>Pass <code>cut=0</code> to strictly terminate the violin tails at observed data min and max bounds.</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>Passing 3+ Hue Levels to <code>split=True</code></strong></td>
+            <td>Code crashes with <code>ValueError: split=True can only be used with a hue variable that has exactly two levels</code>.</td>
+            <td>Split violins only have left and right halves. If you have 3+ categories, set <code>split=False</code>.</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Over-smoothing Bimodal Data with High Bandwidth</strong></td>
+            <td>Setting <code>bw_adjust=2.5</code> masks true bimodal twin peaks into a fake bell curve.</td>
+            <td>Keep <code>bw_adjust=1.0</code> as default. Only adjust slightly (0.8 to 1.2) after verifying with a histogram.</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>Using Obsolete Parameter <code>scale</code> Instead of <code>density_norm</code></strong></td>
+            <td>Getting deprecation warnings in Seaborn 0.13+: <code>FutureWarning: The `scale` parameter is deprecated. Use `density_norm` instead.</code></td>
+            <td>Use modern Seaborn 0.13 syntax: <code>density_norm='area'</code>, <code>'count'</code>, or <code>'width'</code>.</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>Using Obsolete Parameter <code>bw</code> Instead of <code>bw_adjust</code></strong></td>
+            <td>Deprecation warning or broken custom bandwidth scaling.</td>
+            <td>Pass <code>bw_adjust=1.0</code> for relative multiplier or <code>bw_method='scott'</code> for calculation rule.</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>Passing <code>palette</code> Without <code>hue</code> in Seaborn 0.13+</strong></td>
+            <td>Getting <code>FutureWarning: Passing palette without assigning hue is deprecated.</code></td>
+            <td>Pass <code>hue=category_col, legend=False</code> when applying custom categorical palettes.</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>Assuming Outlier Flags Exist in Violin Plots</strong></td>
+            <td>Searching for individual outlier dots that are visible in box plots.</td>
+            <td>Default violins show continuous tapering tails, not isolated fliers. Use <code>inner='point'</code> or overlay <code>sns.stripplot</code>.</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td><strong>Comparing Groups with Incompatible Scale Units</strong></td>
+            <td>Plotting salary in INR next to salary in USD without currency normalization.</td>
+            <td>Always normalize currencies and scales into identical units before feeding into a single axes.</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td><strong>Overlapping Grouped Hue Violins</strong></td>
+            <td>Adjacent hue violins look crowded and visually collide.</td>
+            <td>Use Seaborn 0.13+ <code>gap=0.08</code> to introduce clean modern spacing between sub-category violins.</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td><strong>Treating Synthetic Demonstration Data as Real Measurements</strong></td>
+            <td>Publishing algorithmic case study findings as genuine corporate statistics.</td>
+            <td>Always clearly label synthetic datasets as demonstration examples with explicit random seeds.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 18: Quick Reference Cheat Sheet
+       ========================================== -->
+  <section id="sec-18">
+    <h2><span class="toc-number">18</span> Seaborn Violin Plot Quick Reference &amp; Cheat Sheet</h2>
+    <p>Aapke daily production work aur interviews ke liye complete copy-paste code cheat sheet:</p>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Analytical Goal</th>
+            <th>Modern Seaborn 0.13+ Code Snippet</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Standard Vertical Violin</strong></td>
+            <td><code>sns.violinplot(data=df, x='category', y='value', palette='Set2')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Horizontal Violin (Long Labels)</strong></td>
+            <td><code>sns.violinplot(data=df, y='category', x='value', palette='deep')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Split Violin (Binary Groups)</strong></td>
+            <td><code>sns.violinplot(data=df, x='dept', y='salary', hue='gender', split=True)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Dashed Quartile Lines (No Box)</strong></td>
+            <td><code>sns.violinplot(..., inner='quart')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Individual Data Points on Spine</strong></td>
+            <td><code>sns.violinplot(..., inner='point')</code></td>
+          </tr>
+          <tr>
+            <td><strong>Hollow Clean Density Envelope</strong></td>
+            <td><code>sns.violinplot(..., inner=None)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Strict Data Bounds (No negative tails)</strong></td>
+            <td><code>sns.violinplot(..., cut=0)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Fine-Tune Smoothing Bandwidth</strong></td>
+            <td><code>sns.violinplot(..., bw_adjust=0.8)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Modern Spacing Between Hue Violins</strong></td>
+            <td><code>sns.violinplot(..., hue='subgroup', gap=0.08)</code></td>
+          </tr>
+          <tr>
+            <td><strong>Violin + Strip Plot Overlay</strong></td>
+            <td><code>sns.violinplot(..., inner=None); sns.stripplot(..., alpha=0.6, jitter=0.2)</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       SECTION 19: Section L - 21 Practice Questions & Project
+       ========================================== -->
+  <section id="sec-19">
+    <h2><span class="toc-number">19</span> Section L: 21 Practice Questions, Exercises &amp; Capstone Mini-Project</h2>
+    <p>Apni understanding ko test karne ke liye niche diye gaye 21 curated questions solve kijiye (10 MCQs, 5 Graph Interpretation, 3 Coding Exercises, 2 Output Prediction + 1 Complete Mini-Project).</p>
+
+    <!-- Part 1: 10 MCQs (Q1 to Q10) -->
+    <h3>Part 1: Multiple Choice Questions (10 MCQs)</h3>
+
+    <details class="accordion">
+      <summary>Q1: Violin plot ki horizontal width kya represent karti hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> Total number of observations collected<br>
+        <strong>B)</strong> Estimated relative probability density at that value<br>
+        <strong>C)</strong> The standard deviation of the category<br>
+        <strong>D)</strong> The sample variance</p>
+        <p><strong>Answer: B.</strong> Violin width indicates estimated relative probability density according to KDE, not absolute observation count.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q2: Default Seaborn violin plot ke center spine par white dot kya represent karta hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> Arithmetic Mean<br>
+        <strong>B)</strong> Median (50th percentile)<br>
+        <strong>C)</strong> Mode<br>
+        <strong>D)</strong> Standard Error</p>
+        <p><strong>Answer: B.</strong> The central white marker inside <code>inner='box'</code> represents the median.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q3: Bimodal distribution ko reveal karne ke liye kaunsa plot sabse zyada effective hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> Standard Box Plot<br>
+        <strong>B)</strong> Violin Plot<br>
+        <strong>C)</strong> Bar Plot with mean<br>
+        <strong>D)</strong> Pie Chart</p>
+        <p><strong>Answer: B.</strong> Box plots hide bimodality in a single wide box, while Violin plots clearly show the hourglass shape with twin bulges.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q4: <code>split=True</code> parameter use karne ke liye hue variable mein kitne levels hone chahiye?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> Exactly 1<br>
+        <strong>B)</strong> Exactly 2<br>
+        <strong>C)</strong> 3 or more<br>
+        <strong>D)</strong> Any number of levels</p>
+        <p><strong>Answer: B.</strong> <code>split=True</code> merges two groups into left and right halves of a single violin; it requires exactly 2 hue levels.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q5: Bounded variables (jaise exam marks 0-100) par violin tails ko bahar extend hone se rokne ke liye kaunsa parameter use hota hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> <code>cut=0</code><br>
+        <strong>B)</strong> <code>limit=True</code><br>
+        <strong>C)</strong> <code>clip=True</code><br>
+        <strong>D)</strong> <code>bound=0</code></p>
+        <p><strong>Answer: A.</strong> Setting <code>cut=0</code> terminates the KDE curve strictly at observed minimum and maximum data values.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q6: Bandwidth smoothing ko double karne ke liye kaunsa parameter pass karenge?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> <code>bw_adjust=2.0</code><br>
+        <strong>B)</strong> <code>smooth=2.0</code><br>
+        <strong>C)</strong> <code>bandwidth=2.0</code><br>
+        <strong>D)</strong> <code>kernel_size=2.0</code></p>
+        <p><strong>Answer: A.</strong> In Seaborn 0.13+, <code>bw_adjust</code> acts as the multiplicative factor for KDE bandwidth.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q7: Seaborn 0.13+ mein deprecated <code>scale</code> parameter ko kis parameter se replace kiya gaya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> <code>size_norm</code><br>
+        <strong>B)</strong> <code>density_norm</code><br>
+        <strong>C)</strong> <code>width_scale</code><br>
+        <strong>D)</strong> <code>area_norm</code></p>
+        <p><strong>Answer: B.</strong> <code>density_norm</code> ('area', 'count', 'width') is the modern replacement for <code>scale</code>.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q8: Miniature box plot ke bajaye dashed quartile lines draw karne ke liye kaunsa parameter use hota hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> <code>inner='quart'</code><br>
+        <strong>B)</strong> <code>inner='lines'</code><br>
+        <strong>C)</strong> <code>inner='dashed'</code><br>
+        <strong>D)</strong> <code>inner='percentile'</code></p>
+        <p><strong>Answer: A.</strong> <code>inner='quart'</code> draws clean dashed horizontal lines for Q1, Median, and Q3.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q9: Small datasets (N &lt; 25) par violin plots ka primary risk kya hota hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> Code runtime error throw kar deta hai<br>
+        <strong>B)</strong> KDE curve artificial noisy peaks create kar sakta hai jo population mein exist nahi karti<br>
+        <strong>C)</strong> Violin plot automatically box plot ban jaata hai<br>
+        <strong>D)</strong> Medians calculate nahi ho paate</p>
+        <p><strong>Answer: B.</strong> KDE estimates can be misleading on small samples. Always overlay strip plots when N is small.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q10: Adjacent grouped hue violins ke beech modern spacing add karne ke liye Seaborn 0.13+ parameter kaunsa hai?</summary>
+      <div class="accordion-content">
+        <p><strong>A)</strong> <code>spacing=0.1</code><br>
+        <strong>B)</strong> <code>pad=0.1</code><br>
+        <strong>C)</strong> <code>gap=0.08</code><br>
+        <strong>D)</strong> <code>margin=0.08</code></p>
+        <p><strong>Answer: C.</strong> <code>gap</code> adds proportional spacing between dodged hue elements in Seaborn 0.13+.</p>
+      </div>
+    </details>
+
+    <!-- Part 2: 5 Graph Interpretation Questions (Q11 to Q15) -->
+    <h3>Part 2: Graph Interpretation Questions</h3>
+
+    <details class="accordion">
+      <summary>Q11: Agar kisi violin plot ka lower bulb bohot chouda ho aur upper neck bohot lamba aur patla ho, toh distribution ka nature kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer: Right-Skewed (Positive Skew).</strong> Majority observations low values par cluster karti hain, aur higher values ki taraf ek long tapering tail stretch hoti hai (e.g. customer spending, server latency).</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q12: Section A aur Section B dono ka median 72 hai, lekin Section B ka violin hourglass jaisa dikhta hai with two bulges. Iska business meaning kya hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Section B bimodal hai! Isme do distinct cohorts hain: ek group 55 marks par fail ho raha hai aur doosra group 85 marks par excel kar raha hai. Median sirf dono ke beech ke empty dip par baitha hua hai.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q13: Delivery fleet HyperRoute ka Dinner shift violin do alag-alag bulges dikhata hai (25m aur 55m). Logistics manager ko kya infer karna chahiye?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> HyperRoute ke orders do alag routes par dispatch ho rahe hain: direct local deliveries 25 mins mein poori ho rahi hain, jabki bridge/highway detour orders 55 mins mein stuck ho rahe hain.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q14: Agar exam marks ka violin plot 105% tak jaata hua dikh raha ho, jabki exam 100 marks ka hi tha, toh kya students ne 105 score kiya?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer: Nahi!</strong> Yeh default <code>cut=2</code> KDE smoothing extrapolation ka artifact hai. Actual max marks 100 hi hain. Is visual bug ko fix karne ke liye <code>cut=0</code> set karein.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q15: Split violin mein agar right half (Dinner) ka peak left half (Lunch) ke peak se kaafi upar shift ho, toh kya conclusion nikalta hai?</summary>
+      <div class="accordion-content">
+        <p><strong>Answer:</strong> Dinner shift mein overall delivery time consistently badh jaata hai (typical delivery latency shifts higher during dinner hours).</p>
+      </div>
+    </details>
+
+    <!-- Part 3: 3 Coding Exercises (Q16 to Q18) -->
+    <h3>Part 3: Hands-on Coding Exercises</h3>
+
+    <details class="accordion">
+      <summary>Q16: Write a script to create a horizontal split violin plot comparing 'Lunch' vs 'Dinner' delivery times across partners.</summary>
+      <div class="accordion-content">
+        <p><strong>Solution:</strong></p>
+        <pre><code>import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic8_data/ecommerce_deliveries_shifts.csv")
+fig, ax = plt.subplots(figsize=(10, 5))
+
+sns.violinplot(data=df, y='partner', x='delivery_time_mins', hue='meal_type',
+               split=True, palette='Set2', inner='quart', cut=0, ax=ax)
+
+ax.set_title("Horizontal Split Violin Plot: Lunch vs Dinner")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q17: Write a snippet to plot a clean violin plot overlaid with jittered points for small datasets.</summary>
+      <div class="accordion-content">
+        <p><strong>Solution:</strong></p>
+        <pre><code># 1. Base hollow violin
+sns.violinplot(data=df, x='category', y='value', inner=None, palette='muted', ax=ax)
+# 2. Overlay strip plot
+sns.stripplot(data=df, x='category', y='value', color='#ffffff', size=5, alpha=0.6, jitter=0.2, ax=ax)</code></pre>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q18: Write code to rank categories by median and plot violins in sorted order.</summary>
+      <div class="accordion-content">
+        <p><strong>Solution:</strong></p>
+        <pre><code>sorted_order = df.groupby('partner')['delivery_time_mins'].median().sort_values().index
+sns.violinplot(data=df, x='partner', y='delivery_time_mins', order=sorted_order, palette='crest')</code></pre>
+      </div>
+    </details>
+
+    <!-- Part 4: 2 Output Prediction Questions (Q19 to Q20) -->
+    <h3>Part 4: Output Prediction Questions</h3>
+
+    <details class="accordion">
+      <summary>Q19: Output Prediction: Agar code mein <code>sns.violinplot(data=df, x='partner', y='delivery_time_mins', hue='partner', split=True)</code> likha ho jahan 3 partners hain, toh kya hoga?</summary>
+      <div class="accordion-content">
+        <p><strong>Prediction:</strong> Code will crash with a <code>ValueError</code>! <code>split=True</code> requires a hue variable with exactly two levels. Here, <code>partner</code> has 3 levels, which is invalid for splitting.</p>
+      </div>
+    </details>
+
+    <details class="accordion">
+      <summary>Q20: Output Prediction: <code>bw_adjust=0.1</code> pass karne par violin shape kaisa render hoga?</summary>
+      <div class="accordion-content">
+        <p><strong>Prediction:</strong> Violin curve bohot spiky, jagged, aur distorted render hoga kyunki bandwidth bohot chhota hai, jisse har individual data point ek isolated spiky horn bana dega.</p>
+      </div>
+    </details>
+
+    <!-- Part 5: Capstone Mini-Project (Q21) -->
+    <h3>Part 5: Capstone Mini-Project &mdash; The Distribution Diagnostic Suite</h3>
+
+    <details class="accordion">
+      <summary>Q21: Capstone Project: Automated Multimodal Distribution Diagnostic Pipeline</summary>
+      <div class="accordion-content">
+        <p><strong>Problem Statement:</strong> Ek reusable Python diagnostic function banayein jo kisi bhi continuous numerical column ka modality test kare, skewness calculate kare, aur polished Box vs Violin multi-panel visual comparison generate kare:</p>
+        <pre><code>import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+
+def run_distribution_diagnostic(df, col_name, category_col=None):
+    # Statistical calculations
+    median_val = df[col_name].median()
+    mean_val = df[col_name].mean()
+    skew_val = stats.skew(df[col_name].dropna())
+    
+    print(f"=== DISTRIBUTION DIAGNOSTIC REPORT: {col_name} ===")
+    print(f"Median: {median_val:.2f} | Mean: {mean_val:.2f}")
+    print(f"Skewness: {skew_val:.2f} ({'Right-Skewed' if skew_val > 0.5 else 'Left-Skewed' if skew_val < -0.5 else 'Roughly Symmetric'})")
+    
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+    
+    # Left: Box Plot
+    if category_col:
+        sns.boxplot(data=df, x=category_col, y=col_name, ax=ax1, palette='Set2')
+        sns.violinplot(data=df, x=category_col, y=col_name, ax=ax2, palette='Set2', inner='quart', cut=0)
+    else:
+        sns.boxplot(y=df[col_name], ax=ax1, color='#f59e0b', width=0.35)
+        sns.violinplot(y=df[col_name], ax=ax2, color='#38bdf8', inner='box', cut=0, width=0.45)
+        
+    ax1.set_title("Box Plot: 5-Number Quantile Summary")
+    ax2.set_title("Violin Plot: Density Envelope & Multimodality")
+    plt.tight_layout()
+    return fig</code></pre>
+      </div>
+    </details>
+  </section>
+
+  <!-- ==========================================
+       SECTION 20: Summary & Topic 9 Preview
+       ========================================== -->
+  <section id="sec-20">
+    <h2><span class="toc-number">20</span> Summary, Concept Blueprint &amp; Topic 9 Preview</h2>
+    <p>Badhaai ho! Aapne Seaborn Topic 8 mein Violin Plots, Kernel Density Estimation, smooth bump summation, <code>bw_adjust</code> fine-tuning, <code>cut=0</code> physical bounds, aur <code>split=True</code> binary sub-segmentation ko complete statistical depth ke saath master kar liya hai.</p>
+
+    <div class="figure-wrapper">
+      <img src="assets/final_concept_revision_diagram.png" alt="Seaborn Violin Plots Mastery Blueprint" loading="lazy">
+      <div class="figure-caption">Figure 8.20: The 7 Golden Rules &amp; Architectural Mastery Blueprint for Seaborn Violin Plots.</div>
+    </div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Key Mastery Takeaways</div>
+      <ul>
+        <li><strong>Density, Not Count:</strong> Violin width estimated relative probability density represent karti hai, absolute frequency nahi.</li>
+        <li><strong>Bimodal Detective:</strong> Jahan Box plots do alag-alag peaks ko ek wide box mein mita dete hain, wahan Violin plots unhe hourglass bulges ke roop mein expose kar dete hain.</li>
+        <li><strong>Space Efficiency:</strong> <code>split=True</code> binary groups ko ek hi violin ke left aur right halves mein merge karke 50% screen space bachaata hai.</li>
+      </ul>
+    </div>
+
+    <h3>Upcoming Next: Topic 9 &mdash; Bar Plots &amp; Count Plots</h3>
+    <p>Agli class mein hum move karenge <strong>Categorical Aggregations</strong> par! Hum explore karenge <strong>Bar Plots (<code>sns.barplot</code>)</strong> aur <strong>Count Plots (<code>sns.countplot</code>)</strong>, estimator functions, error bars (confidence intervals vs standard deviation), aur frequency counts.</p>
+  </section>
+
+</div>
+
+<script>
+  function copyCode(button) {
+    const pre = button.parentElement.nextElementSibling;
+    const code = pre.querySelector('code') || pre;
+    navigator.clipboard.writeText(code.innerText).then(() => {
+      const originalText = button.innerText;
+      button.innerText = 'Copied!';
+      button.style.color = '#34d399';
+      button.style.borderColor = '#34d399';
+      setTimeout(() => {
+        button.innerText = originalText;
+        button.style.color = '';
+        button.style.borderColor = '';
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>

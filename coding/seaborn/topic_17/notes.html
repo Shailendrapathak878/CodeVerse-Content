@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seaborn Topic 17: FacetGrid &amp; Multi-Plot Analysis</title>
+  <style>
+    /* Reset & Core Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.68;
+      color: #1E293B;
+      background-color: #F8FAFC;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, #0F766E 0%, #0D9488 50%, #14B8A6 100%);
+      color: #FFFFFF;
+      padding: 36px 28px;
+      border-radius: 18px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.25);
+    }
+    .stage-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 5px 13px;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: #FFFFFF;
+    }
+    .hero p {
+      font-size: 15px;
+      color: #F0FDFA;
+      max-width: 820px;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      color: #F1F5F9;
+      font-weight: 500;
+    }
+
+    /* Table of Contents Card */
+    .toc-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+    .toc-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #F8FAFC;
+      border: 1px solid #EDF2F7;
+      text-decoration: none;
+      color: #334155;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .toc-item:hover {
+      background: #F0FDFA;
+      border-color: #99F6E4;
+      color: #0F766E;
+      transform: translateX(2px);
+    }
+    .toc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: #CCFBF1;
+      color: #0F766E;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styling */
+    section {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 28px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+    }
+    h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-badge {
+      background: #0F766E;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1E293B;
+      margin: 22px 0 10px 0;
+    }
+    h4 {
+      font-size: 14.5px;
+      font-weight: 600;
+      color: #334155;
+      margin: 16px 0 8px 0;
+    }
+    p {
+      margin-bottom: 14px;
+      color: #334155;
+      font-size: 14.5px;
+    }
+    ul, ol {
+      margin: 10px 0 16px 22px;
+      color: #334155;
+      font-size: 14px;
+    }
+    li {
+      margin-bottom: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-container, .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 18px 0;
+      border-radius: 10px;
+      border: 1px solid #E2E8F0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+      min-width: 500px;
+    }
+    th {
+      background: #F1F5F9;
+      color: #0F172A;
+      font-weight: 600;
+      padding: 10px 14px;
+      border-bottom: 2px solid #CBD5E1;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #E2E8F0;
+      color: #334155;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background-color: #F8FAFC;
+    }
+
+    /* Figures and Captions */
+    .figure-wrapper, .figure-container {
+      margin: 24px 0;
+      text-align: center;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .figure-wrapper img, .figure-container img, .figure-img, img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
+    }
+    .figure-caption {
+      font-size: 13px;
+      color: #64748B;
+      margin-top: 10px;
+      font-style: italic;
+      line-height: 1.45;
+    }
+
+    /* Code Blocks */
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0F172A;
+      color: #94A3B8;
+      padding: 8px 14px;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+      font-size: 12px;
+      font-family: monospace;
+      margin-top: 18px;
+    }
+    .code-title {
+      color: #E2E8F0;
+      font-weight: 600;
+    }
+    .copy-btn {
+      background: #1E293B;
+      color: #E2E8F0;
+      border: 1px solid #334155;
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .copy-btn:hover {
+      background: #0F766E;
+      color: #FFFFFF;
+    }
+    pre {
+      background: #0B1120;
+      color: #E2E8F0;
+      padding: 14px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      overflow-x: auto;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    code {
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 13px;
+      background: #F1F5F9;
+      color: #0F766E;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    /* Callouts */
+    .callout {
+      border-left: 4px solid #0F766E;
+      background: #F0FDFA;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 18px 0;
+    }
+    .callout-header {
+      font-weight: 700;
+      color: #0F766E;
+      font-size: 13.5px;
+      margin-bottom: 6px;
+    }
+    .callout-tip {
+      border-left-color: #10B981;
+      background: #ECFDF5;
+    }
+    .callout-tip .callout-header {
+      color: #047857;
+    }
+    .callout-warning {
+      border-left-color: #F59E0B;
+      background: #FFFBEB;
+    }
+    .callout-warning .callout-header {
+      color: #B45309;
+    }
+    .callout-danger {
+      border-left-color: #EF4444;
+      background: #FEF2F2;
+    }
+    .callout-danger .callout-header {
+      color: #B91C1C;
+    }
+
+    /* Card Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    /* Accordions */
+    .accordion {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .accordion-header {
+      padding: 12px 16px;
+      background: #F8FAFC;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 14px;
+      color: #0F172A;
+      user-select: none;
+    }
+    .accordion-header:hover {
+      background: #F1F5F9;
+    }
+    .accordion-content {
+      padding: 14px 16px;
+      display: none;
+      font-size: 13.5px;
+      border-top: 1px solid #E2E8F0;
+      background: #FFFFFF;
+    }
+    .accordion-content.open {
+      display: block;
+    }
+    .accordion-icon {
+      transition: transform 0.2s ease;
+      font-size: 12px;
+      color: #64748B;
+    }
+
+    @media (max-width: 640px) {
+      .hero {
+        padding: 24px 18px;
+      }
+      .hero h1 {
+        font-size: 22px;
+      }
+      section {
+        padding: 20px 16px;
+      }
+      h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Hero Banner -->
+    <header class="hero">
+      <span class="stage-badge">TOPIC 17 &bull; CORRELATION &amp; ADVANCED VISUALIZATION</span>
+      <h1>FacetGrid &amp; Multi-Plot Analysis in Seaborn</h1>
+      <p>Complex multivariate datasets ko categorical factors ke hisaab se clean row-and-column subplots me partition karna: <code>sns.FacetGrid</code>, <code>map_dataframe()</code>, <code>relplot()</code>, <code>displot()</code>, aur <code>catplot()</code> ki comprehensive practical guide natural Hinglish me.</p>
+      <div class="meta-pills">
+        <span class="pill">Class: sns.FacetGrid &bull; Functions: relplot(), displot(), catplot()</span>
+        <span class="pill">Seaborn Version: 0.13.2</span>
+        <span class="pill">Core Focus: Multi-Plot Panels &bull; Subsetting &bull; Shared Scales &bull; Pagination</span>
+      </div>
+    </header>
+
+    <!-- Table of Contents Card -->
+    <nav class="toc-card">
+      <div class="toc-title">Table of Contents (13 Comprehensive Sections)</div>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-item"><span class="toc-badge">1</span> Section A: Intro to Multi-Plot Analysis</a>
+        <a href="#sec-2" class="toc-item"><span class="toc-badge">2</span> Section B: Understanding FacetGrid</a>
+        <a href="#sec-3" class="toc-item"><span class="toc-badge">3</span> Section C: Mapping Plotting Functions</a>
+        <a href="#sec-4" class="toc-item"><span class="toc-badge">4</span> Section D: Faceting with row, col, hue</a>
+        <a href="#sec-5" class="toc-item"><span class="toc-badge">5</span> Section E: Customizing FacetGrid Layout</a>
+        <a href="#sec-6" class="toc-item"><span class="toc-badge">6</span> Section F: Figure-Level Helpers (relplot, displot, catplot)</a>
+        <a href="#sec-7" class="toc-item"><span class="toc-badge">7</span> Section G: Real-Life 1: Student Academic Performance</a>
+        <a href="#sec-8" class="toc-item"><span class="toc-badge">8</span> Section H: Real-Life 2: E-Commerce Regional Analytics</a>
+        <a href="#sec-9" class="toc-item"><span class="toc-badge">9</span> Section I: Real-Life 3: API &amp; Server Telemetry</a>
+        <a href="#sec-10" class="toc-item"><span class="toc-badge">10</span> Section J: Choosing the Right Multi-Plot Tool</a>
+        <a href="#sec-11" class="toc-item"><span class="toc-badge">11</span> Section K: Common Mistakes &amp; Troubleshooting</a>
+        <a href="#sec-12" class="toc-item"><span class="toc-badge">12</span> Section L: Hands-On Mini Challenges</a>
+        <a href="#sec-13" class="toc-item"><span class="toc-badge">13</span> Section M: Quick Revision &amp; Decision Guide</a>
+      </div>
+    </nav>
+
+    <!-- Section 1 (Section A) -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Section A &mdash; Introduction to Multi-Plot Analysis</h2>
+      <p>Suppose tumhare paas ek college ke 120 students ka data hai. Data me 4 alag-alag departments hain: <strong>Computer Science (CS)</strong>, <strong>Engineering</strong>, <strong>Business</strong>, aur <strong>Arts</strong>. Sath hi har student ek study group (Group A, Group B, Group C) me partitioned hai. Agar tum ek hi single scatter plot par sabhi 12 groups ko alag-alag colors aur markers se draw karne ki koshish karoge, toh kya hoga?</p>
+
+      <p>Woh graph ek unreadable dense "ink blob" ban jayega! Har group ke dots ek dusre ke upar overlap ho jayenge, aur yeh pehchanna impossible ho jayega ki CS students ka study pattern Arts students se kitna alag hai. Is visual overcrowding ko solve karne ke liye data science me <strong>Multi-Plot Analysis</strong> (ya <strong>Trellis / Lattice Graphics</strong>) use kiya jata hai.</p>
+
+      <div class="callout callout-info">
+        <div class="callout-header">Core Concept: What is Faceting?</div>
+        <p><strong>Faceting</strong> ka matlab hota hai ek bade complex dataset ko categorical variable ke values ke aadhar par <em>chote-chote subsets</em> me split karna, aur har subset ke liye ek separate mini-graph (subplot) create karna, sabhi ko ek structured row-and-column grid canvas par align karke.</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/crowded_vs_faceted_preview.png" alt="Figure 17.1: The Power of Multi-Plot Analysis — Overcrowded Clutter vs Clean Faceted Panels" loading="lazy" class="figure-img" id="fig-17-1">
+        <div class="figure-caption"><strong>Figure 17.1:</strong> The Power of Multi-Plot Analysis — [Left] Overcrowded single plot with 12 overlapping cohorts creates cognitive chaos. [Right] Clean 1 &times; 4 Faceted grid separates each department into its own dedicated panel with uniform axes scales for effortless side-by-side comparison!</div>
+      </div>
+
+      <h3>Why Multiple Small Graphs Are Superior in Exploratory Data Analysis (EDA)</h3>
+      <ul>
+        <li><strong>Reduced Cognitive Load:</strong> Human brain ek time par 2 se 3 color shades ko hi accurately compare kar sakta hai. 12 colors dekhkar user confuse ho jata hai. Faceting har category ko isolated room deta hai.</li>
+        <li><strong>Shared Visual Scales:</strong> Sabhi faceted subplots default me identical X aur Y axis limits share karte hain. Iska matlab hai ki height aur slopes directly visual intuition se compare kiye ja sakte hain!</li>
+        <li><strong>Spotting Sub-Group Anomalies:</strong> Agar kisi specific department (e.g. Arts) me study hours ka marks par slope gentle hai jabki Engineering me steep hai, toh faceting me yeh interaction effect instantly identify ho jata hai.</li>
+      </ul>
+
+      <div class="figure-wrapper">
+        <img src="assets/facetgrid_anatomy_grid.png" alt="Figure 17.2: Structural Anatomy of a Seaborn FacetGrid Canvas" loading="lazy" class="figure-img" id="fig-17-2">
+        <div class="figure-caption"><strong>Figure 17.2:</strong> Structural Anatomy of a FacetGrid Canvas — The grid orchestrates rows (e.g. <code>row="study_group"</code>) and columns (e.g. <code>col="department"</code>) with synchronized axes coordinates.</div>
+      </div>
+
+      <h3>Example 1: Single Crowded Plot vs Clean FacetGrid Concept</h3>
+      <p>Demonstrating how a single function call partitions a dataset into separate department panels:</p>
+
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 1: Basic FacetGrid Initialization</span>
+        <button class="copy-btn" onclick="copyCode('code-ex1')">Copy Code</button>
+      </div>
+      <pre id="code-ex1"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load verified student performance dataset
+df_student = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# 1. Initialize FacetGrid partitioned by department
+g = sns.FacetGrid(df_student, col="department", height=3.5, aspect=1.0)
+
+# 2. Map scatter plot onto each facet
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#0F766E", s=50)
+
+# 3. Add clean axis labels and title
+g.set_axis_labels("Study Hours", "Marks (%)")
+plt.show()</code></pre>
+
+      <h3>Example 2: Comparing Study Groups with Faceting</h3>
+      <p>Partitioning students vertically across rows using <code>row="study_group"</code>:</p>
+
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 2: Vertical Stack with row Parameter</span>
+        <button class="copy-btn" onclick="copyCode('code-ex2')">Copy Code</button>
+      </div>
+      <pre id="code-ex2"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_student = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Vertical stack by study group
+g = sns.FacetGrid(df_student, row="study_group", height=2.4, aspect=3.0)
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#D97706", s=45)
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+    </section>
+
+    <!-- Section 2 (Section B) -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Section B &mdash; Understanding FacetGrid</h2>
+      <p>Seaborn me <code>FacetGrid</code> ek figure-level object-oriented class hai jo multi-panel visualizations ki foundation banati hai. Yeh do-step execution pattern follow karti hai:</p>
+
+      <ol>
+        <li><strong>Grid Initialization:</strong> <code>g = sns.FacetGrid(data, col="...", row="...")</code> call karke figure aur subplots structure initialize hota hai (empty canvas).</li>
+        <li><strong>Function Mapping:</strong> <code>g.map()</code> ya <code>g.map_dataframe()</code> use karke plotting function ko har subplot cell par execute kiya jata hai.</li>
+      </ol>
+
+      <div class="figure-wrapper">
+        <img src="assets/facetgrid_col_department.png" alt="Figure 17.3: Basic FacetGrid with col='department'" loading="lazy" class="figure-img" id="fig-17-3">
+        <div class="figure-caption"><strong>Figure 17.3:</strong> Basic FacetGrid with <code>col="department"</code> — 4 subplots aligned side-by-side, sharing a uniform Y-axis range (40% to 100%).</div>
+      </div>
+
+      <h3>Core Parameters of FacetGrid</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type / Default</th>
+              <th>Description &amp; Behavioral Function</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td>pandas.DataFrame</td>
+              <td>Tidy (long-form) DataFrame jisme categorical columns aur numerical measurements hon.</td>
+            </tr>
+            <tr>
+              <td><code>col</code></td>
+              <td>str (column name)</td>
+              <td>Categorical variable jo horizontal columns of subplots define karta hai.</td>
+            </tr>
+            <tr>
+              <td><code>row</code></td>
+              <td>str (column name)</td>
+              <td>Categorical variable jo vertical rows of subplots define karta hai.</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td>str (column name)</td>
+              <td>Categorical variable jo har facet ke andar points ko color-code karta hai.</td>
+            </tr>
+            <tr>
+              <td><code>col_wrap</code></td>
+              <td>int (Default: None)</td>
+              <td>Columns ki maximum limit. Agar categories zyada hon (e.g. 8), toh yeh unhe multiple rows me wrap kar deta hai (cannot be used with <code>row</code>).</td>
+            </tr>
+            <tr>
+              <td><code>height</code></td>
+              <td>float (Default: 3.0)</td>
+              <td>Har individual subplot ki height in inches.</td>
+            </tr>
+            <tr>
+              <td><code>aspect</code></td>
+              <td>float (Default: 1.0)</td>
+              <td>Aspect ratio (width = height &times; aspect). <code>aspect=1.5</code> makes facets wider.</td>
+            </tr>
+            <tr>
+              <td><code>sharex, sharey</code></td>
+              <td>bool (Default: True)</td>
+              <td>Whether all subplots share the same X and Y axis limits and tick marks.</td>
+            </tr>
+            <tr>
+              <td><code>margin_titles</code></td>
+              <td>bool (Default: False)</td>
+              <td>When True and using both row and col, places row titles on the right margin instead of repeating on each panel.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The Critical Importance of Axis Sharing (sharex &amp; sharey)</h3>
+      <p>By default, <code>FacetGrid</code> me <code>sharex=True</code> aur <code>sharey=True</code> hota hai. Yeh ek scientific best practice hai. Agar subplots different scales use karenge, toh reader visually deceive ho sakta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/facetgrid_sharex_sharey_comparison.png" alt="Figure 17.4: Shared vs Independent Axes Comparison" loading="lazy" class="figure-img" id="fig-17-4">
+        <div class="figure-caption"><strong>Figure 17.4:</strong> Shared Axes vs Independent Axes — [Top Row] <code>sharey=True</code> reveals true absolute differences across departments. [Bottom Row] <code>sharey=False</code> stretches local coordinates, making low-performing cohorts appear artificially inflated!</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-header">When is sharey=False Acceptable?</div>
+        <p>Agar alag-alag facets me completely different scale ke measurements plot kiye ja rahe hon (e.g. ek facet me Server Requests 0-5000 aur dusre me Error Rate 0-10), tab <code>sharey=False</code> zaroori hota hai. Lekin jab same metric compare ho rahi ho, hamesha <code>sharey=True</code> rakhein!</p>
+      </div>
+
+      <h3>Example 3: Controlling Aspect Ratio and Facet Dimensions</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 3: Customizing Height and Aspect Ratio</span>
+        <button class="copy-btn" onclick="copyCode('code-ex3')">Copy Code</button>
+      </div>
+      <pre id="code-ex3"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_student = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Wide landscape facets (height=3.2, aspect=1.4)
+g = sns.FacetGrid(df_student, col="department", height=3.2, aspect=1.4)
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#2563EB", s=50)
+g.set_axis_labels("Hours Studied", "Exam Score")
+plt.show()</code></pre>
+
+      <h3>Example 4: Using col_wrap for Multi-Category Pagination</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 4: Wrapping Columns with col_wrap</span>
+        <button class="copy-btn" onclick="copyCode('code-ex4')">Copy Code</button>
+      </div>
+      <pre id="code-ex4"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_student = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Wrap 4 departments into a 2x2 grid
+g = sns.FacetGrid(df_student, col="department", col_wrap=2, height=3.0, aspect=1.2)
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#059669")
+g.set_axis_labels("Study Hours", "Marks (%)")
+plt.show()</code></pre>
+    </section>
+
+    <!-- Section 3 (Section C) -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Section C &mdash; Mapping Plotting Functions</h2>
+      <p>FacetGrid create karne ke baad, magic function mapping ke through hota hai. Seaborn do primary mapping methods provide karta hai: <code>g.map()</code> aur <code>g.map_dataframe()</code>.</p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Method</th>
+              <th>Arguments Pattern</th>
+              <th>How It Operates</th>
+              <th>Recommended Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>g.map(func, *args, **kwargs)</code></td>
+              <td><code>g.map(plt.hist, "marks", bins=10)</code></td>
+              <td>Positional column arrays pass karta hai function ko. Useful for classic Matplotlib functions.</td>
+              <td>Simple univariate histograms (<code>plt.hist</code>), scatter plots (<code>plt.scatter</code>).</td>
+            </tr>
+            <tr>
+              <td><code>g.map_dataframe(func, *args, **kwargs)</code></td>
+              <td><code>g.map_dataframe(sns.scatterplot, x="hours", y="marks")</code></td>
+              <td>Passes the subsetted DataFrame directly as keyword arguments. Preserves column names and metadata.</td>
+              <td>Modern Seaborn functions (<code>sns.scatterplot</code>, <code>sns.regplot</code>, <code>sns.kdeplot</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/mapping_scatterplot_kde.png" alt="Figure 17.5: Multi-Function Mapping with map_dataframe" loading="lazy" class="figure-img" id="fig-17-5">
+        <div class="figure-caption"><strong>Figure 17.5:</strong> Layering Multiple Geometries via <code>map_dataframe()</code> — First mapping <code>sns.scatterplot</code> (dots) and then mapping <code>sns.regplot</code> (trendline) onto the identical FacetGrid canvas!</div>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/mapping_matplotlib_hist.png" alt="Figure 17.6: Mapping Matplotlib Functions Across Facets" loading="lazy" class="figure-img" id="fig-17-6">
+        <div class="figure-caption"><strong>Figure 17.6:</strong> Mapping Matplotlib's <code>plt.hist</code> using <code>g.map()</code> — Demonstrates how native Matplotlib plotting calls integrate seamlessly with FacetGrid.</div>
+      </div>
+
+      <h3>Example 5: Layering Scatter and Regression Lines with map_dataframe()</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 5: Layered Multi-Plot Mapping</span>
+        <button class="copy-btn" onclick="copyCode('code-ex5')">Copy Code</button>
+      </div>
+      <pre id="code-ex5"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Initialize grid
+g = sns.FacetGrid(df, col="department", height=3.5, aspect=1.0)
+
+# Layer 1: Scatter plot dots
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#4338CA", s=50, alpha=0.7)
+
+# Layer 2: Regression trendline (without points)
+g.map_dataframe(sns.regplot, x="study_hours", y="marks", scatter=False, color="#DC2626")
+
+g.set_axis_labels("Study Hours", "Marks (%)")
+plt.show()</code></pre>
+
+      <h3>Example 6: Mapping Matplotlib Univariate Histograms</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 6: Mapping Native Matplotlib Functions</span>
+        <button class="copy-btn" onclick="copyCode('code-ex6')">Copy Code</button>
+      </div>
+      <pre id="code-ex6"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.FacetGrid(df, col="department", height=3.4, aspect=1.0)
+# Use g.map() with column name as positional string
+g.map(plt.hist, "marks", bins=8, color="#059669", edgecolor="white")
+g.set_axis_labels("Final Marks (%)", "Count")
+plt.show()</code></pre>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: FACETING DIMENSIONS (ROW, COL, HUE) -->
+    <!-- ========================================== -->
+    <section id="sec-4" class="content-card">
+      <div class="topic-tag">04 &bull; MULTI-DIMENSIONAL DECOMPOSITION</div>
+      <h2>Section 4: Faceting Dimensions &bull; <code>row</code>, <code>col</code>, and <code>hue</code></h2>
+
+      <p>
+        Jab hum real-world complex datasets analyze karte hain, toh data me multiple categorical attributes hote hain. For example, humare student dataset me <code>department</code> (4 categories), <code>study_group</code> (3 categories), aur <code>attendance_rate</code> jaise factors hain.
+        Seaborn ka <code>FacetGrid</code> humein <strong>3 distinct visual dimensions</strong> deta hai jinhe combine karke hum ek hi visualization me 4 ya 5 variables simultaneously explore kar sakte hain:
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Dimension Parameter</th>
+              <th>Spatial / Visual Mapping</th>
+              <th>Cognitive Purpose</th>
+              <th>Ideal Number of Categories</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>col="column_name"</code></td>
+              <td>Horizontal Panels (Left to Right)</td>
+              <td>Primary category comparison along a shared horizontal axis.</td>
+              <td>2 to 5 categories (e.g., 4 Departments).</td>
+            </tr>
+            <tr>
+              <td><code>row="column_name"</code></td>
+              <td>Vertical Panels (Top to Bottom)</td>
+              <td>Secondary category split creating stacked visual baselines.</td>
+              <td>2 to 4 categories (e.g., 3 Study Groups).</td>
+            </tr>
+            <tr>
+              <td><code>hue="column_name"</code></td>
+              <td>Color Palette within each panel</td>
+              <td>Sub-segmentation inside the same Cartesian axes.</td>
+              <td>2 to 4 high-contrast classes (e.g., Attendance High/Low).</td>
+            </tr>
+            <tr>
+              <td><code>style="column_name"</code></td>
+              <td>Marker shapes or dash styles</td>
+              <td>Additional visual encoding accessible for grayscale or colorblind viewers.</td>
+              <td>2 to 3 distinct glyphs.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4.1 Horizontal Column Faceting (<code>col</code>)</h3>
+      <p>
+        Column faceting data ko side-by-side split karta hai. Har category ka apna x-axis aur y-axis panel hota hai, jisse horizontal comparison effortless ho jati hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/facetgrid_col_only.png" alt="Figure 17.7: Column-only faceting across 4 academic departments" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.7: Column-only 1D faceting displaying scatter and regression slope across CS, Engineering, Business, and Arts.</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-header">
+          <span class="callout-icon">&#9432;</span>
+          <span class="callout-title">Visual Insight &bull; Departmental Consistency</span>
+        </div>
+        <p>
+          Figure 17.7 me notice karein ki sabhi four departments me study hours aur marks ka correlation exceptionally strong hai:
+          CS (<em>r</em> = 0.9774), Engineering (<em>r</em> = 0.9670), Arts (<em>r</em> = 0.9614), aur Business (<em>r</em> = 0.9435).
+          Agar humne single axes par 120 points scatter kiye hote, toh 4 overlapping colors dekhkar slope ka exact angle distinguish karna impossible hota!
+        </p>
+      </div>
+
+      <h3>4.2 Vertical Row Faceting (<code>row</code>)</h3>
+      <p>
+        Jab categories me hierarchical order ho ya time-based sequence ho (jaise Year 2024, 2025, 2026 ya Study Group A, B, C), vertical row stacking sabse natural visual flow deti hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/facetgrid_row_only.png" alt="Figure 17.8: Row-only faceting across study groups" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.8: Row-only 1D vertical faceting comparing student distributions across Group A (Intensive), Group B (Standard), and Group C (Self-Paced).</div>
+      </div>
+
+      <h3>4.3 The 2D Matrix Grid: Combining <code>row</code> and <code>col</code></h3>
+      <p>
+        Jab hum <code>row</code> aur <code>col</code> dono pass karte hain, toh Seaborn ek <strong>2D Cartesian Subplot Matrix</strong> generate karta hai.
+        Agar humare paas 3 Rows aur 4 Columns hain, toh exactly <em>3 &times; 4 = 12 subplots</em> create honge:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/facetgrid_row_col_grid.png" alt="Figure 17.9: 2D Matrix Grid combining row and col" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.9: Full 2D Grid Matrix (3 Study Groups &times; 4 Departments = 12 Panels) exposing localized sub-cohort performance.</div>
+      </div>
+
+      <h3>4.4 Adding <code>hue</code> within Panels</h3>
+      <p>
+        Subplot panels ke andar further distinction lane ke liye hum <code>hue</code> parameter use karte hain. Yeh har individual panel ke data points ko unke categorical class ke hisab se colorize kar deta hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/facetgrid_hue_within_panels.png" alt="Figure 17.10: FacetGrid with hue discrimination within panels" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.10: 4-Column FacetGrid with <code>hue="study_group"</code> showing distinct color coding and custom legend.</div>
+      </div>
+
+      <h3>Example 7: Multi-Dimensional Decomposition with <code>row</code>, <code>col</code>, and <code>hue</code></h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 7: 2D Grid with Hue Sub-segmentation</span>
+        <button class="copy-btn" onclick="copyCode('code-ex7')">Copy Code</button>
+      </div>
+      <pre id="code-ex7"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# 1. Load academic telemetry dataset
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# 2. Instantiate 2D Grid: Rows = study_group (3), Cols = department (4)
+g = sns.FacetGrid(
+    df,
+    row="study_group",
+    col="department",
+    margin_titles=True,
+    height=2.8,
+    aspect=1.1
+)
+
+# 3. Map scatterplot to each of the 12 cells
+g.map_dataframe(
+    sns.scatterplot,
+    x="study_hours",
+    y="marks",
+    alpha=0.85,
+    s=50,
+    color="#2563EB"
+)
+
+# 4. Standardize axis labels and titles
+g.set_axis_labels("Study Hours / Day", "Marks (%)")
+g.fig.subplots_adjust(top=0.92)
+g.fig.suptitle("Student Performance 2D Matrix (3 Groups x 4 Departments)", fontsize=14, fontweight="bold")
+plt.show()</code></pre>
+
+      <h3>Example 8: Multi-Plot Decomposition on API Server Telemetry</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 8: Telemetry Latency vs CPU across Traffic Levels</span>
+        <button class="copy-btn" onclick="copyCode('code-ex8')">Copy Code</button>
+      </div>
+      <pre id="code-ex8"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load server telemetry
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+# Create FacetGrid with col=endpoint and hue=traffic_level
+g = sns.FacetGrid(
+    api_df,
+    col="endpoint",
+    hue="traffic_level",
+    palette={"Low": "#10B981", "Normal": "#3B82F6", "Peak": "#EF4444"},
+    height=3.5,
+    aspect=1.0
+)
+
+g.map_dataframe(sns.scatterplot, x="cpu_utilization_pct", y="response_latency_ms", alpha=0.8, s=60)
+g.add_legend(title="Traffic Level")
+g.set_axis_labels("CPU Utilization (%)", "Response Latency (ms)")
+plt.show()</code></pre>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: CUSTOMIZING FACETGRID GEOMETRY -->
+    <!-- ========================================== -->
+    <section id="sec-5" class="content-card">
+      <div class="topic-tag">05 &bull; LAYOUT &amp; GEOMETRY TUNING</div>
+      <h2>Section 5: Customizing FacetGrid Geometry &amp; Layout</h2>
+
+      <p>
+        Default grid settings har dataset ke liye ideal nahi hote. Agar aapke paas 8 categories hain, toh 8 columns ek single horizontal line me squish ho jayenge, jisse text unreadable ho jayega.
+        Is section me hum sikhenge ki <strong>subplot geometry</strong>, <strong>column wrapping</strong>, <strong>axis scale independence</strong>, aur <strong>titles</strong> ko professionally kaise polish kiya jata hai.
+      </p>
+
+      <h3>5.1 Subplot Sizing with <code>height</code> and <code>aspect</code></h3>
+      <p>
+        Matplotlib ke standard <code>figsize=(width, height)</code> ke opposite, Seaborn ka <code>FacetGrid</code> sizing ko <em>per-facet basis</em> par calculate karta hai:
+      </p>
+      <ul>
+        <li><code>height</code>: Har individual subplot ki vertical height in inches (e.g., <code>height=3.5</code>).</li>
+        <li><code>aspect</code>: Har subplot ka aspect ratio, defined as <code>width / height</code>. So individual facet width = <code>height * aspect</code>.</li>
+        <li><strong>Total Figure Width</strong> = <code>height * aspect * n_columns</code>. Total Figure Height = <code>height * n_rows</code>.</li>
+      </ul>
+
+      <h3>5.2 Axis Sharing: <code>sharex</code> and <code>sharey</code></h3>
+      <p>
+        By default, <code>FacetGrid</code> assumes karta hai ki sabhi subplots me x aur y axes ka scale same hona chahiye (<code>sharex=True</code>, <code>sharey=True</code>). Yeh visual comparison ko fair banata hai kyunki same physical height ka matlab same numerical value hota hai.
+        Lekin real-world me, kuch categories ke scale me 10x ka difference ho sakta hai (jaise lightweight microservice vs heavy checkout transaction). Aise case me shared axis set karne se choti values flat ho jati hain!
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/facetgrid_customized_before_after.png" alt="Figure 17.11: FacetGrid Aesthetics - Raw Default vs Publication Polish" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.11: FacetGrid Aesthetics &amp; Layout Tuning &bull; [Top Row] Unstyled raw default with default column labels and spines. [Bottom Row] Polished publication-grade layout with clean titles, unified limits, and despined frames.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-header">
+          <span class="callout-icon">&#9888;</span>
+          <span class="callout-title">Critical Trade-off &bull; Fair Comparison vs Detail Zoom</span>
+        </div>
+        <p>
+          Jab aap <code>sharey=False</code> karte hain, toh har subplot apne data ke <code>[min, max]</code> par zoom-in kar leta hai.
+          <strong>Caution:</strong> Isse viewer confuse ho sakta hai agar do plots ki visual line same height par ho lekin left plot par 50 ho aur right plot par 500! Always add clear tick labels jab axes unshared hon.
+        </p>
+      </div>
+
+      <h3>5.3 Column Wrapping with <code>col_wrap</code></h3>
+      <p>
+        Jab aapke categorical variable me 5 se zyada unique levels hote hain (e.g., 10 US States, 12 Months of the year), toh horizontal row screen se bahar chali jayegi.
+        Is situation ko solve karne ke liye Seaborn deta hai <code>col_wrap=K</code>:
+      </p>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Configuration</th>
+              <th>Grid Dimensions Output</th>
+              <th>Key Constraint</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>col="month", col_wrap=4</code></td>
+              <td>12 categories &rarr; 3 Rows &times; 4 Columns</td>
+              <td><code>col_wrap</code> cannot be combined with <code>row</code> parameter.</td>
+            </tr>
+            <tr>
+              <td><code>col="region", col_wrap=2</code></td>
+              <td>4 regions &rarr; 2 Rows &times; 2 Columns (compact square)</td>
+              <td>Preserves readability on mobile and dashboard layouts.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>5.4 Advanced Title and Axis Label Formatting</h3>
+      <p>
+        Default title format <code>department = CS</code> kafi technical aur robotic lagti hai. Seaborn allows templated string customization via <code>g.set_titles()</code>:
+      </p>
+      <ul>
+        <li><code>g.set_titles(template="Cohort: {col_name}")</code> &rarr; Displays "Cohort: CS", "Cohort: Engineering".</li>
+        <li><code>g.set_titles(row_template="Group: {row_name}", col_template="Dept: {col_name}")</code> &rarr; Customizes both row and column headers in 2D grids.</li>
+        <li><code>g.set_axis_labels("Study Hours", "Final Exam Score")</code> &rarr; Sets outer edge labels while suppressing redundant inner axes labels automatically.</li>
+        <li><code>g.despine(left=True)</code> &rarr; Removes top, right, and optionally left spines for modern, clean visual aesthetics.</li>
+      </ul>
+
+      <h3>Example 9: Professional Layout Formatting with Custom Templates</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 9: Templated Titles and Clean Despined Facets</span>
+        <button class="copy-btn" onclick="copyCode('code-ex9')">Copy Code</button>
+      </div>
+      <pre id="code-ex9"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Create FacetGrid with tuned height and aspect
+g = sns.FacetGrid(
+    df,
+    col="department",
+    col_wrap=2,
+    height=3.2,
+    aspect=1.3,
+    sharey=True
+)
+
+g.map_dataframe(
+    sns.scatterplot,
+    x="study_hours",
+    y="marks",
+    hue="study_group",
+    palette="Set2",
+    s=55
+)
+
+# Custom title template and standardized axis labels
+g.set_titles(template="Department: {col_name}", size=11, weight="bold")
+g.set_axis_labels("Daily Study Hours", "Final Score (%)")
+g.add_legend(title="Academic Cohort")
+g.despine(trim=True)
+
+plt.show()</code></pre>
+
+      <h3>Example 10: Unsharing Y-Axis Scales on Skewed Telemetry Data</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 10: Independent Y-Axis for High-Variance Endpoints</span>
+        <button class="copy-btn" onclick="copyCode('code-ex10')">Copy Code</button>
+      </div>
+      <pre id="code-ex10"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+# Unshare Y axis to observe local distribution of each endpoint
+g = sns.FacetGrid(
+    api_df,
+    col="endpoint",
+    col_wrap=2,
+    height=3.0,
+    aspect=1.2,
+    sharey=False  # Crucial: allows auth (0-60ms) and pay (0-400ms) to each scale properly
+)
+
+g.map(sns.kdeplot, "response_latency_ms", fill=True, color="#8B5CF6")
+g.set_titles(template="Route: {col_name}", size=10, weight="bold")
+g.set_axis_labels("Response Latency (ms)", "Probability Density")
+plt.show()</code></pre>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: HIGH-LEVEL FIGURE-LEVEL HELPERS -->
+    <!-- ========================================== -->
+    <section id="sec-6" class="content-card">
+      <div class="topic-tag">06 &bull; MODERN SEABORN ARCHITECTURE</div>
+      <h2>Section 6: High-Level Visual Faceting with <code>relplot()</code>, <code>displot()</code>, and <code>catplot()</code></h2>
+
+      <p>
+        Beginners aksar puchte hain: <em>"Sir, jab hume <code>FacetGrid</code> initialize karke manually <code>g.map()</code> likhna hi padta hai, toh kya koi aisi function nahi hai jo yeh do-step process ek hi line me kar de?"</em><br/>
+        <strong>Answer is YES!</strong> Modern Seaborn (v0.9+) me author Michael Waskom ne figure-level convenience wrappers introduce kiye:
+        <code>sns.relplot()</code>, <code>sns.displot()</code>, aur <code>sns.catplot()</code>.
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Figure-Level Function</th>
+              <th>Chart Families Supported (<code>kind=...</code>)</th>
+              <th>Underlying Engine</th>
+              <th>Primary Benefit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>sns.relplot()</code></td>
+              <td><code>"scatter"</code> (default), <code>"line"</code></td>
+              <td><code>FacetGrid</code> + <code>scatterplot</code> / <code>lineplot</code></td>
+              <td>Zero boilerplate faceting with automatic legend placement outside the grid.</td>
+            </tr>
+            <tr>
+              <td><code>sns.displot()</code></td>
+              <td><code>"hist"</code> (default), <code>"kde"</code>, <code>"ecdf"</code></td>
+              <td><code>FacetGrid</code> + <code>histplot</code> / <code>kdeplot</code> / <code>ecdfplot</code></td>
+              <td>Seamless multi-panel distribution comparisons with shared bins and normalization.</td>
+            </tr>
+            <tr>
+              <td><code>sns.catplot()</code></td>
+              <td><code>"strip"</code> (default), <code>"box"</code>, <code>"violin"</code>, <code>"bar"</code>, <code>"point"</code>, <code>"count"</code></td>
+              <td><code>FacetGrid</code> + <code>boxplot</code> / <code>violinplot</code>, etc.</td>
+              <td>Categorical aggregation across subplots without manual subset filtering loops.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>6.1 <code>sns.relplot()</code> for Relational Multi-Panel Visuals</h3>
+      <p>
+        <code>relplot()</code> relational variables (two continuous metrics) ke relationship ko study karne ke liye best hai.
+        Isme aap direct <code>col=...</code>, <code>row=...</code>, <code>hue=...</code>, <code>style=...</code>, aur <code>size=...</code> arguments pass kar sakte hain:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/relplot_faceted_scatter.png" alt="Figure 17.12: relplot scatter faceted across departments" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.12: <code>sns.relplot(kind="scatter", col="department")</code> mapping study hours to marks with automated cohort hues.</div>
+      </div>
+
+      <p>
+        Agar data sequential ya time-series nature ka ho, toh simply <code>kind="line"</code> pass karein:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/relplot_faceted_line.png" alt="Figure 17.13: relplot line faceted across regions" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.13: <code>sns.relplot(kind="line", col="region")</code> showing spend trajectory across order frequencies.</div>
+      </div>
+
+      <h3>6.2 <code>sns.displot()</code> for Distribution Multi-Panel Visuals</h3>
+      <p>
+        Jab aapko multiple groups ke underlying statistical distributions (skewness, modality, tails) compare karne hon, toh <code>sns.displot()</code> standard <code>FacetGrid + map(sns.histplot)</code> se 10x zyada convenient hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/displot_faceted_distribution.png" alt="Figure 17.14: displot faceted across endpoints" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.14: <code>sns.displot(kind="kde", col="endpoint", col_wrap=2)</code> showing kernel density estimates of latency distributions.</div>
+      </div>
+
+      <h3>6.3 <code>sns.catplot()</code> for Categorical Aggregations</h3>
+      <p>
+        Categorical data visualization (boxplots, violins, point plots, bar plots) ke liye <code>sns.catplot()</code> ultimate Swiss Army knife hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/catplot_faceted_boxplot.png" alt="Figure 17.15: catplot boxplot faceted across regions" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.15: <code>sns.catplot(kind="box", col="region", x="customer_segment", y="spend_usd")</code> comparing median customer spending.</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-header">
+          <span class="callout-icon">&#128161;</span>
+          <span class="callout-title">Architecture Rule of Thumb &bull; When to use Figure-Level vs FacetGrid</span>
+        </div>
+        <p>
+          <strong>Always use Figure-Level functions (<code>relplot</code>, <code>displot</code>, <code>catplot</code>) first!</strong>
+          Kyunki yeh cleaner hain, 1 line me execute hote hain, aur inme standard figure-level conveniences built-in hain.<br/>
+          <strong>Switch to raw <code>FacetGrid</code> ONLY when:</strong>
+          (1) Aapko multiple unrelated plotting layers add karni hon (jaise panel 1 par scatter + panel 2 par custom KDE + panel 3 par threshold line),
+          ya (2) Aap native Matplotlib function (<code>plt.scatter</code>, <code>plt.fill_between</code>) map karna chahte hon.
+        </p>
+      </div>
+
+      <h3>Example 11: <code>relplot()</code> Scatter Multi-Panel</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 11: Relational Scatter Plot with Col Faceting</span>
+        <button class="copy-btn" onclick="copyCode('code-ex11')">Copy Code</button>
+      </div>
+      <pre id="code-ex11"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# Single-line figure-level faceting
+g = sns.relplot(
+    data=df,
+    x="study_hours",
+    y="marks",
+    col="department",
+    hue="study_group",
+    kind="scatter",
+    palette="viridis",
+    height=3.2,
+    aspect=1.0,
+    s=70
+)
+
+g.set_axis_labels("Study Hours", "Marks (%)")
+plt.show()</code></pre>
+
+      <h3>Example 12: <code>relplot()</code> Line Plot with Region Faceting</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 12: Relational Trendlines across Regions</span>
+        <button class="copy-btn" onclick="copyCode('code-ex12')">Copy Code</button>
+      </div>
+      <pre id="code-ex12"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+g = sns.relplot(
+    data=ecom_df,
+    x="order_count",
+    y="spend_usd",
+    col="region",
+    hue="customer_segment",
+    kind="line",
+    errorbar=None,
+    marker="o",
+    height=3.2,
+    aspect=1.1
+)
+
+g.set_axis_labels("Number of Orders", "Total Spend (&#36;)")
+plt.show()</code></pre>
+
+      <h3>Example 13: <code>displot()</code> Kernel Density Across Facets</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 13: Distribution Density with col_wrap</span>
+        <button class="copy-btn" onclick="copyCode('code-ex13')">Copy Code</button>
+      </div>
+      <pre id="code-ex13"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+# Multi-panel KDE with column wrapping
+g = sns.displot(
+    data=api_df,
+    x="response_latency_ms",
+    col="endpoint",
+    col_wrap=2,
+    kind="kde",
+    fill=True,
+    height=3.0,
+    aspect=1.2,
+    color="#0D9488"
+)
+
+g.set_axis_labels("Latency (ms)", "Density")
+plt.show()</code></pre>
+
+      <h3>Example 14: <code>displot()</code> Histogram with Rug Marks</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 14: Multi-Facet Histogram with Marginal Rugs</span>
+        <button class="copy-btn" onclick="copyCode('code-ex14')">Copy Code</button>
+      </div>
+      <pre id="code-ex14"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.displot(
+    data=df,
+    x="marks",
+    col="department",
+    kind="hist",
+    bins=10,
+    kde=True,
+    rug=True,
+    height=3.0,
+    aspect=1.1,
+    color="#4F46E5"
+)
+
+g.set_axis_labels("Final Marks (%)", "Student Count")
+plt.show()</code></pre>
+
+      <h3>Example 15: <code>catplot()</code> Boxplot across Regional Facets</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 15: Categorical Boxplot with Multi-Panel Facets</span>
+        <button class="copy-btn" onclick="copyCode('code-ex15')">Copy Code</button>
+      </div>
+      <pre id="code-ex15"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+g = sns.catplot(
+    data=ecom_df,
+    x="customer_segment",
+    y="spend_usd",
+    col="region",
+    kind="box",
+    palette="Blues",
+    hue="customer_segment",
+    legend=False,
+    height=3.5,
+    aspect=0.9
+)
+
+g.set_axis_labels("Customer Segment", "Spend (&#36;)")
+g.set_xticklabels(rotation=25)
+plt.show()</code></pre>
+
+      <h3>Example 16: <code>catplot()</code> Barplot Aggregation across Endpoints</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 16: Categorical Bar Plot with Errorbars</span>
+        <button class="copy-btn" onclick="copyCode('code-ex16')">Copy Code</button>
+      </div>
+      <pre id="code-ex16"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+g = sns.catplot(
+    data=api_df,
+    x="traffic_level",
+    y="response_latency_ms",
+    col="endpoint",
+    kind="bar",
+    errorbar="se",
+    palette="coolwarm",
+    hue="traffic_level",
+    legend=False,
+    height=3.2,
+    aspect=1.0
+)
+
+g.set_axis_labels("Traffic Level", "Mean Latency (ms)")
+plt.show()</code></pre>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: CASE STUDY 1 - STUDENT PERFORMANCE -->
+    <!-- ========================================== -->
+    <section id="sec-7" class="content-card">
+      <div class="topic-tag">07 &bull; REAL-WORLD CASE STUDY 1</div>
+      <h2>Section 7: Case Study 1 &bull; University Student Academic Performance EDA</h2>
+
+      <p>
+        Imagine karein aap ek major university ke <strong>Chief Academic Analytics Officer</strong> hain.
+        Aapke samne ek complex problem statement hai: <em>"Kya daily study hours sabhi departments me marks ko equally boost karte hain? Aur kya rigorous study groups (Group A) arts students ke liye utne hi beneficial hain jitne engineering students ke liye?"</em>
+      </p>
+
+      <p>
+        Single aggregated scatter plot dekhne par hume sirf overall trend (overall <em>r</em> = 0.9252) dikhta hai. Lekin multi-plot faceting ke through hum departmental nuances ko isolate kar sakte hain.
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/student_case_dept_scatter.png" alt="Figure 17.16: Faceted regression of study hours vs marks across departments" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.16: 4-Column FacetGrid mapping scatter points and linear regression fit across CS, Engineering, Business, and Arts.</div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Department</th>
+              <th>Student Sample (N)</th>
+              <th>Mean Final Score (%)</th>
+              <th>Study Hours vs Marks Correlation (<em>r</em>)</th>
+              <th>Key Academic Insight</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Computer Science</strong></td>
+              <td>30</td>
+              <td>63.90%</td>
+              <td><strong>0.9774</strong></td>
+              <td>Highest linear predictability; direct code practice yields proportional grades.</td>
+            </tr>
+            <tr>
+              <td><strong>Engineering</strong></td>
+              <td>30</td>
+              <td>62.04%</td>
+              <td><strong>0.9670</strong></td>
+              <td>Steep learning curve; students with &lt; 4 hours/day face elevated failure risk.</td>
+            </tr>
+            <tr>
+              <td><strong>Business School</strong></td>
+              <td>30</td>
+              <td>66.68%</td>
+              <td><strong>0.9435</strong></td>
+              <td>Moderate variance; presentation and case study teamwork balance exam scores.</td>
+            </tr>
+            <tr>
+              <td><strong>Liberal Arts</strong></td>
+              <td>30</td>
+              <td>68.15%</td>
+              <td><strong>0.9614</strong></td>
+              <td>Highest baseline score (68.15%); reading hours strongly enhance essay quality.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Drilling Deeper: 3 &times; 4 Matrix of Cohort Groups &times; Departments</h3>
+      <p>
+        Ab hum next level deeper jate hain. Hum check karna chahte hain ki har department ke andar <strong>Study Group A</strong> (Intensive, mean 6.87 hrs/day), <strong>Group B</strong> (Standard, mean 5.76 hrs/day), aur <strong>Group C</strong> (Self-Paced, mean 4.37 hrs/day) ka performance distribution kaisa hai:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/student_case_dept_group_matrix.png" alt="Figure 17.17: 3x4 Matrix of study groups and academic departments" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.17: 2D Matrix (12 Panels: 3 Study Groups &times; 4 Departments) confirming that Group A consistently dominates the upper quartile across all faculties.</div>
+      </div>
+
+      <h3>Example 17: Generating the Departmental Multi-Facet Regression</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 17: Multi-Facet Regression Analysis</span>
+        <button class="copy-btn" onclick="copyCode('code-ex17')">Copy Code</button>
+      </div>
+      <pre id="code-ex17"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load verified dataset (120 student records)
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# 1. Setup FacetGrid with 4 columns
+g = sns.FacetGrid(df, col="department", height=3.5, aspect=0.95, sharex=True, sharey=True)
+
+# 2. Map scatterplot with study_group hues
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", hue="study_group", palette="Dark2", s=55, alpha=0.9)
+
+# 3. Overlay regression trendline
+g.map_dataframe(sns.regplot, x="study_hours", y="marks", scatter=False, color="#DC2626", line_kws={"linewidth": 1.8})
+
+# 4. Polish labels and legend
+g.set_axis_labels("Daily Study Hours", "Final Marks (%)")
+g.set_titles(template="Faculty: {col_name}", weight="bold")
+g.add_legend(title="Study Cohort")
+plt.show()</code></pre>
+
+      <h3>Example 18: Generating the 12-Panel 2D Academic Matrix</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 18: Full 2D Grid Matrix Exploration</span>
+        <button class="copy-btn" onclick="copyCode('code-ex18')">Copy Code</button>
+      </div>
+      <pre id="code-ex18"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# 3 rows x 4 columns = 12 subplots
+g = sns.FacetGrid(
+    df,
+    row="study_group",
+    col="department",
+    margin_titles=True,
+    height=2.4,
+    aspect=1.1
+)
+
+g.map(sns.histplot, "marks", kde=True, color="#2563EB", bins=7)
+g.set_axis_labels("Marks (%)", "Student Count")
+g.fig.subplots_adjust(top=0.92)
+g.fig.suptitle("Marks Distribution across 12 Departmental-Cohort Cells", fontsize=13, weight="bold")
+plt.show()</code></pre>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 8: CASE STUDY 2 - E-COMMERCE -->
+    <!-- ========================================== -->
+    <section id="sec-8" class="content-card">
+      <div class="topic-tag">08 &bull; REAL-WORLD CASE STUDY 2</div>
+      <h2>Section 8: Case Study 2 &bull; E-Commerce Regional Sales &amp; Customer Segments</h2>
+
+      <p>
+        E-commerce business me sales data ko geographic region aur customer tier ke across compare karna critical decision-making point hota hai.
+        Yahan hum 150 customer enterprise transactions analyze kar rahe hain jisme 4 geographic regions (<strong>North</strong>, <strong>South</strong>, <strong>East</strong>, <strong>West</strong>) aur 3 segments (<strong>Consumer</strong>, <strong>Corporate</strong>, <strong>Home Office</strong>) shamil hain.
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/ecommerce_spend_orders_scatter.png" alt="Figure 17.18: E-commerce spend vs order count faceted across regions" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.18: Regional Facets comparing Order Volume vs Total Spend (&#36;) with hue segmentation for Customer Tiers.</div>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-header">
+          <span class="callout-icon">&#10004;</span>
+          <span class="callout-title">Business Metric Verification</span>
+        </div>
+        <p>
+          Data confirms strong purchase scaling: Order count aur Total spend me global correlation <strong><em>r</em> = 0.9053</strong> hai.
+          Notice karein:
+        </p>
+        <ul>
+          <li><strong>Corporate Segment:</strong> Mean spend is <strong>&#36;1410.97</strong> (almost 2x higher than Consumer tier).</li>
+          <li><strong>Consumer Segment:</strong> Mean spend is <strong>&#36;759.24</strong> with high order volume but lower single-order value.</li>
+          <li><strong>Home Office:</strong> Mean spend is <strong>&#36;848.23</strong> bridging the gap.</li>
+          <li><strong>Regional Powerhouse:</strong> <strong>West Region</strong> leads overall revenue with an average of <strong>&#36;928.37</strong> per customer, compared to North (&#36;769.85), South (&#36;782.23), and East (&#36;782.58).</li>
+        </ul>
+      </div>
+
+      <p>
+        Customer segment spending disparity ko visual confidence intervals ke sath dekhne ke liye categorical multi-panel bar plot create kiya gaya:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/ecommerce_revenue_catplot_bars.png" alt="Figure 17.19: Mean customer spend by segment faceted across regions" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.19: Categorical Multi-Plot (<code>catplot(kind="bar")</code>) proving that Corporate accounts consistently lead spending in every single geographical zone.</div>
+      </div>
+
+      <h3>Example 19: Relational Faceted Scatter with Regional Slicing</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 19: Regional Spend Analysis with sns.relplot</span>
+        <button class="copy-btn" onclick="copyCode('code-ex19')">Copy Code</button>
+      </div>
+      <pre id="code-ex19"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+# Figure-level faceting across regions
+g = sns.relplot(
+    data=ecom_df,
+    x="order_count",
+    y="spend_usd",
+    col="region",
+    hue="customer_segment",
+    style="customer_segment",
+    palette="deep",
+    s=75,
+    height=3.4,
+    aspect=1.05
+)
+
+g.set_axis_labels("Total Orders", "Total Spend (USD)")
+g.set_titles("Territory: {col_name}", weight="bold")
+plt.show()</code></pre>
+
+      <h3>Example 20: Categorical Faceted Bar Chart with Error Bars</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 20: Mean Spend by Segment across Territories</span>
+        <button class="copy-btn" onclick="copyCode('code-ex20')">Copy Code</button>
+      </div>
+      <pre id="code-ex20"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+g = sns.catplot(
+    data=ecom_df,
+    x="customer_segment",
+    y="spend_usd",
+    col="region",
+    kind="bar",
+    errorbar="se",
+    palette="Set2",
+    hue="customer_segment",
+    legend=False,
+    height=3.2,
+    aspect=0.9
+)
+
+g.set_axis_labels("Customer Tier", "Mean Spend (&#36;)")
+g.set_xticklabels(rotation=20)
+g.despine(left=True)
+plt.show()</code></pre>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 9: CASE STUDY 3 - API TELEMETRY -->
+    <!-- ========================================== -->
+    <section id="sec-9" class="content-card">
+      <div class="topic-tag">09 &bull; REAL-WORLD CASE STUDY 3</div>
+      <h2>Section 9: Case Study 3 &bull; Distributed Cloud Microservices &amp; Latency Telemetry</h2>
+
+      <p>
+        Modern cloud engineering me <strong>Site Reliability Engineering (SRE)</strong> teams ko hazaron microservices ka health monitor karna hota hai.
+        Is scenario me humare paas 120 hourly snapshots hain across 4 key endpoints:
+        <code>/auth/login</code>, <code>/api/search</code>, <code>/checkout/pay</code>, aur <code>/user/profile</code> under Low, Normal, aur Peak load conditions.
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/api_cpu_latency_scatter.png" alt="Figure 17.20: API CPU Utilization vs Latency faceted across endpoints" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.20: CPU Utilization (%) vs Latency (ms) across 4 endpoints with hue representing traffic surge levels.</div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Microservice Route</th>
+              <th>Mean Latency (ms)</th>
+              <th>Observed Max Spike (ms)</th>
+              <th>SRE Health Diagnosis</th>
+              <th>Action Required</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>/auth/login</code></td>
+              <td><strong>42.62 ms</strong></td>
+              <td>58.2 ms</td>
+              <td>Ultra-healthy; in-memory JWT cache prevents database bottleneck.</td>
+              <td>None; optimal performance.</td>
+            </tr>
+            <tr>
+              <td><code>/user/profile</code></td>
+              <td><strong>59.04 ms</strong></td>
+              <td>84.1 ms</td>
+              <td>Healthy; Redis caching absorbs 95% of profile reads.</td>
+              <td>Routine monitoring.</td>
+            </tr>
+            <tr>
+              <td><code>/api/search</code></td>
+              <td><strong>96.82 ms</strong></td>
+              <td>162.4 ms</td>
+              <td>Elevated; Elasticsearch cluster CPU surges during Peak queries.</td>
+              <td>Add read replicas to search cluster.</td>
+            </tr>
+            <tr>
+              <td><code>/checkout/pay</code></td>
+              <td><strong>148.01 ms</strong></td>
+              <td><span style="color:#DC2626; font-weight:bold;">401.5 ms</span></td>
+              <td>Severe Bottleneck! Heavy tail latency caused by 3rd-party payment gateways.</td>
+              <td>Implement async queue &amp; circuit breakers.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>
+        Kyunki <code>/checkout/pay</code> ki latency 400ms tak pahunchti hai jabki <code>/auth/login</code> 60ms ke andar rehti hai, isliye distribution plot me <code>col_wrap=2</code> aur independent density scales use kiye gaye:
+      </p>
+
+      <div class="figure-container">
+        <img src="assets/api_latency_endpoint_dist.png" alt="Figure 17.21: Latency distribution KDE across endpoints" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.21: <code>sns.displot(kind="kde", col_wrap=2)</code> revealing the long right-tail degradation in the checkout payment pipeline.</div>
+      </div>
+
+      <h3>Example 21: Telemetry Scatter Plot with Faceted Route Panels</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 21: Endpoint CPU vs Latency Faceted Analysis</span>
+        <button class="copy-btn" onclick="copyCode('code-ex21')">Copy Code</button>
+      </div>
+      <pre id="code-ex21"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+g = sns.FacetGrid(
+    api_df,
+    col="endpoint",
+    hue="traffic_level",
+    palette={"Low": "#10B981", "Normal": "#3B82F6", "Peak": "#EF4444"},
+    height=3.4,
+    aspect=1.05
+)
+
+g.map_dataframe(sns.scatterplot, x="cpu_utilization_pct", y="response_latency_ms", s=65, alpha=0.85)
+g.add_legend(title="Server Load")
+g.set_axis_labels("Host CPU Load (%)", "Response Time (ms)")
+plt.show()</code></pre>
+
+      <h3>Example 22: Multi-Panel Latency Density Distributions</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 22: KDE Latency Distribution with Column Wrapping</span>
+        <button class="copy-btn" onclick="copyCode('code-ex22')">Copy Code</button>
+      </div>
+      <pre id="code-ex22"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+# Displot with 2x2 grid wrapping
+g = sns.displot(
+    data=api_df,
+    x="response_latency_ms",
+    col="endpoint",
+    col_wrap=2,
+    kind="kde",
+    fill=True,
+    height=3.0,
+    aspect=1.25,
+    color="#D97706"
+)
+
+g.set_axis_labels("Latency (ms)", "Empirical Density")
+g.set_titles(template="Route: {col_name}", weight="bold")
+plt.show()</code></pre>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 10: CHOOSING THE RIGHT MULTI-PLOT TOOL -->
+    <!-- ========================================== -->
+    <section id="sec-10" class="content-card">
+      <div class="topic-tag">10 &bull; ARCHITECTURAL SELECTION GUIDE</div>
+      <h2>Section 10: Choosing the Right Multi-Plot Tool &bull; Comprehensive Architecture Comparison</h2>
+
+      <p>
+        Python data visualization ecosystem me multiple multi-plot tools available hain: <code>FacetGrid</code>, <code>sns.relplot()</code>, <code>sns.displot()</code>, <code>sns.catplot()</code>, <code>sns.PairGrid</code> (Topic 15), aur native Matplotlib ka <code>plt.subplots()</code>.
+        Students aksar confuse hote hain ki <em>"Konsa tool kab use karna chahiye?"</em>
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool / Function</th>
+              <th>Object Returned</th>
+              <th>Primary Chart Types</th>
+              <th>Data Format Required</th>
+              <th>Legend &amp; Titles</th>
+              <th>Best Used When...</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>sns.FacetGrid</code></td>
+              <td><code>FacetGrid</code></td>
+              <td>Any Matplotlib or custom Python plotting function</td>
+              <td>Tidy / Long-form DataFrame</td>
+              <td>Manual (<code>g.add_legend()</code>, <code>g.set_titles()</code>)</td>
+              <td>Custom hybrid plots banani hon (e.g. overlaying custom regression models or KDE over scatter).</td>
+            </tr>
+            <tr>
+              <td><code>sns.relplot()</code></td>
+              <td><code>FacetGrid</code></td>
+              <td>Scatter, Line</td>
+              <td>Tidy / Long-form DataFrame</td>
+              <td>Automatic (external margin legend)</td>
+              <td>Two continuous variables ka relationship across categories visualize karna ho (zero boilerplate).</td>
+            </tr>
+            <tr>
+              <td><code>sns.displot()</code></td>
+              <td><code>FacetGrid</code></td>
+              <td>Hist, KDE, ECDF, Rug</td>
+              <td>Tidy / Long-form DataFrame</td>
+              <td>Automatic (shared bins &amp; density)</td>
+              <td>Subgroups ke statistical distributions aur spread compare karne hon.</td>
+            </tr>
+            <tr>
+              <td><code>sns.catplot()</code></td>
+              <td><code>FacetGrid</code></td>
+              <td>Box, Violin, Bar, Strip, Swarm, Point, Count</td>
+              <td>Tidy / Long-form DataFrame</td>
+              <td>Automatic</td>
+              <td>Categorical summaries, medians, aur quartiles across dimensions compare karne hon.</td>
+            </tr>
+            <tr>
+              <td><code>sns.PairGrid</code></td>
+              <td><code>PairGrid</code></td>
+              <td>Pairwise scatter, histograms, KDE matrix</td>
+              <td>Numeric columns of DataFrame</td>
+              <td>Diagonal / Off-diagonal split</td>
+              <td>All pairs of numeric variables ka pairwise interaction dekhna ho (Topic 15).</td>
+            </tr>
+            <tr>
+              <td><code>plt.subplots()</code></td>
+              <td><code>(Figure, ndarray of Axes)</code></td>
+              <td>Arbitrary Matplotlib primitives</td>
+              <td>Any Python list, NumPy array, or Series</td>
+              <td>Fully Manual</td>
+              <td>Heterogeneous dashboard banani ho jahan panel 1 pie chart ho, panel 2 line chart ho, aur panel 3 3D surface ho.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Key Architectural Differences: FacetGrid vs PairGrid</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Aspect</th>
+              <th>FacetGrid</th>
+              <th>PairGrid (Topic 15)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Core Splitting Logic</strong></td>
+              <td><strong>Same variables</strong> plotted across <em>different categorical subsets</em> (e.g., Study Hours vs Marks for CS, Eng, Arts).</td>
+              <td><strong>Different numeric variables</strong> plotted against each other pairwise (e.g., Hours vs Marks, Hours vs Attendance, Marks vs Attendance).</td>
+            </tr>
+            <tr>
+              <td><strong>Grid Dimensions</strong></td>
+              <td>Number of rows/cols depends on categorical levels (e.g., 3 Groups &times; 4 Departments = 12 panels).</td>
+              <td>Square matrix of size <em>N &times; N</em> where <em>N</em> is the number of numerical columns.</td>
+            </tr>
+            <tr>
+              <td><strong>Diagonal Treatment</strong></td>
+              <td>All panels contain the same plot type.</td>
+              <td>Diagonals typically show univariate distributions (<code>histplot</code>), off-diagonals show bivariate relationships (<code>scatterplot</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-header">
+          <span class="callout-icon">&#9432;</span>
+          <span class="callout-title">The "Golden Rule" of Multi-Plot Selection</span>
+        </div>
+        <p>
+          <strong>Rule 1:</strong> Agar aap standard scatter, line, distribution, ya boxplot bana rahe hain &rarr; Use figure-level wrappers (<code>relplot</code>, <code>displot</code>, <code>catplot</code>). Yeh aapke 10 lines of code ko 1 line me shrink kar dete hain.<br/>
+          <strong>Rule 2:</strong> Agar aapko multiple custom plot types ek hi panel me layer karni hain ya non-Seaborn plotting call karni hai &rarr; Use raw <code>FacetGrid</code>.<br/>
+          <strong>Rule 3:</strong> Agar aapko har panel me completely different geometry chahiye (e.g. Panel 1: Gauge chart, Panel 2: Table, Panel 3: Area chart) &rarr; Use Matplotlib <code>plt.subplots()</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 11: COMMON MISTAKES & TROUBLESHOOTING -->
+    <!-- ========================================== -->
+    <section id="sec-11" class="content-card">
+      <div class="topic-tag">11 &bull; DEFECT PREVENTION &amp; DEBUGGING</div>
+      <h2>Section 11: Common Mistakes, Pitfalls &amp; Debugging Masterclass</h2>
+
+      <p>
+        Jab students FacetGrid aur multi-plot workflows implement karte hain, toh kuch subtle syntax errors, layout collisions, aur visual anti-patterns frequently occur karte hain.
+        Neeche 14 critical pitfalls aur unke exact code-level solutions diye gaye hain:
+      </p>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Common Mistake / Antipattern</th>
+              <th>Root Cause</th>
+              <th>The Exact Fix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td>Using <code>col_wrap</code> together with <code>row</code></td>
+              <td><code>ValueError: Cannot use `row` and `col_wrap` together.</code> Wrapping applies only to 1D column arrays.</td>
+              <td>Omit <code>row</code> when using <code>col_wrap</code>, or use <code>row</code> + <code>col</code> for a fixed 2D matrix.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Calling <code>g.map()</code> with keyword-only arguments</td>
+              <td><code>g.map()</code> passes columns positionally: <code>func(df[col1], df[col2])</code>.</td>
+              <td>Use <code>g.map_dataframe()</code> instead, which passes named kwargs (<code>x=...</code>, <code>y=...</code>).</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Overriding figure size via <code>plt.figure(figsize=(12, 6))</code></td>
+              <td><code>FacetGrid</code> internally instantiates its own <code>plt.figure()</code>, ignoring previous figure calls.</td>
+              <td>Configure <code>height</code> and <code>aspect</code> parameters directly in <code>FacetGrid(height=3.5, aspect=1.2)</code>.</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>Using deprecated <code>ci=None</code> parameter</td>
+              <td>Seaborn 0.13+ has replaced <code>ci</code> with <code>errorbar=None</code>.</td>
+              <td>Use <code>errorbar=None</code> in <code>catplot</code>, <code>relplot</code>, and <code>barplot</code>.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Passing <code>palette</code> without assigning <code>hue</code></td>
+              <td>Triggers <code>FutureWarning: Passing `palette` without assigning `hue` is deprecated</code>.</td>
+              <td>Assign <code>hue="column_name"</code> and set <code>legend=False</code> if a legend is not needed.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>Passing wide-form (unmelted) DataFrame</td>
+              <td>FacetGrid requires categorical columns to partition data subsets.</td>
+              <td>Use <code>pd.melt(df, id_vars=[...])</code> to convert wide data to tidy long-form before plotting.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>High-cardinality category explosion (e.g., 50 States)</td>
+              <td>FacetGrid tries to render 50 separate axes, crashing memory and producing microscopic plots.</td>
+              <td>Filter top categories with <code>df[df['col'].isin(top_k)]</code> or aggregate small groups into "Other".</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>Misleading comparison with unshared axes</td>
+              <td>Setting <code>sharey=False</code> causes subplots with small variations to visually look identical to large ones.</td>
+              <td>Keep <code>sharey=True</code> unless category scales differ by orders of magnitude (e.g. 10x+ difference).</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>Missing <code>margin_titles=True</code> on 2D grids</td>
+              <td>Default headers print full title "group = A | dept = CS" in every cell, cluttering the view.</td>
+              <td>Set <code>margin_titles=True</code> so row names appear only on the far right and col names on top.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td>Suptitle overlapping facet titles</td>
+              <td><code>g.fig.suptitle()</code> collides with top row headers.</td>
+              <td>Call <code>g.fig.subplots_adjust(top=0.90)</code> before adding the suptitle.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>Legend cut off on exported images</td>
+              <td>Figure bounding box excludes external legend placed by <code>g.add_legend()</code>.</td>
+              <td>Use <code>plt.savefig('output.png', bbox_inches='tight')</code> to capture the external legend.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>Annotating single panel instead of all subplots</td>
+              <td>Calling <code>plt.axhline()</code> applies only to the last active axis.</td>
+              <td>Loop through all axes: <code>for ax in g.axes.flat: ax.axhline(...)</code>.</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>Categorical sorting disorder</td>
+              <td>Categories appear in arbitrary order of first appearance in data.</td>
+              <td>Specify explicit ordering using <code>col_order=['CS', 'Engineering', 'Business', 'Arts']</code>.</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>Unwanted scientific notation on axes ticks</td>
+              <td>Matplotlib automatically adds <code>1e6</code> multiplier on large financial values.</td>
+              <td>Format ticks with <code>matplotlib.ticker.FuncFormatter(lambda x, p: f'&#36;{{x*1e-3:.0f}}k')</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-container">
+        <img src="assets/pitfalls_faceted_anti_patterns.png" alt="Figure 17.22: Bad practice vs best practice layout comparison" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.22: Left: Anti-pattern with overlapping titles, cluttered legends, and squished columns. Right: Polished best practice with column wrapping and clean margins.</div>
+      </div>
+
+      <h3>Example 23: Bad Practice vs Best Practice on Axis Iteration</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 23: Threshold Lines across All Faceted Axes</span>
+        <button class="copy-btn" onclick="copyCode('code-ex23')">Copy Code</button>
+      </div>
+      <pre id="code-ex23"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+# ---------------------------------------------
+# BAD CODE: Calling plt.axhline() after FacetGrid
+# ---------------------------------------------
+# g = sns.FacetGrid(df, col="department")
+# g.map(sns.scatterplot, "study_hours", "marks")
+# plt.axhline(50, color="red")  # BUG: Only adds line to the LAST axis (Arts)!
+
+# ---------------------------------------------
+# GOOD CODE: Iterating over g.axes.flat
+# ---------------------------------------------
+g = sns.FacetGrid(df, col="department", height=3.2, aspect=1.0)
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#2563EB", s=50)
+
+# Apply baseline benchmark threshold to EVERY facet panel
+for ax in g.axes.flat:
+    ax.axhline(50, color="#DC2626", linestyle="--", linewidth=1.5, alpha=0.8, label="Pass Mark (50%)")
+    ax.set_ylim(20, 100)
+
+g.set_axis_labels("Study Hours", "Marks (%)")
+g.fig.subplots_adjust(top=0.88)
+g.fig.suptitle("Passing Threshold Benchmark across Faculties", weight="bold")
+plt.show()</code></pre>
+
+      <h3>Example 24: Resolving col_wrap Conflicts and Title Formatting</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 24: col_wrap Best Practice with Custom Order</span>
+        <button class="copy-btn" onclick="copyCode('code-ex24')">Copy Code</button>
+      </div>
+      <pre id="code-ex24"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+# Specify explicit geographic order and wrap into 2x2 grid
+territory_order = ["North", "South", "East", "West"]
+
+g = sns.FacetGrid(
+    ecom_df,
+    col="region",
+    col_order=territory_order,
+    col_wrap=2,
+    height=3.0,
+    aspect=1.2
+)
+
+g.map_dataframe(
+    sns.scatterplot,
+    x="order_count",
+    y="spend_usd",
+    hue="customer_segment",
+    palette="Dark2",
+    s=60
+)
+
+# Custom title template and margins
+g.set_titles(template="Territory: {{col_name}}", weight="bold", size=10)
+g.set_axis_labels("Completed Orders", "Total Spend (USD)")
+g.add_legend(title="Segment")
+g.despine()
+
+plt.show()</code></pre>
+    </section>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 12: HANDS-ON MINI CHALLENGES -->
+    <!-- ========================================== -->
+    <section id="sec-12" class="content-card">
+      <div class="topic-tag">12 &bull; INTERACTIVE CODING LAB</div>
+      <h2>Section 12: Hands-On Mini Challenges &bull; Test Your Multi-Plot Skills</h2>
+
+      <p>
+        Ab waqt hai practical coding practice ka! Neeche diye gaye 7 realistic challenges ko solve karke dekhein.
+        Pehle khud try karein, aur jab verify karna ho toh click karke solution aur output explanation reveal karein.
+      </p>
+
+      <!-- Challenge 1 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-1')">
+          <span><strong>Challenge 1:</strong> Single-Column FacetGrid with Univariate Histograms</span>
+          <span id="ch-sol-1-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-1" class="accordion-content">
+          <p><strong>Problem:</strong> <code>student_academic_dataset.csv</code> load karein aur ek 4-column FacetGrid banayein (har department ka ek column). Har panel me student ke final <code>marks</code> ka histogram (8 bins) plot karein using <code>plt.hist</code>.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 1 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol1')">Copy Code</button>
+          </div>
+          <pre id="code-sol1"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.FacetGrid(df, col="department", height=3.2, aspect=1.0)
+g.map(plt.hist, "marks", bins=8, color="#0284C7", edgecolor="white")
+g.set_axis_labels("Final Marks (%)", "Frequency")
+g.set_titles(template="Dept: {col_name}", weight="bold")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 2 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-2')">
+          <span><strong>Challenge 2:</strong> 2D Matrix Grid (row &times; col) with Regression Slopes</span>
+          <span id="ch-sol-2-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-2" class="accordion-content">
+          <p><strong>Problem:</strong> Create a 3 &times; 4 Matrix Grid where rows are <code>study_group</code> and columns are <code>department</code>. Use <code>map_dataframe</code> with <code>sns.regplot</code> to show study hours vs marks with pass-fail threshold lines.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 2 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol2')">Copy Code</button>
+          </div>
+          <pre id="code-sol2"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.FacetGrid(df, row="study_group", col="department", margin_titles=True, height=2.5, aspect=1.1)
+g.map_dataframe(sns.regplot, x="study_hours", y="marks", color="#4F46E5", scatter_kws={"alpha": 0.7, "s": 30})
+g.set_axis_labels("Hours / Day", "Score (%)")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 3 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-3')">
+          <span><strong>Challenge 3:</strong> Converting Boilerplate FacetGrid to 1-Line <code>sns.relplot()</code></span>
+          <span id="ch-sol-3-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-3" class="accordion-content">
+          <p><strong>Problem:</strong> Rewrite a 5-line FacetGrid + scatter + legend script into a concise, single-line <code>sns.relplot()</code> call analyzing regional e-commerce spend.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 3 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol3')">Copy Code</button>
+          </div>
+          <pre id="code-sol3"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+# 1-Line high-level figure command
+g = sns.relplot(
+    data=ecom_df, x="order_count", y="spend_usd", col="region",
+    hue="customer_segment", kind="scatter", s=60, height=3.2, aspect=1.1
+)
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 4 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-4')">
+          <span><strong>Challenge 4:</strong> Wrapped Categorical Boxplots with <code>col_wrap=2</code></span>
+          <span id="ch-sol-4-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-4" class="accordion-content">
+          <p><strong>Problem:</strong> Use <code>sns.catplot()</code> to visualize spend across 4 geographic regions wrapped into a 2 &times; 2 grid using boxplots.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 4 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol4')">Copy Code</button>
+          </div>
+          <pre id="code-sol4"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+g = sns.catplot(
+    data=ecom_df, x="customer_segment", y="spend_usd", col="region",
+    col_wrap=2, kind="box", palette="Pastel1", hue="customer_segment",
+    legend=False, height=3.0, aspect=1.2
+)
+g.set_axis_labels("Customer Tier", "Total Spend (USD)")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 5 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-5')">
+          <span><strong>Challenge 5:</strong> Handling High Variance with Independent Y-Axes (<code>sharey=False</code>)</span>
+          <span id="ch-sol-5-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-5" class="accordion-content">
+          <p><strong>Problem:</strong> Create a multi-panel density plot on server telemetry where <code>sharey=False</code> so that endpoints with low variance are not flattened by high-variance ones.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 5 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol5')">Copy Code</button>
+          </div>
+          <pre id="code-sol5"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+g = sns.FacetGrid(api_df, col="endpoint", col_wrap=2, sharey=False, height=3.0, aspect=1.2)
+g.map(sns.kdeplot, "response_latency_ms", fill=True, color="#059669")
+g.set_axis_labels("Latency (ms)", "Relative Density")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 6 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-6')">
+          <span><strong>Challenge 6:</strong> Dynamic Iteration over <code>g.axes.flat</code> for Target Lines</span>
+          <span id="ch-sol-6-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-6" class="accordion-content">
+          <p><strong>Problem:</strong> Iterate through all axes of a FacetGrid to draw a horizontal Service Level Objective (SLO) latency threshold at 100ms with a red dashed line.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 6 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol6')">Copy Code</button>
+          </div>
+          <pre id="code-sol6"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+g = sns.FacetGrid(api_df, col="endpoint", height=3.2, aspect=1.0)
+g.map_dataframe(sns.scatterplot, x="cpu_utilization_pct", y="response_latency_ms", color="#3B82F6")
+
+# Iterate over each axis to draw the threshold
+for ax in g.axes.flat:
+    ax.axhline(100, color="#EF4444", linestyle="--", linewidth=1.5, label="100ms SLO")
+
+g.fig.subplots_adjust(top=0.88)
+g.fig.suptitle("API Endpoints Latency vs 100ms SLO Target", weight="bold")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <!-- Challenge 7 -->
+      <div class="accordion-item">
+        <div class="accordion-header" onclick="toggleAccordion('ch-sol-7')">
+          <span><strong>Challenge 7:</strong> Multi-Layer Hybrid Visualization on Facet Panels</span>
+          <span id="ch-sol-7-icon" class="accordion-icon">&#9660;</span>
+        </div>
+        <div id="ch-sol-7" class="accordion-content">
+          <p><strong>Problem:</strong> Layer a 2D density contour (<code>sns.kdeplot</code>) beneath a scatterplot (<code>sns.scatterplot</code>) across all 4 department facets.</p>
+          <div class="code-header">
+            <span class="code-title">Python &bull; Challenge 7 Solution</span>
+            <button class="copy-btn" onclick="copyCode('code-sol7')">Copy Code</button>
+          </div>
+          <pre id="code-sol7"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.FacetGrid(df, col="department", height=3.5, aspect=1.0)
+# Layer 1: Density contour background
+g.map_dataframe(sns.kdeplot, x="study_hours", y="marks", levels=5, color="#94A3B8", alpha=0.5)
+# Layer 2: Individual student points
+g.map_dataframe(sns.scatterplot, x="study_hours", y="marks", color="#1E3A8A", s=45)
+g.set_axis_labels("Study Hours", "Marks (%)")
+plt.show()</code></pre>
+        </div>
+      </div>
+
+      <h3>Example 25: Automated Multi-Facet Export Pipeline</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 25: Programmatic Facet Grid Generation &amp; Export</span>
+        <button class="copy-btn" onclick="copyCode('code-ex25')">Copy Code</button>
+      </div>
+      <pre id="code-ex25"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic17_data/student_academic_dataset.csv")
+
+g = sns.relplot(
+    data=df,
+    x="study_hours",
+    y="marks",
+    col="department",
+    col_wrap=2,
+    hue="study_group",
+    palette="Set2",
+    height=3.0,
+    aspect=1.2
+)
+g.set_titles("Department: {col_name}", weight="bold")
+g.fig.subplots_adjust(top=0.90)
+g.fig.suptitle("Departmental Academic Performance Matrix", weight="bold")
+
+# Export high-res graphic with tight bounding box
+g.savefig("student_performance_faceted.png", dpi=300, bbox_inches="tight")
+print("Exported faceted analysis successfully!")</code></pre>
+
+      <h3>Example 26: Custom Color Mapping with Quantitative Hue Scaling</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 26: Continuous Hue Palette inside FacetGrid</span>
+        <button class="copy-btn" onclick="copyCode('code-ex26')">Copy Code</button>
+      </div>
+      <pre id="code-ex26"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+api_df = pd.read_csv("scratch/seaborn_topic17_data/api_telemetry_dataset.csv")
+
+g = sns.FacetGrid(api_df, col="endpoint", col_wrap=2, height=3.0, aspect=1.2)
+g.map_dataframe(
+    sns.scatterplot,
+    x="requests_per_second",
+    y="response_latency_ms",
+    hue="cpu_utilization_pct",
+    palette="rocket_r",
+    s=65
+)
+g.add_legend(title="CPU Load (%)")
+g.set_axis_labels("Requests / Sec", "Latency (ms)")
+plt.show()</code></pre>
+
+      <h3>Example 27: Combining Subplot Spines Customization</h3>
+      <div class="code-header">
+        <span class="code-title">Python &bull; Example 27: Modern Editorial Despining &amp; Grid Lines</span>
+        <button class="copy-btn" onclick="copyCode('code-ex27')">Copy Code</button>
+      </div>
+      <pre id="code-ex27"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+ecom_df = pd.read_csv("scratch/seaborn_topic17_data/ecommerce_regional_dataset.csv")
+
+g = sns.relplot(
+    data=ecom_df,
+    x="order_count",
+    y="spend_usd",
+    col="region",
+    hue="customer_segment",
+    height=3.2,
+    aspect=1.05
+)
+
+# Custom editorial theme polishing
+for ax in g.axes.flat:
+    ax.grid(True, linestyle=":", alpha=0.6, color="#CBD5E1")
+    ax.set_facecolor("#F8FAFC")
+
+g.despine(top=True, right=True, left=False, bottom=False)
+plt.show()</code></pre>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 13: QUICK REVISION & CHECKLIST -->
+    <!-- ========================================== -->
+    <section id="sec-13" class="content-card">
+      <div class="topic-tag">13 &bull; SUMMARY &amp; REFERENCE CHEAT SHEET</div>
+      <h2>Section 13: Quick Revision, Architectural Decision Guide &amp; Checklist</h2>
+
+      <p>
+        Congratulations! Aapne Seaborn ke sabse powerful visual decomposition tool — <strong>FacetGrid &amp; Multi-Plot Analysis</strong> — par master kar liya hai.
+        Is quick revision section me architectural decision workflow, complete parameter cheat sheet, aur self-evaluation checklist provide ki gayi hai.
+      </p>
+
+      <h3>Architectural Multi-Plot Decision Guide</h3>
+      <div class="figure-container">
+        <img src="assets/decision_flowchart_multiplot.png" alt="Figure 17.23: Multi-plot decision flowchart" class="zoomable-img" />
+        <div class="figure-caption">Figure 17.23: Logical decision hierarchy guiding your choice between <code>relplot()</code>, <code>displot()</code>, <code>catplot()</code>, <code>FacetGrid</code>, <code>PairGrid</code>, and <code>plt.subplots()</code>.</div>
+      </div>
+
+      <h3>FacetGrid &amp; Multi-Plot Parameter Reference</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Supported In</th>
+              <th>Data Type / Values</th>
+              <th>Practical Utility</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td>All functions</td>
+              <td>pandas DataFrame</td>
+              <td>Input dataset (must be tidy long-form format).</td>
+            </tr>
+            <tr>
+              <td><code>col</code></td>
+              <td>FacetGrid, relplot, displot, catplot</td>
+              <td>String (Column name)</td>
+              <td>Horizontal panel partitioning across categories.</td>
+            </tr>
+            <tr>
+              <td><code>row</code></td>
+              <td>FacetGrid, relplot, displot, catplot</td>
+              <td>String (Column name)</td>
+              <td>Vertical panel partitioning (creates 2D matrix when paired with <code>col</code>).</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td>All functions</td>
+              <td>String (Column name)</td>
+              <td>Color mapping within each panel; preserves spatial coordinates.</td>
+            </tr>
+            <tr>
+              <td><code>col_wrap</code></td>
+              <td>All functions</td>
+              <td>Integer (&gt; 0)</td>
+              <td>Wraps horizontal column faceting across multiple rows (cannot be used with <code>row</code>).</td>
+            </tr>
+            <tr>
+              <td><code>height</code></td>
+              <td>All functions</td>
+              <td>Float (Inches)</td>
+              <td>Vertical height of each individual subplot.</td>
+            </tr>
+            <tr>
+              <td><code>aspect</code></td>
+              <td>All functions</td>
+              <td>Float (Width / Height)</td>
+              <td>Controls aspect ratio of each facet. Individual width = <code>height * aspect</code>.</td>
+            </tr>
+            <tr>
+              <td><code>sharex</code>, <code>sharey</code></td>
+              <td>FacetGrid, relplot, catplot</td>
+              <td>Boolean or <code>"col"</code>, <code>"row"</code></td>
+              <td>Enforces global axis limits across panels (default <code>True</code>).</td>
+            </tr>
+            <tr>
+              <td><code>margin_titles</code></td>
+              <td>FacetGrid</td>
+              <td>Boolean (default <code>False</code>)</td>
+              <td>When <code>True</code> on 2D grids, places row titles only on the far-right margin.</td>
+            </tr>
+            <tr>
+              <td><code>palette</code></td>
+              <td>All functions</td>
+              <td>String, dict, or list</td>
+              <td>Color mapping scheme applied across categories.</td>
+            </tr>
+            <tr>
+              <td><code>despine</code></td>
+              <td>FacetGrid</td>
+              <td>Boolean (default <code>True</code>)</td>
+              <td>Removes top and right axis spines for clean visual polish.</td>
+            </tr>
+            <tr>
+              <td><code>col_order</code>, <code>row_order</code></td>
+              <td>All functions</td>
+              <td>List of Strings</td>
+              <td>Explicit custom ordering of categorical levels across panels.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Student Mastery Checklist</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Status</th>
+              <th>Core Concept / Skill Objective</th>
+              <th>Self-Check Verification</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Cartesian Decomposition</strong></td>
+              <td>Main samajhta hoon ki Small Multiples kaise overlapping overplotting ko eliminate karte hain.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>FacetGrid 2-Step Workflow</strong></td>
+              <td>Pehle <code>sns.FacetGrid(df, col=...)</code> initialize karna aur phir <code>g.map_dataframe()</code> se plot draw karna.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>map() vs map_dataframe()</strong></td>
+              <td>Main janta hoon ki <code>map()</code> positional columns leta hai jabki <code>map_dataframe()</code> kwargs pass karta hai.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Multi-Dimensional Grid (Row + Col)</strong></td>
+              <td>Main <code>row</code> aur <code>col</code> combine karke 2D subplots matrix create kar sakta hoon.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Subplot Geometry Sizing</strong></td>
+              <td>Main janta hoon ki <code>height</code> aur <code>aspect</code> har subplot par apply hote hain, pure figure par nahi.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Column Wrapping</strong></td>
+              <td>Main <code>col_wrap=K</code> use karke long single-row grids ko multi-row layout me wrap kar sakta hoon.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Axis Independence (sharey)</strong></td>
+              <td>Main janta hoon ki kab <code>sharey=False</code> karna zaroori hota hai aur kab shared scale fair comparison deta hai.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Figure-Level Helpers</strong></td>
+              <td>Main <code>sns.relplot()</code>, <code>sns.displot()</code>, aur <code>sns.catplot()</code> se 1-line faceted plots bana sakta hoon.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>Iterating over g.axes.flat</strong></td>
+              <td>Main sabhi subplots me threshold lines ya annotations loop ke zariye apply kar sakta hoon.</td>
+            </tr>
+            <tr>
+              <td>&#9744;</td>
+              <td><strong>FacetGrid vs PairGrid Distinction</strong></td>
+              <td>Main clearly explain kar sakta hoon ki FacetGrid same variables across groups dikhata hai, PairGrid different variables pairwise.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- What's Next Callout -->
+      <div class="callout callout-success">
+        <div class="callout-header">
+          <span class="callout-icon">&#128640;</span>
+          <span class="callout-title">What's Next in Seaborn Topic 18?</span>
+        </div>
+        <p>
+          Agli class me hum study karenge: <strong>Seaborn Topic 18: Aesthetics, Themes &amp; Palette Customization</strong>!<br/>
+          Wahan hum sikhenge:
+        </p>
+        <ul>
+          <li>Seaborn ke 5 built-in styles: <code>darkgrid</code>, <code>whitegrid</code>, <code>dark</code>, <code>white</code>, aur <code>ticks</code>.</li>
+          <li>Plot scaling presets: <code>paper</code>, <code>notebook</code>, <code>talk</code>, aur <code>poster</code> via <code>sns.set_context()</code>.</li>
+          <li>Qualitative, Sequential, aur Diverging color palettes (<code>color_palette()</code>, <code>hls</code>, <code>husl</code>, <code>cubehelix</code>).</li>
+          <li>Creating publishing-ready, journal-grade visualizations with custom color palettes and typography.</li>
+        </ul>
+      </div>
+
+      <!-- Topic Navigation -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:28px; flex-wrap:wrap; gap:12px;">
+        <a href="../topic_16/notes.html" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; color:var(--text-color); font-weight:600; text-decoration:none; transition:all 0.2s ease;">
+          &larr; Topic 16: Heatmap &amp; Correlation Matrix
+        </a>
+        <a href="#toc" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; background:var(--accent-color); color:#FFFFFF; border-radius:8px; font-weight:600; text-decoration:none; transition:all 0.2s ease;">
+          &#9650; Back to Top
+        </a>
+        <a href="../topic_18/notes.html" style="display:inline-flex; align-items:center; gap:8px; padding:10px 18px; background:var(--card-bg); border:1px solid var(--border-color); border-radius:8px; color:var(--text-color); font-weight:600; text-decoration:none; transition:all 0.2s ease;">
+          Topic 18: Aesthetics &amp; Themes &rarr;
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align:center; padding:32px 16px; margin-top:40px; border-top:1px solid var(--border-color); color:var(--text-muted); font-size:0.875rem;">
+    <p>CodeVerse Learning Content &bull; Seaborn Topic 17: FacetGrid &amp; Multi-Plot Analysis</p>
+    <p style="margin-top:4px;">Crafted for curious Python students, data analysts, and ML engineers worldwide.</p>
+  </footer>
+
+  <script>
+    // Copy code snippet to clipboard
+    function copyCode(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const text = el.innerText || el.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.currentTarget || event.target;
+        const orig = btn.innerHTML;
+        btn.innerHTML = 'Copied!';
+        btn.style.background = '#0F766E';
+        btn.style.color = '#FFFFFF';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    }
+
+    // Collapsible accordion toggle
+    function toggleAccordion(id) {
+      const content = document.getElementById(id);
+      const icon = document.getElementById(id + '-icon');
+      if (!content) return;
+      if (content.classList.contains('open')) {
+        content.classList.remove('open');
+        if (icon) {
+          icon.style.transform = 'rotate(0deg)';
+        }
+      } else {
+        content.classList.add('open');
+        if (icon) {
+          icon.style.transform = 'rotate(180deg)';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

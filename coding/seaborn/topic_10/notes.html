@@ -1,0 +1,1943 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 10: Point Plots in Seaborn — Statistical Estimates, Slope Comparison, Uncertainty Intervals &amp; Estimators</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 14px;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+
+    .toc-card h3 {
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .toc-link:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateX(4px);
+    }
+
+    .toc-number {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styles */
+    section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 26px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent-indigo);
+      margin: 22px 0 12px 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* Highlight Badges & Callout Boxes */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 4px solid;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .callout-info {
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.06);
+    }
+
+    .callout-warning {
+      border-color: var(--accent-amber);
+      background-color: rgba(251, 191, 36, 0.06);
+    }
+
+    .callout-danger {
+      border-color: var(--accent-rose);
+      background-color: rgba(244, 63, 94, 0.06);
+    }
+
+    .callout-success {
+      border-color: var(--accent-green);
+      background-color: rgba(52, 211, 153, 0.06);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info .callout-title { color: var(--accent-blue); }
+    .callout-warning .callout-title { color: var(--accent-amber); }
+    .callout-danger .callout-title { color: var(--accent-rose); }
+    .callout-success .callout-title { color: var(--accent-green); }
+
+    /* Code Blocks */
+    .code-container {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .code-badge {
+      font-weight: 600;
+      color: var(--accent-indigo);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      max-width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code, td code {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+
+    /* Output Blocks */
+    .output-block {
+      background-color: var(--bg-code);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0 18px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .output-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    /* Image Wrapper */
+    .figure-wrapper {
+      margin: 24px 0;
+      text-align: center;
+      background-color: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-caption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--accent-blue);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Accordion Details */
+    details.accordion {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      background-color: rgba(129, 140, 248, 0.04);
+    }
+
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    /* Step Badge */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      background-color: var(--accent-blue);
+      color: #0f172a;
+      font-weight: 800;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-container').querySelector('pre code');
+      if (codeBlock) {
+        navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span>&#10003; Copied!</span>';
+          btn.style.borderColor = 'var(--accent-green)';
+          btn.style.color = 'var(--accent-green)';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.borderColor = '';
+            btn.style.color = '';
+          }, 2000);
+        }).catch(err => console.error('Copy failed:', err));
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Banner -->
+    <header class="hero">
+      <span class="topic-badge">Topic 10 &bull; Categorical Visualization</span>
+      <h1>Point Plots in Seaborn</h1>
+      <p>Statistical point estimates, slope comparison across categories, uncertainty intervals aur interaction effects: Bar plots ki solid heavy bars se aage badhkar elegant, uncluttered comparison sikhne ki complete practical guide in natural Hinglish.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><strong>Function:</strong> <code>sns.pointplot()</code></div>
+        <div class="hero-meta-item"><strong>Seaborn Version:</strong> 0.13.2 Compatible</div>
+        <div class="hero-meta-item"><strong>Core Focus:</strong> Point Estimates &bull; Uncertainty Whiskers &bull; Interaction Slopes</div>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card">
+      <h3>&#128203; Table of Contents &bull; 20 Structured Lessons</h3>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-link"><span class="toc-number">01</span><span class="toc-text">Point Plot Kya Hota Hai? (Introduction)</span></a>
+        <a href="#sec-2" class="toc-link"><span class="toc-number">02</span><span class="toc-text">The Statistics Behind Point Plots</span></a>
+        <a href="#sec-3" class="toc-link"><span class="toc-number">03</span><span class="toc-text">Your First Seaborn Point Plot &amp; Parameters</span></a>
+        <a href="#sec-4" class="toc-link"><span class="toc-number">04</span><span class="toc-text">Reading a Point Plot Correctly</span></a>
+        <a href="#sec-5" class="toc-link"><span class="toc-number">05</span><span class="toc-text">Customizing Point Plots for Production</span></a>
+        <a href="#sec-6" class="toc-link"><span class="toc-number">06</span><span class="toc-text">Group Comparisons Using <code>hue</code></span></a>
+        <a href="#sec-7" class="toc-link"><span class="toc-number">07</span><span class="toc-text">Error Bars, Confidence Intervals &amp; Uncertainty</span></a>
+        <a href="#sec-8" class="toc-link"><span class="toc-number">08</span><span class="toc-text">Estimators: Mean, Median &amp; Outliers</span></a>
+        <a href="#sec-9" class="toc-link"><span class="toc-number">09</span><span class="toc-text">Point Plots vs Related Visualizations</span></a>
+        <a href="#sec-10" class="toc-link"><span class="toc-number">10</span><span class="toc-text">Trends Across Ordered Categories</span></a>
+        <a href="#sec-11" class="toc-link"><span class="toc-number">11</span><span class="toc-text">Case Study 1: College Analytics</span></a>
+        <a href="#sec-12" class="toc-link"><span class="toc-number">12</span><span class="toc-text">Case Study 2: Delivery Logistics</span></a>
+        <a href="#sec-13" class="toc-link"><span class="toc-number">13</span><span class="toc-text">Case Study 3: Customer Satisfaction</span></a>
+        <a href="#sec-14" class="toc-link"><span class="toc-number">14</span><span class="toc-text">Case Study 4: API Infrastructure Latency</span></a>
+        <a href="#sec-15" class="toc-link"><span class="toc-number">15</span><span class="toc-text">Interaction Effects: When Lines Cross</span></a>
+        <a href="#sec-16" class="toc-link"><span class="toc-number">16</span><span class="toc-text">The Danger of False Continuity</span></a>
+        <a href="#sec-17" class="toc-link"><span class="toc-number">17</span><span class="toc-text">12+ Common Pitfalls &amp; Anti-Patterns</span></a>
+        <a href="#sec-18" class="toc-link"><span class="toc-number">18</span><span class="toc-text">Quick Reference Cheat Sheet &amp; Syntax Matrix</span></a>
+        <a href="#sec-19" class="toc-link"><span class="toc-number">19</span><span class="toc-text">21 Practice Exercises &amp; Capstone Project</span></a>
+        <a href="#sec-20" class="toc-link"><span class="toc-number">20</span><span class="toc-text">Summary, Mind Map &amp; Topic 11 Preview</span></a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Point Plot Kya Hota Hai? (Introduction)</h2>
+      <p>Maan lijiye aapke college ke Academic Dean aapse puchte hain:</p>
+      <p><em>"Section A, Section B aur Section C ke students ke average Python scores me kitna antar hai? Aur humein kaise pata chale ki humara estimate kitna uncertain hai &mdash; kya Section A sach me significantly behtar hai ya ye sirf sample variation hai?"</em></p>
+
+      <p>Topic 9 me humne dekha tha ki <code>sns.barplot()</code> solid visual bars draw karta hai jisme baseline 0 par anchor hoti hai. Lekin jab marks 65 se 85 ke narrow band me vary kar rahe hon, to solid bars ka bohot saara hissa (0 se 60 tak) sirf redundant ink waste karta hai! Aise comparison ke liye Seaborn ka <strong>Point Plot (<code>sns.pointplot()</code>)</strong> ek ultimate lightweight aur powerful visual tool hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/pointplot_intro_concept_anatomy.png" alt="Visual architecture of a Seaborn point plot: point estimate, connecting line slope, and uncertainty whisker">
+        <div class="figure-caption">Figure 10.1: Anatomical Breakdown of a Seaborn Point Plot &mdash; Points mark group statistics (Mean), lines guide the eye along category slopes, and vertical whiskers communicate sampling uncertainty (95% CI).</div>
+      </div>
+
+      <p><strong>Point Plot ke 3 Core Principles:</strong></p>
+      <ul>
+        <li><strong>Point (Dot):</strong> Category ke aggregated statistic (default <code>np.mean</code>) ko exact position par plot karta hai.</li>
+        <li><strong>Connecting Line (Slope):</strong> Adjacent categories ke beech ek guide line draw karta hai, jisse dimag instantly slope aur rate of change (increase ya decrease) grasp kar leta hai.</li>
+        <li><strong>Vertical Whisker (Error Bar):</strong> Statistical uncertainty (default 95% Confidence Interval) ko darshata hai, jisse pata chalta hai ki sample mean kitna reliable hai.</li>
+      </ul>
+
+      <div class="figure-wrapper">
+        <img src="assets/college_section_intro_pointplot.png" alt="Average exam marks across college sections using pointplot">
+        <div class="figure-caption">Figure 10.2: Introductory Point Plot &mdash; Section A leads at 76.33, Section B at 71.58, and Section C at 68.44. Notice how effortlessly the connecting line reveals the downward slope without the visual clutter of solid bars!</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; When to Choose a Point Plot Over a Bar Plot</div>
+        <p>Agar aapko do ya teen categories ke across <strong>slopes, differences, ya interaction effects</strong> compare karne hain (jaise Section A vs Section B across 3 subjects), to Point Plot bar plot se 10x zyada readable hota hai kyunki isme solid blocks visual space ko chhipate nahi hain!</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> The Statistics Behind Point Plots</h2>
+      <p>Point plot dekhne me simple lagta hai, lekin iske har ek point aur whisker ke peeche serious statistical computation hoti hai. Aayiye iske mathematical foundation ko samajhte hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Statistical Term</th>
+              <th>Simple Hinglish Explanation</th>
+              <th>Point Plot Component</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Categorical Variable</strong></td>
+              <td>Discrete groups (e.g. Section A, Section B, Delivery Partner)</td>
+              <td>X-axis positions</td>
+            </tr>
+            <tr>
+              <td><strong>Numerical Variable</strong></td>
+              <td>Continuous measured metric (e.g. Marks, Latency, Spending)</td>
+              <td>Y-axis measurement scale</td>
+            </tr>
+            <tr>
+              <td><strong>Point Estimate</strong></td>
+              <td>Group ka calculated statistical summary (Arithmetic Mean ya Median)</td>
+              <td>The central marker/dot</td>
+            </tr>
+            <tr>
+              <td><strong>Sampling Variability</strong></td>
+              <td>Har sample me alag students aane ke karan average ka thoda fluctuate hona</td>
+              <td>Whisker height</td>
+            </tr>
+            <tr>
+              <td><strong>Standard Deviation (SD)</strong></td>
+              <td>Individual students ke scores mean se kitne bikhre (spread) hue hain</td>
+              <td><code>errorbar='sd'</code></td>
+            </tr>
+            <tr>
+              <td><strong>Standard Error (SE)</strong></td>
+              <td>Sample mean ki estimation precision: <code>SD / &radic;N</code></td>
+              <td><code>errorbar='se'</code></td>
+            </tr>
+            <tr>
+              <td><strong>Confidence Interval (CI)</strong></td>
+              <td>95% certainty ke sath true population mean kis range me lie karega</td>
+              <td><code>errorbar=('ci', 95)</code> (Default)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Point Estimate vs Individual Observations</h3>
+      <p>Beginners aksar sochte hain ki point kisi ek student ka score hai. Lekin point pooray group ka aggregated summary hota hai! Figure 10.3 me dekhiye kaise 60 individual students ke bikhre hue scores ko Point Plot ne ek crisp summary estimate me distill kar diya:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/point_estimate_vs_individual_observations.png" alt="Comparison between raw scattered individual student scores and aggregated point plot estimate">
+        <div class="figure-caption">Figure 10.3: Raw Observations vs Point Estimate &mdash; Panel A shows the full scatter of scores (varying from 58 to 96). Panel B shows the point plot condensing this variance into group means (76.3 vs 71.6) with 95% Confidence Interval error bars.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Critical Rule: The Interval is NOT Min to Max Range!</div>
+        <p>Point plot me lagi vertical line <strong>kabhi bhi data ka Minimum to Maximum range nahi hoti</strong>. Section A me sabse kam marks 58 aur sabse zyada 96 the (range 38 marks ki thi), lekin 95% Confidence Interval sirf 73.8 se 78.9 tak hai! CI sirf sample mean ki uncertainty batata hai, individual outliers ka range nahi.</p>
+      </div>
+
+      <h3>Independent Verification: Manual Calculation vs Plotted Point</h3>
+      <p>Logistics partners MetroDash aur ApexCourier ki delivery latency compare karte hain aur verify karte hain ki plotted point exact mathematical formula se match karta hai ya nahi:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/manual_mean_vs_seaborn_verified_plot.png" alt="Manual calculation verification against Seaborn plotted point estimate">
+        <div class="figure-caption">Figure 10.4: Mathematical Verification &mdash; MetroDash manual mean (31.62 min) and ApexCourier manual mean (33.75 min) align with 100% precision with Seaborn's plotted dots!</div>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Your First Seaborn Point Plot &amp; Parameters</h2>
+      <p>Seaborn 0.13+ me <code>sns.pointplot()</code> parameter signature modern data science standards ke anusar optimize kiya gaya hai. Aayiye iske parameters ki compatibility aur role ko samjhein:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Status in 0.13+</th>
+              <th>Allowed Values &amp; Practical Role</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td>Supported</td>
+              <td>Pandas DataFrame in tidy format.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td>Supported</td>
+              <td>Categorical variable aur numerical variable (orientation control).</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td>Supported</td>
+              <td>Secondary grouping category (creates multiple lines).</td>
+            </tr>
+            <tr>
+              <td><code>order</code>, <code>hue_order</code></td>
+              <td>Supported</td>
+              <td>Categories aur hue groups ka explicit display sequence.</td>
+            </tr>
+            <tr>
+              <td><code>estimator</code></td>
+              <td>Supported</td>
+              <td>Statistical callable: default <code>'mean'</code>, ya <code>np.median</code>, <code>np.sum</code>.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar</code></td>
+              <td>Modern Syntax</td>
+              <td>Uncertainty method: <code>('ci', 95)</code>, <code>'sd'</code>, <code>'se'</code>, ya <code>None</code>.</td>
+            </tr>
+            <tr>
+              <td><code>ci</code></td>
+              <td>Deprecated</td>
+              <td>Legacy parameter (Seaborn &le; 0.11). Replaced by <code>errorbar</code>.</td>
+            </tr>
+            <tr>
+              <td><code>capsize</code></td>
+              <td>Supported</td>
+              <td>Float (e.g. <code>0.1</code> to <code>0.2</code>) &mdash; whisker ends par horizontal cap bars.</td>
+            </tr>
+            <tr>
+              <td><code>dodge</code></td>
+              <td>Supported</td>
+              <td>Bool ya float (e.g. <code>dodge=0.25</code>) &mdash; overlapping hue points ko separate karta hai.</td>
+            </tr>
+            <tr>
+              <td><code>markers</code></td>
+              <td>Supported</td>
+              <td>String ya list (e.g. <code>['o', 's', '^', 'D']</code>) for distinct shapes.</td>
+            </tr>
+            <tr>
+              <td><code>linestyles</code></td>
+              <td>Supported</td>
+              <td>String ya list (e.g. <code>['-', '--', ':']</code>). Set to <code>""</code> to remove lines.</td>
+            </tr>
+            <tr>
+              <td><code>palette</code> / <code>color</code></td>
+              <td>Supported</td>
+              <td>Colormaps ya uniform hex codes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Runnable Example</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_college = pd.read_csv("scratch/seaborn_topic10_data/college_marks_sections.csv")
+
+plt.figure(figsize=(8, 5))
+sns.pointplot(
+    data=df_college,
+    x="section",
+    y="marks",
+    order=["Section A", "Section B", "Section C"],
+    palette=["#2563EB", "#059669", "#D97706"],
+    hue="section",
+    legend=False,
+    errorbar=("ci", 95),
+    capsize=0.12,
+    markers="D"
+)
+plt.title("Sections A, B &amp; C Academic Mastery (sns.pointplot)")
+plt.xlabel("Section Group")
+plt.ylabel("Average Marks (0 - 100)")
+plt.ylim(64, 82)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="output-block">
+        <div class="output-label">Pre-Executed Output Summary</div>
+        Section Group Means: Section A = 76.33 | Section B = 71.58 | Section C = 68.44
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/simple_first_pointplot_sections_abc.png" alt="Simple first point plot comparing sections A, B, and C">
+        <div class="figure-caption">Figure 10.5: Your First Seaborn Point Plot &mdash; Diamonds mark section averages with 95% Confidence Interval error bars.</div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Reading a Point Plot Correctly</h2>
+      <p>Point plot ko accurately interpret karne ke liye aapko iske 6 anatomical components ko padhna aana chahiye:</p>
+
+      <ol>
+        <li><strong>X-axis Categories:</strong> Discrete nominal ya ordinal groups jinhe compare kiya ja raha hai.</li>
+        <li><strong>Y-axis Measurement:</strong> Numerical scale jahan points vertically positioned hote hain.</li>
+        <li><strong>Point Estimates:</strong> Har category ka central measure of location (Mean ya Median).</li>
+        <li><strong>Connecting Line (Slope):</strong> Do points ke beech ka angle. Upward slope improvement darshata hai, downward slope decline darshata hai, aur flat line stability darshata hai.</li>
+        <li><strong>Error Whiskers:</strong> Whisker jitna lamba hoga, estimate utna uncertain hoga (sample size kam ho sakta hai ya spread zyada ho sakta hai).</li>
+        <li><strong>Group Legend:</strong> Agar <code>hue</code> diya gaya hai, to distinct line styles aur marker shapes different sub-populations ko identify karte hain.</li>
+      </ol>
+
+      <h3>Pattern 1: Clear Monotonic Increasing Trend</h3>
+      <p>Jab koi metric step-by-step consistently grow karta hai (jaise student ke consecutive mock tests):</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/clear_increasing_trend_pointplot.png" alt="Clear monotonic increasing trend across mock tests">
+        <div class="figure-caption">Figure 10.6: Clear Monotonic Improvement &mdash; Students average 65.01 in Mock 1, steadily climbing to 69.07 (Mock 2), 73.95 (Mock 3), and peaking at 77.34 in Mock 4!</div>
+      </div>
+
+      <h3>Pattern 2: Non-Monotonic Rise-and-Fall Pattern</h3>
+      <p>Real-world engineering me data aksar linear nahi hota. Jaise e-commerce checkout funnel me completion rate pehle girti hai aur fir recovery karti hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/non_monotonic_rise_and_fall_pointplot.png" alt="Non-monotonic rise and fall pattern in checkout funnel conversion">
+        <div class="figure-caption">Figure 10.7: Non-Monotonic Trend &mdash; Conversion drops sharply at Step 3 (Payment Method: 57.7%) due to checkout friction, but rebounds at OTP Auth (72.5%). Point plots instantly spotlight this non-linear bottleneck!</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Caution: Visual Line Does NOT Mean Continuous Function or Causation</div>
+        <p>Connecting line viewer ki aankh ko slope dikhane ke liye hoti hai. Iska matlab ye bilkul nahi hai ki categories ke beech koi continuous intermediate stage exist karti hai (Section A aur Section B ke beech koi <em>"Section 1.5"</em> nahi hota!). Aur slope dekhne ka matlab ye bhi nahi hota ki category A ne category B ko cause kiya hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> Customizing Point Plots for Production</h2>
+      <p>Data science presentations me clean aesthetic customization chart ko clutter se bacha kar actionable banati hai. Seaborn 0.13+ me markers, linestyles, palettes, aur orientation par full programmatic control milta hai:</p>
+
+      <h3>Key Customization Parameters</h3>
+      <ul>
+        <li><strong><code>markers</code>:</strong> Points ko distinct geometric shapes dena: <code>['o', 's', '^', 'D', 'X', '*']</code>. Ye colorblind users ke liye bohot helpful hota hai kyunki bina color dekhe bhi shape se category pehchani ja sakti hai.</li>
+        <li><strong><code>linestyles</code>:</strong> Line patterns set karna: solid (<code>'-'</code>), dashed (<code>'--'</code>), dotted (<code>':'</code>), ya dash-dot (<code>'-.'</code>). Agar connecting lines hatani hon to <code>linestyles=""</code> specify karein.</li>
+        <li><strong><code>dodge</code>:</strong> Jab multiple hue groups hote hain, to points aur whiskers aapas me overlap hone lagte hain. <code>dodge=0.25</code> pass karne se groups horizontally shift ho jate hain.</li>
+        <li><strong><code>capsize</code>:</strong> Whiskers ke ends par horizontal cross-bars add karta hai: <code>capsize=0.1</code> to <code>0.2</code>.</li>
+      </ul>
+
+      <div class="figure-wrapper">
+        <img src="assets/customized_markers_and_linestyles.png" alt="Polished point plot with distinct markers, linestyles, dodged points, and caps">
+        <div class="figure-caption">Figure 10.8: Customized Production Point Plot &mdash; Section A (Circle / Solid), Section B (Square / Dashed), and Section C (Diamond / Dotted) across subjects with <code>dodge=0.25</code> and <code>capsize=0.1</code>.</div>
+      </div>
+
+      <h3>Horizontal Point Plot for Long Category Names</h3>
+      <p>Jab category labels lambe hon (e.g. <em>"BlueDartLogistics"</em>, <em>"SwiftExpress Logistics"</em>), to vertical plot me x-axis labels takrane lagte hain. Is problem ka sabse graceful solution hai <strong>Horizontal Point Plot</strong>:</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Horizontal Point Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_deliv = pd.read_csv("scratch/seaborn_topic10_data/delivery_logistics_performance.csv")
+
+plt.figure(figsize=(8.5, 5))
+p_order = ["SwiftExpress", "BlueDartLogistics", "MetroDash", "ApexCourier"]
+
+# Simply pass category column to y and metric to x!
+sns.pointplot(
+    data=df_deliv,
+    y="partner",
+    x="delivery_time_mins",
+    order=p_order,
+    color="#7C3AED",
+    errorbar=("ci", 95),
+    capsize=0.15,
+    markers="o"
+)
+plt.title("Horizontal Delivery Latency (No Text Overlap)")
+plt.xlabel("Mean Delivery Time in Minutes (±95% CI)")
+plt.ylabel("Logistics Partner")
+plt.xlim(25, 42)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/horizontal_pointplot_delivery_partners.png" alt="Horizontal point plot for delivery logistics partners with zero text overlap">
+        <div class="figure-caption">Figure 10.9: Horizontal Point Plot &mdash; Category labels read effortlessly from left to right. Notice that BlueDartLogistics (29.6 min) and MetroDash (31.6 min) display tight confidence intervals.</div>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> Group Comparisons Using <code>hue</code></h2>
+      <p>Point plots tab sabse zyada powerful bante hain jab hum ek second categorical dimension (<code>hue</code>) introduce karte hain. Bar plot me grouped bars bulky ho jati hain, lekin point plot me har group ki apni distinct <strong>trend line</strong> banti hai!</p>
+
+      <h3>Example 1: College Marks by Section and Subject</h3>
+      <p>Dekhte hain ki Section A, Section B aur Section C ke students ka subject-wise performance (Python, Networks, Math) kaisa behave kar raha hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/grouped_pointplot_section_and_subject.png" alt="Grouped point plot with hue showing subject mastery across college sections">
+        <div class="figure-caption">Figure 10.10: Grouped Point Plot with <code>hue='section'</code> &mdash; In all subjects, Section A maintains the top position, followed by Section B, then Section C. Notice that for all three sections, Python Programming scores are highest, while Applied Mathematics scores drop consistently across cohorts!</div>
+      </div>
+
+      <h3>Example 2: Customer Satisfaction (CSAT) by Category &amp; Member Tier</h3>
+      <p>500 customer reviews me evaluate karte hain ki <strong>Regular Members</strong> aur <strong>VIP Club Members</strong> ka satisfaction rating kaisa compare hota hai across 5 product categories:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/customer_satisfaction_by_tier_hue.png" alt="Customer satisfaction CSAT comparison across product categories and member tier using hue">
+        <div class="figure-caption">Figure 10.11: Customer Satisfaction by Member Tier &mdash; VIP Club members give consistently higher CSAT scores (8.0 to 9.1) across all product categories. The largest satisfaction gap appears in Electronics (8.78 VIP vs 7.45 Regular) due to dedicated VIP warranty support!</div>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-title">&#10004; Pro-Tip: Always Dodge When Using Hue!</div>
+        <p>Agar aap <code>dodge=False</code> chod denge, to do groups ke points agar similar value par honge to wo ek dusre ke upar overlap ho jayenge aur whiskers confuse ho jayengi. Hamesha <code>dodge=0.2</code> to <code>0.3</code> use karein taaki har group ka point aur error bar clearly alag dikhe.</p>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Error Bars, Confidence Intervals &amp; Uncertainty</h2>
+      <p>Point plot ka sabse critical statistical strength hai: <strong>Uncertainty Communication</strong>. Business me <em>"Average 76.3 hai"</em> kehna adha sach hai &mdash; full sach ye hota hai: <em>"Sample ke basis par true population average 73.8 se 78.9 ke beech hone ka 95% confidence hai."</em></p>
+
+      <div class="figure-wrapper">
+        <img src="assets/confidence_interval_anatomy_diagram.png" alt="Anatomical diagram of confidence interval error bar: sample mean, standard error, upper and lower limits">
+        <div class="figure-caption">Figure 10.12: Anatomical Breakdown of a 95% Confidence Interval Whisker &mdash; The central dot is the sample point estimate (76.33), and the vertical whisker bounds the 95% confidence interval range (73.8 to 78.9).</div>
+      </div>
+
+      <h3>How Sample Size (N) Affects Uncertainty</h3>
+      <p>Confidence Interval ka formula Standard Error par depend karta hai:</p>
+      <div class="callout callout-info">
+        <div class="callout-title">&#128290; Mathematical Intuition: Standard Error Formula</div>
+        <p><code>Standard Error (SE) = Standard Deviation / &radic;N</code></p>
+        <p>Jaise-jaise sample size <strong>N bada hota jata hai</strong>, &radic;N increase hota hai aur <strong>Standard Error chhota ho jata hai</strong>! Iska matlab: Zyada data = Chhoti uncertainty whisker = High estimation precision!</p>
+      </div>
+
+      <h3>Comparison of 4 Error Bar Modes in Seaborn 0.13+</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Mode Syntax</th>
+              <th>What it Visualizes</th>
+              <th>When to Use in Production</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>errorbar=('ci', 95)</code></td>
+              <td><strong>95% Confidence Interval:</strong> Population mean estimation certainty.</td>
+              <td>Default for general data science, A/B testing, and research reports.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar='sd'</code></td>
+              <td><strong>Standard Deviation:</strong> Actual data spread of individual observations.</td>
+              <td>Jab dikhana ho ki individual customers ya students kitna wildly differ karte hain.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar='se'</code></td>
+              <td><strong>Standard Error:</strong> Precision of the sample mean.</td>
+              <td>Scientific publications and tight statistical comparisons.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar=None</code></td>
+              <td><strong>Disabled Whiskers:</strong> Clean dots and lines only.</td>
+              <td>Jab data pehle se aggregate ho ya presentation minimalist rakhni ho.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/interval_modes_and_disabled_comparison.png" alt="Four-panel comparison of errorbar modes: 95% CI, Standard Deviation, Standard Error, and None">
+        <div class="figure-caption">Figure 10.13: Comparison of Seaborn 0.13+ Error Bar Modes &mdash; Notice how Standard Deviation (<code>'sd'</code>) produces wide whiskers showing student spread, while Standard Error (<code>'se'</code>) produces narrow whiskers. Disabling intervals (<code>None</code>) leaves clean points but loses all uncertainty context.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Statistical Trap: The Overlapping CI Fallacy</div>
+        <p>Beginners aksar sochte hain ki <em>"Agar do groups ke error bars thode se overlap ho rahe hain, to unke beech koi difference nahi hai!"</em> Ye statistically incorrect hai. Do confidence intervals thode overlap ho sakte hain aur fir bhi unka difference statistically significant ho sakta hai (p &lt; 0.05). Overlap ko sirf visual clue samjhein &mdash; formal hypothesis test (t-test ya ANOVA) ke bina definitive claim na karein!</p>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Estimators: Mean, Median &amp; Outlier Robustness</h2>
+      <p>By default, <code>sns.pointplot()</code> group ka arithmetic mean calculate karta hai (<code>estimator='mean'</code>). Lekin real-world datasets me extreme outliers (jaise rainstorm delay, server crash, ya VIP whale spenders) mean ko buri tarah distort kar dete hain.</p>
+
+      <h3>Outlier Distortion in Logistics Latency</h3>
+      <p>Hamare delivery dataset me <strong>SwiftExpress</strong> ke 95% orders 26.8 minutes me deliver hote hain. Lekin sirf 5% orders me bhayankar rainstorm breakdown hua (180+ minutes delay). Dekhiye kaise Mean aur Median me zameen-aasman ka farq aa jata hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/mean_vs_median_extreme_outlier.png" alt="Estimator comparison: Mean vs Median on skewed delivery partner data">
+        <div class="figure-caption">Figure 10.14: Estimator Comparison on Skewed Logistics Data &mdash; In Panel A (Mean), SwiftExpress appears to be the worst partner at 34.2 minutes! But Panel B (Median) reveals the true picture: for a typical customer, SwiftExpress is actually the fastest partner at 27.2 minutes!</div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Choosing the Right Estimator</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import numpy as np
+
+# A. Arithmetic Mean (Default: Good for Normal Distributions)
+sns.pointplot(data=df, x="partner", y="latency", estimator=np.mean)
+
+# B. Median (Robust: Recommended for Skewed Data with Outliers)
+sns.pointplot(data=df, x="partner", y="latency", estimator=np.median)
+
+# C. Sum (Total Metric across Category)
+sns.pointplot(data=df, x="category", y="revenue", estimator=np.sum)</code></pre>
+      </div>
+
+      <h3>Whale Spender Effect in E-Commerce Spending</h3>
+      <p>Customer spending data me jab do-char ultra-rich VIP customers ₹70,000 ka order place karte hain, to Mean artificially shoot up ho jata hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/customer_spending_mean_vs_median.png" alt="Customer spending mean vs median point estimates showing whale spender effect">
+        <div class="figure-caption">Figure 10.15: Whale Spender Distortion in Electronics &mdash; Mean spending shoots to ₹4550, while Median spending is ₹3309. Using Median accurately captures the typical middle-class shopper's basket size!</div>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Point Plots vs Related Visualizations</h2>
+      <p>Data visualization me sabse important decision hota hai: <em>"Aapke specific analytical question ke liye kaun sa chart best suited hai?"</em></p>
+
+      <h3>Point Plot vs Bar Plot</h3>
+      <div class="figure-wrapper">
+        <img src="assets/pointplot_vs_barplot_comparison.png" alt="Side by side comparison of bar plot vs point plot">
+        <div class="figure-caption">Figure 10.16: Bar Plot vs Point Plot &mdash; Panel A (Bar Plot) anchors to 0, which is great for total volume or sales magnitude. Panel B (Point Plot) zooms into the 60-85 range, spotlighting subtle score slopes between sections with zero visual bulk!</div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Plot Type</th>
+              <th>Primary Analytical Purpose</th>
+              <th>When to Choose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Point Plot (<code>sns.pointplot</code>)</strong></td>
+              <td>Category-level summary statistics (Mean/Median) aur uncertainty compare karna across groups.</td>
+              <td>Jab slopes, differences, aur interaction effects dekhne hon with minimal ink.</td>
+            </tr>
+            <tr>
+              <td><strong>Bar Plot (<code>sns.barplot</code>)</strong></td>
+              <td>Magnitude aur absolute summarized quantities compare karna.</td>
+              <td>Jab 0 baseline mandatory ho (e.g. Total Revenue, Budget, Counts).</td>
+            </tr>
+            <tr>
+              <td><strong>Line Plot (<code>sns.lineplot</code>)</strong></td>
+              <td>Continuous variables ya time-series trends track karna.</td>
+              <td>Continuous time intervals (dates, timestamps, continuous sensor signals).</td>
+            </tr>
+            <tr>
+              <td><strong>Box Plot (<code>sns.boxplot</code>)</strong></td>
+              <td>Full 5-number summary (Min, Q1, Median, Q3, Max) aur outliers dekhna.</td>
+              <td>Jab data distribution ka spread aur skewness dekhna ho.</td>
+            </tr>
+            <tr>
+              <td><strong>Count Plot (<code>sns.countplot</code>)</strong></td>
+              <td>Raw frequency tally / observation rows ginna.</td>
+              <td>Jab sawal ho: <em>"Kis category me kitne rows hain?"</em></td>
+            </tr>
+            <tr>
+              <td><strong>ECDF Plot (<code>sns.ecdfplot</code>)</strong></td>
+              <td>Cumulative empirical distribution aur threshold analysis.</td>
+              <td>SLA monitoring (e.g. <em>"Kitne % orders 30 min ke andar deliver hue?"</em>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pointplot_vs_line_and_box_multiplot.png" alt="Four panel ecosystem comparison: Point plot vs Line plot vs Box plot vs Count plot">
+        <div class="figure-caption">Figure 10.17: Visual Ecosystem Overview &mdash; Four perspectives on the exact same college dataset: Point plot (Group Mean &amp; CI), Line plot (Continuous Ribbon), Box plot (Full Spread &amp; Outliers), and Count plot (Row Counts).</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Trends Across Ordered Categories</h2>
+      <p>Point plots tab sabse natural aur intuitive lagte hain jab x-axis categories me ek <strong>inherent sequential order</strong> hota hai (jaise Test 1 &rarr; Test 4, ya Traffic Load 100 &rarr; 2000 Users).</p>
+
+      <h3>Example 1: Student Learning Trajectory Across Mock Tests</h3>
+      <div class="figure-wrapper">
+        <img src="assets/mock_test_learning_curve_ordered.png" alt="Ordered mock test learning curve across test sessions">
+        <div class="figure-caption">Figure 10.18: Student Learning Curve across Mock Tests &mdash; Notice how all three sections exhibit a positive slope from Test 1 to Test 4, proving that consistent practice raises academic performance across all student cohorts!</div>
+      </div>
+
+      <h3>Example 2: Production API Latency Under Increasing Traffic Load</h3>
+      <div class="figure-wrapper">
+        <img src="assets/api_latency_under_traffic_load.png" alt="System scalability API response time across concurrent user load levels">
+        <div class="figure-caption">Figure 10.19: System Scalability Monitoring &mdash; Legacy v1.2 exhibits exponential latency degradation beyond 1000 users (reaching 580 ms at 2000 users). In contrast, Optimized v2.0 scales gracefully with a shallow slope, remaining under 211 ms!</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Ordering Best Practice</div>
+        <p>Agar categories nominal hain (jaise Mumbai, Delhi, Bengaluru, Chennai), to unhe arbitrary order me na chodein. Pandas groupby se metric ke basis par sort karke <code>order=...</code> me pass karein taaki chart visual hierarchy convey kare.</p>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Real-World Case Study 1 &mdash; College Analytics</h2>
+      <p><strong>Analytical Question:</strong> <em>"College ke 3 sections (A, B, C) me se kis section ka subject-wise academic mastery sabse consistent hai, aur kin subjects me remedial classes ki zaroorat hai?"</em></p>
+
+      <h3>Verified Dataset Metrics (N = 180 Students)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Class Section</th>
+              <th>Overall Mean</th>
+              <th>Python Mean</th>
+              <th>Networks Mean</th>
+              <th>Math Mean</th>
+              <th>Recommended Intervention</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Section A</strong></td>
+              <td>76.33</td>
+              <td>82.6</td>
+              <td>75.5</td>
+              <td>70.9</td>
+              <td>High mastery; advanced project assignments.</td>
+            </tr>
+            <tr>
+              <td><strong>Section B</strong></td>
+              <td>71.58</td>
+              <td>74.2</td>
+              <td>73.3</td>
+              <td>67.2</td>
+              <td>Moderate performance; targeted lab tutorials.</td>
+            </tr>
+            <tr>
+              <td><strong>Section C</strong></td>
+              <td>68.44</td>
+              <td>71.3</td>
+              <td>68.1</td>
+              <td>65.9</td>
+              <td>Math remedial classes required; weekly peer study groups.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Analytical Synthesis (Ref: Figures 10.2, 10.8 &amp; 10.10)</div>
+        <p>Figure 10.10 me lines parallel run karti hain &mdash; iska matlab teeno sections me subject difficulty pattern identical hai (Python &gt; Networks &gt; Math). Koi interaction effect nahi hai, yaani Section C ka drop kisi specific subject ke karan nahi balki overall foundation gap ke karan hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Real-World Case Study 2 &mdash; E-Commerce Delivery Logistics</h2>
+      <p><strong>Analytical Question:</strong> <em>"Logistics partners me se kis partner ka typical delivery turnaround sabse fast hai, aur outliers ke karan kiska performance report distort ho raha hai?"</em></p>
+
+      <h3>Logistics Summary (N = 480 Orders)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Logistics Partner</th>
+              <th>Arithmetic Mean</th>
+              <th>Median (50th %ile)</th>
+              <th>Outlier Influence</th>
+              <th>Operational Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>SwiftExpress</strong></td>
+              <td>34.23 min</td>
+              <td>27.25 min</td>
+              <td>Severe (+7.4 min pull)</td>
+              <td>Fastest for 95% orders; needs bad-weather contingency protocols.</td>
+            </tr>
+            <tr>
+              <td><strong>BlueDartLogistics</strong></td>
+              <td>29.55 min</td>
+              <td>29.50 min</td>
+              <td>Negligible</td>
+              <td>Most stable and predictable delivery partner.</td>
+            </tr>
+            <tr>
+              <td><strong>MetroDash</strong></td>
+              <td>31.62 min</td>
+              <td>31.90 min</td>
+              <td>Low</td>
+              <td>Consistent performance across city zones.</td>
+            </tr>
+            <tr>
+              <td><strong>ApexCourier</strong></td>
+              <td>33.75 min</td>
+              <td>33.95 min</td>
+              <td>Low</td>
+              <td>Slowest baseline latency; route re-optimization required.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-title">&#128188; Operations Recommendation (Ref: Figures 10.9 &amp; 10.14)</div>
+        <p>Kewal Mean bar plot dekhkar SwiftExpress ko penalize karna galti hoti. Point plot with <code>estimator=np.median</code> (Figure 10.14) ne reveal kiya ki SwiftExpress ka typical customer sirf 27.2 minute wait karta hai, jo pure fleet me fastest hai!</p>
+      </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Real-World Case Study 3 &mdash; Customer Satisfaction</h2>
+      <p><strong>Analytical Question:</strong> <em>"Kya VIP Club membership launch karne se sabhi product categories me customer satisfaction uniformly improve hui hai?"</em></p>
+
+      <h3>Verified Category CSAT Baseline (N = 500 Reviews)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Regular Member CSAT</th>
+              <th>VIP Club CSAT</th>
+              <th>Satisfaction Lift</th>
+              <th>Driver</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Electronics</strong></td>
+              <td>7.45</td>
+              <td>8.78</td>
+              <td>+1.57 points</td>
+              <td>Dedicated tech support &amp; priority replacement.</td>
+            </tr>
+            <tr>
+              <td><strong>Apparel</strong></td>
+              <td>7.52</td>
+              <td>8.44</td>
+              <td>+0.88 points</td>
+              <td>Free alterations &amp; doorstep try-on.</td>
+            </tr>
+            <tr>
+              <td><strong>Home Essentials</strong></td>
+              <td>6.71</td>
+              <td>7.85</td>
+              <td>+0.85 points</td>
+              <td>Care packaging for fragile items.</td>
+            </tr>
+            <tr>
+              <td><strong>Grocery</strong></td>
+              <td>8.07</td>
+              <td>8.72</td>
+              <td>+0.70 points</td>
+              <td>Guaranteed 2-hour morning delivery slot.</td>
+            </tr>
+            <tr>
+              <td><strong>Books</strong></td>
+              <td>8.20</td>
+              <td>9.12</td>
+              <td>+0.74 points</td>
+              <td>Author bookmarks &amp; reading community access.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#127919; Key Takeaway (Ref: Figure 10.11)</div>
+        <p>VIP Club tier har category me statistically higher satisfaction achieve karta hai. Sabse bada jump Electronics me dekha gaya, jisse confirm hota hai ki expensive gadgets kharidne wale customers priority service ko sabse zyada value karte hain.</p>
+      </div>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Real-World Case Study 4 &mdash; Production API Monitoring</h2>
+      <p><strong>Analytical Question:</strong> <em>"System v2.0 optimization release ke baad kya high concurrency traffic (up to 2,000 users) me response time SLA (250 ms) ke andar maintain ho raha hai?"</em></p>
+
+      <h3>Concurrency Benchmark Results (N = 1500 Requests)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Concurrent Users</th>
+              <th>Legacy v1.2 Latency</th>
+              <th>Optimized v2.0 Latency</th>
+              <th>Latency Reduction</th>
+              <th>SLA Status (&lt;250 ms)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>100 Users</strong></td>
+              <td>45.1 ms</td>
+              <td>28.0 ms</td>
+              <td>-38.3%</td>
+              <td>Both Pass SLA</td>
+            </tr>
+            <tr>
+              <td><strong>500 Users</strong></td>
+              <td>96.3 ms</td>
+              <td>47.7 ms</td>
+              <td>-49.9%</td>
+              <td>Both Pass SLA</td>
+            </tr>
+            <tr>
+              <td><strong>1000 Users</strong></td>
+              <td>183.2 ms</td>
+              <td>81.9 ms</td>
+              <td>-55.5%</td>
+              <td>Both Pass SLA</td>
+            </tr>
+            <tr>
+              <td><strong>1500 Users</strong></td>
+              <td>341.6 ms</td>
+              <td>135.3 ms</td>
+              <td>-60.4%</td>
+              <td>Legacy Fails SLA (341 ms)</td>
+            </tr>
+            <tr>
+              <td><strong>2000 Users</strong></td>
+              <td>591.2 ms</td>
+              <td>202.4 ms</td>
+              <td>-63.6%</td>
+              <td>Legacy Severe Breach (580 ms) &bull; v2.0 Passes (211 ms)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128640; Production Deployment Decision (Ref: Figure 10.19)</div>
+        <p>Figure 10.19 me slope ka antar saaf dikhata hai ki v1.2 ka architectural bottleneck synchronous database calls the. v2.0 me asynchronous caching introduce karne se curve flat ho gaya, jo 2,000 peak users par bhi SLA guarantee provide karta hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Interaction Effects: When Lines Cross</h2>
+      <p>Point plots ka sabse powerful aur unique superpower hai <strong>Statistical Interaction Effects</strong> ko instantly reveal karna. Bar plots me interaction samajhna bohot mushkil hota hai, lekin point plot me lines ka angle sabkuch bata deta hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Visual Line Behavior</th>
+              <th>Statistical Meaning</th>
+              <th>Real-Life Interpretation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Parallel Lines</strong></td>
+              <td><strong>No Interaction:</strong> Dono groups ek jaise slope ke sath react kar rahe hain.</td>
+              <td>Section A aur Section B dono me Python best aur Math toughest hai (equal drop).</td>
+            </tr>
+            <tr>
+              <td><strong>Diverging Lines (Lines Spread Apart)</strong></td>
+              <td><strong>Magnifying Interaction:</strong> Ek category me dono groups ka gap bada ho jata hai.</td>
+              <td>Electronics me VIP members ka CSAT aam members se bohot zyada high hai.</td>
+            </tr>
+            <tr>
+              <td><strong>Crossing Lines (X-Intersection)</strong></td>
+              <td><strong>Disordinal / Qualitative Interaction:</strong> Group 1 ek jagah better hai, lekin dusri jagah Group 2 better ban jata hai!</td>
+              <td>Algorithm A small data par fast hai, lekin large data par Algorithm B fast ho jata hai.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Why Data Scientists Love Point Plots for A/B Testing</div>
+        <p>Agar Treatment group aur Control group ki lines flat ya parallel hain, to Treatment ka koi dynamic advantage nahi hai. Lekin agar lines aapas me <strong>cross</strong> karti hain, to iska matlab treatment kisi specific segment par dramatically alag effect daal raha hai!</p>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> The Danger of False Continuity &amp; Category Disconnection</h2>
+      <p>Connecting lines human eye ko guide karne ke liye behtareen hain, lekin unke sath ek psychological risk juda hota hai jise <strong>False Continuity Fallacy</strong> kehte hain.</p>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">&#9888; The False Continuity Trap</div>
+        <p>Jab viewer do points ke beech line dekhta hai, to uska subconscious brain use ek continuous mathematical curve ya time-series samajh leta hai. Agar aap unordered nominal categories (jaise <em>Apple &rarr; Banana &rarr; Mango</em>) ke beech line khinchenge, to naive viewer confuse ho sakta hai ki "Apple aur Banana ke beech konsa intermediate fruit hai?"</p>
+      </div>
+
+      <p>Is risk se bachne ke do professional techniques hain:</p>
+      <ol>
+        <li><strong>Order with Purpose:</strong> Nominal categories ko random sequence me rakhne ke bajaye metric ke basis par rank karke (High to Low) pass karein: <code>order=df.groupby('cat')['val'].mean().sort_values(ascending=False).index</code>.</li>
+        <li><strong>Disable Lines When Categories are Completely Independent:</strong> Agar aapko sirf points aur unke error bars dikhane hain bina kisi slope implication ke, to <code>linestyles=""</code> specify kar dijiye!</li>
+      </ol>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Removing Connecting Lines in Seaborn 0.13+</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code># Removing connecting lines: pure points with confidence intervals
+sns.pointplot(
+    data=df,
+    x="city",
+    y="temperature",
+    linestyles="",  # Empty string disables connecting lines!
+    markers="o",
+    capsize=0.15
+)</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> 12+ Common Pitfalls, Anti-Patterns &amp; Visual Deceptions</h2>
+      <p>Point plots banate waqt beginners aur junior data analysts aksar in 12 mistakes me fas jate hain. Neeche har pitfall ka consequence aur verified fix diya gaya hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pitfall / Mistake</th>
+              <th>Dangerous Consequence</th>
+              <th>Professional Correction</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Confusing Point Estimate with Individual Score</strong></td>
+              <td>Log sochte hain ki dot kisi ek student ya single transaction ka data hai.</td>
+              <td>Always clarify in captions that the dot represents the calculated group statistic (e.g. Mean or Median).</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Treating Error Bars as Min to Max Range</strong></td>
+              <td>Whisker ke ends ko lowest aur highest raw data point samajhna.</td>
+              <td>Error bar 95% Confidence Interval ya Standard Deviation hota hai. Min/Max dekhne ke liye Box Plot use karein.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Confusing Standard Deviation with Confidence Interval</strong></td>
+              <td>SD individual points ka spread batata hai; CI sample mean ki statistical precision batata hai.</td>
+              <td>Scientific comparison ke liye CI use karein: <code>errorbar=('ci', 95)</code>. Data variability ke liye <code>errorbar='sd'</code>.</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>The Overlapping CI Fallacy</strong></td>
+              <td>Ye maan lena ki do intervals overlap ho rahe hain to p &gt; 0.05 hai.</td>
+              <td>Moderate overlap ke bawajood formal t-test statistically significant ho sakta hai.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Assuming Connecting Lines Imply Causation</strong></td>
+              <td>Ye samajhna ki category A ke baad B aane se A ne B ko cause kiya.</td>
+              <td>Lines are visual aids for tracking slopes, not causal proofs.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Connecting Unrelated Nominal Categories</strong></td>
+              <td>Random categories (e.g. Blue, Red, Green) ke beech slope line banana false continuity create karta hai.</td>
+              <td>Sort categories intentionally ya remove lines using <code>linestyles=""</code>.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Ignoring Outlier Distortions with Mean</strong></td>
+              <td>Extreme delivery delays (180+ min) ya whale spenders mean ko 10 min upar khinch lete hain.</td>
+              <td>Skewed distributions me <code>estimator=np.median</code> use karein.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Forgetting <code>dodge</code> When Using Hue</strong></td>
+              <td>Different groups ke points aur whiskers aapas me overlap hokar illegible ho jate hain.</td>
+              <td>Always specify <code>dodge=0.2</code> to <code>0.3</code> when passing <code>hue</code>.</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Using Deprecated <code>ci</code> or <code>join</code> in Seaborn 0.13+</strong></td>
+              <td>Deprecated warnings clutter output.</td>
+              <td>Use modern <code>errorbar=('ci', 95)</code> and <code>linestyles=""</code>.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Assuming Smaller Error Bar = "Better" Category</strong></td>
+              <td>Chhota error bar sirf ye batata hai ki sample size bada hai ya data consistent hai, ye nahi ki performance high hai!</td>
+              <td>Evaluate point location for magnitude and whisker height for estimation certainty.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Misinterpreting Vertical vs Horizontal Orientation</strong></td>
+              <td>Passing long labels to vertical x-axis causes unreadable text collisions.</td>
+              <td>Pass category to <code>y</code> for a clean horizontal point plot.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Failing to Format Numeric Ticks and Axis Bounds</strong></td>
+              <td>Default scales zero se bohot door zoom kar sakte hain ya essential baseline context hide kar sakte hain.</td>
+              <td>Explicitly tune <code>plt.ylim()</code> or <code>plt.xlim()</code> for comfortable visual margins.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Debugging Exercise 1: The Overlapping Whiskers Bug</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Buggy Code vs Corrected Code</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code># ❌ BUGGY: Overlapping hue points create illegible visual collision
+sns.pointplot(data=df, x="subject", y="marks", hue="section")
+
+# ✔️ CORRECTED: Clean horizontal separation with dodge and caps
+sns.pointplot(
+    data=df,
+    x="subject",
+    y="marks",
+    hue="section",
+    dodge=0.25,      # Separates points cleanly!
+    capsize=0.1,     # Adds horizontal whisker caps
+    markers=["o", "s", "D"]
+)</code></pre>
+      </div>
+
+      <h3>Debugging Exercise 2: Outlier Distortion Bug</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Buggy Code vs Corrected Code</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code># ❌ BUGGY: Mean distorted by extreme rainstorm delay outliers
+sns.pointplot(data=df_deliv, x="partner", y="delivery_time_mins")
+
+# ✔️ CORRECTED: Robust median represents typical customer experience
+import numpy as np
+sns.pointplot(
+    data=df_deliv,
+    x="partner",
+    y="delivery_time_mins",
+    estimator=np.median,  # Robust against extreme delays!
+    errorbar=None
+)</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> Comprehensive Quick Reference Cheat Sheet &amp; Syntax Matrix</h2>
+      <p>Interview preparation aur rapid production development ke liye complete one-liner recipe matrix:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Task / Analytical Requirement</th>
+              <th>Seaborn 0.13+ One-Liner Recipe</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Basic Point Plot with 95% CI</td>
+              <td><code>sns.pointplot(data=df, x="category", y="score")</code></td>
+            </tr>
+            <tr>
+              <td>Horizontal Point Plot (Long Labels)</td>
+              <td><code>sns.pointplot(data=df, y="partner", x="latency", order=sorted_list)</code></td>
+            </tr>
+            <tr>
+              <td>Grouped Comparison with Dodged Hue</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", hue="group", dodge=0.25)</code></td>
+            </tr>
+            <tr>
+              <td>Robust Median for Outlier-Heavy Data</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", estimator=np.median)</code></td>
+            </tr>
+            <tr>
+              <td>Total Sum Aggregation</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="revenue", estimator=np.sum)</code></td>
+            </tr>
+            <tr>
+              <td>Standard Deviation Error Bar</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", errorbar="sd")</code></td>
+            </tr>
+            <tr>
+              <td>Standard Error of Mean (SE)</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", errorbar="se")</code></td>
+            </tr>
+            <tr>
+              <td>Disable Uncertainty Whiskers</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", errorbar=None)</code></td>
+            </tr>
+            <tr>
+              <td>Whisker Horizontal End Caps</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", capsize=0.15)</code></td>
+            </tr>
+            <tr>
+              <td>Distinct Marker Shapes for Groups</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", hue="grp", markers=["o", "s", "D"])</code></td>
+            </tr>
+            <tr>
+              <td>Distinct Line Styles for Groups</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", hue="grp", linestyles=["-", "--", ":"])</code></td>
+            </tr>
+            <tr>
+              <td>Disable Connecting Lines Completely</td>
+              <td><code>sns.pointplot(data=df, x="cat", y="num", linestyles="")</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> 21 Practice Exercises &amp; Capstone Mini-Project (Beginner to Advanced)</h2>
+      <p>Apne concepts ko test karne ke liye in 21 practical interview-level exercises ko solve karein. Har question ke neeche interactive solution accordion diya gaya hai.</p>
+
+      <h3>Part I: 10 Multiple Choice Questions (MCQs 1 &ndash; 10)</h3>
+
+      <details class="accordion">
+        <summary>Q1: Default roop se `sns.pointplot()` me central point kis statistical measure ko represent karta hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (C) Arithmetic Mean (Average)</strong></p>
+          <p><strong>Explanation:</strong> Seaborn me <code>estimator</code> parameter default roop se <code>'mean'</code> hota hai, jo har category group ka sample average compute karta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q2: Default roop se point plot me vertical error whiskers kya darshate hain?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (B) 95% Bootstrap Confidence Interval</strong></p>
+          <p><strong>Explanation:</strong> Seaborn by default 1,000 bootstrap resamples generate karke 95% Confidence Interval compute karta hai, jo sample mean ki statistical uncertainty batata hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q3: Seaborn 0.13+ me points ke beech ki connecting lines ko completely remove karne ka sahi syntax kya hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (A) `linestyles=""` ya `linestyle="none"`</strong></p>
+          <p><strong>Explanation:</strong> Older Seaborn versions me <code>join=False</code> use hota tha jo ab 0.13+ me deprecated hai. Modern version me empty string <code>linestyles=""</code> pass kiya jata hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q4: Jab data me extreme positive outliers maujood hon, to mean ke bajaye kaun sa estimator use karna chahiye?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (D) `estimator=np.median`</strong></p>
+          <p><strong>Explanation:</strong> Median 50th percentile represent karta hai aur extreme outliers (jaise 180+ min delivery delays) se robust rehta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q5: Grouped point plot banate waqt overlapping points aur whiskers ko horizontally shift karne ke liye kaun sa parameter use hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (B) `dodge=0.25`</strong></p>
+          <p><strong>Explanation:</strong> <code>dodge</code> parameter passing hue levels ko horizontally separate karta hai taaki overlapping markers aur error whiskers visually collide na karein.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q6: Point plot me vertical whisker bars ke ends par horizontal cross-caps lagane ke liye kaun sa argument use hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (C) `capsize=0.15`</strong></p>
+          <p><strong>Explanation:</strong> <code>capsize</code> whisker ke top aur bottom par horizontal caps add karta hai, jisse interval bounds easily visible ho jate hain.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q7: Point plot ko horizontal layout me convert karne ke liye kya karna hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (A) Categorical column ko `y` parameter me aur numeric metric ko `x` parameter me pass karein</strong></p>
+          <p><strong>Explanation:</strong> Seaborn automatic orientation detection use karta hai &mdash; <code>y="partner", x="latency"</code> pass karte hi plot clean horizontal ban jata hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q8: Agar kisi point plot me individual data points ka actual spread (dispersion) dekhna ho, to kaun sa errorbar option use karenge?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (C) `errorbar="sd"`</strong></p>
+          <p><strong>Explanation:</strong> <code>errorbar="sd"</code> Standard Deviation compute karta hai, jo individual observations ke spread ko represent karta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q9: Kya do categories ke 95% Confidence Intervals ka aapas me thoda overlap hona ye prove karta hai ki unka difference zero hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (B) Nahi, moderate overlap ke bawajood formal statistical t-test significant ho sakta hai</strong></p>
+          <p><strong>Explanation:</strong> Overlapping CI fallacy ek classic statistical misconception hai. Formal hypothesis testing (p &lt; 0.05) ke bina definitive null claim nahi karna chahiye.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q10: Bar plot ke mukable Point plot ka sabse bada visual advantage kya hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: (D) Slopes aur interaction effects ko bina heavy solid visual ink ke highlight karna</strong></p>
+          <p><strong>Explanation:</strong> Point plots baseline zero tak solid bars draw nahi karte, jisse viewer ka dhyan directly category differences aur rates of change par focus rehta hai.</p>
+        </div>
+      </details>
+
+      <h3>Part II: 5 Point-Plot Interpretation Questions (11 &ndash; 15)</h3>
+
+      <details class="accordion">
+        <summary>Q11: Ek point plot me Group 1 ki line horizontally flat hai jabki Group 2 ki line steeply upward tilted hai. Is slope difference ka business meaning kya hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Ye ek <strong>Statistical Interaction Effect</strong> hai. Iska matlab hai ki independent variable ka effect dono groups par alag-alag padta hai &mdash; Group 1 category changes se neutral/unaffected rehta hai, jabki Group 2 me strong positive sensitivity hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q12: Agar do delivery partners ka sample size N = 20 vs N = 2,000 orders hai, to unke error bars me kya farq dikhega?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> N = 20 wale partner ka 95% CI whisker bohot lamba (wide) hoga kyunki sample size chhota hone se Standard Error bada hota hai. N = 2,000 wale partner ka whisker ultra-compact hoga, jo high estimation precision show karega.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q13: Unordered nominal categories (e.g. Red, Blue, Green) ke beech connecting line khichne par kya analytical risk hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: False Continuity Fallacy</strong>. Viewer ka dimag line dekhkar samajh sakta hai ki Red aur Blue ke beech koi continuous transitional stage hai ya Red ne Blue ko cause kiya hai. Isse bachne ke liye ya to categories ko sort karein ya <code>linestyles=""</code> karein.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q14: Ek e-commerce point plot me Mean order value ₹4,964 hai lekin Median point sirf ₹2,900 par hai. Ek data scientist iska kya inference nikalega?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: Severe Right-Skewness (Whale Effect)</strong>. Dataset me kuch bohot bade high-roller purchases (e.g. ₹70,000 VIP orders) hain jinhone arithmetic mean ko upar pull kar diya hai. Aam customer ka typical basket size ₹2,900 hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q15: Ek API latency point plot me 100 users par line flat hai lekin 1500 users ke baad slope exponentially steep ho jati hai. Ye kya communicate karta hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer: System Concurrency Bottleneck</strong>. 1,000 users tak system load handle kar raha tha, lekin 1,500 users ke baad thread pool exhaustion ya database connection pooling limit hit ho gayi hai, jisse non-linear latency degradation shuru ho gaya.</p>
+        </div>
+      </details>
+
+      <h3>Part III: 3 Coding Exercises (16 &ndash; 18)</h3>
+
+      <details class="accordion">
+        <summary>Q16: Write a Python snippet to plot average employee salary across departments with distinct square markers, dashed lines, and 95% CI.</summary>
+        <div class="accordion-content">
+          <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+
+sns.pointplot(
+    data=df_emp,
+    x="department",
+    y="salary",
+    markers="s",
+    linestyles="--",
+    color="#059669",
+    errorbar=("ci", 95),
+    capsize=0.15
+)
+plt.title("Departmental Average Salary with 95% CI")
+plt.tight_layout()
+plt.show()</code></pre>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q17: Write code to create a horizontal point plot comparing customer delivery times across partners, sorted in descending order of median delivery time.</summary>
+        <div class="accordion-content">
+          <pre><code>import seaborn as sns
+import numpy as np
+
+# Dynamically sort partners by median
+median_order = (
+    df_deliv.groupby("partner")["delivery_time_mins"]
+    .median()
+    .sort_values(ascending=False)
+    .index
+    .tolist()
+)
+
+sns.pointplot(
+    data=df_deliv,
+    y="partner",
+    x="delivery_time_mins",
+    order=median_order,
+    estimator=np.median,
+    errorbar=None,
+    color="#2563EB",
+    markers="D"
+)</code></pre>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q18: Write code to compare student test scores across 3 subjects for Male and Female students with dodged points and separate line styles.</summary>
+        <div class="accordion-content">
+          <pre><code>sns.pointplot(
+    data=df_students,
+    x="subject",
+    y="score",
+    hue="gender",
+    dodge=0.25,
+    markers=["o", "^"],
+    linestyles=["-", ":"],
+    palette=["#2563EB", "#F43F5E"],
+    errorbar=("ci", 95),
+    capsize=0.1
+)</code></pre>
+        </div>
+      </details>
+
+      <h3>Part IV: 2 Output Prediction Questions (19 &ndash; 20)</h3>
+
+      <details class="accordion">
+        <summary>Q19: Agar `data = pd.DataFrame({'grp': ['X', 'X', 'X'], 'val': [10, 20, 30]})` ho, to `sns.pointplot(data=data, x='grp', y='val', estimator=np.mean)` ka point exactly kis y-value par plot hoga?</summary>
+        <div class="accordion-content">
+          <p><strong>Predicted Output: y = 20.0</strong></p>
+          <p><strong>Explanation:</strong> Group X ke values [10, 20, 30] ka arithmetic mean <code>(10 + 20 + 30) / 3 = 60 / 3 = 20.0</code> hota hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q20: Agar kisi column me values `[10, 12, 11, 13, 200]` hon, to `estimator=np.mean` aur `estimator=np.median` ke plotted points me kitna numerical difference hoga?</summary>
+        <div class="accordion-content">
+          <p><strong>Predicted Output: Mean = 49.2 vs Median = 12.0 (Difference = 37.2 units!)</strong></p>
+          <p><strong>Explanation:</strong> Mean = (10+12+11+13+200)/5 = 246/5 = 49.2. Sorted data: [10, 11, 12, 13, 200], median = 12.0. Single extreme value 200 ne mean ko 37.2 units artificially pull kar diya!</p>
+        </div>
+      </details>
+
+      <h3>Part V: Capstone Mini-Project (Question 21)</h3>
+      <p><strong>Project Title:</strong> Healthcare Patient Recovery &amp; Clinical Trial Monitor</p>
+      <p><strong>Scenario:</strong> Ek pharmaceutical biotechnology research team do alag drug treatments (<code>Treatment Drug A</code> vs <code>Placebo Control</code>) test kar rahi hai across 3 patient age groups (<code>18-35 Young</code>, <code>36-55 Middle</code>, <code>56+ Senior</code>). Clinical data science team ko patient recovery hours aur statistical interaction plot karni hai.</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Runnable Capstone Solution</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Set seed for reproducible clinical trial dataset
+np.random.seed(88)
+
+age_groups = ["18-35 Young", "36-55 Middle", "56+ Senior"]
+drugs = ["Placebo Control", "Treatment Drug A"]
+
+trial_rows = []
+for age in age_groups:
+    for d in drugs:
+        # Treatment Drug A shows stronger effect in seniors!
+        if d == "Treatment Drug A":
+            base_rec = 42.0 if age == "18-35 Young" else (50.0 if age == "36-55 Middle" else 58.0)
+        else:
+            base_rec = 48.0 if age == "18-35 Young" else (62.0 if age == "36-55 Middle" else 84.0)
+            
+        for _ in range(40):  # 40 patients per cell = 240 patients total
+            rec_hours = np.random.normal(base_rec, 6.0)
+            trial_rows.append({
+                "Age_Group": age,
+                "Treatment": d,
+                "Recovery_Hours": round(float(rec_hours), 1)
+            })
+
+df_trial = pd.DataFrame(trial_rows)
+
+# Create Interaction Point Plot
+plt.figure(figsize=(9, 5.5), dpi=160)
+sns.pointplot(
+    data=df_trial,
+    x="Age_Group",
+    y="Recovery_Hours",
+    hue="Treatment",
+    palette=["#DC2626", "#059669"],
+    markers=["o", "D"],
+    linestyles=["--", "-"],
+    dodge=0.2,
+    errorbar=("ci", 95),
+    capsize=0.12
+)
+
+plt.title("Clinical Trial: Patient Recovery Hours Across Age Groups & Treatments", fontsize=13, weight="bold", pad=12)
+plt.xlabel("Patient Age Bracket", weight="semibold")
+plt.ylabel("Mean Recovery Latency in Hours (±95% CI)", weight="semibold")
+plt.legend(title="Clinical Protocol", loc="upper left")
+plt.ylim(30, 95)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <details class="accordion">
+        <summary>Capstone Findings &amp; Clinical Takeaways</summary>
+        <div class="accordion-content">
+          <p><strong>Clinical Verdict:</strong> Figure clearly exhibits a <strong>Diverging Interaction Effect</strong>!</p>
+          <ul>
+            <li>In Young patients (18-35), Treatment Drug A provides a modest 6-hour improvement (42h vs 48h).</li>
+            <li>In Senior patients (56+), Placebo recovery balloons up to 84 hours, while Treatment Drug A keeps recovery time down to 58 hours &mdash; delivering a massive <strong>26-hour clinical benefit</strong>!</li>
+            <li>The diverging slope confirms that elderly patients benefit disproportionately from the drug protocol.</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> Summary, Mind Map &amp; Preview of Topic 11 (Strip &amp; Swarm Plots)</h2>
+      <p>Topic 10 me humne Seaborn ke sabse elegant categorical visual tool &mdash; <code>sns.pointplot()</code> &mdash; ko statistical depth, real-life datasets aur multi-group interaction analysis ke sath master kar liya hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_concept_revision_diagram.png" alt="Topic 10 Summary: Architectural Rules for Point Plots in Seaborn">
+        <div class="figure-caption">Figure 10.20: Master Decision Matrix &amp; 7 Golden Rules &mdash; Essential guide to point estimates, slopes, uncertainty whiskers, and robust estimators.</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128640; Up Next &mdash; Topic 11: Categorical Strip &amp; Swarm Plots</div>
+        <p>Agle topic me hum seekhenge <strong>Strip Plots (<code>sns.stripplot()</code>)</strong> aur <strong>Swarm Plots (<code>sns.swarmplot()</code>)</strong>: Jab aapko data ko aggregate karke point nahi banana, balki <em>har ek individual data point</em> ko uske exact position par scatter karke dekhna ho bina kisi point ko overlap kiye!</p>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 13: Line Plots &amp; Time-Based Relationships in Seaborn</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .hero-meta-item strong {
+      color: var(--text-primary);
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: all 0.2s ease;
+      background: rgba(148, 163, 184, 0.04);
+      border: 1px solid transparent;
+    }
+
+    .toc-link:hover {
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--accent-blue);
+      border-color: rgba(56, 189, 248, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    /* Section Structure */
+    section {
+      margin-bottom: 44px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--accent-blue);
+      color: #0f172a;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    h3 {
+      font-size: 1.18rem;
+      font-weight: 600;
+      margin: 22px 0 12px 0;
+      color: var(--accent-indigo);
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+    }
+
+    p strong, li strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin: 0 0 18px 22px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+      font-size: 0.96rem;
+    }
+
+    /* Figures and Visuals */
+    .figure-wrapper {
+      margin: 24px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #ffffff;
+    }
+
+    .figure-caption {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.4);
+      line-height: 1.5;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .figure-caption {
+        background: rgba(241, 245, 249, 0.8);
+      }
+    }
+
+    /* Code Blocks */
+    .code-block {
+      position: relative;
+      margin: 18px 0;
+      background: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background: rgba(30, 41, 59, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-blue);
+      color: #0f172a;
+    }
+
+    pre {
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      background: rgba(148, 163, 184, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent-blue);
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      border-radius: 0;
+    }
+
+    /* Responsive Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(30, 41, 59, 0.8);
+      color: var(--accent-blue);
+      padding: 12px 14px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    @media (prefers-color-scheme: light) {
+      th {
+        background: #e2e8f0;
+        color: var(--accent-blue);
+      }
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(148, 163, 184, 0.03);
+    }
+
+    /* Callout Boxes */
+    .callout {
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border-left: 4px solid;
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info {
+      border-left-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .callout-info .callout-title {
+      color: var(--accent-blue);
+    }
+
+    .callout-warning {
+      border-left-color: var(--accent-amber);
+      background: rgba(251, 191, 36, 0.05);
+    }
+    .callout-warning .callout-title {
+      color: var(--accent-amber);
+    }
+
+    .callout-tip {
+      border-left-color: var(--accent-green);
+      background: rgba(52, 211, 153, 0.05);
+    }
+    .callout-tip .callout-title {
+      color: var(--accent-green);
+    }
+
+    .callout-danger {
+      border-left-color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.05);
+    }
+    .callout-danger .callout-title {
+      color: var(--accent-rose);
+    }
+
+    /* Accordions */
+    details.accordion {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+    }
+
+    summary {
+      padding: 13px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      font-size: 0.94rem;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .accordion-content {
+      padding: 14px 18px 18px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+      background: rgba(15, 23, 42, 0.2);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .accordion-content {
+        background: rgba(248, 250, 252, 0.6);
+      }
+    }
+
+    .exercise-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+
+    .exercise-title {
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+      font-size: 1.02rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+      .hero {
+        padding: 20px 16px;
+      }
+      .hero h1 {
+        font-size: 1.65rem;
+      }
+      .toc-grid {
+        grid-template-columns: 1fr;
+      }
+      h2 {
+        font-size: 1.25rem;
+      }
+      pre {
+        font-size: 0.8rem;
+        padding: 12px;
+      }
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const pre = btn.closest('.code-block').querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.style.background = "var(--accent-green)";
+        btn.style.color = "#0f172a";
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = "";
+          btn.style.color = "";
+        }, 2000);
+      }).catch(err => {
+        console.error("Copy failed", err);
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Hero Banner -->
+    <header class="hero">
+      <div class="topic-badge">Topic 13 &bull; Relationships &amp; Regression</div>
+      <h1>Line Plots &amp; Time-Based Relationships in Seaborn</h1>
+      <p>Continuous sequential data ke temporal patterns ko samajhna: Daily website traffic se lekar 24-hour diurnal temperature cycles, multi-series <code>hue</code> comparisons, rolling average smoothing, uncertainty intervals (<code>errorbar</code>), aur figure-level <code>relplot(kind='line')</code> faceting ki complete practical guide in natural Hinglish.</p>
+      
+      <div class="hero-meta">
+        <div class="hero-meta-item">Functions: <strong>sns.lineplot() &bull; sns.relplot(kind='line') &bull; pd.Series.rolling()</strong></div>
+        <div class="hero-meta-item">Seaborn Version: <strong>0.13.2 Compatible</strong></div>
+        <div class="hero-meta-item">Core Focus: <strong>Time Series &bull; Trends &bull; Seasonality &bull; Aggregation &bull; Uncertainty</strong></div>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card" aria-label="Table of Contents">
+      <div class="toc-header">
+        <div class="toc-title">&#128218; Table of Contents (20 Comprehensive Sections)</div>
+      </div>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-link"><span class="toc-num">1</span><span class="toc-text">Line Plot Kya Hota Hai? Intuition &amp; Anatomy</span></a>
+        <a href="#sec-2" class="toc-link"><span class="toc-num">2</span><span class="toc-text">Understanding Time-Based Data in Pandas</span></a>
+        <a href="#sec-3" class="toc-link"><span class="toc-num">3</span><span class="toc-text">Your First <code>sns.lineplot()</code> &mdash; Syntax &amp; Daily Traffic</span></a>
+        <a href="#sec-4" class="toc-link"><span class="toc-num">4</span><span class="toc-text">Trends and Fluctuations: Direction vs Noise</span></a>
+        <a href="#sec-5" class="toc-link"><span class="toc-num">5</span><span class="toc-text">Comparing Multiple Series with <code>hue</code></span></a>
+        <a href="#sec-6" class="toc-link"><span class="toc-num">6</span><span class="toc-text">Visual Encodings with <code>style</code>, <code>size</code> &amp; <code>units</code></span></a>
+        <a href="#sec-7" class="toc-link"><span class="toc-num">7</span><span class="toc-text">Figure-Level Multi-Panel Lines with <code>sns.relplot()</code></span></a>
+        <a href="#sec-8" class="toc-link"><span class="toc-num">8</span><span class="toc-text">Date Formatting &amp; Readable Time Axes</span></a>
+        <a href="#sec-9" class="toc-link"><span class="toc-num">9</span><span class="toc-text">Aggregation and Repeated Observations (estimator)</span></a>
+        <a href="#sec-10" class="toc-link"><span class="toc-num">10</span><span class="toc-text">Error Bars, Confidence Intervals &amp; Uncertainty</span></a>
+        <a href="#sec-11" class="toc-link"><span class="toc-num">11</span><span class="toc-text">Rolling Averages &amp; Time-Series Smoothing</span></a>
+        <a href="#sec-12" class="toc-link"><span class="toc-num">12</span><span class="toc-text">Seasonality &amp; Recurring Cyclic Patterns</span></a>
+        <a href="#sec-13" class="toc-link"><span class="toc-num">13</span><span class="toc-text">Missing Timestamps &amp; Irregular Time Intervals</span></a>
+        <a href="#sec-14" class="toc-link"><span class="toc-num">14</span><span class="toc-text">Line Plots vs Other Charts (Scatter, Bar, Area)</span></a>
+        <a href="#sec-15" class="toc-link"><span class="toc-num">15</span><span class="toc-text">Case Study 1: Web Traffic Analytics &amp; Device Share</span></a>
+        <a href="#sec-16" class="toc-link"><span class="toc-num">16</span><span class="toc-text">Case Study 2: E-Commerce Annual Sales &amp; Q4 Surge</span></a>
+        <a href="#sec-17" class="toc-link"><span class="toc-num">17</span><span class="toc-text">Case Study 3: IoT Multi-Sensor Cold-Storage Telemetry</span></a>
+        <a href="#sec-18" class="toc-link"><span class="toc-num">18</span><span class="toc-text">Case Study 4: Production SRE &amp; API Latency Incident</span></a>
+        <a href="#sec-19" class="toc-link"><span class="toc-num">19</span><span class="toc-text">15+ Common Pitfalls, Anti-Patterns &amp; Debugging</span></a>
+        <a href="#sec-20" class="toc-link"><span class="toc-num">20</span><span class="toc-text">Quick Reference Cheat Sheet, 21 Exercises &amp; Capstone</span></a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Line Plot Kya Hota Hai? Intuition &amp; Anatomy</h2>
+      <p>Data analytics me hum aksar aise sawal puchte hain jahan samay (time) ke sath cheezein badalti hain: <em>"Pichhle 7 din me hamari website ke daily visitors badhe hain ya kam hue hain?"</em> Ya <em>"Poore 24 ghante me city ka ambient temperature kab sabse thanda tha aur kab peak par pahucha?"</em></p>
+
+      <p>Aise sequential, ordered datasets ke liye hamara primary visualization tool hota hai: <strong>Line Plot</strong> (Line Chart). Scatter plot ki tarah ye discrete points draw karta hai, lekin ek bohot bada farak hota hai &mdash; <strong>ye points ko chronological order me straight lines se jod deta hai!</strong></p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Why Connect the Dots? (Connecting Line Segment)</div>
+        <p>Dots ko line se jodne ka matlab hai: <strong>Continuity</strong>. Hum reader ko ye visual cue dete hain ki data ek continuous sequence (timeline) follow kar raha hai. Line ka slope (dhalan) instant velocity aur direction batata hai &mdash; line upar ja rahi hai to growth hai, niche ja rahi hai to decline hai!</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/line_plot_concept_anatomy.png" alt="Anatomy of a Time-Based Line Plot showing peak, trough, confidence band, and connecting lines">
+        <div class="figure-caption">Figure 13.1: The Anatomy of a Time-Based Line Plot &mdash; Time dimension on the horizontal X-axis, measured metric on the vertical Y-axis. The central solid line traces the temporal trajectory, while peaks, troughs, and confidence bands communicate variation.</div>
+      </div>
+
+      <h3>Introductory Example 1: Website Visitors Over 7 Days</h3>
+      <p>Ek naye startup ke 7 din ka verified daily traffic dekhiye (Monday to Sunday):</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/weekly_website_visitors.png" alt="Daily website visitors over one week showing weekend surge">
+        <div class="figure-caption">Figure 13.2: 7-Day Daily Website Visitors &mdash; Notice how traffic stays around 1,200 - 1,500 on weekdays (Mon - Thu), begins climbing on Friday (1,690), and dramatically spikes over the weekend to 2,380 visitors on Sunday (+91.9% weekend surge!).</div>
+      </div>
+
+      <h3>Introductory Example 2: Hourly Diurnal Temperature Cycle</h3>
+      <p>IoT weather sensors har ghante temperature (°C) record karte hain. 24 ghante ka continuous diurnal pattern dekhiye:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/hourly_temperature_day.png" alt="24-hour diurnal temperature cycle showing minimum at dawn and peak afternoon">
+        <div class="figure-caption">Figure 13.3: 24-Hour Diurnal Temperature Curve &mdash; The curve dips to its coolest point of 14.1&deg;C at 4:00 AM (just before sunrise) and climbs steadily to reach its peak of 27.8&deg;C at 15:00 PM in the afternoon.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; When Can a Line Plot Mislead?</div>
+        <p>Agar aapka X-axis <strong>ordered sequence nahi hai</strong> (jaise unordered categories: Apple, Orange, Banana), to line plot <strong>kabhi nahi banana chahiye!</strong> Unordered categories ke beech line draw karna false connection dikhata hai. Line plot sirf tab use karein jab X-axis naturally sorted ho &mdash; jaise Timestamps, Age, Distance, ya Experimental Steps.</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Understanding Time-Based Data in Pandas</h2>
+      <p>Time-series visualization me 80% errors data formatting ki wajah se hote hain. Agar CSV file me dates strings (<code>object</code> dtype) ke roop me loaded hain, to Matplotlib unhe discrete textual labels samajhta hai, jisse chronological sorting aur date tick formatting fail ho jati hai!</p>
+
+      <h3>Core Datetime Concepts</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Concept</th>
+              <th>Example Format</th>
+              <th>Pandas Representation &amp; Handling</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Date</strong></td>
+              <td><code>2026-03-15</code></td>
+              <td>Calendar date; no time component.</td>
+            </tr>
+            <tr>
+              <td><strong>Time</strong></td>
+              <td><code>14:30:00</code></td>
+              <td>Time of day within a 24-hour cycle.</td>
+            </tr>
+            <tr>
+              <td><strong>Timestamp / Datetime</strong></td>
+              <td><code>2026-03-15 14:30:00</code></td>
+              <td>Pandas <code>Timestamp</code> (<code>datetime64[ns]</code>) &mdash; gold standard.</td>
+            </tr>
+            <tr>
+              <td><strong>Frequency / Interval</strong></td>
+              <td><code>freq="D"</code>, <code>"h"</code>, <code>"5min"</code></td>
+              <td>Uniform spacing between consecutive observations.</td>
+            </tr>
+            <tr>
+              <td><strong>Chronological Order</strong></td>
+              <td>Jan 1 &rarr; Jan 2 &rarr; Jan 3</td>
+              <td>Must always sort by datetime before plotting (<code>df.sort_values()</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Code Walkthrough: Parsing and Inspecting Datetime Data</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; pd.to_datetime &amp; Temporal Feature Extraction</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import pandas as pd
+
+# Load raw traffic data
+df_raw = pd.read_csv("website_traffic_90days.csv")
+print("Before Conversion - Date Dtype:", df_raw["Date"].dtype)
+
+# 1. Parse string to datetime64
+df_raw["Date"] = pd.to_datetime(df_raw["Date"])
+print("After Conversion - Date Dtype:", df_raw["Date"].dtype)
+
+# 2. Sort chronologically
+df_raw = df_raw.sort_values("Date").reset_index(drop=True)
+
+# 3. Extract temporal components effortlessly
+df_raw["Day_Name"] = df_raw["Date"].dt.day_name()
+df_raw["Month"] = df_raw["Date"].dt.month_name()
+df_raw["Is_Weekend"] = df_raw["Date"].dt.dayofweek &gt;= 5
+
+print("
+Sample Processed Records:
+", df_raw[["Date", "Day_Name", "Is_Weekend", "Visitors"]].head(3))</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Best Practice: Always Check <code>is_monotonic_increasing</code></div>
+        <p>Plotting se pehle hamesha check karein: <code>df["Date"].is_monotonic_increasing</code>. Agar ye <code>True</code> return karta hai, to aapka data strictly ascending chronological order me hai aur lines aapas me zigzag backward cross nahi karengi!</p>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Your First <code>sns.lineplot()</code> &mdash; Syntax &amp; Daily Traffic</h2>
+      <p>Seaborn me time-series line plot banana bohot clean hai. Iska basic syntax hai:</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Seaborn Syntax</span></div>
+        <pre><code>sns.lineplot(data=df, x="Date_Column", y="Numeric_Value", **kwargs)</code></pre>
+      </div>
+
+      <h3>Supported Parameters in Seaborn 0.13.2</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Default</th>
+              <th>Description &amp; Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td><code>None</code></td>
+              <td>Tidy pandas DataFrame containing variables.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td><code>None</code></td>
+              <td>Time variable (X) and numerical metric (Y).</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td><code>None</code></td>
+              <td>Categorical variable producing distinct colored lines.</td>
+            </tr>
+            <tr>
+              <td><code>style</code></td>
+              <td><code>None</code></td>
+              <td>Categorical variable producing different dash patterns (solid, dashed).</td>
+            </tr>
+            <tr>
+              <td><code>size</code></td>
+              <td><code>None</code></td>
+              <td>Variable mapped to line stroke thickness.</td>
+            </tr>
+            <tr>
+              <td><code>estimator</code></td>
+              <td><code>'mean'</code></td>
+              <td>Method for aggregating repeated observations at the same X coordinate.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar</code></td>
+              <td><code>('ci', 95)</code></td>
+              <td>Uncertainty representation (e.g. <code>('ci', 95)</code>, <code>'sd'</code>, or <code>None</code>).</td>
+            </tr>
+            <tr>
+              <td><code>sort</code></td>
+              <td><code>True</code></td>
+              <td>Automatically sorts data along the X axis before drawing lines.</td>
+            </tr>
+            <tr>
+              <td><code>markers</code></td>
+              <td><code>None</code></td>
+              <td>Draws markers at data points (e.g. <code>markers=True</code> or dict).</td>
+            </tr>
+            <tr>
+              <td><code>dashes</code></td>
+              <td><code>True</code></td>
+              <td>Controls whether lines use dashed styles when <code>style</code> is mapped.</td>
+            </tr>
+            <tr>
+              <td><code>ax</code></td>
+              <td><code>None</code></td>
+              <td>Matplotlib axes object for multi-plot placement.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: 30-Day Daily E-Commerce Sales</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; First sns.lineplot()</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+
+df_sales = pd.read_csv("retail_store_sales_365days.csv")
+df_sales["Date"] = pd.to_datetime(df_sales["Date"])
+
+# Filter 30-day snapshot and aggregate daily store revenue
+df_sales_30 = df_sales[df_sales["Date"] &lt;= "2025-01-30"].groupby("Date", as_index=False)["Sales_USD"].sum()
+
+plt.figure(figsize=(10, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+sns.lineplot(
+    data=df_sales_30,
+    x="Date",
+    y="Sales_USD",
+    marker="s",
+    markersize=5,
+    color="#10B981",
+    linewidth=2.2
+)
+
+plt.title("Figure 13.5: Daily Online Store Revenue (30-Day Snapshot)", fontweight="bold", pad=12)
+plt.xlabel("Date (January 2025)", labelpad=10)
+plt.ylabel("Daily Sales ($ USD)", labelpad=10)
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d-%b"))
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/daily_ecommerce_sales.png" alt="Daily online store revenue 30-day snapshot line plot">
+        <div class="figure-caption">Figure 13.5: Daily E-Commerce Revenue &mdash; The line plot traces daily volatility with square markers. Notice the recurring rhythmic peaks occurring every 7 days (weekend sales surges).</div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Trends and Fluctuations: Direction vs Noise</h2>
+      <p>Time series data me do forces hamesha ek sath kaam karti hain:</p>
+      <ol>
+        <li><strong>Long-Term Trend:</strong> Data ki overall fundamental direction over weeks, months, ya years (Upward, Downward, ya Stable).</li>
+        <li><strong>Short-Term Fluctuations (Noise):</strong> Day-to-day random shocks, weather changes, ya server restarts jo temporarily numbers ko upar-niche karte hain.</li>
+      </ol>
+
+      <div class="figure-wrapper">
+        <img src="assets/trend_types_comparison_3panel.png" alt="Three fundamental trend directions in time series comparison">
+        <div class="figure-caption">Figure 13.4: Three Core Trend Directions &mdash; Panel A: Upward Growth Trend (business scaling). Panel B: Downward Decay Trend (battery drainage or churn). Panel C: Stable Oscillating Trend (stationary server baseline load with normal noise).</div>
+      </div>
+
+      <h3>Trend Comparison Matrix</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Trend Type</th>
+              <th>Behavior Over Time</th>
+              <th>Real-Life Business Example</th>
+              <th>Analytical Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Upward Growth</strong></td>
+              <td>Net values steadily climb despite minor dips.</td>
+              <td>Active registered users; monthly recurring revenue.</td>
+              <td>Invest in server infrastructure &amp; customer support.</td>
+            </tr>
+            <tr>
+              <td><strong>Downward Decay</strong></td>
+              <td>Net values progressively decline over time.</td>
+              <td>Smartphone battery capacity; legacy app downloads.</td>
+              <td>Trigger churn intervention campaigns or battery replacement.</td>
+            </tr>
+            <tr>
+              <td><strong>Stationary / Stable</strong></td>
+              <td>Values oscillate around a constant horizontal mean.</td>
+              <td>Idle server CPU load; warehouse baseline temperature.</td>
+              <td>Maintain automated monitoring thresholds.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Warning: The Single Spike Fallacy</div>
+        <p>Ek single high value dekh kar ye conclude mat kijiye ki <em>"Trend change ho gaya hai!"</em> Ho sakta hai Monday ko marketing email blast gaya ho jisne 1-day spike create kiya. True trend hamesha multiple consecutive periods (weeks/months) ke aggregate baseline se judge hota hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> Comparing Multiple Series with <code>hue</code></h2>
+      <p>Real-world analytics me hum rarely single time series analyze karte hain. Usually hume multiple segments ko compare karna hota hai: <em>"Mobile users badh rahe hain ya Desktop users?"</em> Aur <em>"Electronics ki sales Apparel se fast grow kar rahi hai ya slow?"</em></p>
+
+      <p>Seaborn me <code>hue="Category_Column"</code> pass karke hum ek hi chart me multiple colored lines draw kar sakte hain. Seaborn automatically har line ko distinct color assign karta hai aur automatic legend generate karta hai!</p>
+
+      <h3>Example 1: Daily Website Visitors by Device</h3>
+      <p>Niche 30 days ka website traffic teen platforms &mdash; Mobile, Desktop, aur Tablet &mdash; ke beech compare kiya gaya hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Multi-Line Plot with hue</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+
+df_traffic = pd.read_csv("website_traffic_90days.csv")
+df_traffic["Date"] = pd.to_datetime(df_traffic["Date"])
+
+# Filter 30 days snapshot for North America
+df_sub = df_traffic[(df_traffic["Date"] &lt;= "2026-01-30") &amp; (df_traffic["Region"] == "North America")]
+
+plt.figure(figsize=(10, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Plot multi-series lines by device
+sns.lineplot(
+    data=df_sub,
+    x="Date",
+    y="Visitors",
+    hue="Device",
+    palette="tab10",
+    linewidth=2.4
+)
+
+plt.title("Figure 13.6: Daily Visitors by Access Device (hue='Device')", fontweight="bold", pad=12)
+plt.xlabel("Date (January 2026)", labelpad=10)
+plt.ylabel("Unique Daily Visitors", labelpad=10)
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+plt.xticks(rotation=35)
+plt.legend(title="Device Type", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/traffic_by_device_hue.png" alt="Daily website visitors by device type using hue">
+        <div class="figure-caption">Figure 13.6: Device-Wise Comparison &mdash; Mobile (Blue) dominates with highest overall volume (1111.4 mean daily visitors), Desktop (Orange) follows with stable engagement, while Tablet (Green) accounts for a small niche share. Notice how weekend surges are most dramatic on Mobile!</div>
+      </div>
+
+      <h3>Example 2: Daily Sales by Product Category</h3>
+      <p>Retail business me different departments ki growth rate aur weekend volatility compare karne ke liye category-wise line plot perfect hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/sales_by_region_hue.png" alt="Daily sales by product category using hue">
+        <div class="figure-caption">Figure 13.7: Merchandise Sales Comparison &mdash; Electronics leads revenue with highest daily volatility and massive weekend spikes, Apparel shows consistent steady performance, while Home Decor maintains a stable baseline.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; The "Spaghetti Chart" Warning</div>
+        <p>Agar aap ek hi plot me 8-10 se zyada lines stack kar denge, to chart aapas me ulajhkar <strong>Spaghetti Chart</strong> ban jayega &mdash; jahan reader ye nahi samajh payega ki kaunsi line kahan ja rahi hai! Rule of thumb: Ek single axes par <strong>maximum 4 ya 5 lines</strong> rakhein. Agar categories zyada hon, to Section 7 me explain kiye gaye <code>sns.relplot()</code> faceting ka use karein!</p>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> Visual Encodings with <code>style</code>, <code>size</code> &amp; <code>units</code></h2>
+      <p>Professional publications aur accessible design me sirf color par depend karna risky hota hai &mdash; color-blind readers ya black-and-white photocopy prints me lines aapas me mix ho jati hain. Is problem ko solve karne ke liye Seaborn <code>style</code> aur <code>size</code> parameters provide karta hai.</p>
+
+      <h3>Encoding Parameters</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Visual Mechanism</th>
+              <th>Recommended Use Case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>style</code></td>
+              <td>Dashes (solid, dashed, dotted) &amp; Markers</td>
+              <td>Distinguishing environments (Production Solid vs Staging Dashed).</td>
+            </tr>
+            <tr>
+              <td><code>size</code></td>
+              <td>Line stroke thickness (linewidth)</td>
+              <td>Emphasizing a primary target series (e.g. Actual vs Projected).</td>
+            </tr>
+            <tr>
+              <td><code>units</code></td>
+              <td>Sampling unit identifier</td>
+              <td>Drawing multiple individual trajectories without aggregating them into a single line!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: Production vs Staging Benchmark Monitoring</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Line Plot with hue &amp; style</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+
+# Benchmark comparison dataset
+sns.lineplot(
+    data=df_bench,
+    x="Date",
+    y="Response_Time",
+    hue="Environment",
+    style="Environment",
+    markers=True,         # Draw circle/square glyphs on vertices
+    dashes=True,          # Solid line for Prod, dashed for Staging
+    palette={"Production": "#2563EB", "Staging": "#DC2626"},
+    linewidth=2.5
+)
+
+plt.title("Figure 13.8: Multi-Encoding Line Plot (hue & style='Environment')", fontweight="bold", pad=12)
+plt.ylabel("Latency (Milliseconds)")
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+plt.xticks(rotation=35)
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/environment_performance_style.png" alt="Multi-encoding line plot with hue and style separating server environments">
+        <div class="figure-caption">Figure 13.8: Dual Encoding (Color + Dash + Marker) &mdash; Production is rendered as a solid blue line with circular markers, while Staging is rendered as a dashed red line with square markers. The distinction remains 100% crystal clear even in monochrome printouts!</div>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Figure-Level Multi-Panel Lines with <code>sns.relplot()</code></h2>
+      <p>Jab aapko multiple categories ko compare karna ho bina unhe ek hi canvas me crowd kiye, to Seaborn ka figure-level function <strong><code>sns.relplot(kind="line")</code></strong> sabse elegant solution hai.</p>
+
+      <p>Ye function automatic <code>FacetGrid</code> create karta hai jahan har category ko synchronized axes ke sath apna dedicated subplot panel milta hai!</p>
+
+      <h3>Example 1: Regional Traffic Trends Faceted by Region</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; sns.relplot(kind="line")</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+
+df_traffic = pd.read_csv("website_traffic_90days.csv")
+df_traffic["Date"] = pd.to_datetime(df_traffic["Date"])
+
+# Create figure-level multi-panel line plot by Region
+g = sns.relplot(
+    data=df_traffic[df_traffic["Date"] &lt;= "2026-02-15"],
+    x="Date",
+    y="Visitors",
+    col="Region",         # One subplot column per region!
+    kind="line",
+    color="#0284C7",
+    linewidth=2.2,
+    height=3.8,
+    aspect=1.1
+)
+
+g.fig.subplots_adjust(top=0.88)
+g.fig.suptitle("Figure 13.9: Regional Traffic Trends Faceted by Region (sns.relplot)", fontweight="bold")
+g.set_axis_labels("Date", "Daily Visitors")
+for ax in g.axes.flat:
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
+    plt.setp(ax.get_xticklabels(), rotation=35)
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/faceted_traffic_regions_relplot.png" alt="Regional website traffic faceted across regions using relplot">
+        <div class="figure-caption">Figure 13.9: Figure-Level Regional Faceting &mdash; North America, Europe, and Asia Pacific displayed in synchronized subplots sharing identical Y-axis scales. Zero line collisions, maximum comparative clarity!</div>
+      </div>
+
+      <h3>Example 2: Weekday vs Weekend Grid Electricity Demand</h3>
+      <p>Industrial aur domestic electrical load profile weekday aur weekend me completely alag shape display karta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/weekday_vs_weekend_relplot.png" alt="Power grid load profile comparing weekday vs weekend using relplot">
+        <div class="figure-caption">Figure 13.10: Power Grid Load Profile &mdash; Weekdays (Red) show a sharp bimodal double-peak (morning office start at 9:00 AM and evening return at 7:00 PM). Weekends (Blue) show a gentle, delayed afternoon residential curve.</div>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Date Formatting &amp; Readable Time Axes</h2>
+      <p>Time series plots me beginners ki sabse common complaint hoti hai: <em>"Meri date labels aapas me overlap ho rahi hain aur unreadable black blob ban rahi hain!"</em></p>
+
+      <p>Matplotlib ka <code>matplotlib.dates</code> module hume date ticks aur formatting par full precision control provide karta hai:</p>
+
+      <h3>Key Date Formatting Tools</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tool / Class</th>
+              <th>Syntax Example</th>
+              <th>Visual Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>mdates.DateFormatter</code></td>
+              <td><code>ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%b"))</code></td>
+              <td>Formats datetime objects into clean strings (e.g. <code>15-Jan</code>).</td>
+            </tr>
+            <tr>
+              <td><code>mdates.DayLocator</code></td>
+              <td><code>ax.xaxis.set_major_locator(mdates.DayLocator(interval=5))</code></td>
+              <td>Places tick marks strictly every 5 days, eliminating label crowding.</td>
+            </tr>
+            <tr>
+              <td><code>mdates.MonthLocator</code></td>
+              <td><code>ax.xaxis.set_major_locator(mdates.MonthLocator())</code></td>
+              <td>Places tick marks on the 1st of every month for annual timelines.</td>
+            </tr>
+            <tr>
+              <td><code>plt.xticks(rotation=...)</code></td>
+              <td><code>plt.xticks(rotation=35)</code></td>
+              <td>Tilts labels diagonally for comfortable reading.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example 1: 30-Day Timeline with 5-Day Clean Spacing</h3>
+      <div class="figure-wrapper">
+        <img src="assets/thirty_day_traffic_formatted.png" alt="30-day traffic plot with clean date formatting and 5-day ticks">
+        <div class="figure-caption">Figure 13.11: Clean Date Spacing &mdash; By applying <code>DayLocator(interval=5)</code> and <code>DateFormatter("%d-%b")</code>, ticks appear at exactly 01-Jan, 06-Jan, 11-Jan, 16-Jan, 21-Jan, and 26-Jan. Ticks stay completely horizontal with zero overlap!</div>
+      </div>
+
+      <h3>Example 2: 12-Month Calendar Revenue with MonthLocator</h3>
+      <div class="figure-wrapper">
+        <img src="assets/twelve_month_sales_formatted.png" alt="12-month sales curve with monthly ticks showing annual trajectory">
+        <div class="figure-caption">Figure 13.12: 12-Month Revenue Curve &mdash; Standard monthly labels (Jan to Dec) smoothly trace the annual performance, clearly exposing the massive Q4 holiday revenue surge in November and December.</div>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Aggregation and Repeated Observations (<code>estimator</code>)</h2>
+      <p>Data science me aksar aisa hota hai ki ek hi timestamp ya time unit par <strong>multiple observations</strong> exist karti hain &mdash; jaise ek hi ghante me 3 alag-alag IoT sensors ne readings li hon, ya ek hi din me thousands of customers ne e-commerce purchases ki hon.</p>
+
+      <p>Agar aap raw Matplotlib me aisa data plot karenge, to line har point par aage-piche wildly zigzag karegi. Lekin Seaborn me <code>sns.lineplot()</code> ka default behavior bohot intelligent hai: <strong>ye identical X-values par observations ko automatically aggregate karta hai!</strong></p>
+
+      <h3>Seaborn Ka Aggregation Mechanism</h3>
+      <ul>
+        <li><strong><code>estimator="mean"</code> (Default):</strong> Har timestamp par maujood sabhi Y-values ka mathematical average calculate karta hai aur ek smooth central line draw karta hai.</li>
+        <li><strong><code>estimator="median"</code>:</strong> Robust central tendency calculate karta hai jo extreme outliers se affect nahi hoti.</li>
+        <li><strong><code>estimator=None</code>:</strong> Automatic aggregation ko disable kar deta hai aur points ko unke appearance order me directly connect karta hai (useful for simulation trajectories).</li>
+      </ul>
+
+      <div class="figure-wrapper">
+        <img src="assets/repeated_observations_aggregated.png" alt="Repeated observations at same timestamps aggregated by mean in Seaborn">
+        <div class="figure-caption">Figure 13.13: Automatic Aggregation &mdash; Gray dots show multiple empirical readings taken at the same hour of the day across repeated sensor checks. Seaborn automatically computes the central blue mean estimate line, cutting straight through the empirical noise!</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Error Bars, Confidence Intervals &amp; Uncertainty</h2>
+      <p>Jab Seaborn multiple repeated observations ko aggregate karke central mean line banata hai, to line ke charo taraf ek translucent shaded ribbon dikhta hai. Is ribbon ko <strong>Confidence Interval (CI) Band</strong> kehte hain!</p>
+
+      <h3>Confidence Interval Ribbon Ka Asli Matlab</h3>
+      <p>By default, Seaborn <code>errorbar=("ci", 95)</code> use karta hai. Iska matlab hai: <em>"Agar hum is experiment ko 100 baar repeat karein, to 95 baar true population mean is shaded ribbon ke andar fall karega."</em></p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Confidence Interval vs Full Data Range</div>
+        <p>Bohot se beginners sochte hain ki shaded ribbon minimum aur maximum values ko cover karta hai. <strong>Ye galat hai!</strong> Ribbon sirf <em>mean estimate ki uncertainty</em> ko measure karta hai. Sample size jitna bada hoga, ribbon utni hi narrow (patli) ho jayegi, chahe raw data me minimum aur maximum kitne bhi door hon!</p>
+      </div>
+
+      <h3>Comparing CI Enabled vs Disabled</h3>
+      <div class="figure-wrapper">
+        <img src="assets/uncertainty_intervals_enabled.png" alt="Multi-sensor trajectories with 95 percent confidence intervals enabled">
+        <div class="figure-caption">Figure 13.14: Uncertainty Bands Enabled (<code>errorbar=('ci', 95)</code>) &mdash; Three IoT sensors with their respective 95% bootstrap confidence ribbons. Where the ribbons do not overlap, sensor calibration differences are statistically meaningful.</div>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/uncertainty_intervals_disabled.png" alt="Multi-sensor trajectories with confidence intervals disabled">
+        <div class="figure-caption">Figure 13.15: Clean Mean Lines (<code>errorbar=None</code>) &mdash; Shaded ribbons removed for clean, uncluttered executive reporting where readers only care about the central baseline direction.</div>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Rolling Averages &amp; Time-Series Smoothing</h2>
+      <p>Daily time series data me aksar high-frequency random noise aur weekend spikes hote hain, jisse underlying long-term trend chhip jata hai. Is noise ko filter karne ke liye data science me <strong>Moving / Rolling Average</strong> ka use kiya jata hai.</p>
+
+      <h3>How Rolling Average Works</h3>
+      <p>Pandas ka <code>Series.rolling(window=7).mean()</code> function har din ke liye pichhle 7 dinon ka average calculate karta hai. Jaise-jaise window ek din aage slide karti hai, pura weekly cycle (Mon-Sun) smooth ho jata hai aur pure seasonal noise eliminate ho jati hai!</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; 7-Day Rolling Average Smoothing</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+df = pd.read_csv("website_traffic_90days.csv")
+df["Date"] = pd.to_datetime(df["Date"])
+
+# Extract mobile traffic in North America and sort
+df_mob = df[(df["Device"] == "Mobile") &amp; (df["Region"] == "North America")].sort_values("Date").copy()
+
+# Compute 7-day rolling moving average
+df_mob["Rolling_7D"] = df_mob["Visitors"].rolling(window=7).mean()
+
+plt.figure(figsize=(11, 5.8))
+# Plot noisy raw daily data in light dashed line
+plt.plot(df_mob["Date"], df_mob["Visitors"], color="#93C5FD", linestyle="--", linewidth=1.2, label="Raw Daily Traffic (Volatile)")
+# Plot smooth rolling average in bold solid line
+plt.plot(df_mob["Date"], df_mob["Rolling_7D"], color="#1D4ED8", linewidth=2.8, label="7-Day Rolling Average (Underlying Trend)")
+
+plt.title("Figure 13.16: Revealing Underlying Trend with a 7-Day Rolling Average", fontweight="bold", pad=12)
+plt.ylabel("Mobile Visitors")
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+plt.xticks(rotation=30)
+plt.legend(loc="upper left")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/traffic_7day_rolling_average.png" alt="Raw daily traffic with 7-day rolling average overlay">
+        <div class="figure-caption">Figure 13.16: 7-Day Rolling Average &mdash; The light blue dashed line shows sharp day-to-day jumps. The dark blue solid line reveals the true commercial reality: a continuous +46.4% net upward trajectory across the quarter!</div>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/daily_sales_smoothed.png" alt="Daily store sales smoothed with 14-day rolling average">
+        <div class="figure-caption">Figure 13.17: E-Commerce Revenue Smoothing &mdash; Applying a 14-day rolling window to volatile daily transaction volume filters out random pay-day spikes and illuminates the true underlying macro trend.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Caution: Do Not Over-Smooth!</div>
+        <p>Agar aap window size bohot bada kar denge (e.g. 60-day window on 90-day data), to rolling curve actual market shifts se bohot peeche lag (delay) karegi aur sudden catastrophic events (jaise server downtime ya sudden traffic crash) completely hide ho jayenge!</p>
+      </div>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Seasonality &amp; Recurring Cyclic Patterns</h2>
+      <p>Time series me <strong>Seasonality</strong> ka matlab hota hai: <em>Aisa predictable pattern jo regular, fixed intervals par baar-baar repeat hota hai.</em></p>
+
+      <h3>Common Seasonality Frequencies</h3>
+      <ul>
+        <li><strong>Diurnal (24-Hour Cycle):</strong> Temperature subah 5:00 AM par drop hoti hai aur dopahar 3:00 PM par peak hoti hai; API traffic raat 3:00 AM par lowest hota hai aur shaam 8:00 PM par peak hota hai.</li>
+        <li><strong>Weekly (7-Day Cycle):</strong> E-commerce aur entertainment websites par Friday raat se Sunday tak traffic surge hota hai aur Monday morning drop hota hai.</li>
+        <li><strong>Annual (12-Month Cycle):</strong> Retail shopping November/December holiday season me massive boom karti hai, aur ice-cream sales summer months me spike karti hain.</li>
+      </ul>
+
+      <div class="figure-wrapper">
+        <img src="assets/recurring_weekly_seasonality.png" alt="Recurring weekly seasonality pattern showing weekend surges">
+        <div class="figure-caption">Figure 13.18: Recurring 7-Day Cycle &mdash; Purple shaded bands highlight every weekend period across 4 consecutive weeks. Notice how the traffic pattern rhythmically replicates: lowest every Tuesday/Wednesday and highest every Saturday/Sunday!</div>
+      </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Missing Timestamps &amp; Irregular Time Intervals</h2>
+      <p>Production environments me network drops, sensor battery drainage, ya server maintenance ki wajah se <strong>missing timestamps</strong> bohot common hote hain.</p>
+
+      <h3>The False Continuity Anti-Pattern</h3>
+      <p>Agar March 5 se March 8 tak server completely dead tha aur koi data collect nahi hua, lekin aapne missing rows drop karke line plot draw kar diya, to Matplotlib March 4 ke point ko March 9 ke point se seedhi line se jod dega!</p>
+
+      <p>Isse chart dekhne wale manager ko lagega ki server downtime ke dauran bhi smoothly chal raha tha! Ye ek severe misleading data fabrication hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/missing_timestamps_gaps.png" alt="Comparison between blindly connecting missing data gaps and properly retaining them">
+        <div class="figure-caption">Figure 13.19: The Gap Handling Dilemma &mdash; Panel A (Anti-Pattern): Connecting across missing dates fabricates a false smooth line during a 4-day system outage. Panel B (Best Practice): Inserting explicit NaNs creates a visible break in the line, accurately informing the team of the telemetry failure!</div>
+      </div>
+
+      <h3>Handling Irregular Asynchronous Sampling</h3>
+      <p>IoT nodes battery save karne ke liye tabhi ping karte hain jab temperature me koi change aaye (irregular intervals):</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/irregular_sensor_sampling.png" alt="Irregularly sampled sensor data showing non-uniform time spacing">
+        <div class="figure-caption">Figure 13.20: Irregular Sampling &mdash; Vertical dotted lines indicate asynchronous event timestamps. Line plots faithfully handle non-uniform time spacing as long as X is encoded as true datetime values.</div>
+      </div>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Line Plots vs Other Visualizations</h2>
+      <p>Data science me har chart type ek specific analytical question ka answer dene ke liye design kiya gaya hai. Aaiye dekhte hain ki time-series data ko represent karne ke liye Line Plot kab best choice hai aur alternative charts kab use karne chahiye:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Visualization Type</th>
+              <th>Primary Question Answered</th>
+              <th>When to Choose</th>
+              <th>Key Limitation on Time Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Line Plot (<code>lineplot</code>)</strong></td>
+              <td><em>"Metric samay ke sath kis direction me change ho raha hai?"</em></td>
+              <td>Ordered continuous sequence, trend detection, rate of change.</td>
+              <td>Implies continuity; misleading if large data gaps exist.</td>
+            </tr>
+            <tr>
+              <td><strong>Scatter Plot (<code>scatterplot</code>)</strong></td>
+              <td><em>"Do variables ke beech kya statistical correlation hai?"</em></td>
+              <td>Bivariate relationships, cluster discovery, outlier inspection.</td>
+              <td>Hides the chronological flow and sequence between consecutive points.</td>
+            </tr>
+            <tr>
+              <td><strong>Bar Plot (<code>barplot</code>)</strong></td>
+              <td><em>"Discrete categories ya time buckets ka absolute total/mean kya hai?"</em></td>
+              <td>Comparing aggregated monthly totals or discrete categories.</td>
+              <td>Consumes high visual ink; clumsy for dense continuous timelines (365 days).</td>
+            </tr>
+            <tr>
+              <td><strong>Area Plot</strong></td>
+              <td><em>"Sub-components milkar cumulative total me kitna contribute karte hain?"</em></td>
+              <td>Part-to-whole composition changing over time (stacked area).</td>
+              <td>Hard to read individual baseline trends for inner layers.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Side-by-Side Comparison: Line vs Scatter on Time Series</h3>
+      <div class="figure-wrapper">
+        <img src="assets/line_vs_scatter_comparison.png" alt="Scatter plot versus line plot on identical time series comparison">
+        <div class="figure-caption">Figure 13.21: Visual Impact on Identical Data &mdash; Panel A (Scatter Plot) presents disconnected floating dots where the eye struggles to follow progression. Panel B (Line Plot) instantly reveals the continuous trajectory and the rhythmic weekend surges!</div>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Case Study 1: Web Traffic Analytics &amp; Device Share</h2>
+      <p>Digital marketing agency ek global web portal ke 90 days ke traffic telemetry ko analyze kar rahi hai (Jan 1, 2026 se Mar 31, 2026):</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Device Platform</th>
+              <th>Average Daily Visitors</th>
+              <th>Share of Traffic</th>
+              <th>Weekend Volatility Ratio</th>
+              <th>Strategic Business Recommendation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Mobile</strong></td>
+              <td>1,111.4 visitors</td>
+              <td><strong>55.2%</strong></td>
+              <td>+42% on Saturdays</td>
+              <td>Prioritize mobile-first checkout UI and AMP page speeds.</td>
+            </tr>
+            <tr>
+              <td><strong>Desktop</strong></td>
+              <td>730.7 visitors</td>
+              <td><strong>34.8%</strong></td>
+              <td>Stable weekdays</td>
+              <td>Maintain B2B corporate productivity workflows.</td>
+            </tr>
+            <tr>
+              <td><strong>Tablet</strong></td>
+              <td>208.5 visitors</td>
+              <td><strong>10.0%</strong></td>
+              <td>Minor weekend lift</td>
+              <td>Lightweight responsive maintenance; low priority investment.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Analytical Takeaway</div>
+        <p>7-day rolling average analysis confirms that the portal achieved a net <strong>+46.4% organic user growth</strong> across Q1. Weekend traffic spikes consistently account for 45% of weekly conversion revenue.</p>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> Case Study 2: E-Commerce Annual Sales &amp; Q4 Surge</h2>
+      <p>Leading e-commerce retail store ke poore 2025 calendar year ka transactional audit (365 consecutive days):</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Merchandise Department</th>
+              <th>Annual Revenue ($ USD)</th>
+              <th>Share of Gross Sales</th>
+              <th>Peak Sales Period</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Consumer Electronics</strong></td>
+              <td>$770,135.40</td>
+              <td><strong>48.1%</strong></td>
+              <td>Black Friday &amp; Cyber Week (Late November)</td>
+            </tr>
+            <tr>
+              <td><strong>Fashion &amp; Apparel</strong></td>
+              <td>$511,726.35</td>
+              <td><strong>32.0%</strong></td>
+              <td>Diwali &amp; Christmas Festive Season (Oct - Dec)</td>
+            </tr>
+            <tr>
+              <td><strong>Home &amp; Kitchen Decor</strong></td>
+              <td>$320,842.30</td>
+              <td><strong>19.9%</strong></td>
+              <td>Spring Home Renovation (April - May)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>12-month aggregated line plot confirms that daily sales average around $4,390.97, with Q4 (Oct-Dec) generating over 42% of total annual commercial cash flow.</p>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> Case Study 3: IoT Multi-Sensor Cold-Storage Telemetry</h2>
+      <p>Pharmaceutical cold storage warehouse me 3 IoT sensors (North, South, Central) temperature telemetry continuously stream karte hain. Strict compliance rule hai ki ambient temperature 15&deg;C aur 28&deg;C ke beech safe zone me rehna chahiye:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Sensor Location</th>
+              <th>Mean Temperature (&plusmn; SD)</th>
+              <th>Observed Safe Min</th>
+              <th>Observed Safe Max</th>
+              <th>Calibration Compliance Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Sensor Central</strong></td>
+              <td>20.05&deg;C</td>
+              <td>14.2&deg;C</td>
+              <td>27.8&deg;C</td>
+              <td>100% compliant baseline standard.</td>
+            </tr>
+            <tr>
+              <td><strong>Sensor South</strong></td>
+              <td>21.86&deg;C</td>
+              <td>15.8&deg;C</td>
+              <td>29.2&deg;C</td>
+              <td>Minor heat-leak warning near delivery loading bay.</td>
+            </tr>
+            <tr>
+              <td><strong>Sensor North</strong></td>
+              <td>18.85&deg;C</td>
+              <td>12.8&deg;C</td>
+              <td>26.4&deg;C</td>
+              <td>Over-cooling observed near chiller vent.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Confidence interval ribbons (Figure 13.14) prove that Sensor South consistently runs +1.8&deg;C warmer than Central due to warehouse entrance door openings during daytime fulfillment hours.</p>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> Case Study 4: Production SRE &amp; API Latency Incident</h2>
+      <p>Cloud infrastructure engineering me line plot microservice latency SLA violations ko audit karne ke liye primary tool hai. 15-Mar-2026 ko 24 ghante ke dauran 5-minute telemetry intervals collect kiye gaye:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Production SRE Latency Incident Line Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+
+df_api = pd.read_csv("api_monitoring_telemetry.csv")
+df_api["Timestamp"] = pd.to_datetime(df_api["Timestamp"])
+
+plt.figure(figsize=(11, 5.8))
+# Plot 5-min latency telemetry
+plt.plot(df_api["Timestamp"], df_api["Latency_ms"], color="#2563EB", linewidth=1.5, label="Raw 5-Min Latency")
+plt.axhline(200, color="#DC2626", linestyle="--", linewidth=2.0, label="200ms Strict SLA Breach Limit")
+
+# Highlight critical spike
+spike_idx = df_api["Latency_ms"].idxmax()
+spike_time = df_api["Timestamp"].iloc[spike_idx]
+spike_val = df_api["Latency_ms"].iloc[spike_idx]
+plt.scatter([spike_time], [spike_val], color="#DC2626", s=140, zorder=6)
+plt.annotate("Critical Incident at 20:30!\nLatency spiked to " + str(spike_val) + "ms",
+             xy=(spike_time, spike_val), xytext=(spike_time - pd.Timedelta(hours=5), 320),
+             arrowprops=dict(arrowstyle="->", color="#DC2626", lw=1.8),
+             bbox=dict(boxstyle="round,pad=0.3", fc="#FEE2E2", ec="#DC2626", lw=1),
+             fontweight="bold", color="#991B1B")
+
+plt.title("Figure 13.22: Production API Monitoring: 24-Hour Latency Telemetry Audit", fontweight="bold", pad=12)
+plt.xlabel("Time of Day (15-Mar-2026)", labelpad=10)
+plt.ylabel("Checkout Latency (ms)", labelpad=10)
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+plt.legend(loc="upper left", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/api_response_spikes_telemetry.png" alt="Production API latency telemetry audit showing critical incident spike">
+        <div class="figure-caption">Figure 13.22: SRE Incident Audit &mdash; Baseline latency remains rock-solid around 43.7ms for 98% of the day. However, a database connection pool deadlock triggered a critical severity incident at 20:30, causing checkout latency to explode to 397.1ms and breaching the 200ms SLA limit!</div>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> 15+ Common Pitfalls, Anti-Patterns &amp; Debugging</h2>
+      <p>Time-series aur line plots create karte waqt developers aur data scientists aksar ye 15 critical mistakes karte hain. Aaiye inke root causes aur battle-tested debugging solutions samajhte hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Common Pitfall / Anti-Pattern</th>
+              <th>Underlying Root Cause</th>
+              <th>Correct Professional Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Unsorted Timestamp Zigzag Line</strong></td>
+              <td>Data rows random order me hain; line piche mud jati hai</td>
+              <td>Always sort before plotting: <code>df.sort_values('Date')</code></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Date Column Left as String</strong></td>
+              <td>Pandas <code>object</code> dtype treats dates as categorical text</td>
+              <td>Convert with <code>pd.to_datetime(df['Date'])</code></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Over-Smoothing with Rolling Window</strong></td>
+              <td>Window size bohot bada (e.g. 60 days on 90-day data)</td>
+              <td>Use standard 7-day or 14-day window to preserve macro shifts</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>Blindly Connecting Missing Data Gaps</strong></td>
+              <td>Line fabricates smooth operation during 4-day downtime</td>
+              <td>Reindex with complete date range so missing days are <code>NaN</code></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Confusing Sums and Averages</strong></td>
+              <td>Summing daily latency measurements instead of averaging</td>
+              <td>Use <code>mean()</code> for rates/temperatures, <code>sum()</code> for revenues/counts</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Crowded Date Label Black Blob</strong></td>
+              <td>Daily dates printed without locator interval</td>
+              <td>Use <code>mdates.DayLocator(interval=5)</code> and <code>DateFormatter</code></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Spaghetti Chart with 8+ Lines</strong></td>
+              <td>Stacking too many categories in a single plot canvas</td>
+              <td>Limit to &le; 4 lines or use <code>sns.relplot(col='Category')</code></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Confusing CI Ribbon with Data Range</strong></td>
+              <td>Assuming shaded band represents min-max values</td>
+              <td>Remember CI measures <em>uncertainty of the mean estimate</em></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Single Spike Fallacy</strong></td>
+              <td>Treating 1-day outlier spike as a permanent trend reversal</td>
+              <td>Verify trend direction using rolling moving averages</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Unordered Categorical X-Axis</strong></td>
+              <td>Plotting product names (Apple, Banana) on line plot</td>
+              <td>Line plots require sequential ordered axes; use Bar Plot instead</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Using Deprecated <code>ci</code> Parameter</strong></td>
+              <td>Passing <code>ci=95</code> in modern Seaborn 0.12+</td>
+              <td>Use <code>errorbar=('ci', 95)</code> or <code>errorbar='sd'</code></td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Assuming Parallel Lines Prove Causation</strong></td>
+              <td>Two series growing together assumed to cause each other</td>
+              <td>Acknowledge common macroeconomic or seasonal confounding factors</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td><strong>Rolling NaN Start Gaps</strong></td>
+              <td>Default rolling leaves first <i>W-1</i> rows as NaN</td>
+              <td>Pass <code>min_periods=1</code> inside <code>.rolling()</code></td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td><strong>Unsynced Facet Y-Axes</strong></td>
+              <td>Comparing subplots where each panel has independent scaling</td>
+              <td>Keep <code>sharey=True</code> in <code>sns.relplot()</code></td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td><strong>Mixed Timezone Timestamps</strong></td>
+              <td>Plotting UTC and IST timestamps on the same scale</td>
+              <td>Normalize with <code>dt.tz_convert('UTC')</code> before analysis</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 1: The Unsorted Timestamp Zigzag Bug</h3>
+      <div class="code-block">
+        <div class="code-header"><span>Python &bull; Buggy Implementation</span></div>
+        <pre><code># BUGGY: DataFrame is not sorted by Date! Line draws a messy backward zigzag!
+df_scrambled = df.sample(frac=1.0) # Rows shuffled randomly
+plt.plot(df_scrambled["Date"], df_scrambled["Visitors"])
+# Result: Line jumps back and forth across the canvas creating a spiderweb!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code># CORRECTED: Always ensure chronological ordering before plotting
+df_clean = df.copy()
+df_clean["Date"] = pd.to_datetime(df_clean["Date"])
+df_clean = df_clean.sort_values("Date").reset_index(drop=True)
+
+# Seaborn lineplot also provides built-in sort=True protection
+sns.lineplot(data=df_clean, x="Date", y="Visitors", color="#2563EB", linewidth=2.2)</code></pre>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 2: The Crowded Date Label Blob Bug</h3>
+      <div class="code-block">
+        <div class="code-header"><span>Python &bull; Buggy Implementation</span></div>
+        <pre><code># BUGGY: 90 dates rendered without locator formatting
+plt.plot(df["Date"], df["Visitors"])
+# Result: 90 text strings collide into an unreadable solid black bar!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import matplotlib.dates as mdates
+
+ax = sns.lineplot(data=df, x="Date", y="Visitors")
+# Apply explicit 7-day interval locator and clean day-month formatter
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%b"))
+plt.xticks(rotation=30)
+plt.tight_layout()</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> Quick Reference Cheat Sheet, 21 Exercises &amp; Capstone</h2>
+      <p>Time-series visualization me speed aur accuracy maintain karne ke liye quick lookup reference guide:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Analytical Requirement</th>
+              <th>Recommended Code Syntax</th>
+              <th>Key Parameters to Remember</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Standard Single Time Series</strong></td>
+              <td><code>sns.lineplot(data=df, x="Date", y="Metric")</code></td>
+              <td>Ensure <code>x</code> is <code>datetime64</code>; <code>sort=True</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Multiple Series by Category</strong></td>
+              <td><code>sns.lineplot(..., hue="Segment", palette="Dark2")</code></td>
+              <td>Keep lines &le; 4; use high-contrast color palettes.</td>
+            </tr>
+            <tr>
+              <td><strong>Print / Grayscale Accessibility</strong></td>
+              <td><code>sns.lineplot(..., hue="Env", style="Env", markers=True)</code></td>
+              <td>Combines color + dash styles + vertex glyphs.</td>
+            </tr>
+            <tr>
+              <td><strong>Multi-Panel Subplots (Faceting)</strong></td>
+              <td><code>sns.relplot(data=df, x="Date", y="Metric", col="Region", kind="line")</code></td>
+              <td>Figure-level; manages subplots and sizing via <code>height/aspect</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Aggregation with Confidence Band</strong></td>
+              <td><code>sns.lineplot(..., estimator="mean", errorbar=("ci", 95))</code></td>
+              <td>Automatically aggregates repeated readings at same timestamp.</td>
+            </tr>
+            <tr>
+              <td><strong>Noise Reduction / Trend Line</strong></td>
+              <td><code>df["Rolling"] = df["Metric"].rolling(7, min_periods=1).mean()</code></td>
+              <td>Pandas rolling average overlay; filters day-to-day noise.</td>
+            </tr>
+            <tr>
+              <td><strong>Clean Date Axis Ticks</strong></td>
+              <td><code>ax.xaxis.set_major_locator(mdates.DayLocator(5))</code></td>
+              <td>Pair with <code>ax.xaxis.set_major_formatter(mdates.DateFormatter("%d-%b"))</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_timeseries_decision_guide.png" alt="Seaborn Topic 13 Time Series and Line Plot Architecture Mind Map">
+        <div class="figure-caption">Figure 13.23: Topic 13 Architecture &amp; Decision Mind Map &mdash; Comprehensive relational and time-series visualization framework.</div>
+      </div>
+
+      <h3>Part A: 10 Multiple-Choice Questions (MCQs)</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q1: Primary Purpose of a Line Plot</div>
+        <p>Line plot ka primary purpose kin datasets ko visualize karna hota hai?</p>
+        <p>A) Do categorical variables ke beech cross-tabulation table.<br>
+        B) Continuous sequential ordered dimensions (jaise time) par numerical metric ke trends aur changes track karna.<br>
+        C) Unordered categorical words ka frequency cloud.<br>
+        D) Binary 0/1 classification outcomes.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Line plot continuous sequential ordered sequences (timeline, age, experimental iterations) par observations ko connect karta hai taaki directional trends aur temporal changes instantly visible hon.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q2: Connecting Line Meaning</div>
+        <p>Line plot me do consecutive points ke beech connecting line segment kya communicate karta hai?</p>
+        <p>A) Points ke beech statistical significance.<br>
+        B) Ordered continuity aur change of rate across the sequence.<br>
+        C) Dono points ka mathematical average.<br>
+        D) Machine learning decision boundary.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Connecting line reader ko continuous progression ka visual signal deti hai. Line ka slope directly velocity aur rate of change ko darshata hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q3: Seaborn Modern Uncertainty Parameter</div>
+        <p>Modern Seaborn (0.12+) me confidence intervals specify karne ke liye kaunsa non-deprecated parameter use hota hai?</p>
+        <p>A) <code>ci=95</code><br>
+        B) <code>confidence_band=True</code><br>
+        C) <code>errorbar=("ci", 95)</code><br>
+        D) <code>std_error=True</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: C</strong></p>
+            <p><strong>Explanation:</strong> Legacy <code>ci</code> parameter Seaborn me deprecated ho chuka hai. Modern Seaborn me <code>errorbar</code> parameter use hota hai (e.g. <code>errorbar=("ci", 95)</code>, <code>errorbar="sd"</code>, ya <code>errorbar=None</code>).</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q4: Shaded Confidence Ribbon Interpretation</div>
+        <p><code>sns.lineplot()</code> me central line ke charo taraf translucent shaded band kya represent karta hai?</p>
+        <p>A) Observed minimum aur maximum values ka complete span.<br>
+        B) Aggregated mean estimate ka bootstrap 95% Confidence Interval.<br>
+        C) Data entry errors ka range.<br>
+        D) Hardware sensor noise floor.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Shaded band true population mean ki statistical estimation uncertainty ko represent karta hai. Sample size bada hone par ye ribbon narrow ho jata hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q5: Purpose of Rolling Average</div>
+        <p>Time series data par <code>Series.rolling(7).mean()</code> apply karne ka main objective kya hota hai?</p>
+        <p>A) Data ko compress karke size 10x kam karna.<br>
+        B) High-frequency random noise aur short-term weekly fluctuations ko smooth karke underlying macro trend expose karna.<br>
+        C) Missing values ko delete karna.<br>
+        D) Future stock prices predict karna.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Rolling average ek moving window filter hai jo cyclic weekend spikes aur volatile day-to-day noise ko average out karta hai, jisse long-term directional signal clearly emerge hota hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q6: Missing Data Gap Anti-Pattern</div>
+        <p>Agar March 5 se March 8 tak server telemetry missing hai aur aap bina <code>reindex</code> ke line plot draw kar dete hain, to kya visual flaw hoga?</p>
+        <p>A) Plot crash ho jayega.<br>
+        B) Matplotlib March 4 aur March 9 ke beech seedhi fake line draw kar dega jo downtime ke dauran false continuity imply karegi.<br>
+        C) Missing dates par automatic zeros draw honge.<br>
+        D) Colors invert ho jayenge.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Missing rows drop karne se line seedhi next available date se jud jati hai, jisse audience ko lagta hai ki system continuously functioning tha. Proper way hai complete date range se reindex karke missing days me <code>NaN</code> chhodna taaki line me visible break dikhe.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q7: Figure-Level vs Axes-Level Function</div>
+        <p>Multiple categories (jaise Regions) ko separate subplots me facet karne ke liye kaunsa function natively designed hai?</p>
+        <p>A) <code>sns.lineplot(col="Region")</code><br>
+        B) <code>sns.relplot(data=df, x="Date", y="Visitors", col="Region", kind="line")</code><br>
+        C) <code>plt.line_facet()</code><br>
+        D) <code>df.plot.facet()</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> <code>sns.relplot()</code> ek figure-level function hai jo multi-panel faceting (<code>col</code>, <code>row</code>, <code>col_wrap</code>) ko seamlessly handle karta hai. <code>sns.lineplot()</code> ek axes-level function hai jo <code>col</code> parameter support nahi karta.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q8: Preventing Date Label Crowding</div>
+        <p>30-day timeline me date labels ko clean spacing dene ke liye Matplotlib ka kaunsa locator standard hai?</p>
+        <p>A) <code>mdates.YearLocator()</code><br>
+        B) <code>mdates.DayLocator(interval=5)</code><br>
+        C) <code>plt.space_dates()</code><br>
+        D) <code>ax.set_crowd(False)</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> <code>mdates.DayLocator(interval=5)</code> har 5th day par tick mark place karta hai, jisse daily crowding completely eliminate ho jati hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q9: The Spaghetti Chart Threshold</div>
+        <p>Ek single plot canvas par kitni se zyada lines stack karne se spaghetti chart banta hai?</p>
+        <p>A) 2 lines.<br>
+        B) 5 se zyada lines.<br>
+        C) 100 lines.<br>
+        D) Kabhi nahi banta.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Cognitive research ke according human brain ek sath 4-5 line trajectories se zyada ko comfortably decode nahi kar pata. 5+ lines hone par faceting ya small multiples use karna chahiye.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q10: Causation Fallacy in Time Series</div>
+        <p>Pichhle 5 saal me Electric Cars ki sales aur US me Avocado consumption dono sath me 200% badhe hain. Iska kya conclusion hai?</p>
+        <p>A) Avocado khane se log electric car khareedte hain.<br>
+        B) Dono independent time series hain jo overall economic growth aur demographic lifestyle changes se grow ho rahi hain &mdash; koi causal relation nahi hai.<br>
+        C) Electric cars me avocado battery use hoti hai.<br>
+        D) Data corrupted hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Ye classical spurious correlation in time series hai. Co-trending time series aksar high correlation dikhati hain bina kisi underlying physical causal connection ke.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part B: 5 Visual Graph Interpretation Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 11: Interpreting Figure 13.2 (Weekly Traffic Bump)</div>
+        <p>Figure 13.2 me website visitors Monday se Thursday lagbhag 1,200 - 1,500 rehte hain, lekin Saturday ko 2,150 aur Sunday ko 2,380 ho jate hain (+91.9% increase). Is pattern ka business meaning kya hai aur digital media team iska kya fayda utha sakti hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Website consumer-facing (B2C / entertainment / hobby) portal hai jahan users weekends par free time me browsing karte hain. Marketing team ko high-value newsletter campaigns aur weekend flash promotions Friday evening schedule karne chahiye taaki peak traffic window par maximum monetization ho sake.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 12: Interpreting Figure 13.3 (Diurnal IoT Temperature Cycle)</div>
+        <p>Figure 13.3 me temperature dawn (4:00 AM) par 14.1&deg;C aur afternoon (15:00 PM) par 27.8&deg;C record hoti hai. Solar radiation dopahar 12:00 PM par maximum hoti hai, to temperature peak 3 ghante baad (15:00 PM) kyun aati hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Isko physical science me <em>Thermal Lag / Thermal Inertia</em> kehte hain. Earth's surface aur concrete structures solar heat absorb karne me time lete hain aur jab thermal radiation outward transfer hoti hai to peak air temperature noon ke 2-3 ghante baad (afternoon) hoti hai. Line plot is physical hysteresis lag ko faithfully illustrate karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 13: Interpreting Figure 13.10 (Power Grid Demand Profile)</div>
+        <p>Figure 13.10 me Weekday demand profile bimodal double-peak dikhata hai jabki Weekend profile single broad afternoon curve dikhata hai. Grid operator is visual evidence ke basis par power generators kaise schedule karega?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Weekdays par commercial offices aur industrial factories subah 9:00 AM par start hoti hain (Peak 1) aur shaam ko log ghar laut kar AC/appliances chalate hain (Peak 2 at 7:00 PM). Weekends par commercial demand zero hoti hai aur domestic demand late morning/afternoon me smoothly rise karti hai. Grid dispatchers weekdays par gas turbine peaker plants ko specific hours (8:30-10:30 AM aur 6:30-8:30 PM) par schedule karenge taaki fuel cost optimize ho sake.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 14: Interpreting Figure 13.16 (7-Day Rolling Trend)</div>
+        <p>Figure 13.16 me light blue dashed line bohot noisy hai aur har 7 din par jump karti hai. Dark blue 7-day rolling line perfectly smooth upward slope dikhati hai (+46.4% growth). Ek stakeholder agar sirf raw daily data dekhe to kya mistake karega?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Stakeholder har Monday/Tuesday ko traffic dip dekh kar panic karega aur sochega ki site engagement crash ho gaya hai, aur har weekend par celebration karega! 7-day rolling average prove karta hai ki day-to-day dips normal weekly rhythm hain aur company ka true business baseline continuously scale kar raha hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 15: Interpreting Figure 13.22 (SRE Incident Spike)</div>
+        <p>Figure 13.22 me 24 ghante ke dauran baseline latency 42ms rehti hai lekin 20:30 par ek single 397ms spike record hota hai jo 200ms red SLA line ko cross kar jata hai. Ek post-mortem report me is chart ka kya value hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Line plot incident ka exact timestamp (20:30) aur blast radius duration (approx 30 mins) establish karta hai. SRE engineer database error logs ko 20:15 - 20:45 ke narrow window me filter karke deadlocks ya memory leak identify kar sakta hai. Agar hum pure din ka average latency nikalte to wo 45ms aati aur ye critical incident completely conceal ho jata!</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part C: 3 Practical Python Coding Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 16: Multi-Series Line Plot with Rolling Average</div>
+        <p><strong>Task:</strong> 60 days ka continuous e-commerce dataset banaiye jisme daily revenue aur 7-day rolling average dono ek sath plot kiye gaye hon. Raw sales ko light gray dashed line me aur rolling average ko bold dark green line me render kijiye.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <div class="code-header">
+                <span>Python &bull; Exercise 16 Solution</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+              </div>
+              <pre><code>import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+import numpy as np
+
+np.random.seed(42)
+dates = pd.date_range("2026-01-01", periods=60, freq="D")
+sales = 5000 + np.cumsum(np.random.normal(50, 200, 60)) + np.random.normal(0, 300, 60)
+df = pd.DataFrame({"Date": dates, "Sales": sales})
+df["Rolling_7D"] = df["Sales"].rolling(7, min_periods=1).mean()
+
+plt.figure(figsize=(10, 5))
+plt.plot(df["Date"], df["Sales"], color="#94A3B8", linestyle="--", linewidth=1.2, label="Raw Daily Revenue")
+plt.plot(df["Date"], df["Rolling_7D"], color="#059669", linewidth=2.8, label="7-Day Rolling Trend")
+
+plt.title("60-Day E-Commerce Revenue with 7-Day Moving Average", fontweight="bold")
+plt.ylabel("Revenue ($ USD)")
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
+plt.xticks(rotation=30)
+plt.legend(frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 17: Faceted Line Plot Across Server Regions</div>
+        <p><strong>Task:</strong> <code>sns.relplot()</code> use karke 3 server regions (<code>"US-East"</code>, <code>"EU-West"</code>, <code>"AP-South"</code>) ke 14-day network ping times ko 3 separate subplots me facet kijiye sharing identical Y-axis limits.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <div class="code-header">
+                <span>Python &bull; Exercise 17 Solution</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+              </div>
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(101)
+dates = pd.date_range("2026-03-01", periods=14, freq="D")
+records = []
+for reg, base in [("US-East", 25), ("EU-West", 38), ("AP-South", 52)]:
+    for dt in dates:
+        ping = base + np.random.normal(0, 4)
+        records.append({"Date": dt, "Region": reg, "Ping_ms": round(ping, 1)})
+
+df_net = pd.DataFrame(records)
+
+g = sns.relplot(
+    data=df_net,
+    x="Date",
+    y="Ping_ms",
+    col="Region",
+    kind="line",
+    marker="o",
+    color="#2563EB",
+    height=3.8,
+    aspect=1.1
+)
+g.fig.subplots_adjust(top=0.85)
+g.fig.suptitle("Daily Network Ping Telemetry Faceted Across Cloud Regions", fontweight="bold")
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 18: Repeated Observations Aggregation with Confidence Intervals</div>
+        <p><strong>Task:</strong> Ek clinical trial dataset create kijiye jisme 5 patients ke body temperature ko din me 4 specific time intervals (<code>[08:00, 12:00, 16:00, 20:00]</code>) par measure kiya gaya ho. <code>sns.lineplot()</code> use karke repeated patient observations ka mean aur 95% bootstrap confidence interval ribbon draw kijiye.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <div class="code-header">
+                <span>Python &bull; Exercise 18 Solution</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+              </div>
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(42)
+times = [8, 12, 16, 20]
+records = []
+for p in range(1, 6): # 5 patients
+    for t in times:
+        temp = 36.6 + (t - 8) * 0.08 + np.random.normal(0, 0.25)
+        records.append({"Patient_ID": "P0" + str(p), "Hour": t, "Body_Temp_C": round(temp, 2)})
+
+df_trial = pd.DataFrame(records)
+
+plt.figure(figsize=(8.5, 5))
+sns.set_theme(style="whitegrid")
+sns.lineplot(
+    data=df_trial,
+    x="Hour",
+    y="Body_Temp_C",
+    errorbar=("ci", 95), # Bootstrap confidence interval band
+    marker="o",
+    color="#DC2626",
+    linewidth=2.5
+)
+plt.title("Patient Body Temperature Diurnal Profile (Mean & 95% CI Ribbon)", fontweight="bold")
+plt.xlabel("Hour of Day (24-Hour Military Format)")
+plt.ylabel("Body Temperature (°C)")
+plt.xticks(times, [str(t) + ":00" for t in times])
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part D: 2 Output Prediction Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 19: Predict the Output &mdash; Disabling Sort Parameter</div>
+        <p>Niche diye gaye code snippet ka output kya hoga jab <code>sort=False</code> pass kiya jaye on an unsorted DataFrame?</p>
+        <div class="code-block">
+          <pre><code>df_test = pd.DataFrame({"Step": [1, 5, 2, 4, 3], "Score": [10, 50, 20, 40, 30]})
+sns.lineplot(data=df_test, x="Step", y="Score", sort=False)</code></pre>
+        </div>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> Line sequential 1-2-3-4-5 ascending order me draw nahi hogi! Line pehle (1,10) se (5,50) seedhi aage jayegi, fir piche mudkar (2,20) par aayegi, fir aage (4,40) par jayegi, aur fir piche (3,30) par mudegi &mdash; ek chaotic zigzag shape banayegi!</p>
+            <p><strong>Explanation:</strong> <code>sort=False</code> Seaborn ke default ascending coordinate sorter ko disable kar deta hai aur rows ko exactly unke dataframe appearance order me connect karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 20: Predict the Output &mdash; Default Aggregation on Repeated Timestamps</div>
+        <p>Agar hum ek DataFrame jisme <code>x=[1, 1, 1, 2, 2, 2]</code> aur <code>y=[10, 20, 30, 40, 50, 60]</code> hon par <code>sns.lineplot(x=x, y=y)</code> run karein, to screen par kitne points connect honge?</p>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> Screen par sirf aur sirf <strong>2 points</strong> aapas me connect honge: pehla point <code>(1, 20)</code> par aur dusra point <code>(2, 50)</code> par!</p>
+            <p><strong>Explanation:</strong> Seaborn by default <code>estimator="mean"</code> use karta hai. x=1 par <code>mean(10, 20, 30) = 20</code> aur x=2 par <code>mean(40, 50, 60) = 50</code> calculate hota hai. Shaded ribbon 95% confidence interval dikhayegi.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part E: Capstone Mini-Project</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 21: Smart Grid Renewable Energy Generation &amp; Deficit Audit</div>
+        <p><strong>Real-World Scenario:</strong> Aap ek municipal smart energy grid me Lead Analytics Engineer hain. Grid 168 hours (one full week) ka continuous power telemetry audit kar rahi hai jisme <code>Timestamp</code>, <code>Solar_MW</code>, <code>Wind_MW</code>, aur <code>Total_Consumer_Demand_MW</code> recorded hain.</p>
+        <p><strong>Your Deliverables:</strong></p>
+        <ol>
+          <li>Deterministic reproducible dataset generate kijiye (seed 42) jisme Solar daytime (08:00 - 17:00) me peak kare aur Wind evening/night me peak kare.</li>
+          <li>Combined <code>Total_Renewable_MW = Solar_MW + Wind_MW</code> calculate kijiye.</li>
+          <li><code>Total_Renewable_MW</code> aur <code>Total_Consumer_Demand_MW</code> ko ek single high-resolution line plot me compare kijiye with clear date-time ticks.</li>
+          <li>24-hour rolling average trendline add kijiye taaki daily baseline generation deficit clearly expose ho.</li>
+          <li>Uncertainty interval aur peak hours identify karke executive power-dispatch recommendation writeup formulate kijiye.</li>
+        </ol>
+
+        <details class="accordion">
+          <summary>View Complete Capstone Mini-Project Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <div class="code-header">
+                <span>Python &bull; Capstone Mini-Project Solution</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+              </div>
+              <pre><code>import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import pandas as pd
+import numpy as np
+
+# Step 1: Generate reproducible Smart Grid Telemetry (168 Hours)
+np.random.seed(42)
+times_168 = pd.date_range("2026-03-01 00:00:00", periods=168, freq="h")
+records = []
+
+for dt in times_168:
+    h = dt.hour
+    dow = dt.dayofweek
+    
+    # Solar generation (only daylight hours 06:00 - 18:00)
+    solar = max(0.0, 180.0 * np.sin((h - 6) * np.pi / 12)) if 6 &lt;= h &lt;= 18 else 0.0
+    solar += np.random.normal(0, 8.0) if solar &gt; 0 else 0.0
+    solar = max(0.0, solar)
+    
+    # Wind generation (higher at night and early morning)
+    wind = 110.0 + 45.0 * np.cos(h * np.pi / 12) + np.random.normal(0, 15.0)
+    wind = max(10.0, wind)
+    
+    # Grid demand (weekday peak vs weekend)
+    base_demand = 280.0 if dow &lt; 5 else 220.0
+    demand = base_demand + 70.0 * np.sin((h - 8) * np.pi / 12)**2 + 60.0 * np.sin((h - 18) * np.pi / 12)**2 + np.random.normal(0, 10.0)
+    
+    records.append({
+        "Timestamp": dt,
+        "Solar_MW": round(solar, 1),
+        "Wind_MW": round(wind, 1),
+        "Total_Renewable_MW": round(solar + wind, 1),
+        "Grid_Demand_MW": round(demand, 1)
+    })
+
+df_grid = pd.DataFrame(records)
+df_grid["Rolling_Renewable_24H"] = df_grid["Total_Renewable_MW"].rolling(24, min_periods=1).mean()
+
+# Step 2: Visualization
+plt.figure(figsize=(12, 6))
+plt.plot(df_grid["Timestamp"], df_grid["Grid_Demand_MW"], color="#DC2626", linewidth=2.0, label="Consumer Demand (MW)")
+plt.plot(df_grid["Timestamp"], df_grid["Total_Renewable_MW"], color="#10B981", alpha=0.6, linewidth=1.2, label="Raw Total Renewable (Solar + Wind)")
+plt.plot(df_grid["Timestamp"], df_grid["Rolling_Renewable_24H"], color="#047857", linewidth=2.8, label="24-Hour Rolling Renewable Baseline")
+
+# Highlight Deficit
+plt.fill_between(df_grid["Timestamp"], df_grid["Total_Renewable_MW"], df_grid["Grid_Demand_MW"],
+                 where=(df_grid["Grid_Demand_MW"] &gt; df_grid["Total_Renewable_MW"]),
+                 color="#FCA5A5", alpha=0.3, label="Fossil / Battery Dispatch Deficit Zone")
+
+plt.title("Smart Grid Energy Dispatch: Renewable Generation vs Consumer Demand (168-Hour Audit)", fontweight="bold", pad=12)
+plt.ylabel("Power Load (Megawatts)")
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter("%d-%b"))
+plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=1))
+plt.xticks(rotation=0)
+plt.legend(loc="upper right", frameon=True)
+plt.tight_layout()
+plt.show()
+
+# Step 3: Verified Summary Metrics
+print("Smart Grid Weekly Audit Summary:")
+print("Average Consumer Demand:", round(df_grid["Grid_Demand_MW"].mean(), 1), "MW")
+print("Average Renewable Generation:", round(df_grid["Total_Renewable_MW"].mean(), 1), "MW")
+renewable_share = (df_grid["Total_Renewable_MW"].sum() / df_grid["Grid_Demand_MW"].sum()) * 100
+print("Net Renewable Energy Penetration:", round(renewable_share, 1), "%")</code></pre>
+            </div>
+            <p><strong>Capstone Engineering Takeaway:</strong> Visual audit clearly demonstrates that while solar provides impressive midday peaks (up to 180 MW), the critical evening peak (18:00 - 21:00) coincides with zero solar radiation and dropping wind speeds. The pink deficit zone proves that the municipality needs a minimum of <strong>140 MW / 450 MWh utility-scale battery energy storage system (BESS)</strong> to buffer midday solar surplus and dispatch it during the evening commercial peak!</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128640; What's Next in Topic 14?</div>
+        <p>Agla topic hai <strong>Seaborn Topic 14: Regression Plots &amp; Statistical Model Visualization</strong>! Wahan hum seekhenge ki kaise <code>sns.regplot()</code>, <code>sns.lmplot()</code>, multi-facet logistic regression, residual diagnostics, aur robust outlier models ke through complex statistical relationships ko visually audit kiya jata hai!</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

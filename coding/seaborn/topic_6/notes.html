@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seaborn Topic 6: ECDF &amp; Distribution Comparison | CodeVerse</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --secondary: #4f46e5;
+            --accent: #059669;
+            --accent-light: #d1fae5;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08);
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: "Fira Code", Consolas, Monaco, "Courier New", monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-sans);
+            font-size: 15px;
+            line-height: 1.68;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 16px;
+        }
+
+        .main-container {
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0369a1 0%, #0284c7 50%, #0ea5e9 100%);
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            color: #ffffff;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #e0f2fe;
+            margin-bottom: 18px;
+            max-width: 840px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 12.5px;
+            color: #f0f9ff;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 14px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section Styling */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 20px 0 10px 0;
+        }
+
+        h4 {
+            font-size: 14.5px;
+            font-weight: 600;
+            color: #334155;
+            margin: 14px 0 8px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 16px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Code Block Styling */
+        .code-container {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: 18px 0;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            background: #1e293b;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-content {
+            padding: 14px 16px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.6;
+            color: #f8fafc;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .output-block {
+            background: #020617;
+            border-top: 1px dashed #334155;
+            padding: 12px 16px;
+            font-family: var(--font-mono);
+            font-size: 12.5px;
+            color: #38bdf8;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+
+        .output-title {
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        /* Syntax Highlighting */
+        .keyword { color: #f472b6; font-weight: 600; }
+        .string { color: #a5f3fc; }
+        .comment { color: #64748b; font-style: italic; }
+        .number { color: #fde047; }
+        .built_in { color: #c084fc; }
+
+        /* Inline Code */
+        code:not(.code-content code) {
+            font-family: var(--font-mono);
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Figure Cards */
+        .figure-card {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-md);
+        }
+
+        .figure-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .figure-caption {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .callout-warning {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+
+        .callout-danger {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .callout-realworld {
+            background: #f8fafc;
+            border-color: #6366f1;
+            color: #312e81;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+            min-width: 500px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #1e293b;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) {
+            background: #fbfcfe;
+        }
+
+        tr:hover {
+            background: #f1f5f9;
+        }
+
+        /* Table of Contents */
+        .toc-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toc-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px 16px;
+        }
+
+        .toc-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toc-link:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .toc-num {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 20px;
+        }
+
+        /* Interactive Details / Accordions */
+        .details-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .details-box[open] {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .details-summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            cursor: pointer;
+            background: #f8fafc;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .details-summary:hover {
+            background: #f1f5f9;
+        }
+
+        .details-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .details-summary::after {
+            content: "▼";
+            font-size: 10px;
+            color: var(--primary);
+            transition: transform 0.2s ease;
+        }
+
+        .details-box[open] .details-summary::after {
+            transform: rotate(180deg);
+        }
+
+        .details-content {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: #ffffff;
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+                font-size: 14.5px;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 18px;
+            }
+
+            .hero-banner {
+                padding: 22px 16px;
+                border-radius: var(--radius-md);
+            }
+
+            .hero-title {
+                font-size: 22px;
+            }
+
+            .hero-subtitle {
+                font-size: 13.5px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .code-content {
+                font-size: 12px;
+                padding: 10px;
+            }
+
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+        <span class="hero-badge">Seaborn Course &bull; Topic 6 of 20 (Distribution Visualization)</span>
+        <h1 class="hero-title">ECDF &amp; Distribution Comparison</h1>
+        <p class="hero-subtitle">Master Empirical Cumulative Distribution Functions: Parameter-Free Step Functions, Threshold Probability Auditing, Stochastic Dominance, and Multi-Group Comparisons with sns.ecdfplot()</p>
+        <div class="hero-meta">
+            <span class="hero-meta-item">&#9201; 60 Min Interactive Mastery</span>
+            <span class="hero-meta-item">&#128187; 22 Runnable Python Examples</span>
+            <span class="hero-meta-item">&#128202; 20 High-Res Charts (@ 160 DPI)</span>
+            <span class="hero-meta-item">&#9989; Verified on Seaborn 0.13.2, Pandas 2.3 &amp; Python 3.13</span>
+        </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-container" aria-label="Table of Contents">
+        <div class="toc-title">&#128209; Curriculum Table of Contents (20 In-Depth Sections)</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec-1"><span class="toc-num">01.</span> What is an ECDF?</a>
+            <a class="toc-link" href="#sec-2"><span class="toc-num">02.</span> Cumulative Probability &amp; Step Math</a>
+            <a class="toc-link" href="#sec-3"><span class="toc-num">03.</span> First ECDF with sns.ecdfplot()</a>
+            <a class="toc-link" href="#sec-4"><span class="toc-num">04.</span> Customizing Aesthetics &amp; Thresholds</a>
+            <a class="toc-link" href="#sec-5"><span class="toc-num">05.</span> Operational SLA Targets</a>
+            <a class="toc-link" href="#sec-6"><span class="toc-num">06.</span> Comparing Distributions Beyond Means</a>
+            <a class="toc-link" href="#sec-7"><span class="toc-num">07.</span> Head-to-Head Service Comparisons</a>
+            <a class="toc-link" href="#sec-8"><span class="toc-num">08.</span> Multi-Group ECDF with hue</a>
+            <a class="toc-link" href="#sec-9"><span class="toc-num">09.</span> Histogram vs. KDE vs. ECDF</a>
+            <a class="toc-link" href="#sec-10"><span class="toc-num">10.</span> The Crossover Phenomenon</a>
+            <a class="toc-link" href="#sec-11"><span class="toc-num">11.</span> Distribution Tails &amp; Outliers</a>
+            <a class="toc-link" href="#sec-12"><span class="toc-num">12.</span> Regular CDF vs. Complementary CCDF</a>
+            <a class="toc-link" href="#sec-13"><span class="toc-num">13.</span> Sample Size Sensitivity</a>
+            <a class="toc-link" href="#sec-14"><span class="toc-num">14.</span> Case Study A: College Exam Sections</a>
+            <a class="toc-link" href="#sec-15"><span class="toc-num">15.</span> Case Study B: Cloud Microservice Latency</a>
+            <a class="toc-link" href="#sec-16"><span class="toc-num">16.</span> Case Study C: Industrial IoT Sensors</a>
+            <a class="toc-link" href="#sec-17"><span class="toc-num">17.</span> Common Pitfalls &amp; Debugging Guide</a>
+            <a class="toc-link" href="#sec-18"><span class="toc-num">18.</span> Quick Reference Cheat Sheet</a>
+            <a class="toc-link" href="#sec-19"><span class="toc-num">19.</span> 21 Practice Qs &amp; Capstone Mini-Project</a>
+            <a class="toc-link" href="#sec-20"><span class="toc-num">20.</span> Summary &amp; What's Next</a>
+        </div>
+    </nav>
+
+    <!-- Section 1: What is an ECDF? -->
+    <section id="sec-1" class="card">
+        <h2 class="section-title">&#128200; 01. What is an ECDF? (Empirical Cumulative Distribution Function)</h2>
+
+        <p>Sochiye aapke college me ek tough programming exam conduct hua jisme 100 students baithe the. Professor aapse poochte hain:</p>
+
+        <div class="callout callout-realworld">
+            <div class="callout-title">&#129300; The Real-Life Scenario: The 60-Minute Exam Question</div>
+            <p><strong>"Kitne percent students ne apna paper 60 minutes ke andar complete karke submit kar diya?"</strong></p>
+            <p>Agar aap sirf <em>Average (Mean)</em> nikalte hain (e.g. Mean time = 58 minutes), toh aap professor ke question ka answer nahi de sakte! Average yeh nahi batata ki kitne percent log time limit ke andar the. Aur agar aap Histogram banate hain, toh bins ke cutoffs (e.g. 50-59 mins, 60-69 mins) exact 60-minute cutoff par split ho jaate hain. Yahan hume zaroorat padti hai <strong>ECDF (Empirical Cumulative Distribution Function)</strong> ki!</p>
+        </div>
+
+        <p><strong>ECDF</strong> ek statistical visualization hai jo data ke har unique value par yeh measure karta hai ki <strong>kitne proportion (ya percentage) observations us value ke barabar ya us se chote (less than or equal to, &le; x) hain</strong>:</p>
+
+        <div class="figure-card">
+            <img src="assets/ecdf_step_function_diagram.png" alt="ECDF Step Function Diagram" loading="lazy">
+            <div class="figure-caption">Figure 6.1: Anatomy of an ECDF &mdash; Visualizing discrete step jumps (1/N) and horizontal flats across exam completion times.</div>
+        </div>
+
+        <h3>Why is ECDF Called "Parameter-Free"? (The Ultimate Superpower)</h3>
+        <p>Topic 5 me humne dekha tha ki:</p>
+        <ul>
+            <li><strong>Histogram</strong> me aapko <code>bins</code> ya <code>binwidth</code> choose karni padti hai. Galat bin number choose karne se distribution distort ho jati hai.</li>
+            <li><strong>KDE plot</strong> me aapko <code>bw_adjust</code> (smoothing bandwidth) tune karni padti hai. Galat bandwidth se bimodal peaks merge ho jaate hain.</li>
+            <li><strong>ECDF</strong> me <strong>ZERO parameters tune karne hote hain!</strong> Yeh raw data ke har single observation ko directly step format me plot karta hai bina kisi assumption ya smoothing ke.</li>
+        </ul>
+
+        <div class="figure-card">
+            <img src="assets/hist_vs_kde_vs_ecdf_comparison.png" alt="Histogram vs KDE vs ECDF Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.2: Three Perspectives on the Same Distribution &mdash; Histogram (binned counts), KDE (smoothed continuous density), and ECDF (exact cumulative proportion).</div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Mental Model: ECDF Axes Decoded</div>
+            <ul>
+                <li><strong>X-axis:</strong> Observation value <i>x</i> (jaise Exam Completion Time in minutes, Order Delivery Time, ya Website Latency in ms).</li>
+                <li><strong>Y-axis:</strong> Cumulative Proportion <i>F(x) = P(X &le; x)</i>, jo strictly <strong>0.0 (0%)</strong> se start hokar <strong>1.0 (100%)</strong> tak monotonically increase hota hai. ECDF curve kabhi neeche nahi girti!</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 2: Cumulative Probability & Step Math -->
+    <section id="sec-2" class="card">
+        <h2 class="section-title">&#128290; 02. Understanding Cumulative Probability &amp; Step Function Math</h2>
+
+        <p>Aaiye ECDF ki internal mathematics ko ground-up samajhte hain. Maan lijiye 10 students ke exam submission times (minutes) yeh hain:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; 10 Students Exam Completion Times</span>
+                <span>Deterministic Array</span>
+            </div>
+            <pre class="code-content"><code>exam_times = [<span class="number">35</span>, <span class="number">42</span>, <span class="number">48</span>, <span class="number">50</span>, <span class="number">55</span>, <span class="number">60</span>, <span class="number">65</span>, <span class="number">72</span>, <span class="number">80</span>, <span class="number">95</span>]</code></pre>
+        </div>
+
+        <h3>The 4-Step Mathematical Recipe to Build an ECDF</h3>
+        <ol>
+            <li><strong>Sort the observations in ascending order:</strong> <i>x</i><sub>(1)</sub> &le; <i>x</i><sub>(2)</sub> &le; &hellip; &le; <i>x</i><sub>(<i>N</i>)</sub>.</li>
+            <li><strong>Assign ranks:</strong> Har observation ko index <i>i</i> (1, 2, &hellip;, <i>N</i>) assign karein.</li>
+            <li><strong>Compute cumulative fraction:</strong> Har value <i>x</i><sub>(<i>i</i>)</sub> ke liye formula apply karein:
+                <br><code>F(x) = (Observations &le; x) / N = i / N</code>
+            </li>
+            <li><strong>Plot as a Step Function:</strong> Points ko horizontal flats aur vertical jumps (<i>1/N = 1/10 = 0.10</i>) ke through connect karein.</li>
+        </ol>
+
+        <div class="figure-card">
+            <img src="assets/cumulative_probability_worked_example.png" alt="Cumulative Probability Worked Example" loading="lazy">
+            <div class="figure-caption">Figure 6.3: Step-by-Step Worked Calculation on 10 Exam Times &mdash; Highlighting exact cumulative fractions at 48 mins (30%), 60 mins (60%), and 80 mins (90%).</div>
+        </div>
+
+        <h3>Worked Step-by-Step Numerical Verification Table</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rank (i)</th>
+                        <th>Time (mins, x)</th>
+                        <th>Students Finished (&le; x)</th>
+                        <th>Cumulative Proportion F(x)</th>
+                        <th>Cumulative Percentage (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>35</td><td>1</td><td>1 / 10 = 0.10</td><td>10%</td></tr>
+                    <tr><td>2</td><td>42</td><td>2</td><td>2 / 10 = 0.20</td><td>20%</td></tr>
+                    <tr style="background: #fef3c7;"><td><strong>3</strong></td><td><strong>48</strong></td><td><strong>3</strong></td><td><strong>3 / 10 = 0.30</strong></td><td><strong>30% (F(48) = 0.30)</strong></td></tr>
+                    <tr><td>4</td><td>50</td><td>4</td><td>4 / 10 = 0.40</td><td>40%</td></tr>
+                    <tr><td>5</td><td>55</td><td>5</td><td>5 / 10 = 0.50</td><td>50% (Median = 55m)</td></tr>
+                    <tr style="background: #ecfdf5;"><td><strong>6</strong></td><td><strong>60</strong></td><td><strong>6</strong></td><td><strong>6 / 10 = 0.60</strong></td><td><strong>60% (F(60) = 0.60)</strong></td></tr>
+                    <tr><td>7</td><td>65</td><td>7</td><td>7 / 10 = 0.70</td><td>70%</td></tr>
+                    <tr><td>8</td><td>72</td><td>8</td><td>8 / 10 = 0.80</td><td>80%</td></tr>
+                    <tr style="background: #f3e8ff;"><td><strong>9</strong></td><td><strong>80</strong></td><td><strong>9</strong></td><td><strong>9 / 10 = 0.90</strong></td><td><strong>90% (F(80) = 0.90)</strong></td></tr>
+                    <tr><td>10</td><td>95</td><td>10</td><td>10 / 10 = 1.00</td><td>100% (All Finished)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128269; Why is it a "Step" Function?</div>
+            <p>Jab tak koi naya student paper submit nahi karta, cumulative count change nahi hoti (horizontal flat line). Jaise hi koi student submit karta hai, cumulative count instantly 1 se jump karti hai (vertical step jump of size <i>1/N</i>). Continuous smooth curve draw karna empirical data par mathematically inaccurate hota hai kyunki observations discrete events hoti hain!</p>
+        </div>
+    </section>
+
+    <!-- Section 3: First ECDF with sns.ecdfplot() -->
+    <section id="sec-3" class="card">
+        <h2 class="section-title">&#128640; 03. Your First ECDF with sns.ecdfplot()</h2>
+
+        <p>Seaborn 0.11+ me introduce kiya gaya <strong><code>sns.ecdfplot()</code></strong> standalone empirical cumulative distribution plot create karne ka primary axes-level function hai. Aaiye iske core parameters ko samajhte hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 140px;">Parameter</th>
+                        <th style="min-width: 130px;">Type &amp; Default</th>
+                        <th style="min-width: 250px;">Functional Purpose</th>
+                        <th style="min-width: 220px;">Common Production Usage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>data</code></td>
+                        <td><code>DataFrame / Array</code></td>
+                        <td>Input dataset containing variables.</td>
+                        <td><code>data=df_exam</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>x</code></td>
+                        <td><code>str / Series</code></td>
+                        <td>Column name for horizontal evaluation (independent variable).</td>
+                        <td><code>x="completion_time"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>y</code></td>
+                        <td><code>str / Series</code></td>
+                        <td>Column name for vertical evaluation (if plotting inverted ECDF).</td>
+                        <td>Rarely used (default is horizontal x).</td>
+                    </tr>
+                    <tr>
+                        <td><code>hue</code></td>
+                        <td><code>str</code></td>
+                        <td>Categorical grouping variable for multi-line comparison.</td>
+                        <td><code>hue="section"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>stat</code></td>
+                        <td><code>"proportion" | "percent" | "count"</code></td>
+                        <td>Statistic to compute on Y-axis. Default is <code>"proportion"</code> [0.0 to 1.0].</td>
+                        <td><code>stat="percent"</code> [0 to 100%]</td>
+                    </tr>
+                    <tr>
+                        <td><code>complementary</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>If <code>True</code>, plots Complementary CDF: 1 - F(x) = P(X &gt; x).</td>
+                        <td><code>complementary=True</code> (SLA Violations)</td>
+                    </tr>
+                    <tr>
+                        <td><code>log_scale</code></td>
+                        <td><code>bool | number</code></td>
+                        <td>Applies logarithmic transformation to axis.</td>
+                        <td><code>log_scale=True</code> for long latency tails</td>
+                    </tr>
+                    <tr>
+                        <td><code>weights</code></td>
+                        <td><code>array-like</code></td>
+                        <td>Weight of each observation for non-uniform sampling.</td>
+                        <td>Survey demographic weighting</td>
+                    </tr>
+                    <tr>
+                        <td><code>ax</code></td>
+                        <td><code>matplotlib.axes.Axes</code></td>
+                        <td>Target subplot axes object.</td>
+                        <td><code>ax=axes[0]</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Example 1: College Exam Completion Time (100 Students)</h3>
+        <p>Aaiye 100 students ke exam submission times par ECDF plot create karein aur 60-minute threshold evaluate karein:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; First ECDF with sns.ecdfplot()</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_sections = pd.read_csv(<span class="string">"scratch/seaborn_topic6_data/college_exam_sections.csv"</span>)
+sec_a = df_sections[df_sections[<span class="string">"section"</span>] == <span class="string">"Section A"</span>]
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4.2</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Plot Empirical CDF</span>
+sns.ecdfplot(data=sec_a, x=<span class="string">"completion_time"</span>, color=<span class="string">"#4f46e5"</span>, linewidth=<span class="number">2.5</span>, ax=ax)
+
+<span class="comment"># Annotate 60-minute cutoff</span>
+ax.axvline(<span class="number">60</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">1.8</span>, label=<span class="string">"60-Min Limit"</span>)
+ax.axhline(<span class="number">0.75</span>, color=<span class="string">"#10b981"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">1.8</span>, label=<span class="string">"75% Finished"</span>)
+ax.plot(<span class="number">60</span>, <span class="number">0.75</span>, marker=<span class="string">"o"</span>, markersize=<span class="number">8</span>, color=<span class="string">"#dc2626"</span>)
+
+ax.set_title(<span class="string">"College Exam Completion Time ECDF (Section A: 100 Students)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Exam Completion Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Proportion of Students Finished F(x)"</span>)
+ax.legend(loc=<span class="string">"upper left"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Proportion <= 60 mins:"</span>, (sec_a[<span class="string">"completion_time"</span>] &lt;= <span class="number">60</span>).mean())
+<span class="built_in">print</span>(<span class="string">"Proportion <= 75 mins:"</span>, (sec_a[<span class="string">"completion_time"</span>] &lt;= <span class="number">75</span>).mean())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Proportion &lt;= 60 mins: 0.75
+Proportion &lt;= 75 mins: 1.0
+            </div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/exam_completion_time_ecdf.png" alt="Exam Completion Time ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.4: College Exam Completion Time ECDF &mdash; Exactly 75% of Section A students submitted within the 60-minute window, and 100% submitted within 75 minutes.</div>
+        </div>
+
+        <h3>Example 2: Online Retail Delivery Times (QuickDrop: 100 Orders)</h3>
+        <p>Agar business stakeholder percentages dekhna chahta hai, toh <strong><code>stat="percent"</code></strong> pass karein taaki Y-axis <code>0% se 100%</code> format me display ho:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Percentage Scaling with stat="percent"</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>df_delivery = pd.read_csv(<span class="string">"scratch/seaborn_topic6_data/ecommerce_deliveries.csv"</span>)
+quick_deliv = df_delivery[df_delivery[<span class="string">"partner"</span>] == <span class="string">"QuickDrop"</span>]
+
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4.2</span>), dpi=<span class="number">140</span>)
+
+sns.ecdfplot(data=quick_deliv, x=<span class="string">"delivery_time_mins"</span>, stat=<span class="string">"percent"</span>, color=<span class="string">"#0284c7"</span>, linewidth=<span class="number">2.5</span>, ax=ax)
+
+ax.set_title(<span class="string">"Online Retail Delivery Time ECDF (QuickDrop: 100 Orders)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Delivery Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Percentage of Orders Delivered (%)"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Delivered <= 30 mins:"</span>, f"{(quick_deliv['delivery_time_mins'] &lt;= 30).mean() * 100:.1f}%")
+<span class="built_in">print</span>(<span class="string">"Delivered <= 45 mins:"</span>, f"{(quick_deliv['delivery_time_mins'] &lt;= 45).mean() * 100:.1f}%")</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Delivered &lt;= 30 mins: 31.0%
+Delivered &lt;= 45 mins: 95.0%
+            </div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/delivery_time_ecdf.png" alt="Delivery Time ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.5: Delivery Time ECDF with <code>stat="percent"</code> &mdash; Showing 31% delivered within 30 minutes, and 95% delivered within the 45-minute SLA target.</div>
+        </div>
+    </section>
+
+    <!-- Section 4: Customizing Aesthetics & Threshold Annotations -->
+    <section id="sec-4" class="card">
+        <h2 class="section-title">&#127912; 04. Customizing Aesthetics &amp; Threshold Annotations</h2>
+
+        <p>Raw plots students aur management dono ke liye boring hote hain. Ek presentation-grade ECDF banane ke liye hume:</p>
+        <ol>
+            <li>Target compliance region ko <strong><code>ax.axvspan()</code></strong> se light green shade karna chahiye.</li>
+            <li>Critical business cutoffs par <strong><code>ax.axvline()</code></strong> aur <strong><code>ax.axhline()</code></strong> reference lines lagani chahiye.</li>
+            <li>Direct text callout box ke zariye actionable conclusion highlight karna chahiye.</li>
+        </ol>
+
+        <div class="figure-card">
+            <img src="assets/annotated_threshold_ecdf.png" alt="Annotated Threshold ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.6: Presentation-Ready Annotated ECDF &mdash; Shaded compliance window (&le; 60 mins) and highlighted 75% threshold callout.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Shaded Compliance Region &amp; Annotation Pipeline</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+
+sns.ecdfplot(data=sec_a, x=<span class="string">"completion_time"</span>, stat=<span class="string">"percent"</span>, color=<span class="string">"#2563eb"</span>, linewidth=<span class="number">2.5</span>, ax=ax)
+
+<span class="comment"># Highlight compliance window</span>
+ax.axvspan(<span class="number">30</span>, <span class="number">60</span>, color=<span class="string">"#dcfce7"</span>, alpha=<span class="number">0.5</span>, label=<span class="string">"Standard Window (&lt;= 60 Mins)"</span>)
+ax.axvline(<span class="number">60</span>, color=<span class="string">"#16a34a"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">"60-Min Cutoff (75% Compliance)"</span>)
+ax.axhline(<span class="number">75</span>, color=<span class="string">"#16a34a"</span>, linestyle=<span class="string">":"</span>, linewidth=<span class="number">1.8</span>)
+
+ax.annotate(
+    <span class="string">"75% of Section A completed within 60 mins\n25% required additional time"</span>,
+    xy=(<span class="number">60</span>, <span class="number">75</span>), xytext=(<span class="number">63</span>, <span class="number">50</span>),
+    arrowprops=<span class="built_in">dict</span>(arrowstyle=<span class="string">"-&gt;"</span>, color=<span class="string">"#15803d"</span>, lw=<span class="number">2</span>),
+    fontweight=<span class="string">"bold"</span>, color=<span class="string">"#15803d"</span>, bbox=<span class="built_in">dict</span>(boxstyle=<span class="string">"round,pad=0.3"</span>, fc=<span class="string">"#ffffff"</span>, ec=<span class="string">"#16a34a"</span>)
+)
+
+ax.set_title(<span class="string">"Presentation-Ready Annotated ECDF with Operational Threshold"</span>, pad=<span class="number">12</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Time Taken to Submit Exam (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Percentage of Students (%)"</span>)
+ax.legend(loc=<span class="string">"upper left"</span>)
+plt.tight_layout()
+plt.show()</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 5: Operational SLA Targets & Compliance -->
+    <section id="sec-5" class="card">
+        <h2 class="section-title">&#128392; 05. Operational SLA Targets &amp; Multi-Service Compliance</h2>
+
+        <p>Real-world operations me companies <strong>Service Level Agreements (SLAs)</strong> sign karti hain. Example: <em>"90% of all customer orders must be delivered within 45 minutes."</em></p>
+
+        <p>Aaiye 3 alag-alag logistics partners (<code>QuickDrop</code>, <code>SpeedyKart</code>, <code>HyperRoute</code>) ko same chart par ECDF ke through evaluate karein:</p>
+
+        <div class="figure-card">
+            <img src="assets/operational_target_ecdf.png" alt="Operational Target ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.7: Operational SLA Compliance Audit at 45-Minute Target &mdash; QuickDrop comfortably clears SLA (95% &ge; 90%), while SpeedyKart (63%) and HyperRoute (61%) fail the contractual benchmark.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Multi-Partner SLA Audit with sns.ecdfplot()</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+
+sns.ecdfplot(
+    data=df_delivery, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>, stat=<span class="string">"percent"</span>,
+    palette={<span class="string">"QuickDrop"</span>: <span class="string">"#10b981"</span>, <span class="string">"SpeedyKart"</span>: <span class="string">"#f59e0b"</span>, <span class="string">"HyperRoute"</span>: <span class="string">"#ec4899"</span>},
+    linewidth=<span class="number">2.2</span>, ax=ax
+)
+
+<span class="comment"># 45-min deadline and 90% SLA requirement</span>
+ax.axvline(<span class="number">45</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">"SLA Target: 45 Mins"</span>)
+ax.axhline(<span class="number">90</span>, color=<span class="string">"#6b7280"</span>, linestyle=<span class="string">":"</span>, linewidth=<span class="number">1.8</span>, label=<span class="string">"Required Benchmark: 90%"</span>)
+
+ax.set_title(<span class="string">"Operational SLA Compliance Audit at 45-Minute Delivery Target"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Delivery Duration (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Orders Delivered (%)"</span>)
+ax.legend(loc=<span class="string">"upper left"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="keyword">for</span> partner <span class="keyword">in</span> [<span class="string">"QuickDrop"</span>, <span class="string">"SpeedyKart"</span>, <span class="string">"HyperRoute"</span>]:
+    sub = df_delivery[df_delivery[<span class="string">"partner"</span>] == partner]
+    pct = (sub[<span class="string">"delivery_time_mins"</span>] &lt;= <span class="number">45</span>).mean() * <span class="number">100</span>
+    <span class="built_in">print</span>(<span class="string">f"{partner} 45-Min Compliance: {pct:.1f}% -> {'PASS' if pct >= 90 else 'FAIL'}"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+QuickDrop 45-Min Compliance: 95.0% -&gt; PASS
+SpeedyKart 45-Min Compliance: 63.0% -&gt; FAIL
+HyperRoute 45-Min Compliance: 61.0% -&gt; FAIL
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6: Comparing Distributions Beyond Single Summary Averages -->
+    <section id="sec-6" class="card">
+        <h2 class="section-title">&#128260; 06. Comparing Distributions: Beyond Single Summary Averages</h2>
+
+        <p>Data science me sabse bada trap hota hai <strong>The Flaw of Averages</strong>. Agar do groups ka average (mean) ek jaisa ho, toh log maan lete hain ki dono groups identical perform kar rahe hain. Lekin ground reality me unka distribution completely different ho sakta hai!</p>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Why Averages Can Deceive You</div>
+            <p>Maan lijiye do hospital emergency rooms (ER-1 aur ER-2) ka average patient waiting time <strong>45 minutes</strong> hai:</p>
+            <ul>
+                <li><strong>ER-1:</strong> Sabhi patients ka waiting time 40 se 50 minutes ke beech hota hai (Consistent &amp; predictable).</li>
+                <li><strong>ER-2:</strong> 50% patients 5 minutes me check ho jaate hain, lekin baaki 50% critical patients 85 minutes tak tadap rahe hote hain!</li>
+            </ul>
+            <p>Average dono ka 45 mins hai, lekin ER-2 me 50% log dangerously delayed hain! ECDF is extreme spread ko instant reveal karta hai.</p>
+        </div>
+
+        <h3>First-Order Stochastic Dominance (Kiska Curve Aage Hai?)</h3>
+        <p>Jab hum do ECDFs ko compare karte hain, toh <strong>curve jo LEFT aur UPWARD hoti hai</strong>, woh faster / smaller values represent karti hai. Aaiye Section A aur Section B ke exam submission times ko compare karein:</p>
+
+        <div class="figure-card">
+            <img src="assets/section_a_vs_b_ecdf.png" alt="Section A vs Section B Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.8: Comparing Distributions: Section A vs. Section B &mdash; Section A's curve is strictly to the left of Section B, demonstrating First-Order Stochastic Dominance (consistently faster completion).</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Section A vs B Stochastic Dominance Check</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+
+sns.ecdfplot(
+    data=df_sections, x=<span class="string">"completion_time"</span>, hue=<span class="string">"section"</span>,
+    palette={<span class="string">"Section A"</span>: <span class="string">"#2563eb"</span>, <span class="string">"Section B"</span>: <span class="string">"#dc2626"</span>},
+    linewidth=<span class="number">2.5</span>, ax=ax
+)
+
+<span class="comment"># Highlight the 60-minute gap</span>
+ax.axvline(<span class="number">60</span>, color=<span class="string">"#64748b"</span>, linestyle=<span class="string">"--"</span>, alpha=<span class="number">0.7</span>)
+ax.plot(<span class="number">60</span>, <span class="number">0.75</span>, marker=<span class="string">"o"</span>, markersize=<span class="number">8</span>, color=<span class="string">"#2563eb"</span>)
+ax.plot(<span class="number">60</span>, <span class="number">0.30</span>, marker=<span class="string">"o"</span>, markersize=<span class="number">8</span>, color=<span class="string">"#dc2626"</span>)
+
+ax.set_title(<span class="string">"Comparing Distributions: Section A vs. Section B (Stochastic Dominance)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Exam Completion Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Proportion F(x)"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Section A <= 60 mins:"</span>, f"{(sec_a['completion_time'] &lt;= 60).mean()*100:.1f}%")
+sec_b = df_sections[df_sections[<span class="string">"section"</span>] == <span class="string">"Section B"</span>]
+<span class="built_in">print</span>(<span class="string">"Section B <= 60 mins:"</span>, f"{(sec_b['completion_time'] &lt;= 60).mean()*100:.1f}%")</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Section A &lt;= 60 mins: 75.0%
+Section B &lt;= 60 mins: 30.0%
+            </div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#127919; How to Read Direction in ECDFs</div>
+            <ul>
+                <li><strong>Agar x-axis "Cost", "Latency" ya "Time" hai (where smaller is better):</strong> Toh jo curve <strong>Left &amp; Upward</strong> hogi woh better perform kar rahi hai.</li>
+                <li><strong>Agar x-axis "Exam Marks", "Income" ya "Battery Life" hai (where bigger is better):</strong> Toh jo curve <strong>Right &amp; Downward</strong> hogi woh better perform kar rahi hai (higher scores).</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 7: Head-to-Head Service Comparisons -->
+    <section id="sec-7" class="card">
+        <h2 class="section-title">&#9878; 07. Head-to-Head Service Comparisons &amp; Median Spreads</h2>
+
+        <p>Business me jab do vendors ya delivery partners compete karte hain, toh hume unke <strong>Median (50th percentile)</strong> aur unke <strong>Spread (Interquartile Range)</strong> ko evaluate karna hota hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/delivery_service_a_vs_b_ecdf.png" alt="Delivery Service A vs B Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.9: Head-to-Head Delivery Comparison &mdash; QuickDrop (Median 33.6m) vs. SpeedyKart (Median 42.5m) showing a clear 8.9-minute median advantage and tighter spread.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Median &amp; Quartile Spread Comparison</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>df_two = df_delivery[df_delivery[<span class="string">"partner"</span>].isin([<span class="string">"QuickDrop"</span>, <span class="string">"SpeedyKart"</span>])]
+
+fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+sns.ecdfplot(
+    data=df_two, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>,
+    palette={<span class="string">"QuickDrop"</span>: <span class="string">"#059669"</span>, <span class="string">"SpeedyKart"</span>: <span class="string">"#d97706"</span>},
+    linewidth=<span class="number">2.5</span>, ax=ax
+)
+
+<span class="comment"># Draw Median Reference Lines (F(x) = 0.50)</span>
+ax.axhline(<span class="number">0.50</span>, color=<span class="string">"#64748b"</span>, linestyle=<span class="string">":"</span>, alpha=<span class="number">0.8</span>, label=<span class="string">"Median (50th Percentile)"</span>)
+ax.axvline(<span class="number">33.6</span>, color=<span class="string">"#059669"</span>, linestyle=<span class="string">":"</span>, alpha=<span class="number">0.8</span>)
+ax.axvline(<span class="number">42.45</span>, color=<span class="string">"#d97706"</span>, linestyle=<span class="string">":"</span>, alpha=<span class="number">0.8</span>)
+
+ax.set_title(<span class="string">"Head-to-Head Delivery Comparison: QuickDrop vs. SpeedyKart"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Delivery Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Proportion"</span>)
+ax.legend(loc=<span class="string">"upper left"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"QuickDrop Median:"</span>, df_two[df_two[<span class="string">"partner"</span>]==<span class="string">"QuickDrop"</span>][<span class="string">"delivery_time_mins"</span>].median(), <span class="string">"mins"</span>)
+<span class="built_in">print</span>(<span class="string">"SpeedyKart Median:"</span>, df_two[df_two[<span class="string">"partner"</span>]==<span class="string">"SpeedyKart"</span>][<span class="string">"delivery_time_mins"</span>].median(), <span class="string">"mins"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+QuickDrop Median: 33.6 mins
+SpeedyKart Median: 42.45 mins
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8: Multi-Group ECDF with hue -->
+    <section id="sec-8" class="card">
+        <h2 class="section-title">&#128396; 08. Multi-Group Visualizations with hue &amp; Color Palettes</h2>
+
+        <p>Jab 3 ya 4 groups hon, toh <code>hue</code> parameter ke sath distinct, accessible colors use karna essential hota hai. Unlike histograms (jahan multiple groups ke bars ek doosre ko block kar dete hain), ECDF me sabhi curves <strong>clean lines</strong> ke roop me draw hoti hain jisse koi bar occlusion nahi hota:</p>
+
+        <div class="figure-card">
+            <img src="assets/grouped_ecdf_hue.png" alt="Grouped ECDF using hue" loading="lazy">
+            <div class="figure-caption">Figure 6.10: Multi-Partner Delivery Distribution Profile across 3 Logistics Partners &mdash; Clean, un-occluded multi-distribution lines with high visual contrast.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Multi-Group ECDF with Explicit Color Dictionary</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>partner_palette = {
+    <span class="string">"QuickDrop"</span>: <span class="string">"#2563eb"</span>,    <span class="comment"># Vibrant Blue</span>
+    <span class="string">"SpeedyKart"</span>: <span class="string">"#f59e0b"</span>,   <span class="comment"># Amber Orange</span>
+    <span class="string">"HyperRoute"</span>: <span class="string">"#8b5cf6"</span>    <span class="comment"># Royal Purple</span>
+}
+
+fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+sns.ecdfplot(
+    data=df_delivery, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>,
+    palette=partner_palette, linewidth=<span class="number">2.3</span>, ax=ax
+)
+
+ax.set_title(<span class="string">"Multi-Partner Delivery Distribution Profile (300 Orders)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Delivery Duration (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Proportion F(x)"</span>)
+plt.tight_layout()
+plt.show()</code></pre>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128161; Best Practices for Multi-Group ECDFs</div>
+            <ul>
+                <li><strong>Max 4&ndash;5 Curves:</strong> 5 se zyada groups hone par lines aapas me tangled pasta jaisi ban sakti hain.</li>
+                <li><strong>Explicit Palette Mapping:</strong> Hamesha categorical dictionary pass karein taaki har run par colors consistent rahein.</li>
+                <li><strong>Descriptive Legend:</strong> Seaborn automatically clean legend generate karta hai jo figure ke upper-left ya outside placement par crisp rehta hai.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 9: Histogram vs KDE vs ECDF Showdown -->
+    <section id="sec-9" class="card">
+        <h2 class="section-title">&#9878; 09. Tri-Plot Showdown: Histogram vs. KDE vs. ECDF</h2>
+
+        <p>Distribution visualization ke 3 sabse prominent methods hain: <strong>Histogram</strong>, <strong>KDE Plot</strong>, aur <strong>ECDF Plot</strong>. Har tool ka apna unique purpose, mathematical assumption, aur limitation hota hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/three_panel_hist_kde_ecdf.png" alt="Three-Panel Hist KDE ECDF Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.11: Three Perspectives on Identical Delivery Data (300 Orders) &mdash; Histogram (binned frequency), KDE (smoothed continuous density), and ECDF (exact cumulative proportion).</div>
+        </div>
+
+        <h3>Comprehensive Comparison Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 140px;">Feature / Dimension</th>
+                        <th style="min-width: 200px;">Histogram (<code>histplot</code>)</th>
+                        <th style="min-width: 220px;">KDE Plot (<code>kdeplot</code>)</th>
+                        <th style="min-width: 220px;">ECDF Plot (<code>ecdfplot</code>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Purpose</strong></td>
+                        <td>Specific bins me observations ki frequency count dekhna.</td>
+                        <td>Continuous probability density shape aur multiple peaks estimate karna.</td>
+                        <td>Exact cumulative fraction (percentile) aur threshold compliance measure karna.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Parameter Sensitivity</strong></td>
+                        <td><strong>High</strong> (Appearance changes with <code>bins</code> and <code>binwidth</code>).</td>
+                        <td><strong>High</strong> (Curve changes with <code>bw_adjust</code> and <code>clip</code>).</td>
+                        <td><strong>ZERO!</strong> (Parameter-free, exact direct empirical step function).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Loss / Smoothing</strong></td>
+                        <td>Discretizes continuous data into arbitrary bins.</td>
+                        <td>Smooths over local spikes, can create boundary spillover.</td>
+                        <td><strong>Zero smoothing!</strong> 100% data points directly represented.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Group Overlap</strong></td>
+                        <td>Poor (Bars overlap or occlude unless dodged).</td>
+                        <td>Good (Translucent curves allow comparison of 2&ndash;3 groups).</td>
+                        <td><strong>Excellent!</strong> (Non-overlapping lines cleanly compare 3&ndash;5 groups).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Threshold Reading</strong></td>
+                        <td>Difficult (Bins don't align with exact cutoffs).</td>
+                        <td>Requires complex numerical integration under curve.</td>
+                        <td><strong>Instantaneous!</strong> Simply read Y-value at chosen X.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bimodal Peak Detection</strong></td>
+                        <td><strong>Very Clear</strong> (Two tall bar clusters visible).</td>
+                        <td><strong>Very Clear</strong> (Two distinct peaks in density).</td>
+                        <td>Subtle (Visible as an inflection point or S-curve shift, but less intuitive).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Rule of Thumb: When to Choose Which Plot?</div>
+            <ul>
+                <li><strong>Choose Histogram:</strong> Jab aapko discrete count numbers dekhne hon ("50 se 60 ke beech kitne orders the?").</li>
+                <li><strong>Choose KDE:</strong> Jab aapko distribution ki smooth multi-peak shape dekhni ho ("Kahan par clusters concentrate ho rahe hain?").</li>
+                <li><strong>Choose ECDF:</strong> Jab aapko threshold decisions lene hon ("Kitne % orders 45 mins ke andar delivered hue?") ya multiple services ko objectively compare karna ho.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 10: The Crossover Phenomenon -->
+    <section id="sec-10" class="card">
+        <h2 class="section-title">&#10060; 10. The Crossover Phenomenon: When ECDF Curves Intersect</h2>
+
+        <p>Real-world distributions me aksar <strong>ECDF curves aapas me cross karti hain</strong>. Crossover ka matlab hota hai ki ek service fast delivery me aage hai lekin reliability me piche hai! Yeh business analytics ka sabse illuminating insight hota hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/ecdf_crossing_curves.png" alt="ECDF Crossing Curves Demonstration" loading="lazy">
+            <div class="figure-caption">Figure 6.12: The ECDF Crossover Phenomenon &mdash; HyperRoute has a faster median (28.9m vs 33.6m), but crosses QuickDrop at ~35 mins due to a disastrous heavy tail (only 61% SLA vs QuickDrop's 95%).</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Analyzing ECDF Crossover Points</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>df_crossing = df_delivery[df_delivery[<span class="string">"partner"</span>].isin([<span class="string">"QuickDrop"</span>, <span class="string">"HyperRoute"</span>])]
+
+fig, ax = plt.subplots(figsize=(<span class="number">9</span>, <span class="number">4.8</span>), dpi=<span class="number">140</span>)
+sns.ecdfplot(
+    data=df_crossing, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>,
+    palette={<span class="string">"QuickDrop"</span>: <span class="string">"#059669"</span>, <span class="string">"HyperRoute"</span>: <span class="string">"#db2777"</span>},
+    linewidth=<span class="number">2.5</span>, ax=ax
+)
+
+<span class="comment"># Highlight the Crossover at ~35 mins</span>
+ax.plot(<span class="number">35</span>, <span class="number">0.58</span>, marker=<span class="string">"X"</span>, markersize=<span class="number">12</span>, color=<span class="string">"#dc2626"</span>, zorder=<span class="number">6</span>)
+ax.axvline(<span class="number">45</span>, color=<span class="string">"#6b7280"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">1.5</span>, alpha=<span class="number">0.7</span>)
+
+ax.set_title(<span class="string">"The ECDF Crossover Phenomenon: Why Faster Medians Can Mislead"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Delivery Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Proportion F(x)"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"HyperRoute Median:"</span>, df_delivery[df_delivery[<span class="string">"partner"</span>]==<span class="string">"HyperRoute"</span>][<span class="string">"delivery_time_mins"</span>].median(), <span class="string">"mins"</span>)
+<span class="built_in">print</span>(<span class="string">"QuickDrop Median:"</span>, df_delivery[df_delivery[<span class="string">"partner"</span>]==<span class="string">"QuickDrop"</span>][<span class="string">"delivery_time_mins"</span>].median(), <span class="string">"mins"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+HyperRoute Median: 28.85 mins
+QuickDrop Median: 33.6 mins
+            </div>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#128680; Executive Takeaway: The Long-Tail Hazard</div>
+            <p>Agar aap marketing me sirf <strong>Median</strong> advertise karein, toh <em>HyperRoute</em> jeet jayega (28.9 mins vs 33.6 mins). Lekin agar aap customer satisfaction ya SLA guarantee (45 mins) dekhenge, toh HyperRoute ke <strong>39% orders late ho jaate hain</strong>, jabki QuickDrop ke sirf <strong>5% orders late hote hain</strong>! Crossover ECDFs prove karte hain ki <em>Median alone does not tell the whole story!</em></p>
+        </div>
+    </section>
+
+    <!-- Section 11: Distribution Tails & Outlier Latency Audits -->
+    <section id="sec-11" class="card">
+        <h2 class="section-title">&#128065; 11. Distribution Tails &amp; Outlier Latency Audits</h2>
+
+        <p>Distribution ka <strong>Right Tail (<i>Y</i> &ge; 0.80)</strong> batata hai ki worst-case scenarios me system kaisa behave karta hai. ECDF me tail behavior ko analyze karna bohot easy hota hai &mdash; curve kitni der baad 1.0 touch karti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/distribution_tail_comparison.png" alt="Distribution Tail Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.13: Distribution Tail Analysis &mdash; QuickDrop has a thin, predictable tail (all orders finish by 55 mins), whereas HyperRoute has a fat, unpredictable tail extending up to 95 mins.</div>
+        </div>
+
+        <h3>Thin Tail vs. Fat Tail (What it Means in Production)</h3>
+        <ul>
+            <li><strong>Thin Tail (Consistent Performance):</strong> Curve steeply rise hokar jaldi 1.0 par pahunch jaati hai. Outliers bohot kam hote hain. QuickDrop ka 99th percentile sirf 52 minutes hai.</li>
+            <li><strong>Fat / Heavy Tail (High Latency Variance):</strong> Curve upper region me flat ho kar bohot aage tak stretch hoti hai. Kuch unfortunate customers ko 80&ndash;95 minutes intezaar karna padta hai!</li>
+        </ul>
+    </section>
+
+    <!-- Section 12: Regular CDF vs. Complementary CCDF -->
+    <section id="sec-12" class="card">
+        <h2 class="section-title">&#128257; 12. Regular CDF vs. Complementary CCDF (complementary=True)</h2>
+
+        <p>Standard ECDF measure karta hai: <code>P(X &le; x)</code> (kitne fraction ne time ke andar complete kiya). Lekin reliability engineering aur SLA breach audits me hume ulta poochhna hota hai: <strong>"Kitne fraction ne target se ZYADA time lagaya?"</strong> (Exceedance Probability).</p>
+
+        <p>Iske liye Seaborn me <strong><code>complementary=True</code></strong> use kiya jata hai, jise <strong>Complementary Cumulative Distribution Function (CCDF)</strong> ya <em>Survival Function</em> kehte hain:</p>
+
+        <div class="figure-card">
+            <img src="assets/threshold_percentage_comparison.png" alt="CDF vs CCDF Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.16: Regular CDF vs. Complementary CCDF &mdash; Left shows early completion proportion P(X &le; x); Right shows remaining/breached proportion P(X &gt; x) = 1 - F(x).</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Plotting Complementary CCDF for SLA Breach Audits</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">12</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+sec_b_times = df_sections[df_sections[<span class="string">"section"</span>] == <span class="string">"Section B"</span>][<span class="string">"completion_time"</span>]
+
+<span class="comment"># 1. Standard CDF: P(Time <= x)</span>
+sns.ecdfplot(sec_b_times, stat=<span class="string">"percent"</span>, color=<span class="string">"#2563eb"</span>, linewidth=<span class="number">2.5</span>, ax=axes[<span class="number">0</span>])
+axes[<span class="number">0</span>].set_title(<span class="string">"Standard ECDF: P(Time &lt;= x)\nFinished Early"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>].axvline(<span class="number">60</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>)
+
+<span class="comment"># 2. Complementary CCDF: P(Time > x)</span>
+sns.ecdfplot(sec_b_times, stat=<span class="string">"percent"</span>, complementary=<span class="keyword">True</span>, color=<span class="string">"#d97706"</span>, linewidth=<span class="number">2.5</span>, ax=axes[<span class="number">1</span>])
+axes[<span class="number">1</span>].set_title(<span class="string">"Complementary CCDF: P(Time &gt; x)\nStill Writing / Overdue"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>].axvline(<span class="number">60</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>)
+
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Finished <= 60m:"</span>, f"{(sec_b_times &lt;= 60).mean()*100:.1f}%")
+<span class="built_in">print</span>(<span class="string">"Breached > 60m:"</span>, f"{(sec_b_times &gt; 60).mean()*100:.1f}%")</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Finished &lt;= 60m: 30.0%
+Breached &gt; 60m: 70.0%
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 13: Sample Size Sensitivity -->
+    <section id="sec-13" class="card">
+        <h2 class="section-title">&#128300; 13. Sample Size Sensitivity: Staircase vs. Smooth Curves</h2>
+
+        <p>Aksar students poochte hain: <em>"Sir, mere graph me ECDF jagged staircase jaisa kyun dikh raha hai jabki tutorials me smooth curve jaisa dikhta hai?"</em></p>
+
+        <p>Iska direct answer hai: <strong>Sample Size (<i>N</i>)</strong>. Har jump ki height <i>1/N</i> hoti hai:</p>
+        <ul>
+            <li>Jab <i>N</i> = 15 ho, toh har step <i>1/15 &approx; 6.7%</i> ka bada jump hota hai &mdash; staircase clearly nazar aati hai.</li>
+            <li>Jab <i>N</i> = 500 ho, toh har step <i>1/500 = 0.2%</i> ka tiny jump hota hai &mdash; curve visually continuous and smooth dikhne lagti hai!</li>
+        </ul>
+
+        <div class="figure-card">
+            <img src="assets/sample_size_comparison_ecdf.png" alt="Sample Size Sensitivity Comparison" loading="lazy">
+            <div class="figure-caption">Figure 6.17: Sample Size Sensitivity &mdash; N=15 (coarse discrete staircase jumps), N=50 (balanced step definition), and N=500 (smooth continuous curve appearance).</div>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128161; Statistical Truth: Small Samples Do Not Invalidate ECDF</div>
+            <p>Bina kisi parameter ke, chote samples (<i>N</i>=15) par bhi ECDF 100% mathematically truthful hota hai! Yeh raw empirical data ko faithfully represent karta hai bina false smooth modes fabricate kiye.</p>
+        </div>
+    </section>
+
+    <!-- Section 14: Case Study A - College Exam Sections -->
+    <section id="sec-14" class="card">
+        <h2 class="section-title">&#127891; 14. Real-Life Case Study A: College Exam Section Performance</h2>
+
+        <p><strong>The Academic Problem:</strong> Ek engineering college ke HOD do faculty sections (Section A: 100 students vs Section B: 100 students) ke final programming exam submission times ko evaluate karna chahte hain. Unka question hai: <em>"Kya Section A ke teaching methodology se students paper significantly jaldi aur accurately solve kar paaye?"</em></p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Case Study A: Academic Performance Audit</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_sections = pd.read_csv(<span class="string">"scratch/seaborn_topic6_data/college_exam_sections.csv"</span>)
+
+fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+sns.ecdfplot(
+    data=df_sections, x=<span class="string">"completion_time"</span>, hue=<span class="string">"section"</span>,
+    palette={<span class="string">"Section A"</span>: <span class="string">"#2563eb"</span>, <span class="string">"Section B"</span>: <span class="string">"#dc2626"</span>},
+    linewidth=<span class="number">2.5</span>, ax=ax
+)
+
+<span class="comment"># Threshold lines at 60 and 75 mins</span>
+ax.axvline(<span class="number">60</span>, color=<span class="string">"#64748b"</span>, linestyle=<span class="string">"--"</span>, label=<span class="string">"60-Min Standard Cutoff"</span>)
+ax.axvline(<span class="number">75</span>, color=<span class="string">"#10b981"</span>, linestyle=<span class="string">":"</span>, label=<span class="string">"75-Min Extended Cutoff"</span>)
+
+ax.set_title(<span class="string">"Case Study A: Exam Submission Speed by Section"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Exam Completion Time (Minutes)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Fraction Submitted F(x)"</span>)
+ax.legend(loc=<span class="string">"upper left"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="keyword">for</span> sec <span class="keyword">in</span> [<span class="string">"Section A"</span>, <span class="string">"Section B"</span>]:
+    sub = df_sections[df_sections[<span class="string">"section"</span>] == sec]
+    m = sub[<span class="string">"completion_time"</span>].mean()
+    med = sub[<span class="string">"completion_time"</span>].median()
+    p60 = (sub[<span class="string">"completion_time"</span>] &lt;= <span class="number">60</span>).mean() * <span class="number">100</span>
+    p75 = (sub[<span class="string">"completion_time"</span>] &lt;= <span class="number">75</span>).mean() * <span class="number">100</span>
+    <span class="built_in">print</span>(<span class="string">f"{sec} -> Mean: {m:.1f}m, Median: {med:.1f}m | <=60m: {p60:.1f}%, <=75m: {p75:.1f}%"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Section A -&gt; Mean: 55.0m, Median: 54.7m | &lt;=60m: 75.0%, &lt;=75m: 100.0%
+Section B -&gt; Mean: 68.3m, Median: 69.2m | &lt;=60m: 30.0%, &lt;=75m: 74.0%
+            </div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128221; Findings &amp; Next Steps for College HOD</div>
+            <ul>
+                <li><strong>Empirical Evidence:</strong> Section A demonstrates First-Order Stochastic Dominance over Section B. Section A ke 100% students 75 minutes me finish kar chuke the, jabki Section B ke 26% students ko 75 minutes se zyada time laga.</li>
+                <li><strong>Actionable Policy:</strong> Section A ke tutorial problem-solving structure ko Section B ke curriculum me implement kiya jaye taaki unki speed improve ho sake.</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Section 15: Case Study B - Cloud Microservice Latency -->
+    <section id="sec-15" class="card">
+        <h2 class="section-title">&#9729; 15. Real-Life Case Study B: Cloud Microservice Latency (v1 vs. v2)</h2>
+
+        <p><strong>The Cloud Engineering Problem:</strong> Ek tech company ne apna legacy monolithic payment API (API v1) rewrite karke modern microservice architecture (API v2) deploy kiya. Lead DevOps Architect ko prove karna hai ki naya service production SLA budget (100ms) meet kar raha hai aur tail latency eliminate ho chuki hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/website_api_latency_ecdf.png" alt="Website API Latency ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.14: Cloud Microservice API Latency Audit &mdash; API v2 (Blue) achieves 100% compliance within the 100ms performance budget (p99 = 86.6ms), while legacy API v1 (Red) breaches SLA on 52.5% of requests.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Case Study B: Percentile Latency Audit</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code>df_lat = pd.read_csv(<span class="string">"scratch/seaborn_topic6_data/system_latencies.csv"</span>)
+
+fig, ax = plt.subplots(figsize=(<span class="number">9</span>, <span class="number">4.6</span>), dpi=<span class="number">140</span>)
+sns.ecdfplot(
+    data=df_lat, x=<span class="string">"latency_ms"</span>, hue=<span class="string">"service_version"</span>,
+    palette={<span class="string">"API v1 (Monolith)"</span>: <span class="string">"#dc2626"</span>, <span class="string">"API v2 (Microservice)"</span>: <span class="string">"#0284c7"</span>},
+    linewidth=<span class="number">2.5</span>, ax=ax
+)
+
+<span class="comment"># 100ms Performance SLA Budget</span>
+ax.axvline(<span class="number">100</span>, color=<span class="string">"#16a34a"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">1.8</span>, label=<span class="string">"Performance Budget: 100ms"</span>)
+ax.set_title(<span class="string">"Website Microservice API Latency Distribution Audit"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Server Response Latency (Milliseconds, ms)"</span>)
+ax.set_ylabel(<span class="string">"Cumulative Fraction F(x)"</span>)
+ax.legend(loc=<span class="string">"lower right"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="keyword">for</span> ver <span class="keyword">in</span> [<span class="string">"API v1 (Monolith)"</span>, <span class="string">"API v2 (Microservice)"</span>]:
+    sub = df_lat[df_lat[<span class="string">"service_version"</span>] == ver][<span class="string">"latency_ms"</span>]
+    <span class="built_in">print</span>(<span class="string">f"--- {ver} ---"</span>)
+    <span class="built_in">print</span>(<span class="string">f"p50 (Median): {sub.quantile(0.50):.1f} ms"</span>)
+    <span class="built_in">print</span>(<span class="string">f"p95:          {sub.quantile(0.95):.1f} ms"</span>)
+    <span class="built_in">print</span>(<span class="string">f"p99:          {sub.quantile(0.99):.1f} ms"</span>)
+    <span class="built_in">print</span>(<span class="string">f"<= 100ms SLA: {(sub <= 100).mean()*100:.1f}%\n"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+--- API v1 (Monolith) ---
+p50 (Median): 103.1 ms
+p95:          224.7 ms
+p99:          334.7 ms
+&lt;= 100ms SLA: 47.5%
+
+--- API v2 (Microservice) ---
+p50 (Median): 48.3 ms
+p95:          74.1 ms
+p99:          86.6 ms
+&lt;= 100ms SLA: 100.0%
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 16: Case Study C - Industrial IoT Sensors -->
+    <section id="sec-16" class="card">
+        <h2 class="section-title">&#128225; 16. Real-Life Case Study C: Industrial IoT Sensor Response Times</h2>
+
+        <p><strong>The Industrial Edge Problem:</strong> Smart factory floor me 400 temperature and vibration IoT sensors real-time telemetry stream karte hain. Network congestion ke time sensor heartbeat latencies measure ki gayi taaki pata lag sake ki safety alerts delay ho rahe hain ya nahi:</p>
+
+        <div class="figure-card">
+            <img src="assets/iot_sensor_response_ecdf.png" alt="IoT Sensor Response ECDF" loading="lazy">
+            <div class="figure-caption">Figure 6.15: Industrial IoT Edge Sensor Response Latency &mdash; Under normal traffic, 99% sensors respond within 20ms; during congestion, only 32% meet the 20ms threshold, posing critical delay risks.</div>
+        </div>
+
+        <div class="callout callout-realworld">
+            <div class="callout-title">&#128736; Safety Alert Threshold Analysis</div>
+            <p>Safety alert standard ke mutabiq sensor heartbeat response strictly <strong>20 milliseconds</strong> ke andar aana chahiye:</p>
+            <ul>
+                <li><strong>Normal Traffic:</strong> 99% readings 20ms se kam hain (Safe operation).</li>
+                <li><strong>Congested Traffic:</strong> Curve severely right side shift ho jaati hai &mdash; <strong>68% readings 20ms threshold breach kar deti hain!</strong></li>
+            </ul>
+            <p>Yeh empirical visual evidence plant engineers ko dedicated industrial private 5G network implement karne ka solid justification deti hai.</p>
+        </div>
+    </section>
+
+    <!-- Section 17: Common Pitfalls & Debugging Guide -->
+    <section id="sec-17" class="card">
+        <h2 class="section-title">&#128679; 17. Common Pitfalls &amp; Debugging Guide</h2>
+
+        <p>ECDF visualization simple lagti hai lekin beginners aksar statistical aur visual interpretation traps me phans jaate hain:</p>
+
+        <div class="figure-card">
+            <img src="assets/common_mistakes_ecdf_visual.png" alt="Common Mistakes ECDF Visual Explainer" loading="lazy">
+            <div class="figure-caption">Figure 6.19: Visual Explainer of Common ECDF Misinterpretations &mdash; Mistake 1 (Thinking Y-axis is density or frequency count) and Mistake 2 (Ignoring crossing curves and tail variance).</div>
+        </div>
+
+        <h3>12 Common ECDF Pitfalls &amp; Solutions</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 170px;">Pitfall / Trap</th>
+                        <th style="min-width: 200px;">Kyun Hota Hai? (Root Cause)</th>
+                        <th style="min-width: 250px;">Recommended Fix &amp; Code Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Misinterpreting Y-Axis as Density</strong></td>
+                        <td>Users sochte hain ki Y-axis par 0.60 ka matlab hai "40 minutes par density 0.60 hai". Y-axis <strong>Cumulative Fraction (&le; x)</strong> hoti hai, frequency ya density nahi!</td>
+                        <td>Y-axis labels ko clearly <em>Cumulative Proportion F(x)</em> ya <em>Orders Delivered (%)</em> mark karein:<br><code>ax.set_ylabel("Cumulative Fraction F(x)")</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Misreading Curve Direction</strong></td>
+                        <td>Users sochte hain ki jo curve right side hoti hai woh faster hai. Duration / Latency context me <strong>LEFT curve faster hoti hai</strong>!</td>
+                        <td>Check karein: Left curve lower values par jaldi 1.0 touch karti hai, isliye faster hoti hai. Lower is better for time/cost.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Declaring a Winner When Curves Cross</strong></td>
+                        <td>Agar do curves cross kar rahi hon, toh ek service shuru me fast hoti hai lekin tail me slow ho sakti hai. Single winner declare karna misleading hai.</td>
+                        <td>Crossover point identify karein aur specify karein: "Service A has faster median, but Service B has higher 95th percentile SLA reliability."</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Confusing Percent vs. Proportion</strong></td>
+                        <td><code>stat="proportion"</code> me scale <code>0.0 to 1.0</code> hota hai; <code>stat="percent"</code> me <code>0% to 100%</code> hota hai. Dono ko mix karne se labels wrong ho jaate hain.</td>
+                        <td>Explicit units use karein: Percentage ke liye Y-axis par <code>%</code> symbol aur proportion ke liye <code>[0.0 - 1.0]</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Forgetting that ECDF Shows &le; x, Not &lt; x</strong></td>
+                        <td>Discrete data me exact values par ECDF step jump point ko include karta hai (<i>P(X &le; x)</i>). Strict inequality (&lt;) expect karna count mismatch karta hai.</td>
+                        <td>Mathematical definition yaad rakhein: <i>F(x)</i> includes all observations equal to <i>x</i>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. Comparing Unequal Units</strong></td>
+                        <td>Ek group minutes me ho aur doosra seconds ya hours me ho, unhe bina normalize kiye same plot me pass kar dena.</td>
+                        <td>Hamesha unit check karein: <code>df["time_mins"] = df["time_secs"] / 60</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. Small Sample Over-Interpretation</strong></td>
+                        <td><i>N</i>=10 observations par broad population claims karna. Chhote samples me steps bade (10%) hote hain jisse sample variance high rehti hai.</td>
+                        <td>Sample size (<i>N</i>) ko title ya legend me disclose karein: <code>title="Section A (N=100)"</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>8. Forgetting CCDF for Exceedance Analysis</strong></td>
+                        <td>"Kitne orders 45 mins se zyada late hue?" nikalne ke liye standard ECDF se mental subtraction karna padta hai (100 - <i>F(x)</i>).</td>
+                        <td>Directly <code>complementary=True</code> use karein taaki Y-axis directly late/breached proportion dikhaye:<br><code>sns.ecdfplot(df, x="time", complementary=True)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>9. Overcrowding Multi-Hue Plots</strong></td>
+                        <td>6 se zyada groups ko single ECDF me daal dene se line tangle ban jata hai.</td>
+                        <td>Groups ko 4&ndash;5 tak limit karein ya FacetGrid subplots use karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>10. Assuming ECDF Establishes Causation</strong></td>
+                        <td>Section A ka ECDF Section B se left hone par maan lena ki faculty A better hai, jabki student baseline admission score different ho sakta hai.</td>
+                        <td>ECDF distribution shape show karta hai, causal proof nahi. Confounding variables check karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>11. Missing / NaN Values Breaking Calculations</strong></td>
+                        <td>Pandas column me null values hone se observation count <i>N</i> distort ho jata hai.</td>
+                        <td>Plot karne se pehle <code>.dropna()</code> karein:<br><code>sns.ecdfplot(df["latency"].dropna())</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>12. Extreme Outliers Compressing Visible Steps</strong></td>
+                        <td>Latency me ek extreme 10,000ms outlier hone se 99% data pehle 2% horizontal space me cram ho jata hai.</td>
+                        <td><code>log_scale=True</code> use karein ya 99th percentile par horizontal axis zoom karein:<br><code>sns.ecdfplot(df, x="latency", log_scale=True)</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Debugging Exercises: 2 Buggy Code Snippets &amp; Fixes</h3>
+
+        <!-- Bug 1 -->
+        <div class="callout callout-danger" style="margin-top: 18px;">
+            <div class="callout-title">&#128027; Bug 1: Units Mismatch in Comparative ECDF</div>
+            <p><strong>Buggy Code:</strong></p>
+            <div class="code-container">
+                <div class="code-header"><span>Python &bull; Buggy Snippet</span></div>
+                <pre class="code-content"><code><span class="comment"># Bug: Partner A logged in minutes, Partner B logged in seconds!</span>
+sns.ecdfplot(data=df_a, x=<span class="string">"delivery_mins"</span>, label=<span class="string">"Partner A"</span>)
+sns.ecdfplot(data=df_b, x=<span class="string">"delivery_secs"</span>, label=<span class="string">"Partner B"</span>) <span class="comment"># Disaster: 2400s plotted against 40m!</span></code></pre>
+            </div>
+            <p><strong>Correction:</strong></p>
+            <div class="code-container">
+                <div class="code-header"><span>Python &bull; Corrected Snippet</span></div>
+                <pre class="code-content"><code><span class="comment"># Fix: Normalize both datasets to minutes before plotting</span>
+df_b[<span class="string">"delivery_mins"</span>] = df_b[<span class="string">"delivery_secs"</span>] / <span class="number">60.0</span>
+sns.ecdfplot(data=df_a, x=<span class="string">"delivery_mins"</span>, label=<span class="string">"Partner A"</span>)
+sns.ecdfplot(data=df_b, x=<span class="string">"delivery_mins"</span>, label=<span class="string">"Partner B"</span>)</code></pre>
+            </div>
+        </div>
+
+        <!-- Bug 2 -->
+        <div class="callout callout-danger">
+            <div class="callout-title">&#128027; Bug 2: Missing Hue Semantic Argument</div>
+            <p><strong>Buggy Code:</strong></p>
+            <div class="code-container">
+                <div class="code-header"><span>Python &bull; Buggy Snippet</span></div>
+                <pre class="code-content"><code><span class="comment"># Bug: Passing grouped dataframe without hue combines all sections into one single curve!</span>
+sns.ecdfplot(data=df_sections, x=<span class="string">"completion_time"</span>)</code></pre>
+            </div>
+            <p><strong>Correction:</strong></p>
+            <div class="code-container">
+                <div class="code-header"><span>Python &bull; Corrected Snippet</span></div>
+                <pre class="code-content"><code><span class="comment"># Fix: Explicitly specify hue="section" to generate distinct colored curves per group</span>
+sns.ecdfplot(data=df_sections, x=<span class="string">"completion_time"</span>, hue=<span class="string">"section"</span>)</code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 18: Quick Reference Cheat Sheet -->
+    <section id="sec-18" class="card">
+        <h2 class="section-title">&#128203; 18. Quick Reference: ECDF Cheat Sheet &amp; Dashboard</h2>
+
+        <p>Aapke daily workflow ke liye yeh comprehensive cheat sheet sabhi common distribution evaluation goals ko summarize karti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/case_study_summary_dashboard.png" alt="Case Study Summary Dashboard" loading="lazy">
+            <div class="figure-caption">Figure 6.18: Executive Distribution Analytics &amp; SLA Benchmark Dashboard &mdash; 4-panel synthesis tracking Exam Completion, Delivery Timeliness, API Microservice Latency, and Operational Benchmark Compliance.</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 140px;">Analytical Goal</th>
+                        <th style="min-width: 130px;">Function / Parameter</th>
+                        <th style="min-width: 200px;">Key Options</th>
+                        <th style="min-width: 220px;">Use-Case Example</th>
+                        <th style="min-width: 180px;">Quality Assertion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Basic Cumulative Curve</strong></td>
+                        <td><code>sns.ecdfplot()</code></td>
+                        <td><code>x="col", stat="proportion"</code></td>
+                        <td>Measure student exam completion times</td>
+                        <td>Curve monotonically ascends from 0.0 to 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Percentage Scaling</strong></td>
+                        <td><code>sns.ecdfplot()</code></td>
+                        <td><code>stat="percent"</code></td>
+                        <td>Show client-friendly 0% to 100% metrics</td>
+                        <td>Y-axis displays clean percentage ticks</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multi-Group Comparison</strong></td>
+                        <td><code>sns.ecdfplot()</code></td>
+                        <td><code>hue="group", palette="Set2"</code></td>
+                        <td>Compare delivery partners QuickDrop vs SpeedyKart</td>
+                        <td>Non-overlapping curves with distinct colors</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Breach / Exceedance Audit</strong></td>
+                        <td><code>sns.ecdfplot()</code></td>
+                        <td><code>complementary=True</code></td>
+                        <td>Measure fraction of API requests exceeding 200ms</td>
+                        <td>Curve starts at 1.0 and descends to 0.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Threshold Annotation</strong></td>
+                        <td><code>ax.axvline() + ax.axhline()</code></td>
+                        <td><code>linestyle="--", color="#dc2626"</code></td>
+                        <td>Annotate 45-min SLA deadline on delivery plot</td>
+                        <td>Exact visual intersection at target percentage</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Heavy Tail Normalization</strong></td>
+                        <td><code>sns.ecdfplot()</code></td>
+                        <td><code>log_scale=True</code></td>
+                        <td>Microservice latency with extreme 10,000ms spikes</td>
+                        <td>Spreads tightly packed lower percentiles</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Production ECDF Benchmark Pipeline Function</h3>
+        <p>Aap is reusable Python function ko kisi bhi continuous numerical column par call karke automated SLA threshold evaluation aur median reference lines generate kar sakte hain:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Automated ECDF Benchmark Pipeline</span>
+                <span>Production Reusable</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="keyword">def</span> <span class="built_in">plot_ecdf_benchmark</span>(df, column, hue=<span class="keyword">None</span>, threshold=<span class="keyword">None</span>, title=<span class="keyword">None</span>):
+    <span class="string">"""
+    Generates an executive-ready ECDF plot with automated median reference lines,
+    optional threshold compliance check, and clean Seaborn styling.
+    """</span>
+    sns.set_theme(style=<span class="string">"whitegrid"</span>)
+    fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+    
+    sns.ecdfplot(data=df, x=column, hue=hue, stat=<span class="string">"percent"</span>, linewidth=<span class="number">2.3</span>, ax=ax)
+    
+    <span class="comment"># Add Median reference line</span>
+    ax.axhline(<span class="number">50</span>, color=<span class="string">"#64748b"</span>, linestyle=<span class="string">":"</span>, alpha=<span class="number">0.8</span>, label=<span class="string">"50th Percentile (Median)"</span>)
+    
+    <span class="keyword">if</span> threshold <span class="keyword">is</span> <span class="keyword">not</span> <span class="keyword">None</span>:
+        ax.axvline(threshold, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">1.8</span>, label=<span class="string">f"Threshold: {threshold}"</span>)
+        <span class="keyword">if</span> hue <span class="keyword">is</span> <span class="keyword">None</span>:
+            compliance = (df[column] &lt;= threshold).mean() * <span class="number">100</span>
+            ax.axhline(compliance, color=<span class="string">"#10b981"</span>, linestyle=<span class="string">"--"</span>, label=<span class="string">f"Compliance: {compliance:.1f}%"</span>)
+            
+    plot_title = title <span class="keyword">if</span> title <span class="keyword">else</span> <span class="string">f"ECDF Distribution Benchmark: {column}"</span>
+    ax.set_title(plot_title, fontsize=<span class="number">13</span>, fontweight=<span class="string">"bold"</span>)
+    ax.set_ylabel(<span class="string">"Cumulative Percentage (%)"</span>)
+    ax.legend(loc=<span class="string">"best"</span>)
+    plt.tight_layout()
+    <span class="keyword">return</span> fig, ax</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 19: Practice Questions & Capstone Mini-Project -->
+    <section id="sec-19" class="card">
+        <h2 class="section-title">&#128170; 19. Practice Questions &amp; Capstone Mini-Project</h2>
+
+        <p>Neeche diye gaye 21 conceptual questions, analytical challenges, MCQs, aur Capstone project ko solve karke apna ECDF concepts test karein. Har question ka solution dekhne ke liye accordion par click karein:</p>
+
+        <!-- Q1 -->
+        <details class="details-box">
+            <summary class="details-summary">Q01: ECDF ka full form kya hai aur yeh Histogram se kaise alag hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><strong>Full Form:</strong> Empirical Cumulative Distribution Function.</li>
+                    <li><strong>Difference from Histogram:</strong> Histogram data ko arbitrary bins me divide karta hai jisse plot ka shape bin count par heavily depend karta hai. ECDF me <strong>ZERO parameters</strong> hote hain; yeh dataset ke har single observation ko directly cumulative step function ke roop me plot karta hai bina kisi binning ya smoothing distortion ke.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q2 -->
+        <details class="details-box">
+            <summary class="details-summary">Q02: ECDF plot me vertical step jump ka size kya hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Har unique observation par ECDF curve vertically <strong><i>1 / N</i></strong> se jump karti hai (jahan <i>N</i> total sample size hai). Agar <i>N = 10</i> ho toh har jump <i>1/10 = 0.10</i> (10%) ka hota hai. Agar <i>N = 500</i> ho toh har jump <i>1/500 = 0.002</i> (0.2%) ka hota hai, jisse curve visually smooth dikhne lagti hai.</p>
+            </div>
+        </details>
+
+        <!-- Q3 -->
+        <details class="details-box">
+            <summary class="details-summary">Q03: ECDF plot me X-axis aur Y-axis kya represent karte hain?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><strong>X-axis:</strong> Actual measured variable <i>x</i> (jaise Exam Completion Time in minutes, Order Delivery Time in mins, ya Server Latency in ms).</li>
+                    <li><strong>Y-axis:</strong> Cumulative Fraction <i>F(x) = P(X &le; x)</i>, jo measure karta hai ki dataset ke kitne proportion (0.0 to 1.0) ya percentage (0% to 100%) observations <i>x</i> ke barabar ya us se chote hain.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q4 -->
+        <details class="details-box">
+            <summary class="details-summary">Q04: First-Order Stochastic Dominance ka visual matlab kya hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Jab Group A ki ECDF curve Group B ki curve ke <strong>strictly LEFT aur ABOVE</strong> hoti hai (yaani har value <i>x</i> par <i>F<sub>A</sub>(x) &ge; F<sub>B</sub>(x)</i>), toh iska matlab hai ki Group A consistently lower / faster values generate karta hai. Example: Section A ke students consistently Section B se jaldi paper submit karte hain.</p>
+            </div>
+        </details>
+
+        <!-- Q5 -->
+        <details class="details-box">
+            <summary class="details-summary">Q05: Do ECDF curves aapas me cross kyun karti hain (The Crossover Phenomenon)?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Jab do distributions me trade-off hota hai! Example: Partner X bottom 50% orders me Partner Y se faster hota hai (faster median), lekin Partner X ke paas ek heavy tail hoti hai jisme kuch orders dangerously late hote hain. Resultantly, lower region me Partner X ki curve left hoti hai, lekin higher region me Partner Y ki curve left ho jaati hai.</p>
+            </div>
+        </details>
+
+        <!-- Q6 -->
+        <details class="details-box">
+            <summary class="details-summary">Q06: Complementary CDF (complementary=True) kab use kiya jata hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Jab hume <em>SLA Breach</em> ya <em>Exceedance Probability</em> dekhni ho: <i>CCDF(x) = 1 - F(x) = P(X &gt; x)</i>. Example: "Kitne percent API requests ne 200ms se ZYADA time lagaya?" Standard ECDF se subtraction karne ke bajaye CCDF directly late/breached percentage show karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q7 -->
+        <details class="details-box">
+            <summary class="details-summary">Q07: ECDF curve ka shape kabhi neeche gir sakta hai? Explain karein.</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p><strong>Nahi, kabhi nahi!</strong> ECDF ek <em>Monotonically Non-Decreasing Function</em> hota hai. Jaise-jaise <i>x</i> increase hota hai, cumulative count ya toh constant rehti hai (horizontal flat segment) ya jump karti hai (vertical step). Curve kabhi bhi downward slope nahi le sakti!</p>
+            </div>
+        </details>
+
+        <!-- Q8 -->
+        <details class="details-box">
+            <summary class="details-summary">Q08: stat="percent" aur stat="proportion" me kya antar hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><code>stat="proportion"</code>: Y-axis scale <code>0.0 se 1.0</code> hota hai (relative probability).</li>
+                    <li><code>stat="percent"</code>: Y-axis scale <code>0% se 100%</code> hota hai (multiplied by 100, presentation-friendly).</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q9 -->
+        <details class="details-box">
+            <summary class="details-summary">Q09: ECDF se Median (50th percentile) kaise read karte hain?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Y-axis par 0.50 (50%) mark par horizontal line draw karein. Jahan yeh line ECDF step curve ko intersect kare, wahan se vertically downward X-axis par drop karein. X-axis par milne wali value exact empirical median hoti hai!</p>
+            </div>
+        </details>
+
+        <!-- Q10 -->
+        <details class="details-box">
+            <summary class="details-summary">Q10: KDE ke muqable ECDF small sample sizes par kyun reliable rehta hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>KDE chote samples (<i>N</i> &lt; 20) par smoothing bandwidth ki wajah se false bumps ya tails hallucinate kar sakta hai. ECDF zero assumptions banata hai aur exact raw sample steps display karta hai, jo mathematically transparent hota hai.</p>
+            </div>
+        </details>
+
+        <!-- Q11 -->
+        <details class="details-box">
+            <summary class="details-summary">Q11: Practical Coding Challenge &mdash; Delivery Times par 45-Min SLA ECDF banayein.</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header"><span>Python Solution</span></div>
+                    <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>))
+sns.ecdfplot(data=df_delivery, x=<span class="string">"delivery_time_mins"</span>, stat=<span class="string">"percent"</span>, ax=ax)
+ax.axvline(<span class="number">45</span>, color=<span class="string">"red"</span>, linestyle=<span class="string">"--"</span>, label=<span class="string">"45-Min SLA"</span>)
+ax.set_title(<span class="string">"Delivery SLA Compliance ECDF"</span>, fontweight=<span class="string">"bold"</span>)
+ax.legend()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q12 -->
+        <details class="details-box">
+            <summary class="details-summary">Q12: Practical Coding Challenge &mdash; Complementary CCDF se Latency Violations plot karein.</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header"><span>Python Solution</span></div>
+                    <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>))
+sns.ecdfplot(data=df_latency, x=<span class="string">"latency_ms"</span>, hue=<span class="string">"service_version"</span>, complementary=<span class="keyword">True</span>, stat=<span class="string">"percent"</span>, ax=ax)
+ax.axvline(<span class="number">100</span>, color=<span class="string">"green"</span>, linestyle=<span class="string">"--"</span>, label=<span class="string">"100ms Budget"</span>)
+ax.set_title(<span class="string">"API Latency Violation Rate (CCDF)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.legend()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q13 -->
+        <details class="details-box">
+            <summary class="details-summary">Q13: Practical Coding Challenge &mdash; Median aur 90th percentile reference lines add karein.</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header"><span>Python Solution</span></div>
+                    <pre class="code-content"><code>p50 = np.percentile(df_sections[<span class="string">"completion_time"</span>], <span class="number">50</span>)
+p90 = np.percentile(df_sections[<span class="string">"completion_time"</span>], <span class="number">90</span>)
+
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>))
+sns.ecdfplot(data=df_sections, x=<span class="string">"completion_time"</span>, stat=<span class="string">"percent"</span>, ax=ax)
+ax.axhline(<span class="number">50</span>, color=<span class="string">"blue"</span>, linestyle=<span class="string">":"</span>, label=<span class="string">f"p50: {p50:.1f}m"</span>)
+ax.axhline(<span class="number">90</span>, color=<span class="string">"purple"</span>, linestyle=<span class="string">":"</span>, label=<span class="string">f"p90: {p90:.1f}m"</span>)
+ax.legend()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q14 -->
+        <details class="details-box">
+            <summary class="details-summary">Q14: Multiple Choice &mdash; Seaborn me ECDF plot karne ke liye kaunsa dedicated function use hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which Seaborn function creates an empirical cumulative distribution plot?</p>
+                <ul>
+                    <li>A) <code>sns.cumplot()</code></li>
+                    <li>B) <code>sns.ecdfplot()</code> &mdash; <strong>Correct!</strong></li>
+                    <li>C) <code>sns.stepdistribution()</code></li>
+                    <li>D) <code>sns.cdfplot()</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>sns.ecdfplot()</code> Seaborn ka standard function hai jo empirical CDF plot karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q15 -->
+        <details class="details-box">
+            <summary class="details-summary">Q15: Multiple Choice &mdash; ECDF me Y-axis kis value range me strictly bounded hoti hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> What are the strict mathematical bounds of the Y-axis in an ECDF when stat="proportion"?</p>
+                <ul>
+                    <li>A) <code>[-1.0, 1.0]</code></li>
+                    <li>B) <code>[0.0, infinity)</code></li>
+                    <li>C) <code>[0.0, 1.0]</code> &mdash; <strong>Correct!</strong></li>
+                    <li>D) Depends on bin count</li>
+                </ul>
+                <p><strong>Explanation:</strong> Cumulative proportion hamesha 0.0 (0 observations) se 1.0 (all observations) ke beech strictly bounded hoti hai.</p>
+            </div>
+        </details>
+
+        <!-- Q16 -->
+        <details class="details-box">
+            <summary class="details-summary">Q16: Multiple Choice &mdash; Kis parameter se ECDF P(X &gt; x) calculate karta hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which parameter in <code>sns.ecdfplot()</code> plots the survival / exceedance function 1 - <i>F(x)</i>?</p>
+                <ul>
+                    <li>A) <code>reverse=True</code></li>
+                    <li>B) <code>invert=True</code></li>
+                    <li>C) <code>complementary=True</code> &mdash; <strong>Correct!</strong></li>
+                    <li>D) <code>descending=True</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>complementary=True</code> complementary CDF (1 - <i>F(x)</i>) plot karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q17 -->
+        <details class="details-box">
+            <summary class="details-summary">Q17: Multiple Choice &mdash; Agar Delivery Time ke graph me Service X ka curve Service Y ke LEFT me ho, toh iska kya matlab hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> In a delivery duration ECDF, what does it mean if Service X's curve is strictly to the left of Service Y?</p>
+                <ul>
+                    <li>A) Service X is slower than Service Y.</li>
+                    <li>B) Service X consistently delivers faster than Service Y. &mdash; <strong>Correct!</strong></li>
+                    <li>C) Both services have identical variance.</li>
+                    <li>D) Service X has more missing data.</li>
+                </ul>
+                <p><strong>Explanation:</strong> Left curve ka matlab hai ki har time threshold par Service X ne higher percentage of orders deliver kar diye the, yaani Service X faster hai.</p>
+            </div>
+        </details>
+
+        <!-- Q18 -->
+        <details class="details-box">
+            <summary class="details-summary">Q18: Multiple Choice &mdash; ECDF me bina kisi parameter ke kitne data points directly represent hote hain?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> What percentage of sample data points are directly preserved and represented in an ECDF?</p>
+                <ul>
+                    <li>A) Only 50% (the interquartile range)</li>
+                    <li>B) 95% (excluding outliers)</li>
+                    <li>C) 100% of observations &mdash; <strong>Correct!</strong></li>
+                    <li>D) Depends on Sturges rule</li>
+                </ul>
+                <p><strong>Explanation:</strong> ECDF me koi binning ya smoothing data drop nahi hota; 100% observations step transitions ke roop me directly visual rehte hain.</p>
+            </div>
+        </details>
+
+        <!-- Q19 -->
+        <details class="details-box">
+            <summary class="details-summary">Q19: Debugging Exercise &mdash; Comparing Incompatible Units (Minutes vs. Seconds)</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header"><span>Python &bull; Buggy Snippet</span></div>
+                    <pre class="code-content"><code><span class="comment"># Bug: QuickDrop is in minutes, RuralRoute is recorded in seconds!</span>
+sns.ecdfplot(data=df_quick, x=<span class="string">"time_mins"</span>, label=<span class="string">"QuickDrop"</span>)
+sns.ecdfplot(data=df_rural, x=<span class="string">"time_secs"</span>, label=<span class="string">"RuralRoute"</span>)</code></pre>
+                </div>
+                <p><strong>Problem:</strong> RuralRoute 1800 to 3600 seconds scale par plot hoga jabki QuickDrop 30 to 60 mins par, jisse plot completely distorted ho jayega.</p>
+                <p><strong>Fixed Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header"><span>Python &bull; Corrected Snippet</span></div>
+                    <pre class="code-content"><code>df_rural[<span class="string">"time_mins"</span>] = df_rural[<span class="string">"time_secs"</span>] / <span class="number">60.0</span>
+sns.ecdfplot(data=df_quick, x=<span class="string">"time_mins"</span>, label=<span class="string">"QuickDrop"</span>)
+sns.ecdfplot(data=df_rural, x=<span class="string">"time_mins"</span>, label=<span class="string">"RuralRoute"</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q20 -->
+        <details class="details-box">
+            <summary class="details-summary">Q20: Debugging Exercise &mdash; Forgetting hue Semantic in Multi-Group Data</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header"><span>Python &bull; Buggy Snippet</span></div>
+                    <pre class="code-content"><code><span class="comment"># Bug: Dataframe contains multiple partners, but hue is omitted!</span>
+sns.ecdfplot(data=df_delivery, x=<span class="string">"delivery_time_mins"</span>)</code></pre>
+                </div>
+                <p><strong>Problem:</strong> All 3 partners combine into one single mixed distribution curve.</p>
+                <p><strong>Fixed Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header"><span>Python &bull; Corrected Snippet</span></div>
+                    <pre class="code-content"><code>sns.ecdfplot(data=df_delivery, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q21 Capstone -->
+        <details class="details-box" open>
+            <summary class="details-summary">Q21 Capstone Project: Multi-Partner Delivery SLA Audit</summary>
+            <div class="details-content">
+                <p><strong>Mission Objectives:</strong></p>
+                <ol>
+                    <li>Load <code>ecommerce_deliveries.csv</code>.</li>
+                    <li>Compute median delivery times and 45-minute SLA compliance rates for all 3 partners.</li>
+                    <li>Plot a dual-panel comparative visualization:
+                        <ul>
+                            <li>Left Panel: Regular ECDF with 45-minute SLA target line.</li>
+                            <li>Right Panel: Complementary CCDF highlighting late/breached order rates.</li>
+                        </ul>
+                    </li>
+                    <li>Print executive audit summary.</li>
+                </ol>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Complete Capstone Solution Code</span>
+                        <span>Verified Execution</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="comment"># 1. Load Data</span>
+df_deliv = pd.read_csv(<span class="string">"scratch/seaborn_topic6_data/ecommerce_deliveries.csv"</span>)
+
+<span class="comment"># 2. Setup Figure</span>
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">13</span>, <span class="number">4.8</span>), dpi=<span class="number">140</span>)
+palette = {<span class="string">"QuickDrop"</span>: <span class="string">"#10b981"</span>, <span class="string">"SpeedyKart"</span>: <span class="string">"#f59e0b"</span>, <span class="string">"HyperRoute"</span>: <span class="string">"#ec4899"</span>}
+
+<span class="comment"># Panel 1: Regular ECDF (On-Time Compliance)</span>
+sns.ecdfplot(data=df_deliv, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>, stat=<span class="string">"percent"</span>, palette=palette, linewidth=<span class="number">2.3</span>, ax=axes[<span class="number">0</span>])
+axes[<span class="number">0</span>].axvline(<span class="number">45</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">"45-Min SLA"</span>)
+axes[<span class="number">0</span>].axhline(<span class="number">90</span>, color=<span class="string">"#64748b"</span>, linestyle=<span class="string">":"</span>, label=<span class="string">"90% Target"</span>)
+axes[<span class="number">0</span>].set_title(<span class="string">"On-Time Delivery Compliance (ECDF)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>].set_ylabel(<span class="string">"Delivered Orders (%)"</span>)
+axes[<span class="number">0</span>].legend(loc=<span class="string">"upper left"</span>)
+
+<span class="comment"># Panel 2: Complementary CCDF (Late Order Risk)</span>
+sns.ecdfplot(data=df_deliv, x=<span class="string">"delivery_time_mins"</span>, hue=<span class="string">"partner"</span>, complementary=<span class="keyword">True</span>, stat=<span class="string">"percent"</span>, palette=palette, linewidth=<span class="number">2.3</span>, ax=axes[<span class="number">1</span>])
+axes[<span class="number">1</span>].axvline(<span class="number">45</span>, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">"45-Min SLA"</span>)
+axes[<span class="number">1</span>].set_title(<span class="string">"Late Delivery Breach Risk (CCDF)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>].set_ylabel(<span class="string">"Breached Orders (%)"</span>)
+axes[<span class="number">1</span>].legend(loc=<span class="string">"upper right"</span>)
+
+plt.tight_layout()
+plt.savefig(<span class="string">"scratch/capstone_delivery_benchmark.png"</span>, dpi=<span class="number">160</span>)
+plt.show()
+
+<span class="comment"># 3. Print Executive Audit</span>
+<span class="built_in">print</span>(<span class="string">"=== ECDF CAPSTONE DELIVERY AUDIT ==="</span>)
+<span class="keyword">for</span> p <span class="keyword">in</span> [<span class="string">"QuickDrop"</span>, <span class="string">"SpeedyKart"</span>, <span class="string">"HyperRoute"</span>]:
+    sub = df_deliv[df_deliv[<span class="string">"partner"</span>] == p][<span class="string">"delivery_time_mins"</span>]
+    med = sub.median()
+    sla = (sub &lt;= <span class="number">45</span>).mean() * <span class="number">100</span>
+    <span class="built_in">print</span>(<span class="string">f"{p:10s} | Median: {med:4.1f}m | 45-Min SLA: {sla:5.1f}% | {'PASS' if sla>=90 else 'FAIL'}"</span>)</code></pre>
+                    <div class="output-block">
+                        <div class="output-title">Verified Executed Output</div>
+=== ECDF CAPSTONE DELIVERY AUDIT ===
+QuickDrop  | Median: 33.6m | 45-Min SLA:  95.0% | PASS
+SpeedyKart | Median: 42.5m | 45-Min SLA:  63.0% | FAIL
+HyperRoute | Median: 28.9m | 45-Min SLA:  61.0% | FAIL
+                    </div>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 20: Summary & What's Next -->
+    <section id="sec-20" class="card">
+        <h2 class="section-title">&#127937; 20. Summary &amp; What's Next</h2>
+
+        <p>Congratulations! Aapne Seaborn distribution visualization ke sabse objective, parameter-free aur actionable tool &mdash; <strong>Empirical Cumulative Distribution Functions (<code>sns.ecdfplot</code>)</strong> &mdash; par complete practical mastery achieve kar li hai.</p>
+
+        <div class="figure-card">
+            <img src="assets/final_concept_revision_diagram.png" alt="Final Concept Revision Diagram" loading="lazy">
+            <div class="figure-caption">Figure 6.20: Master Revision &mdash; ECDF Mental Model, Decision Rules, and Stochastic Dominance Principles.</div>
+        </div>
+
+        <h3>6 Golden Rules of ECDF Mastery</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule #</th>
+                        <th>Core Principle</th>
+                        <th>Actionable Rule of Thumb</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1</strong></td>
+                        <td><strong>Parameter-Free Truth</strong></td>
+                        <td>Jab bins ya bandwidth tuning se avoid karna ho, ECDF use karein &mdash; 100% observations unaltered rehte hain.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2</strong></td>
+                        <td><strong>Threshold Decision Power</strong></td>
+                        <td>"Kitne % orders SLA meet kar rahe hain?" poochhne par hamesha ECDF use karein, averages par rely na karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3</strong></td>
+                        <td><strong>Read Direction Carefully</strong></td>
+                        <td>Duration/Cost me LEFT curve faster/better hoti hai; Scores/Income me RIGHT curve higher/better hoti hai.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4</strong></td>
+                        <td><strong>Watch for Crossovers</strong></td>
+                        <td>Agar curves cross kar rahi hon, toh faster median hone ke bawajood long-tail risk ho sakta hai.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5</strong></td>
+                        <td><strong>CCDF for Breach Audits</strong></td>
+                        <td>Worst-case late deliveries aur SLA violations directly measure karne ke liye <code>complementary=True</code> use karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6</strong></td>
+                        <td><strong>Clean Multi-Group Comparisons</strong></td>
+                        <td>3&ndash;5 groups ko bina bar occlusion ke compare karne ke liye ECDF histogram se far superior hota hai.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top: 24px;">
+            <div class="callout-title">&#128640; What's Next in Seaborn Topic 7?</div>
+            <p>Topic 7 me hum explore karenge <strong>Box Plots (<code>sns.boxplot</code>)</strong> &mdash; jahan Five-Number Summary (Min, Q1, Median, Q3, Max), Interquartile Range (IQR), Whiskers, aur statistical Outliers ko compact, category-wise visual format me analyze karna seekhenge!</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

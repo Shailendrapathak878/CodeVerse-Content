@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seaborn Topic 15: Joint Plots &amp; Pair Plots</title>
+  <style>
+    /* Reset & Core Base */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.68;
+      color: #1E293B;
+      background-color: #F8FAFC;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, #0F766E 0%, #0D9488 50%, #14B8A6 100%);
+      color: #FFFFFF;
+      padding: 36px 28px;
+      border-radius: 18px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 25px -5px rgba(13, 148, 136, 0.25);
+    }
+    .stage-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      padding: 5px 13px;
+      border-radius: 9999px;
+      margin-bottom: 14px;
+    }
+    .hero h1 {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: #FFFFFF;
+    }
+    .hero p {
+      font-size: 15px;
+      color: #F0FDFA;
+      max-width: 820px;
+      margin-bottom: 18px;
+      line-height: 1.6;
+    }
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .pill {
+      background: rgba(15, 23, 42, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      color: #F1F5F9;
+      font-weight: 500;
+    }
+
+    /* Table of Contents Card */
+    .toc-card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 32px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    }
+    .toc-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #F8FAFC;
+      border: 1px solid #EDF2F7;
+      text-decoration: none;
+      color: #334155;
+      font-size: 13.5px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .toc-item:hover {
+      background: #F0FDFA;
+      border-color: #99F6E4;
+      color: #0F766E;
+      transform: translateX(2px);
+    }
+    .toc-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: #E2E8F0;
+      color: #475569;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .toc-item:hover .toc-badge {
+      background: #0D9488;
+      color: #FFFFFF;
+    }
+
+    /* Section Styling */
+    section {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 30px 24px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+      overflow-x: hidden;
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0F172A;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: #F0FDFA;
+      color: #0D9488;
+      border: 1px solid #99F6E4;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #1E293B;
+      margin-top: 24px;
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 15px;
+      color: #334155;
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 16px;
+      color: #334155;
+    }
+    li {
+      font-size: 14.5px;
+      margin-bottom: 8px;
+      line-height: 1.6;
+    }
+
+    /* Code Blocks */
+    .code-block {
+      background: #0F172A;
+      border-radius: 12px;
+      margin: 20px 0;
+      overflow: hidden;
+      border: 1px solid #1E293B;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+    .code-header {
+      background: #1E293B;
+      padding: 9px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: #94A3B8;
+      border-bottom: 1px solid #334155;
+    }
+    .copy-btn {
+      background: #334155;
+      color: #F8FAFC;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .copy-btn:hover {
+      background: #0D9488;
+    }
+    pre {
+      padding: 16px;
+      overflow-x: auto;
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #F8FAFC;
+      background: transparent;
+      margin: 0;
+    }
+    code {
+      font-family: "Consolas", "Monaco", "Courier New", monospace;
+      font-size: 13.5px;
+      color: #0F172A;
+      background: #F1F5F9;
+      padding: 2px 6px;
+      border-radius: 5px;
+      border: 1px solid #E2E8F0;
+    }
+    pre code {
+      color: inherit;
+      background: transparent;
+      padding: 0;
+      border: none;
+    }
+
+    /* Callouts */
+    .callout {
+      padding: 16px 18px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border-left: 4px solid;
+    }
+    .callout-info {
+      background: #F0FDFA;
+      border-color: #0D9488;
+      color: #115E59;
+    }
+    .callout-tip {
+      background: #F0FDF4;
+      border-color: #22C55E;
+      color: #14532D;
+    }
+    .callout-warning {
+      background: #FFFBEB;
+      border-color: #F59E0B;
+      color: #78350F;
+    }
+    .callout-danger {
+      background: #FEF2F2;
+      border-color: #EF4444;
+      color: #7F1D1D;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 14.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Responsive Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      text-align: left;
+      background: #FFFFFF;
+      min-width: 580px;
+    }
+    th {
+      background: #F8FAFC;
+      color: #0F172A;
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid #E2E8F0;
+      font-size: 13px;
+    }
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid #F1F5F9;
+      color: #334155;
+      vertical-align: top;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:nth-child(even) td {
+      background: #FAFBFD;
+    }
+
+    /* Visual Figures */
+    .figure-wrapper, .figure-container {
+      margin: 24px 0;
+      text-align: center;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    }
+    .figure-wrapper img, .figure-container img, .figure-img, img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      margin: 0 auto;
+    }
+    .figure-caption {
+      font-size: 13px;
+      color: #64748B;
+      margin-top: 10px;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* Exercise & Accordion Cards */
+    .exercise-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      padding: 20px;
+      margin: 18px 0;
+    }
+    .exercise-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 8px;
+    }
+    details.accordion {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 10px;
+      margin-top: 12px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+    details.accordion summary {
+      padding: 12px 16px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #0F766E;
+      cursor: pointer;
+      background: #F8FAFC;
+      outline: none;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    details.accordion summary:hover {
+      background: #F0FDFA;
+    }
+    details.accordion summary::marker {
+      display: none;
+    }
+    details.accordion summary::-webkit-details-marker {
+      display: none;
+    }
+    details.accordion summary::after {
+      content: "+";
+      font-size: 16px;
+      font-weight: 800;
+      color: #0D9488;
+    }
+    details.accordion[open] summary::after {
+      content: "−";
+    }
+    .accordion-content {
+      padding: 16px;
+      border-top: 1px solid #E2E8F0;
+      background: #FFFFFF;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      .hero {
+        padding: 24px 18px;
+      }
+      .hero h1 {
+        font-size: 22px;
+      }
+      section {
+        padding: 20px 14px;
+      }
+      h2 {
+        font-size: 19px;
+      }
+      .toc-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-block').querySelector('pre code');
+      if (codeBlock) {
+        navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+          const orig = btn.innerText;
+          btn.innerText = 'Copied!';
+          btn.style.background = '#0D9488';
+          setTimeout(() => {
+            btn.innerText = orig;
+            btn.style.background = '';
+          }, 2000);
+        }).catch(err => {
+          console.error('Failed to copy code: ', err);
+        });
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Banner -->
+    <header class="hero">
+      <div class="stage-badge">TOPIC 15 &bull; RELATIONSHIPS &amp; REGRESSION</div>
+      <h1>Joint Plots &amp; Pair Plots in Seaborn</h1>
+      <p>Data ke bivariate relationships aur multivariate dimensions ko ek sath discover karna: Bivariate scatter/hex/KDE plots ke sath marginal distributions (JointPlot) aur multidimensional feature matrices (PairPlot) ki complete practical masterclass in natural Hinglish.</p>
+      <div class="meta-pills">
+        <span class="pill">Functions: sns.jointplot() &bull; sns.pairplot() &bull; JointGrid &bull; PairGrid</span>
+        <span class="pill">Seaborn Version: 0.13.2</span>
+        <span class="pill">Core Focus: Bivariate Distribution &bull; Marginals &bull; Feature Matrix &bull; Overplotting &bull; corner=True</span>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card">
+      <div class="toc-title">&#128218; Table of Contents (20 Comprehensive Sections)</div>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-item"><span class="toc-badge">1</span> Introduction to EDA &amp; Motivation</a>
+        <a href="#sec-2" class="toc-item"><span class="toc-badge">2</span> Understanding Joint Plots: Anatomy of JointGrid</a>
+        <a href="#sec-3" class="toc-item"><span class="toc-badge">3</span> Basic sns.jointplot() Syntax &amp; Parameters</a>
+        <a href="#sec-4" class="toc-item"><span class="toc-badge">4</span> Joint Plot Type 1: Scatter (kind="scatter")</a>
+        <a href="#sec-5" class="toc-item"><span class="toc-badge">5</span> Joint Plot Type 2: Binned Histograms (kind="hist")</a>
+        <a href="#sec-6" class="toc-item"><span class="toc-badge">6</span> Joint Plot Type 3: Density Contours (kind="kde")</a>
+        <a href="#sec-7" class="toc-item"><span class="toc-badge">7</span> Joint Plot Type 4: Regression (kind="reg")</a>
+        <a href="#sec-8" class="toc-item"><span class="toc-badge">8</span> Joint Plot Type 5: Hexbin (kind="hex")</a>
+        <a href="#sec-9" class="toc-item"><span class="toc-badge">9</span> Categorical Grouping in Joint Plots (hue)</a>
+        <a href="#sec-10" class="toc-item"><span class="toc-badge">10</span> Advanced JointGrid Programming &amp; Overlays</a>
+        <a href="#sec-11" class="toc-item"><span class="toc-badge">11</span> Understanding Pair Plots: Matrix of Plots</a>
+        <a href="#sec-12" class="toc-item"><span class="toc-badge">12</span> Basic sns.pairplot() Syntax &amp; Customization</a>
+        <a href="#sec-13" class="toc-item"><span class="toc-badge">13</span> Diagonal Distributions (diag_kind)</a>
+        <a href="#sec-14" class="toc-item"><span class="toc-badge">14</span> Matrix Optimization with corner=True</a>
+        <a href="#sec-15" class="toc-item"><span class="toc-badge">15</span> Case Study 1: College Student Performance</a>
+        <a href="#sec-16" class="toc-item"><span class="toc-badge">16</span> Case Study 2: E-Commerce Customer Analytics</a>
+        <a href="#sec-17" class="toc-item"><span class="toc-badge">17</span> Case Study 3: Fitness &amp; Health Activity</a>
+        <a href="#sec-18" class="toc-item"><span class="toc-badge">18</span> Deep Comparison: Scatter vs Joint vs Pair Plot</a>
+        <a href="#sec-19" class="toc-item"><span class="toc-badge">19</span> 15+ Common Pitfalls, Anti-Patterns &amp; Debugging</a>
+        <a href="#sec-20" class="toc-item"><span class="toc-badge">20</span> Quick Reference Cheat Sheet, 21 Exercises &amp; Capstone</a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Introduction to Exploratory Data Analysis (EDA) &amp; Motivation</h2>
+      <p>Data science aur analytics workflow me <strong>EDA (Exploratory Data Analysis)</strong> ka matlab hota hai data ko bina kisi bias ke visually aur statistically explore karna. Socho tumhare paas ek college ke 80 students ka dataset hai jisme unke <code>Study_Hours</code>, <code>Attendance_Pct</code>, <code>Assignment_Score</code>, aur <code>Final_Marks</code> recorded hain.</p>
+      
+      <p>Aam beginner sirf ek simple <code>plt.scatter()</code> draw karta hai. Lekin standard scatter plot me do bohot badi limitations hoti hain:</p>
+      <ul>
+        <li><strong>No Marginal Insight:</strong> Scatter plot ye toh dikha deta hai ki X aur Y sath me upar ja rahe hain ya nahi, lekin wo ye <em>nahi</em> batata ki X akele kaisa distribute hai (kya study hours normal hain ya heavily skewed?) aur Y akele kaisa distribute hai (kya marks bimodal hain?).</li>
+        <li><strong>Overplotting in Dense Data:</strong> Agar dataset me hazaron observations hon, toh scatter points aapas me collide karke ek solid black blob ban jate hain, jisse true frequency density completely conceal ho jati hai!</li>
+      </ul>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Why Joint Plots &amp; Pair Plots are Superpowers</div>
+        <p><strong>Joint Plot (sns.jointplot):</strong> Ek hi graphic canvas par do continuous variables ka <strong>bivariate relationship</strong> (center me) aur dono variables ki apni-apni <strong>univariate marginal distributions</strong> (top aur right borders par) simultaneously render karta hai!<br>
+        <strong>Pair Plot (sns.pairplot):</strong> Ek complete multi-feature dataset ke sabhi numerical columns ka <strong>pairwise combination matrix</strong> draw karta hai &mdash; off-diagonal par bivariate scatter plots aur diagonal par univariate histograms/KDE curves!</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_vs_joint_preview.png" alt="Figure 15.1: Exploratory Motivation — Standard Scatter Plot vs Joint Plot">
+        <div class="figure-caption">Figure 15.1: Exploratory Motivation &mdash; Left: Standard scatter plot (relationship only, missing marginal spread). Right: Joint plot combining central bivariate scatter with top &amp; right marginal histograms.</div>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_vs_pair_preview.png" alt="Figure 15.2: Joint Plot vs Pair Plot Strategic Roles">
+        <div class="figure-caption">Figure 15.2: Strategic Roles &mdash; Joint Plot focuses on deep 2-variable inspection with marginals; Pair Plot performs broad N-variable matrix discovery across an entire dataset.</div>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/eda_multivariate_workflow.png" alt="Figure 15.3: The Structured 3-Tier EDA Progression">
+        <div class="figure-caption">Figure 15.3: The 3-Tier EDA Progression &mdash; From Univariate (single feature) to Bivariate Joint (2 features + marginals) to Multivariate Matrix (pairwise feature scanning).</div>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Understanding Joint Plots: Anatomy of JointGrid</h2>
+      <p>Seaborn me <code>sns.jointplot()</code> under-the-hood ek figure-level class <code>JointGrid</code> create karta hai. Ye grid canvas ko 3 coordinated subplots me divide karta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/anatomy_jointplot.png" alt="Figure 15.4: Structural Anatomy of a Seaborn JointGrid">
+        <div class="figure-caption">Figure 15.4: Structural Anatomy of a Joint Plot &mdash; Central bivariate canvas (ax_joint), Top marginal X distribution (ax_marg_x), and Right marginal Y distribution (ax_marg_y).</div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Grid Subplot Region</th>
+              <th>Matplotlib Axis Object</th>
+              <th>What It Visualizes</th>
+              <th>Analytical Insights Revealed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Central Joint Canvas</strong></td>
+              <td><code>g.ax_joint</code></td>
+              <td>Bivariate relationship between <em>X</em> and <em>Y</em> (Scatter, KDE, Hex, Reg).</td>
+              <td>Direction (positive/negative), slope, clustering, non-linearity, correlation strength.</td>
+            </tr>
+            <tr>
+              <td><strong>Top Marginal Canvas</strong></td>
+              <td><code>g.ax_marg_x</code></td>
+              <td>Univariate distribution of Independent Variable <em>X</em> (Aligned with X-axis).</td>
+              <td>X-variable ka center, spread, skewness, outliers, aur sample density.</td>
+            </tr>
+            <tr>
+              <td><strong>Right Marginal Canvas</strong></td>
+              <td><code>g.ax_marg_y</code></td>
+              <td>Univariate distribution of Dependent Variable <em>Y</em> (Rotated, aligned with Y-axis).</td>
+              <td>Y-variable ki modality (unimodal vs bimodal), ceiling effects, floor truncations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Notice kijiye ki top plot ki horizontal axis central plot ki X-axis ke sath perfectly synchronized hoti hai, aur right plot ki vertical axis central plot ki Y-axis ke sath synchronized hoti hai!</p>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Basic sns.jointplot() Syntax &amp; Parameters</h2>
+      <p>Seaborn me basic joint plot banana bohot clean aur readable hai:</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Python Syntax</span></div>
+        <pre><code>sns.jointplot(data=df, x="feature_x", y="feature_y", kind="scatter", **kwargs)</code></pre>
+      </div>
+
+      <h3>Supported Parameters in Seaborn 0.13.2</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Default</th>
+              <th>Description &amp; Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td><code>None</code></td>
+              <td>Tidy Pandas DataFrame containing input features.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td><code>None</code></td>
+              <td>Column names (strings) for horizontal and vertical variables.</td>
+            </tr>
+            <tr>
+              <td><code>kind</code></td>
+              <td><code>"scatter"</code></td>
+              <td>Kind of plot to draw: <code>"scatter"</code>, <code>"hist"</code>, <code>"kde"</code>, <code>"reg"</code>, <code>"hex"</code>, <code>"resid"</code>.</td>
+            </tr>
+            <tr>
+              <td><code>height</code></td>
+              <td><code>6</code></td>
+              <td>Size of the figure (since JointGrid is always a square canvas, height = width in inches).</td>
+            </tr>
+            <tr>
+              <td><code>ratio</code></td>
+              <td><code>5</code></td>
+              <td>Ratio of joint axes size to marginal axes size. <code>ratio=5</code> means central plot is 5x larger than marginals.</td>
+            </tr>
+            <tr>
+              <td><code>space</code></td>
+              <td><code>0.2</code></td>
+              <td>Spacing buffer between central joint plot and marginal subplots.</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td><code>None</code></td>
+              <td>Categorical variable producing color-coded groups across both joint and marginal plots.</td>
+            </tr>
+            <tr>
+              <td><code>marginal_ticks</code></td>
+              <td><code>False</code></td>
+              <td>If <code>True</code>, shows numerical tick labels on marginal distribution axes.</td>
+            </tr>
+            <tr>
+              <td><code>joint_kws</code></td>
+              <td><code>None</code></td>
+              <td>Dictionary of keyword arguments passed directly to the central joint plotting function.</td>
+            </tr>
+            <tr>
+              <td><code>marginal_kws</code></td>
+              <td><code>None</code></td>
+              <td>Dictionary of keyword arguments passed directly to the marginal distribution plotting functions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128207; Pro Tip: Controlling ratio and space</div>
+        <p>Agar aap chahte hain ki marginal histograms thode bade aur clear dikhein, toh <code>ratio=3</code> ya <code>ratio=4</code> use kijiye. Agar aap marginals ko bilkul central plot se sata kar chipkana chahte hain, toh <code>space=0</code> set kar dijiye!</p>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Joint Plot Type 1: Scatter (kind="scatter")</h2>
+      <p><code>kind="scatter"</code> Seaborn joint plot ka default mode hai. Ye central region me individual scatter points draw karta hai aur marginal regions par clean univariate histograms render karta hai.</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Scatter Joint Plot Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load student performance dataset
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Create Scatter Joint Plot
+g = sns.jointplot(
+    data=df,
+    x="Study_Hours",
+    y="Final_Marks",
+    kind="scatter",
+    color="#2563EB",
+    height=5.8,
+    ratio=5,
+    space=0.2,
+    marginal_kws={"bins": 15, "fill": True, "color": "#3B82F6"}
+)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_scatter_student_performance.png" alt="Figure 15.5: Scatter Joint Plot — Study Hours vs Final Marks">
+        <div class="figure-caption">Figure 15.5: Scatter Joint Plot (kind='scatter') &mdash; Central dots show a strong positive correlation (<em>r</em> = 0.9638), while marginal histograms reveal that both study hours and marks are reasonably well-distributed across the 80 students.</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128065;&#65039; When to Use kind="scatter"</div>
+        <p>Scatter joint plot tab sabse best hota hai jab dataset moderate size ka ho (e.g. 50 se 1,000 points). Yahan aap individual students ko clearly inspect kar sakte hain aur unke exact study duration aur exam marks ko visualize kar sakte hain.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> Joint Plot Type 2: Binned Histograms (kind="hist")</h2>
+      <p>Jab dataset me points densely pack hone lagte hain, toh scatter plot me individual dots overlap ho jate hain. Is situation me <code>kind="hist"</code> ek bohot powerful alternative ban jata hai.</p>
+
+      <p><code>kind="hist"</code> central plot ko <strong>2D Binned Heatmap</strong> me convert karta hai jahan canvas ko rectangular grids me divide kiya jata hai aur har grid box ka color shade us region me fall hone wale data points ke frequency count ko represent karta hai!</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; 2D Histogram Joint Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Create 2D Histogram Joint Plot with Colorbar
+g = sns.jointplot(
+    data=df,
+    x="Study_Hours",
+    y="Final_Marks",
+    kind="hist",
+    color="#059669",
+    height=5.5,
+    ratio=5,
+    cbar=True, # Display colorbar indicating observation frequency
+    cbar_kws={"shrink": 0.7, "label": "Student Frequency Count"}
+)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_hist_student_performance.png" alt="Figure 15.6: Binned Histogram Joint Plot — 2D Density Heatmap">
+        <div class="figure-caption">Figure 15.6: Binned Histogram Joint Plot (kind='hist') &mdash; Darker green tiles represent higher concentrations of students, while marginal histograms show the corresponding 1D frequencies on each axis.</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Why kind="hist" Solves Overplotting</div>
+        <p>Agar 20 students ne exactly 5 hours padhkar 70 marks score kiye hain, toh scatter plot par sirf 1 dot dikhega (baki 19 dots piche chhip jayenge!). Lekin <code>kind="hist"</code> us cell ko deep dark shade dega aur colorbar clearly batayega ki yahan 20 students concentrated hain!</p>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> Joint Plot Type 3: Density Contours (kind="kde")</h2>
+      <p>Agar aap discrete points ya discrete boxes ke bajay smooth statistical probability landscape dekhna chahte hain, toh <code>kind="kde"</code> (Kernel Density Estimation) sabse visually appealing option hai.</p>
+
+      <p>Ye central plot par continuous <strong>Topographic Elevation Contours</strong> (contour rings) draw karta hai &mdash; jaise map par pahad ki unchai dikhai jati hai, waise hi yahan concentric rings data ki highest density peaks ko represent karti hain!</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; 2D KDE Joint Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Create Smooth 2D KDE Joint Plot
+g = sns.jointplot(
+    data=df,
+    x="Study_Hours",
+    y="Final_Marks",
+    kind="kde",
+    color="#7C3AED",
+    height=5.5,
+    ratio=5,
+    fill=True, # Fill contours with gradient shading
+    cmap="Purples"
+)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_kde_student_performance.png" alt="Figure 15.7: Kernel Density Estimation Joint Plot">
+        <div class="figure-caption">Figure 15.7: Kernel Density Estimation Joint Plot (kind='kde') &mdash; Concentric purple contour rings illuminate the dense center of mass around 5.5 hours and 74 marks, accompanied by smooth marginal bell curves.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888;&#65039; Critical Caution: KDE is an Approximation!</div>
+        <p>KDE plot actual discrete observations ko draw nahi karta, balki Gaussian mathematical kernels ke zariye ek continuous smoothed surface interpolate karta hai. Agar dataset bohot chhota ho (e.g. &lt; 25 points), toh KDE artificial peaks fabricate kar sakta hai jo real data me maujood nahi hoteen!</p>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Joint Plot Type 4: Regression (kind="reg")</h2>
+      <p>Jab aap do variables ke beech underlying quantitative slope aur trendline dekhna chahte hain, toh <code>kind="reg"</code> use kiya jata hai. Ye Topic 14 ke <code>sns.regplot()</code> ko marginal KDE distribution curves ke sath combine karta hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Regression Joint Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Create Regression Joint Plot with OLS line and CI band
+g = sns.jointplot(
+    data=df,
+    x="Study_Hours",
+    y="Final_Marks",
+    kind="reg",
+    color="#DC2626",
+    height=5.5,
+    ratio=5,
+    scatter_kws={"alpha": 0.75, "s": 45},
+    line_kws={"linewidth": 2.4, "color": "#991B1B"}
+)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_reg_student_performance.png" alt="Figure 15.8: Regression Joint Plot — OLS Trendline & CI Band">
+        <div class="figure-caption">Figure 15.8: Regression Joint Plot (kind='reg') &mdash; Fitted OLS trendline (Slope +6.0385, Intercept 40.797) with 95% bootstrap confidence ribbon, framed by univariate marginal KDE curves.</div>
+      </div>
+
+      <p><strong>Verified Regression Formula:</strong> Is dataset par fitted model hai: <code>Final Marks = 40.80 + 6.04 * Study Hours</code>. Marginal KDE curves clearly confirm karti hain ki predictor (Study Hours) center around 5.5 hours par symmetrically balanced hai aur outcome (Marks) me koi severe artificial floor truncation nahi hai.</p>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Joint Plot Type 5: Hexbin (kind="hex")</h2>
+      <p>Agar aapke paas 5,000 se lekar 500,000 data points ka massive dataset ho (jaise e-commerce clickstream ya ride-sharing GPS pings), toh <code>kind="scatter"</code> computer memory ko choke kar dega aur plot solid black blob ban jayega.</p>
+
+      <p>Iska ultimate data-science solution hai <strong>Hexagonal Binning (kind="hex")</strong>. Ye pure canvas par madhumakkhi ke chhatte (honeycomb) jaisi hexagonal cells draw karta hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Hexagonal Binning Joint Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_ecom = pd.read_csv("ecommerce_customer_analytics.csv")
+
+# Create Hexbin Joint Plot
+g = sns.jointplot(
+    data=df_ecom,
+    x="Orders_Placed",
+    y="Monthly_Spend_USD",
+    kind="hex",
+    color="#D97706",
+    height=5.5,
+    ratio=5,
+    gridsize=18, # Number of hexagons in x-direction
+    cmap="YlOrBr"
+)
+
+g.set_axis_labels("Monthly Orders Placed", "Monthly Spend ($ USD)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_hexbin_customer_analysis.png" alt="Figure 15.9: Hexbin Joint Plot — Customer Orders vs Spend">
+        <div class="figure-caption">Figure 15.9: Hexbin Joint Plot (kind='hex') &mdash; Honeycomb cells seamlessly aggregate dense data points into color-coded frequency hexagons, perfectly suited for large-scale customer transaction volumes.</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#11042; Why are Hexagons Superior to Squares?</div>
+        <p>Geometry ka golden rule: Square cells ke diagonal neighbors side neighbors ke mukable zyada door hote hain (&radic;2 &approx; 1.41&times; further). Lekin Regular Hexagons me center se sabhi 6 neighbors ka distance mathematically <strong>equidistant</strong> hota hai! Isliye hexbins natural radial clustering ko bina directional bias ke faithfully represent karte hain!</p>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Categorical Grouping in Joint Plots (hue)</h2>
+      <p>Modern Seaborn (0.11+) me <code>sns.jointplot()</code> categorical grouping (<code>hue</code>) ko seamlessly support karta hai. Jab aap <code>hue="Academic_Major"</code> pass karte hain, toh do major changes hote hain:</p>
+      <ul>
+        <li><strong>Central Plot:</strong> Har category ke observations alag-alag color me scatter dots ki tarah plot hote hain.</li>
+        <li><strong>Marginal Subplots:</strong> Histograms ke bajay Seaborn automatically smooth <strong>Layered KDE Curves</strong> draw karta hai, jisse aap clearly dekh sakte hain ki har major ke students ka average study time aur marks kahan center ho raha hai!</li>
+      </ul>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Multi-Group Joint Plot with hue</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Create Grouped Joint Plot by Academic Major
+g = sns.jointplot(
+    data=df,
+    x="Study_Hours",
+    y="Final_Marks",
+    hue="Academic_Major",
+    palette={"Computer Science": "#2563EB", "Data Science": "#059669", "Electronics": "#D97706"},
+    height=5.8,
+    ratio=5
+)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_hue_student_majors.png" alt="Figure 15.10: Grouped Joint Plot with hue — Layered KDE Marginals">
+        <div class="figure-caption">Figure 15.10: Grouped Joint Plot with hue &mdash; Color-coded dots reveal that Computer Science, Data Science, and Electronics students follow parallel upward trajectories, with layered marginal KDE curves comparing major-specific distribution shifts.</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Advanced JointGrid Programming &amp; Overlays</h2>
+      <p>Kabhi-kabhi aapko predefined <code>kind</code> options ke beyond custom hybrid visualization create karni hoti hai &mdash; jaise central plot me scatter dots ke upar KDE contour rings overlay karna, aur top margin par histogram ke bajay <strong>Boxplot</strong> draw karna!</p>
+
+      <p>Iske liye hum directly <code>sns.JointGrid</code> class use karte hain:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Custom JointGrid Hybrid Overlay</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# 1. Initialize custom JointGrid
+g = sns.JointGrid(data=df, x="Study_Hours", y="Final_Marks", height=5.8, ratio=5)
+
+# 2. Central plot: Overlay Scatter dots + KDE contour lines
+g.plot_joint(sns.scatterplot, color="#2563EB", s=50, alpha=0.75, edgecolors="#1E3A8A")
+g.plot_joint(sns.kdeplot, color="#DC2626", levels=5, alpha=0.7, linewidths=1.5)
+
+# 3. Marginals: Boxplot on Top X, KDE curve on Right Y
+sns.boxplot(x=df["Study_Hours"], ax=g.ax_marg_x, color="#93C5FD")
+sns.kdeplot(y=df["Final_Marks"], ax=g.ax_marg_y, color="#2563EB", fill=True, alpha=0.4)
+
+g.set_axis_labels("Daily Study Hours", "Final Exam Marks (%)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/custom_jointgrid_advanced.png" alt="Figure 15.11: Custom JointGrid — Hybrid Scatter + KDE with Boxplot">
+        <div class="figure-caption">Figure 15.11: Advanced JointGrid Customization &mdash; Demonstrating ultimate programmatic flexibility by composing scatter dots, red KDE contour lines, a top marginal boxplot, and a right marginal density curve.</div>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Understanding Pair Plots: Matrix of Multidimensional Visualizations</h2>
+      <p>Ab socho ek real data-science project jisme tumhare paas 4 se lekar 8 numerical columns hain. Agar aap har pair ke liye alag-alag <code>plt.scatter()</code> ya <code>sns.jointplot()</code> banayenge, toh aapko <em>N</em> &times; (<em>N</em> - 1) / 2 alag-alag plots likhne padenge &mdash; 5 features ke liye 10 plots aur 8 features ke liye 28 plots!</p>
+
+      <p>Is manual frustration ko eliminate karne ke liye Seaborn deta hai <strong>Pair Plot (<code>sns.pairplot</code>)</strong>. Ye ek hi line of code me ek complete <em>N</em> &times; <em>N</em> grid matrix render kar deta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_matrix_anatomy.png" alt="Figure 15.12: Anatomical Structure of a 3 × 3 PairPlot Matrix">
+        <div class="figure-caption">Figure 15.12: Structural Anatomy of a PairPlot Matrix &mdash; Main Diagonal cells visualize univariate distributions, while Off-Diagonal cells visualize pairwise bivariate relationships.</div>
+      </div>
+
+      <h3>Pair Plot Matrix ke 2 Fundamental Components</h3>
+      <ol>
+        <li><strong>The Main Diagonal Cells (row == col):</strong> Yahan horizontal axis aur vertical axis dono par wahi same variable hota hai (e.g. <code>Study_Hours vs Study_Hours</code>). Ek variable ka apne hi sath scatter plot banana useless hoga (kyunki wo seedhi diagonal line ban jayegi), isliye Seaborn diagonal par automatically <strong>Univariate Distribution</strong> (Histogram ya KDE) draw karta hai!</li>
+        <li><strong>The Off-Diagonal Cells (row != col):</strong> Yahan do alag-alag variables intersect karte hain (e.g. Row = Marks, Col = Study Hours). Ye cells classic <strong>Bivariate Scatter Plots</strong> hote hain jo correlation aur clustering expose karte hain.</li>
+      </ol>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Basic sns.pairplot() Syntax &amp; Customization</h2>
+      <p>Seaborn me pair plot ka foundational syntax:</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Python Syntax</span></div>
+        <pre><code>sns.pairplot(data=df, vars=["col1", "col2", "col3"], hue="Category", **kwargs)</code></pre>
+      </div>
+
+      <h3>Supported Parameters in Seaborn 0.13.2</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Default</th>
+              <th>Description &amp; Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td><em>Required</em></td>
+              <td>Tidy Pandas DataFrame containing numerical and categorical features.</td>
+            </tr>
+            <tr>
+              <td><code>vars</code></td>
+              <td><code>None</code></td>
+              <td>List of specific numerical column names to plot. If omitted, plots <strong>all</strong> numerical columns in DataFrame!</td>
+            </tr>
+            <tr>
+              <td><code>x_vars</code>, <code>y_vars</code></td>
+              <td><code>None</code></td>
+              <td>Allows non-square rectangular matrices by specifying different variables for rows and columns.</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td><code>None</code></td>
+              <td>Categorical column name for color-coding observations across both diagonal and off-diagonal subplots.</td>
+            </tr>
+            <tr>
+              <td><code>palette</code></td>
+              <td><code>None</code></td>
+              <td>Color palette name or dictionary mapping for <code>hue</code> categories.</td>
+            </tr>
+            <tr>
+              <td><code>kind</code></td>
+              <td><code>"scatter"</code></td>
+              <td>Plot kind for off-diagonal subplots: <code>"scatter"</code>, <code>"kde"</code>, <code>"hist"</code>, <code>"reg"</code>.</td>
+            </tr>
+            <tr>
+              <td><code>diag_kind</code></td>
+              <td><code>"auto"</code></td>
+              <td>Plot kind for diagonal subplots: <code>"auto"</code>, <code>"hist"</code>, <code>"kde"</code>, or <code>None</code> to leave blank.</td>
+            </tr>
+            <tr>
+              <td><code>corner</code></td>
+              <td><code>False</code></td>
+              <td>If <code>True</code>, renders only the lower triangle of the matrix, eliminating redundant duplicate cells!</td>
+            </tr>
+            <tr>
+              <td><code>height</code></td>
+              <td><code>2.5</code></td>
+              <td>Height (in inches) of each individual subplot panel in the grid.</td>
+            </tr>
+            <tr>
+              <td><code>aspect</code></td>
+              <td><code>1</code></td>
+              <td>Aspect ratio of each subplot (aspect * height = width of each panel).</td>
+            </tr>
+            <tr>
+              <td><code>plot_kws</code></td>
+              <td><code>None</code></td>
+              <td>Dictionary of keyword arguments passed to off-diagonal plotting functions (e.g. <code>alpha</code>, <code>s</code>).</td>
+            </tr>
+            <tr>
+              <td><code>diag_kws</code></td>
+              <td><code>None</code></td>
+              <td>Dictionary of keyword arguments passed to diagonal plotting functions.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888;&#65039; Golden Rule: Always Use the vars Parameter!</div>
+        <p>Agar aapke DataFrame me 40 columns hain aur aapne bina <code>vars</code> ke simply <code>sns.pairplot(df)</code> run kar diya, toh Seaborn 40 &times; 40 = 1,600 subplots draw karne ki koshish karega! Computer freeze ho jayega aur Jupyter kernel crash ho jayegi. <strong>Hamesha 3 se 6 meaningful numerical columns ko explicitly select kijiye!</strong></p>
+      </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Diagonal Distributions (diag_kind)</h2>
+      <p>Pair plot ke main diagonal par har feature ki univariate distribution render hoti hai. Seaborn do primary diagonal representations support karta hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>diag_kind Option</th>
+              <th>Underlying Visualization</th>
+              <th>Best Use Case</th>
+              <th>Behavior with hue</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>diag_kind="hist"</code></td>
+              <td>1D Discrete Binned Histogram</td>
+              <td>Discrete integer counts, sample sizes &lt; 50, skewness inspection.</td>
+              <td>Draws layered or stacked colored histogram bars.</td>
+            </tr>
+            <tr>
+              <td><code>diag_kind="kde"</code></td>
+              <td>1D Smooth Continuous Density Curve</td>
+              <td>Continuous measurements, large sample sizes, multi-group density shifts.</td>
+              <td>Draws smooth overlapping bell curves per category group.</td>
+            </tr>
+            <tr>
+              <td><code>diag_kind="auto"</code></td>
+              <td>Automatic Selection (Default)</td>
+              <td>If <code>hue</code> is None &rarr; uses <code>"hist"</code>. If <code>hue</code> is present &rarr; automatically switches to <code>"kde"</code>!</td>
+              <td>Smart adaptive default behavior.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_diag_hist_vs_kde.png" alt="Figure 15.13: Pair Plot with Diagonal Histograms">
+        <div class="figure-caption">Figure 15.13: Diagonal Histogram Rendering (diag_kind='hist') &mdash; Inspecting discrete bin frequencies on the main diagonal while exploring pairwise bivariate scatter plots off-diagonal.</div>
+      </div>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Matrix Optimization with corner=True</h2>
+      <p>Ek standard 4 &times; 4 pair plot me total 16 subplots bante hain. Notice kijiye ki diagonal ke upar wala hissa (Upper Triangle) aur diagonal ke niche wala hissa (Lower Triangle) <strong>exactly identical information</strong> contain karte hain &mdash; bas X aur Y axes aapas me swapped (transposed) hote hain!</p>
+
+      <p>Upper half ko render karna computational time ko double karta hai aur audience ko redundant visual clutter dikhata hai. Seaborn iska clean solution deta hai: <code>corner=True</code>:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Lower Triangle Corner Optimization</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("student_performance_dataset.csv")
+
+# Corner=True renders only lower triangle of matrix
+g = sns.pairplot(
+    data=df,
+    vars=["Study_Hours", "Assignment_Score", "Final_Marks"],
+    corner=True, # Drops redundant upper triangle
+    height=2.2,
+    aspect=1.0,
+    plot_kws={"s": 35, "alpha": 0.75, "color": "#059669"},
+    diag_kws={"color": "#10B981", "fill": True}
+)
+
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_corner_true_optimization.png" alt="Figure 15.14: Corner Optimization — Eliminates Redundant Upper Half">
+        <div class="figure-caption">Figure 15.14: Corner Optimization (corner=True) &mdash; Drops the redundant upper triangle, reducing visual cognitive load by 50% while cutting rendering time in half!</div>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Case Study 1: College Student Performance</h2>
+      <p><strong>Real-World Scenario:</strong> Ek university academic committee 80 engineering students ke 4 critical performance metrics ka comprehensive multivariate audit conduct kar rahi hai:</p>
+      <ul>
+        <li><code>Study_Hours</code>: Average daily study hours (1.8 to 9.8 hrs, Mean = 5.53 hrs)</li>
+        <li><code>Attendance_Pct</code>: Lecture attendance percentage (62% to 99%, Mean = 80.07%)</li>
+        <li><code>Assignment_Score</code>: Cumulative lab &amp; project assignments (40 to 98, Mean = 82.49)</li>
+        <li><code>Final_Marks</code>: End-semester exam percentage (35 to 99%, Mean = 74.2%)</li>
+      </ul>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Case Study 1 Multivariate Pair Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_performance_dataset.csv")
+
+# Full 4-variable pair plot grouped by Academic Major
+stu_vars = ["Study_Hours", "Attendance_Pct", "Assignment_Score", "Final_Marks"]
+
+g = sns.pairplot(
+    data=df_students,
+    vars=stu_vars,
+    hue="Academic_Major",
+    palette={"Computer Science": "#2563EB", "Data Science": "#059669", "Electronics": "#D97706"},
+    diag_kind="kde",
+    height=2.0,
+    aspect=1.0,
+    plot_kws={"s": 35, "alpha": 0.75}
+)
+
+g.fig.subplots_adjust(top=0.92)
+g.fig.suptitle("College Student Performance 4-Variable Pair Plot by Academic Major", fontweight="bold")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_student_performance_hue.png" alt="Figure 15.15: College Student Performance 4-Variable Pair Plot">
+        <div class="figure-caption">Figure 15.15: Case Study 1 Pair Plot &mdash; Notice that Study Hours and Assignment Score show near-perfect linear correlation with Final Marks (<em>r = 0.9638</em> and <em>r = 0.9269</em>), while Attendance shows wide vertical dispersion (<em>r = 0.1639</em>), proving that mere physical presence in class without active study does not guarantee high marks!</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#127919; Academic Analytics Takeaways</div>
+        <p>1. <strong>Study Hours vs Final Marks:</strong> Tight upward linear relationship &mdash; each daily hour studied contributes approx +6.04% to final marks.<br>
+        2. <strong>Attendance vs Marks:</strong> Wide cloud (low correlation <em>r = 0.1639</em>). 95% attendance wale students ke marks bhi 45% se 95% ke beech spread hain &mdash; attendance is a prerequisite, not a sufficient condition for mastery!</p>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> Case Study 2: E-Commerce Customer Analytics</h2>
+      <p><strong>Real-World Scenario:</strong> Ek multinational D2C e-commerce platform 120 customers ke purchasing habits aur mobile app engagement metrics ko audit kar rahi hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Case Study 2 E-Commerce Customer Tiers</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_ecom = pd.read_csv("ecommerce_customer_analytics.csv")
+
+# Multivariate exploration of Customer Segments
+ecom_vars = ["Orders_Placed", "Monthly_Spend_USD", "Customer_Age", "App_Screen_Time_Mins"]
+
+g = sns.pairplot(
+    data=df_ecom,
+    vars=ecom_vars,
+    hue="Customer_Tier",
+    palette={"Standard": "#94A3B8", "Premium": "#2563EB", "VIP": "#D97706"},
+    height=1.9,
+    aspect=1.0,
+    plot_kws={"s": 35, "alpha": 0.75}
+)
+
+g.fig.subplots_adjust(top=0.92)
+g.fig.suptitle("E-Commerce Customer Analytics Pair Plot Across Customer Tiers", fontweight="bold")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_ecommerce_customer_tiers.png" alt="Figure 15.16: E-Commerce Customer Analytics Pair Plot Across Customer Tiers">
+        <div class="figure-caption">Figure 15.16: Case Study 2 Pair Plot &mdash; Demonstrating sharp demographic and behavioral clustering: VIP customers (Orange) place frequent high-value orders and spend 120+ minutes on app, whereas Standard tier customers (Gray) cluster at low spend irrespective of age.</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128176; Commercial Insights &amp; Correlation Caveat</div>
+        <p><strong>Verified Metrics:</strong> Orders Placed aur Monthly Spend ke beech massive correlation hai (<em>r = 0.9536</em>). Average spend Standard tier ke liye &#36;130.34 hai jabki VIP tier ke liye &#36;1264.92 hai.<br>
+        <strong>Causation Caveat:</strong> App screen time aur spend ke beech correlation <em>r = 0.7589</em> hai. Lekin iska matlab ye nahi ki user ko app par roke rakhne se wo zabardasti paise kharch karega &mdash; high-intent shoppers naturally browse more!</p>
+      </div>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> Case Study 3: Fitness &amp; Health Activity Analytics</h2>
+      <p>Modern wearable fitness smartwatches (Apple Watch, Fitbit, Garmin) continuous biometric telemetry log karte hain. Is dataset me <strong>100 users</strong> ke biometric signals analyze kiye gaye hain: <code>Daily_Steps</code>, <code>Active_Minutes</code>, <code>Sleep_Hours</code>, aur <code>Calories_Burned</code>, categorized by <code>Fitness_Category</code> (<strong>Sedentary</strong>, <strong>Moderate</strong>, <strong>Athlete</strong>).</p>
+
+      <div class="callout callout-info">
+        <div class="callout-header"><i class="fas fa-heartbeat"></i> Domain Insight: Wearable Biometrics Triangulation</div>
+        <p>Biomedical analytics me single feature isolated inspection deceptive hoti hai. For example, agar kisi user ke high calories burned record hue hain, to kya wo excessive physical workouts ki wajah se hai ya elevated baseline metabolic rate? Pair plot multidimensional matrix cross-comparison se in teeno user cohorts ke distinct biometric signatures instantly isolate ho jate hain.</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_fitness_health_analytics.png" alt="Fitness and Health Wearable Activity Pair Plot with Corner Optimization and KDE Diagonals" loading="lazy" class="figure-img" id="fig-15-17">
+        <div class="figure-caption">
+          <strong>Figure 15.17:</strong> Multivariate Pair Plot of Wearable Biometrics across Sedentary, Moderate, and Athlete Cohorts with <code>diag_kind="kde"</code> and <code>corner=True</code>. Notice the pristine non-overlapping density separation and positive linear trajectories.
+        </div>
+      </div>
+
+      <h3>Biometric Relationships &amp; Verified Empirical Findings</h3>
+      <ul>
+        <li><strong>Daily Steps vs Calories Burned (r = 0.9788):</strong> Steps aur Calories ke beech near-perfect linear correlation observe hota hai. Mean Daily Steps <strong>8,596.6</strong> aur Mean Calories <strong>2,618.0 kcal</strong> hain. Athletes distinctly top-right quad (&gt;12,000 steps, &gt;3,000 kcal) occupy karte hain.</li>
+        <li><strong>Active Minutes vs Calories Burned (r = 0.9434):</strong> Intense active movement energy expenditure ka direct driver hai. Sedentary users (&lt;30 active mins) bottom-left quadrant me tightly clustered hain.</li>
+        <li><strong>Sleep Hours vs Calories Burned (r = 0.6916):</strong> Moderate positive trend (Mean sleep: <strong>6.97 hours</strong>). Lekin scatter inspect karne par clear plateau effect dikhta hai: 8.5 hours se zyada sleep calories burn ko further amplify nahi karti. Rest recovery phase hai, active expenditure nahi!</li>
+      </ul>
+
+      <div class="code-header">
+        <span class="code-title"><i class="fas fa-terminal"></i> Case Study 3: Production Wearables Telemetry Script</span>
+        <button class="copy-btn" onclick="copyCode('code-sec17-fit')"><i class="far fa-copy"></i> Copy</button>
+      </div>
+      <pre id="code-sec17-fit"><code>import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load wearable fitness telemetry dataset
+df_fit = pd.read_csv("scratch/seaborn_topic15_data/fitness_wearable_health.csv")
+
+# Configure publication typography and styling
+sns.set_theme(style="whitegrid", font_scale=1.05)
+palette_fit = {"Sedentary": "#e74c3c", "Moderate": "#f39c12", "Athlete": "#2ecc71"}
+
+# Execute pair plot with lower-triangle corner optimization and KDE diagonals
+g = sns.pairplot(
+    data=df_fit,
+    vars=["Daily_Steps", "Active_Minutes", "Sleep_Hours", "Calories_Burned"],
+    hue="Fitness_Category",
+    palette=palette_fit,
+    diag_kind="kde",
+    corner=True,
+    plot_kws={"alpha": 0.82, "s": 50, "edgecolor": "white", "linewidths": 0.5},
+    diag_kws={"fill": True, "alpha": 0.45}
+)
+
+# Refine figure super-title and layout
+g.figure.suptitle("Wearable Health Biometrics: Multi-Cohort Pair Plot Analysis", y=1.02, fontsize=15, weight="bold")
+plt.savefig("coding/seaborn/topic_15/assets/pairplot_fitness_health_analytics.png", dpi=160, bbox_inches="tight")
+plt.close()</code></pre>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> Deep Comparison: Scatter vs Joint vs Pair Plot</h2>
+      <p>Data science workflows me students aksar confuse hote hain ki simple <code>sns.scatterplot()</code>, <code>sns.jointplot()</code>, aur <code>sns.pairplot()</code> me se kab kis tool ka chayan karna chahiye. Yeh deep architectural comparison unke fundamental trade-offs ko crystal clear karta hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Analytical Dimension</th>
+              <th>sns.scatterplot()</th>
+              <th>sns.jointplot()</th>
+              <th>sns.pairplot()</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Dimensionality</strong></td>
+              <td>Exactly 2 continuous variables (X vs Y).</td>
+              <td>Exactly 2 continuous variables (X vs Y).</td>
+              <td>M continuous variables (produces M &times; M subplots).</td>
+            </tr>
+            <tr>
+              <td><strong>Univariate Distributions</strong></td>
+              <td>None (no marginals or diagonals rendered).</td>
+              <td>Top &amp; Right marginal axes (ax_marg_x, ax_marg_y).</td>
+              <td>Main diagonal subplots (diag_kind="hist" | "kde").</td>
+            </tr>
+            <tr>
+              <td><strong>Return Object</strong></td>
+              <td><code>matplotlib.axes.Axes</code></td>
+              <td><code>seaborn.axisgrid.JointGrid</code></td>
+              <td><code>seaborn.axisgrid.PairGrid</code></td>
+            </tr>
+            <tr>
+              <td><strong>Subplot Grid Integration</strong></td>
+              <td>Seamless (directly embeds via <code>ax=ax_i</code> in plt.subplots).</td>
+              <td>Complex (figure-level canvas; cannot embed via ax argument).</td>
+              <td>Complex (figure-level canvas; generates entire multi-plot figure).</td>
+            </tr>
+            <tr>
+              <td><strong>Categorical Grouping (hue)</strong></td>
+              <td>Standard color mapping per observation.</td>
+              <td>Supported in scatter/kde/hist marginals.</td>
+              <td>Supported across off-diagonal scatters &amp; diagonal KDEs.</td>
+            </tr>
+            <tr>
+              <td><strong>Overplotting Mitigation</strong></td>
+              <td>Alpha transparency and marker sizing adjustments.</td>
+              <td>Built-in hexbin (<code>kind="hex"</code>) and 2D hist (<code>kind="hist"</code>).</td>
+              <td>Lower triangle reduction via <code>corner=True</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Rendering Computational Cost</strong></td>
+              <td>O(N) &mdash; Extremely fast (milliseconds).</td>
+              <td>O(N) &mdash; Very fast (under 1 second).</td>
+              <td>O(M&sup2; &times; N) &mdash; High (scales quadratically with feature count M).</td>
+            </tr>
+            <tr>
+              <td><strong>Primary Analytical Role</strong></td>
+              <td>Isolated bivariate hypothesis testing.</td>
+              <td>Fused bivariate relationship + univariate distribution check.</td>
+              <td>Holistic multivariate feature space exploration &amp; collinearity audit.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/comparison_scatter_joint_pair.png" alt="Architectural Comparison: Scatter Plot vs Joint Plot vs Pair Plot" loading="lazy" class="figure-img" id="fig-15-18">
+        <div class="figure-caption">
+          <strong>Figure 15.18:</strong> Architectural Comparison across Scatter Plot (left), Joint Plot with Marginals (center), and Pair Plot Feature Matrix (right).
+        </div>
+      </div>
+
+      <h3>Visual Comparison: Joint Plot Kinds Gallery</h3>
+      <p>Seaborn <code>jointplot()</code> ka <code>kind</code> parameter bivariate geometry ko completely transform kar deta hai. Neeche diye gaye visual comparison gallery me ek hi dataset par paanchon primary kinds ka side-by-side comparison dekhein:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/joint_kind_comparison_gallery.png" alt="Joint Plot Kind Comparison: Scatter, Hist, KDE, Reg, and Hex" loading="lazy" class="figure-img" id="fig-15-19">
+        <div class="figure-caption">
+          <strong>Figure 15.19:</strong> Gallery of <code>sns.jointplot()</code> kinds: Scatter (individual points), Hist (2D binned heatmap), KDE (smooth density contours), Reg (linear fit line with 95% CI), and Hex (hexagonal bin aggregation).
+        </div>
+      </div>
+
+      <h3>Visual Comparison: Pair Plot Kinds &amp; Off-Diagonal Geometries</h3>
+      <p>Pair plots me bhi <code>kind</code> parameter off-diagonal subplots ki representation control karta hai (<code>kind="scatter"</code>, <code>kind="kde"</code>, <code>kind="hist"</code>, ya <code>kind="reg"</code>):</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/pairplot_kind_comparison.png" alt="Pair Plot Kind Comparison: Scatter vs KDE vs Hist vs Reg off-diagonal geometries" loading="lazy" class="figure-img" id="fig-15-20">
+        <div class="figure-caption">
+          <strong>Figure 15.20:</strong> Off-diagonal geometries in <code>sns.pairplot()</code>: Scatter dots vs KDE contours vs 2D Histograms vs Regression trendlines.
+        </div>
+      </div>
+
+      <h3>The Overplotting Solution: Scatter vs Hexbin</h3>
+      <p>Jab dataset me hazaron observations hoti hain (jaise dense telemetry ya web clickstreams), to simple scatter plot ek solid dark blob ban jata hai jisme density variations invisible ho jati hain. Hexagonal binning (<code>kind="hex"</code>) spatial tessellation create karke density ko color intensity se encode karta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/overplotting_hex_vs_scatter.png" alt="Overplotting Problem: Dense Scatter Clutter vs Clean Hexagonal Binning Density Map" loading="lazy" class="figure-img" id="fig-15-21">
+        <div class="figure-caption">
+          <strong>Figure 15.21:</strong> Resolving the Overplotting Dilemma: 4,000 dense points in standard scatter plot (left, unreadable ink saturation) versus Hexbin aggregation (right, clear high-density centroid resolution).
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> 15+ Common Pitfalls, Anti-Patterns &amp; Debugging Guide</h2>
+      <p>Joint plots aur pair plots powerful figure-level visualizations hain, lekin beginner aur intermediate developers frequently inke execution me common traps me phas jate hain. Neeche 16 real-world pitfalls, unke underlying root causes, aur verified industry fixes diye gaye hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pitfall / Error Message</th>
+              <th>Root Cause</th>
+              <th>Industry Standard Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><code>ValueError: Continuous hue not supported for hex</code></td>
+              <td><code>kind="hex"</code> underlying hexagonal binning algorithm multi-color overlay support nahi karta.</td>
+              <td>Hex ke saath <code>hue</code> drop karein, ya categorical grouping ke liye <code>kind="kde"</code> ya <code>kind="scatter"</code> use karein.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Laggy browser / Out-of-memory crash during <code>sns.pairplot(df)</code></td>
+              <td>DataFrame me 15+ numerical columns hain, jisse 15 &times; 15 = 225 subplots render hone lagte hain.</td>
+              <td>Hamesha <code>vars=["col1", "col2", "col3", "col4"]</code> specify karein to limit feature count to &le; 5.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>Cognitive clutter from redundant duplicate plots in pairplot</td>
+              <td>Upper triangle lower triangle ka exact transpose hota hai, wasting 50% screen space and doubling render time.</td>
+              <td>Set <code>corner=True</code> to automatically drop the duplicate upper triangle!</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><code>AttributeError: 'JointGrid' object has no attribute 'ax'</code></td>
+              <td><code>sns.jointplot()</code> returns a <code>JointGrid</code> object, not a single Matplotlib <code>Axes</code>.</td>
+              <td>Use <code>g.ax_joint</code> for center plot, or <code>g.ax_marg_x</code> / <code>g.ax_marg_y</code> for marginals.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>Marginal histogram labels or title chopped off in saved PNG</td>
+              <td>Calling <code>plt.tight_layout()</code> disrupts JointGrid custom marginal axis geometry.</td>
+              <td>Avoid <code>plt.tight_layout()</code> on JointGrid. Instead use <code>g.figure.subplots_adjust(top=0.92)</code>.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>KDE failure / Flat diagonal line: <code>LinAlgError: singular matrix</code></td>
+              <td>A feature has zero variance (all values identical or binary constant) causing zero covariance in KDE.</td>
+              <td>Set <code>diag_kind="hist"</code> or remove zero-variance constant features before plotting.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td>Trying to embed <code>jointplot()</code> inside <code>plt.subplots(1, 2)</code></td>
+              <td><code>jointplot</code> is a figure-level function that creates its own standalone canvas and ignores <code>ax=...</code>.</td>
+              <td>Use individual <code>sns.scatterplot(..., ax=ax1)</code> or manage sub-canvases independently.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td>Continuous float passed to <code>hue</code> creating 500+ color legend</td>
+              <td>Float variable passed to categorical <code>hue</code> argument forces continuous color binning.</td>
+              <td>Discretize continuous column using <code>pd.qcut(df['col'], q=3, labels=['Low', 'Med', 'High'])</code> first.</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td>Points completely invisible in dense scatter jointplot</td>
+              <td>Default solid opacity causes thousands of points to overlap identically without depth.</td>
+              <td>Pass <code>joint_kws={"alpha": 0.3, "s": 20}</code> or switch to <code>kind="hex"</code>.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><code>TypeError: Got both 'linewidth' and 'linewidths'</code></td>
+              <td>Matplotlib scatter kwarg alias collision when passing <code>linewidth</code> inside <code>plot_kws</code>.</td>
+              <td>Explicitly use <code>linewidths=0.5</code> (plural) in Matplotlib scatter dictionary arguments.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td>Misaligned diagonal histogram bins across hue groups</td>
+              <td>Each group calculates independent bin edges leading to visually mismatched bars.</td>
+              <td>Pass <code>diag_kws=dict(common_norm=False, bins=15)</code> to align bin calculations.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td>Hexagonal bins stretched into thin ellipses</td>
+              <td>X-axis and Y-axis have wildly different numeric magnitudes (e.g., 0-1 GPA vs 0-50,000 Salary).</td>
+              <td>Tune <code>joint_kws=dict(gridsize=25)</code> or normalize features with standard scaling prior to plotting.</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td>Super-title overlaps top marginal plot in JointGrid</td>
+              <td><code>plt.title()</code> places title on the last active axis (usually right marginal).</td>
+              <td>Use <code>g.figure.suptitle("Main Title", y=1.03)</code> to anchor title on the overarching figure.</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td>Entire rows missing due to NaN in unselected columns</td>
+              <td>Passing raw DataFrame with NaNs to <code>pairplot()</code> causes aggressive row dropping.</td>
+              <td>Clean subset explicitly: <code>df.dropna(subset=selected_vars)</code> before passing to Seaborn.</td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td>Palette color mismatch across categorical groups</td>
+              <td>Custom dictionary keys don't match exact string cases of DataFrame category levels.</td>
+              <td>Verify <code>df['cat'].unique()</code> and map exact string keys in <code>palette={"CatA": "#color"}</code>.</td>
+            </tr>
+            <tr>
+              <td>16</td>
+              <td>Saved figure truncated or edges cut off</td>
+              <td>Using default <code>plt.savefig('plot.png')</code> without bounding box optimization.</td>
+              <td>Always pass <code>bbox_inches="tight"</code> and high resolution <code>dpi=160</code> (or 300 for print).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Buggy Code vs Production-Grade Fix (Side-by-Side)</h3>
+      <div class="grid-2">
+        <div class="card" style="border-left: 4px solid #e74c3c;">
+          <h4 style="color: #e74c3c;"><i class="fas fa-times-circle"></i> Anti-Pattern: Unbounded Pairplot Crash</h4>
+          <p>Har column ko bina soche samjhe feed karna aur redundant square matrix render karna:</p>
+          <pre><code># BAD CODE: 15 columns = 225 subplots!
+import seaborn as sns
+# Crashes browser / memory out of bounds
+sns.pairplot(df_massive) 
+plt.show()</code></pre>
+          <p><small style="color: #c0392b;">Problem: O(M&sup2;) combinatorial explosion, redundant upper triangle, zero aesthetic tuning.</small></p>
+        </div>
+        <div class="card" style="border-left: 4px solid #2ecc71;">
+          <h4 style="color: #2ecc71;"><i class="fas fa-check-circle"></i> Production-Grade: Focused Corner Pairplot</h4>
+          <p>Carefully selected features, corner optimization, categorical hue, and customized markers:</p>
+          <pre id="code-pitfall-fix"><code># PRODUCTION FIX: Lean, focused, optimized
+import seaborn as sns
+g = sns.pairplot(
+    data=df_massive,
+    vars=["Steps", "Active_Mins", "Calories"],
+    hue="Tier",
+    corner=True,        # 50% faster, 0 clutter
+    diag_kind="kde",
+    plot_kws={"alpha": 0.8, "s": 40}
+)
+g.figure.suptitle("Focused Biometrics", y=1.02)</code></pre>
+          <div style="text-align: right; margin-top: 8px;">
+            <button class="copy-btn" onclick="copyCode('code-pitfall-fix')"><i class="far fa-copy"></i> Copy Fix</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> Quick Reference Cheat Sheet, 21 Exercises &amp; Capstone</h2>
+      <p>Yeh comprehensive concluding section aapki mastery ko test aur solidify karne ke liye design kiya gaya hai. Isme quick reference cheat sheet, autonomous vehicle sensor fusion capstone analysis, decision guide, aur exactly <strong>21 practical self-assessment challenges</strong> included hain.</p>
+
+      <h3>Joint Plots &amp; Pair Plots Quick Reference Cheat Sheet</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>Key Parameters</th>
+              <th>Default Value</th>
+              <th>Recommended Production Setting</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>sns.jointplot()</code></td>
+              <td><code>kind</code></td>
+              <td><code>"scatter"</code></td>
+              <td><code>"scatter"</code> for small datasets; <code>"hex"</code> or <code>"hist"</code> for &gt; 2,000 points; <code>"reg"</code> for trends.</td>
+            </tr>
+            <tr>
+              <td><code>sns.jointplot()</code></td>
+              <td><code>marginal_kws</code></td>
+              <td><code>None</code></td>
+              <td><code>dict(fill=True, color="#3498db")</code> for modern aesthetic filled marginal distributions.</td>
+            </tr>
+            <tr>
+              <td><code>sns.jointplot()</code></td>
+              <td><code>joint_kws</code></td>
+              <td><code>None</code></td>
+              <td><code>dict(alpha=0.7, s=40, edgecolor="white")</code> for crisp anti-aliased scatter points.</td>
+            </tr>
+            <tr>
+              <td><code>sns.pairplot()</code></td>
+              <td><code>vars</code></td>
+              <td><code>None</code> (all numerical)</td>
+              <td>Explicit list of 3&ndash;5 relevant features: <code>vars=["feat1", "feat2", "feat3"]</code>.</td>
+            </tr>
+            <tr>
+              <td><code>sns.pairplot()</code></td>
+              <td><code>corner</code></td>
+              <td><code>False</code></td>
+              <td><code>corner=True</code> (always enable for publication to cut redundant upper triangle).</td>
+            </tr>
+            <tr>
+              <td><code>sns.pairplot()</code></td>
+              <td><code>diag_kind</code></td>
+              <td><code>"auto"</code></td>
+              <td><code>"kde"</code> when <code>hue</code> is categorical; <code>"hist"</code> for discrete count data.</td>
+            </tr>
+            <tr>
+              <td><code>sns.JointGrid()</code></td>
+              <td><code>plot_joint(), plot_marginals()</code></td>
+              <td>Manual wiring</td>
+              <td>Use for bespoke hybrid plots (e.g., KDE density center + Boxplot marginals).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Capstone Project: Autonomous Vehicle Sensor Fusion Telemetry</h3>
+      <p>Autonomous vehicle self-driving algorithms multiple redundant sensors se data ingest karte hain: Speed Radar, LIDAR braking response, and Camera obstacle reaction. Niche diye gaye telemetry dataset me <strong>150 test runs</strong> analyze kiye gaye hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/capstone_autonomous_telemetry.png" alt="Autonomous Vehicle Sensor Telemetry Joint Regression Plot across Dry, Wet, and Icy Road Conditions" loading="lazy" class="figure-img" id="fig-15-22">
+        <div class="figure-caption">
+          <strong>Figure 15.22:</strong> Capstone Telemetry Analysis: Vehicle Speed vs Braking Distance Regression Joint Plot partitioned across Road Conditions (Dry, Wet, Icy). Note the massive divergence in stopping distance on icy pavements!
+        </div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-header"><i class="fas fa-car-crash"></i> Empirical Safety Telemetry Finding</div>
+        <p>Telemetry results prove that mean speed <strong>81.3 km/h</strong> par overall speed-to-distance correlation <strong>r = 0.8091</strong> hai. Lekin <em>Icy</em> roads par braking distance extreme exponential climb show karta hai (maximum recorded distance: <strong>813.2 meters</strong>), demonstrating that linear safety margins on icy conditions fail catastrophically!</p>
+      </div>
+
+      <div class="code-header">
+        <span class="code-title"><i class="fas fa-terminal"></i> Capstone Telemetry Analysis Script</span>
+        <button class="copy-btn" onclick="copyCode('code-capstone-auto')"><i class="far fa-copy"></i> Copy</button>
+      </div>
+      <pre id="code-capstone-auto"><code>import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load autonomous vehicle telemetry logs
+df_auto = pd.read_csv("scratch/seaborn_topic15_data/autonomous_vehicle_telemetry.csv")
+
+# Palette for road hazard conditions
+road_palette = {"Dry": "#27ae60", "Wet": "#2980b9", "Icy": "#e74c3c"}
+
+# Joint regression visualization
+g = sns.jointplot(
+    data=df_auto,
+    x="Vehicle_Speed_kmh",
+    y="Braking_Distance_m",
+    hue="Road_Condition",
+    palette=road_palette,
+    kind="scatter",
+    height=8,
+    marginal_kws=dict(fill=True, common_norm=False)
+)
+
+# Overlay individual OLS trendlines per road condition
+for condition, color in road_palette.items():
+    subset = df_auto[df_auto["Road_Condition"] == condition]
+    sns.regplot(
+        data=subset,
+        x="Vehicle_Speed_kmh",
+        y="Braking_Distance_m",
+        scatter=False,
+        ax=g.ax_joint,
+        color=color,
+        ci=None
+    )
+
+g.figure.suptitle("Autonomous Telemetry: Speed vs Braking by Hazard Condition", y=1.02, weight="bold")
+plt.savefig("coding/seaborn/topic_15/assets/capstone_autonomous_telemetry.png", dpi=160, bbox_inches="tight")
+plt.close()</code></pre>
+
+      <h3>Architectural Decision Flowchart Guide</h3>
+      <p>Data visualization strategy decide karte waqt is practical decision guide ka use karein:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_joint_pair_decision_guide.png" alt="Final Decision Flowchart: Choosing Between Scatter, Joint, and Pair Plots" loading="lazy" class="figure-img" id="fig-15-23">
+        <div class="figure-caption">
+          <strong>Figure 15.23:</strong> Comprehensive Decision Flowchart: How to select the optimal visualization tool based on feature count, sample density, and analytical goals.
+        </div>
+      </div>
+
+      <!-- Part A: 10 MCQs -->
+      <h3>Part A: 10 Multiple-Choice Conceptual Questions</h3>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-1')">
+          <span>Q1: sns.jointplot() call karne par kaunsa object return hota hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-1-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-1">
+          <p><strong>A)</strong> <code>matplotlib.axes.Axes</code><br>
+          <strong>B)</strong> <code>seaborn.axisgrid.JointGrid</code> (Correct)<br>
+          <strong>C)</strong> <code>seaborn.axisgrid.PairGrid</code><br>
+          <strong>D)</strong> <code>seaborn.axisgrid.FacetGrid</code></p>
+          <p><em>Explanation:</em> <code>sns.jointplot()</code> internally ek <code>JointGrid</code> object instantiate karta hai jisme teen sub-axes hote hain: <code>ax_joint</code>, <code>ax_marg_x</code>, aur <code>ax_marg_y</code>.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-2')">
+          <span>Q2: Pair plot me corner=True parameter ka primary benefit kya hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-2-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-2">
+          <p><strong>A)</strong> Diagonal plots ko circle me convert karta hai.<br>
+          <strong>B)</strong> Redundant upper triangle subplots ko drop karke visual clarity aur render speed 2x boost karta hai. (Correct)<br>
+          <strong>C)</strong> X aur Y axes ke labels rotate karta hai.<br>
+          <strong>D)</strong> Correlation coefficient print karta hai.</p>
+          <p><em>Explanation:</em> Full square matrix me upper triangle lower triangle ka exact inverted transpose hota hai (X vs Y vs Y vs X). <code>corner=True</code> se redundant plots suppress ho jate hain.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-3')">
+          <span>Q3: Jab sns.jointplot() me kind="hex" use kiya jaye, to marginal axes par kya render hota hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-3-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-3">
+          <p><strong>A)</strong> Hexagonal bins<br>
+          <strong>B)</strong> 1D Univariate Histograms (Correct)<br>
+          <strong>C)</strong> Box plots<br>
+          <strong>D)</strong> Scatter dots</p>
+          <p><em>Explanation:</em> Marginals par hamesha 1D univariate distribution display hoti hai. <code>kind="hex"</code> ke saath marginals standard 1D discrete histograms render karte hain.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-4')">
+          <span>Q4: Agar pair plot me diag_kind="auto" set ho aur hue parameter pass kiya jaye, to diagonal par kya banega?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-4-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-4">
+          <p><strong>A)</strong> Histogram<br>
+          <strong>B)</strong> Kernel Density Estimate (KDE) curve (Correct)<br>
+          <strong>C)</strong> Scatter plot<br>
+          <strong>D)</strong> Bar plot</p>
+          <p><em>Explanation:</em> Jab <code>hue</code> None hota hai, tab default <code>"hist"</code> banta hai. Lekin jaise hi <code>hue</code> provide kiya jata hai, Seaborn visually smooth overlapping group density compare karne ke liye automatically <code>"kde"</code> par switch kar leta hai.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-5')">
+          <span>Q5: sns.jointplot() me central bivariate plot ko access karne ke liye kaunsa attribute use hota hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-5-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-5">
+          <p><strong>A)</strong> <code>g.ax</code><br>
+          <strong>B)</strong> <code>g.ax_joint</code> (Correct)<br>
+          <strong>C)</strong> <code>g.axes[0]</code><br>
+          <strong>D)</strong> <code>g.center_ax</code></p>
+          <p><em>Explanation:</em> <code>JointGrid</code> ke pass <code>.ax</code> attribute nahi hota. Central plot ko <code>g.ax_joint</code> ke through reference kiya jata hai.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-6')">
+          <span>Q6: sns.pairplot() me 15 columns pass karne par total kitne subplots render honge agar corner=False ho?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-6-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-6">
+          <p><strong>A)</strong> 30<br>
+          <strong>B)</strong> 120<br>
+          <strong>C)</strong> 225 (Correct)<br>
+          <strong>D)</strong> 15</p>
+          <p><em>Explanation:</em> Subplot count <em>M</em> &times; <em>M</em> hota hai. For <em>M</em> = 15, total subplots 15 &times; 15 = 225 banenge, jo heavy memory leak aur laggy render cause karega!</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-7')">
+          <span>Q7: Agar 5,000 continuous points ka bivariate plot banana ho jisme extreme overplotting ho, to kaunsa kind sabse best hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-7-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-7">
+          <p><strong>A)</strong> <code>kind="scatter"</code><br>
+          <strong>B)</strong> <code>kind="hex"</code> (Hexbin) (Correct)<br>
+          <strong>C)</strong> <code>kind="reg"</code> with no scatter<br>
+          <strong>D)</strong> <code>kind="strip"</code></p>
+          <p><em>Explanation:</em> <code>kind="hex"</code> 2D continuous space ko regular hexagonal cells me aggregate karta hai, jisse dense regions high-contrast heat color se identify ho jate hain.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-8')">
+          <span>Q8: sns.jointplot() ke canvas par suptitle add karte waqt plt.title() kyu fail ho jata hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-8-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-8">
+          <p><strong>A)</strong> Seaborn titles support nahi karta.<br>
+          <strong>B)</strong> <code>plt.title()</code> last active Matplotlib axis (ax_marg_y) par title chipka deta hai, overall figure par nahi. (Correct)<br>
+          <strong>C)</strong> Matplotlib crash ho jata hai.<br>
+          <strong>D)</strong> Syntax error throw hota hai.</p>
+          <p><em>Explanation:</em> <code>g.figure.suptitle("Title", y=1.02)</code> use karna zaroori hai kyunki <code>JointGrid</code> ek multiple axes figure canvas hai.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-9')">
+          <span>Q9: JointGrid par custom plots overlay karte waqt marginals par KDE curve draw karne ke liye kaunsa method use hota hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-9-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-9">
+          <p><strong>A)</strong> <code>g.plot_marginals(sns.kdeplot)</code> (Correct)<br>
+          <strong>B)</strong> <code>g.map_diag(sns.kdeplot)</code><br>
+          <strong>C)</strong> <code>g.add_kde_marginals()</code><br>
+          <strong>D)</strong> <code>g.ax_marg.plot()</code></p>
+          <p><em>Explanation:</em> <code>JointGrid.plot_marginals()</code> top aur right marginal axes par specified Seaborn univariate plotting function ko map karta hai.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('mcq-10')">
+          <span>Q10: PairGrid par lower triangle me Scatter aur upper triangle me KDE contours plot karne ke liye kin methods ka combination use hota hai?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="mcq-10-icon"></i>
+        </div>
+        <div class="accordion-content" id="mcq-10">
+          <p><strong>A)</strong> <code>g.map_lower()</code> and <code>g.map_upper()</code> (Correct)<br>
+          <strong>B)</strong> <code>g.plot_joint()</code> and <code>g.plot_corner()</code><br>
+          <strong>C)</strong> <code>g.ax_lower.scatter()</code> and <code>g.ax_upper.kde()</code><br>
+          <strong>D)</strong> <code>g.set_upper_lower()</code></p>
+          <p><em>Explanation:</em> <code>PairGrid</code> teen discrete mapping methods provide karta hai: <code>map_diag()</code> for diagonal, <code>map_lower()</code> for lower triangle, and <code>map_upper()</code> for upper triangle.</p>
+        </div>
+      </div>
+
+      <!-- Part B: 5 Graph Interpretations -->
+      <h3>Part B: 5 Real-World Graph Interpretation Challenges</h3>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('interp-1')">
+          <span>Interpretation 1: Figure 15.8 (Regression Joint Plot of Student Study Hours vs Marks)</span>
+          <i class="fas fa-chevron-down accordion-icon" id="interp-1-icon"></i>
+        </div>
+        <div class="accordion-content" id="interp-1">
+          <p><strong>Visual Clues:</strong> Tight points around trendline, narrow 95% translucent confidence band, bell-shaped symmetric marginal histograms on both axes.</p>
+          <p><strong>Statistical Deduction:</strong> Study hours aur Final marks ke beech strong positive linear dependency hai (<em>r</em> = 0.9638, OLS slope +6.0385). Marginals indicate karte hain ki study hours normal distribution follow karte hain centered around 5.0 hours, aur marks centered around 66.8.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('interp-2')">
+          <span>Interpretation 2: Figure 15.9 (Hexbin Plot of Customer Age vs Monthly Spend)</span>
+          <i class="fas fa-chevron-down accordion-icon" id="interp-2-icon"></i>
+        </div>
+        <div class="accordion-content" id="interp-2">
+          <p><strong>Visual Clues:</strong> Deep dark purple-blue hexagonal cluster at age 40&ndash;55 and spend &#36;400&ndash;&#36;600, surrounded by pale yellow low-density hexes.</p>
+          <p><strong>Statistical Deduction:</strong> E-commerce spending age ke saath strictly linear nahi hai, balki middle-aged demographic (40&ndash;55 years) me high-density expenditure hotspot form karta hai. Outlying younger shoppers lower expenditure bins me disperse hain.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('interp-3')">
+          <span>Interpretation 3: Figure 15.15 (Student Performance Hue Pair Plot across Majors)</span>
+          <i class="fas fa-chevron-down accordion-icon" id="interp-3-icon"></i>
+        </div>
+        <div class="accordion-content" id="interp-3">
+          <p><strong>Visual Clues:</strong> Diagonal KDE plots show CS, Business, and Arts curves largely overlapping across study hours and final marks.</p>
+          <p><strong>Statistical Deduction:</strong> Academic Major final marks par confounding bias create nahi kar raha. Study hours aur assignment score ki intrinsic correlation across all three academic disciplines consistent aur uniform rehti hai.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('interp-4')">
+          <span>Interpretation 4: Figure 15.16 (E-Commerce Customer Tier Separation)</span>
+          <i class="fas fa-chevron-down accordion-icon" id="interp-4-icon"></i>
+        </div>
+        <div class="accordion-content" id="interp-4">
+          <p><strong>Visual Clues:</strong> Platinum users (green) completely isolated in top right; Bronze (red) in bottom left; Silver (orange) transition bridge in center.</p>
+          <p><strong>Statistical Deduction:</strong> Feature pairs <code>Monthly_Spend_USD</code> vs <code>Annual_Orders_Count</code> linearly separable boundary exhibit karte hain. Platinum customers (<em>r</em> = 0.9536) high volume + high revenue generate karte hain, proving tier loyalty program effectiveness.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('interp-5')">
+          <span>Interpretation 5: Figure 15.22 (Autonomous Telemetry Braking on Icy Surfaces)</span>
+          <i class="fas fa-chevron-down accordion-icon" id="interp-5-icon"></i>
+        </div>
+        <div class="accordion-content" id="interp-5">
+          <p><strong>Visual Clues:</strong> Red points (Icy) have steep upward curvature, high variance scatter, and maximum braking distance reaching 813.2 meters compared to &lt; 200m on Dry road.</p>
+          <p><strong>Statistical Deduction:</strong> Kinetic friction on icy surfaces drops drastically, causing braking distance to scale super-linearly with speed (<em>d</em> &prop; <em>v</em><sup>2</sup>). Autonomous braking safety margins must triple reaction distance on ice.</p>
+        </div>
+      </div>
+
+      <!-- Part C: 3 Coding Challenges -->
+      <h3>Part C: 3 Hands-On Coding Challenges</h3>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h4>Coding Challenge 1: Custom Hybrid JointGrid</h4>
+        <p><strong>Objective:</strong> Ek customized <code>JointGrid</code> create karein jisme central plot par <strong>Hexbin</strong> plot ho aur marginals par <strong>Box plots</strong> draw hon.</p>
+        <div class="code-header">
+          <span class="code-title"><i class="fas fa-code"></i> Challenge 1 Solution Script</span>
+          <button class="copy-btn" onclick="copyCode('code-sol-ch1')"><i class="far fa-copy"></i> Copy Solution</button>
+        </div>
+        <pre id="code-sol-ch1"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic15_data/ecommerce_customer_analytics.csv")
+
+# 1. Initialize empty JointGrid
+g = sns.JointGrid(data=df, x="Annual_Orders_Count", y="Monthly_Spend_USD", height=7)
+
+# 2. Plot central hexbin using custom lambda or ax_joint method
+g.ax_joint.hexbin(df["Annual_Orders_Count"], df["Monthly_Spend_USD"], gridsize=20, cmap="viridis", mincnt=1)
+
+# 3. Plot boxplots on marginals
+sns.boxplot(x=df["Annual_Orders_Count"], ax=g.ax_marg_x, color="#3498db")
+sns.boxplot(y=df["Monthly_Spend_USD"], ax=g.ax_marg_y, color="#2ecc71")
+
+g.figure.suptitle("Hybrid JointGrid: Hexbin Center + Boxplot Marginals", y=1.02)
+plt.show()</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h4>Coding Challenge 2: Lower-Triangle Pairplot with Subset Features</h4>
+        <p><strong>Objective:</strong> Ek dataset se exactly 3 continuous features select karein, <code>hue</code> assign karein, redundant upper triangle drop karein, aur points par subtle alpha transparency apply karein.</p>
+        <div class="code-header">
+          <span class="code-title"><i class="fas fa-code"></i> Challenge 2 Solution Script</span>
+          <button class="copy-btn" onclick="copyCode('code-sol-ch2')"><i class="far fa-copy"></i> Copy Solution</button>
+        </div>
+        <pre id="code-sol-ch2"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic15_data/student_performance_dataset.csv")
+
+g = sns.pairplot(
+    data=df,
+    vars=["Study_Hours_Per_Day", "Assignment_Score", "Final_Exam_Marks"],
+    hue="Academic_Major",
+    palette="Set2",
+    corner=True,
+    diag_kind="kde",
+    plot_kws={"alpha": 0.75, "s": 45, "edgecolor": "white", "linewidths": 0.5},
+    diag_kws={"fill": True, "alpha": 0.4}
+)
+g.figure.suptitle("Academic Metrics: Tri-Feature Lower Triangle Matrix", y=1.02)
+plt.show()</code></pre>
+      </div>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h4>Coding Challenge 3: Asymmetric PairGrid with Custom Lower and Upper Geometries</h4>
+        <p><strong>Objective:</strong> <code>sns.PairGrid</code> initialize karein jisme lower triangle me Scatter points hon, upper triangle me 2D KDE contour rings hon, aur diagonal par Histograms hon.</p>
+        <div class="code-header">
+          <span class="code-title"><i class="fas fa-code"></i> Challenge 3 Solution Script</span>
+          <button class="copy-btn" onclick="copyCode('code-sol-ch3')"><i class="far fa-copy"></i> Copy Solution</button>
+        </div>
+        <pre id="code-sol-ch3"><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic15_data/fitness_wearable_health.csv")
+
+# 1. Initialize PairGrid
+g = sns.PairGrid(df, vars=["Daily_Steps", "Active_Minutes", "Calories_Burned"], hue="Fitness_Category", palette="coolwarm")
+
+# 2. Map geometries to distinct matrix regions
+g.map_diag(sns.histplot, multiple="stack", bins=15)
+g.map_lower(sns.scatterplot, alpha=0.7, s=40)
+g.map_upper(sns.kdeplot, levels=4, alpha=0.6)
+
+g.add_legend(title="Cohort")
+g.figure.suptitle("Asymmetric Tri-Modal Health Grid", y=1.02)
+plt.show()</code></pre>
+      </div>
+
+      <!-- Part D: 2 Predictions -->
+      <h3>Part D: 2 Code Output Prediction Challenges</h3>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('pred-1')">
+          <span>Prediction 1: What happens when corner=True and map_upper() are combined on PairGrid?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="pred-1-icon"></i>
+        </div>
+        <div class="accordion-content" id="pred-1">
+          <p><strong>Code Snippet:</strong></p>
+          <pre><code>g = sns.PairGrid(df, corner=True)
+g.map_upper(sns.scatterplot)
+g.map_lower(sns.scatterplot)</code></pre>
+          <p><strong>Predicted Outcome:</strong> <code>g.map_upper()</code> silently executes but renders <strong>zero plots</strong>! Kyunki <code>corner=True</code> specify karne se Seaborn upper triangle ke axes ko internal initialization ke dauran remove / disable kar deta hai. Sirf <code>map_lower()</code> aur <code>map_diag()</code> valid rahenge.</p>
+        </div>
+      </div>
+
+      <div class="accordion">
+        <div class="accordion-header" onclick="toggleAccordion('pred-2')">
+          <span>Prediction 2: What is the output shape and legend behavior of pairplot with continuous hue?</span>
+          <i class="fas fa-chevron-down accordion-icon" id="pred-2-icon"></i>
+        </div>
+        <div class="accordion-content" id="pred-2">
+          <p><strong>Code Snippet:</strong></p>
+          <pre><code>sns.pairplot(df, hue="Calories_Burned") # continuous float</code></pre>
+          <p><strong>Predicted Outcome:</strong> Plot render to ho jayega lekin Seaborn continuous variable ke har distinct float value ko independent category treat karne ki koshish karega ya continuous colormap use karega. Legend me dozens of tiny discrete entries ban jayengi jisse right side screen overflow ho jayegi, aur diagonal KDE curves collapse ho kar single lines ban jayengi!</p>
+        </div>
+      </div>
+
+      <!-- Part E: Exercise 21 Capstone -->
+      <div class="card" style="margin-top: 30px; border: 2px solid #3498db; background: rgba(52, 152, 219, 0.04);">
+        <h3 style="color: #2980b9;"><i class="fas fa-award"></i> Exercise 21: Capstone Mini-Project &mdash; Autonomous Sensor Telemetry Audit</h3>
+        <p><strong>Scenario:</strong> Aap ek autonomous driving vehicle startup me Lead Perception Engineer hain. Aapke fleet test runs me rainy aur icy conditions me emergency braking failures report hue hain. Aapka task hai <code>autonomous_vehicle_telemetry.csv</code> par comprehensive exploratory multi-plot telemetry audit conduct karna.</p>
+        
+        <h4>Audit Requirements:</h4>
+        <ol>
+          <li><code>Vehicle_Speed_kmh</code>, <code>Radar_Reaction_Time_sec</code>, aur <code>Braking_Distance_m</code> ke pairwise relationships ko lower-triangle matrix me visualize karein (<code>corner=True</code>).</li>
+          <li>Categorical factor <code>Road_Condition</code> (Dry, Wet, Icy) ko <code>hue</code> me map karein with distinct high-contrast colors (Green, Blue, Red).</li>
+          <li>Speed vs Braking Distance ka standalone <code>sns.jointplot()</code> create karein with <code>kind="reg"</code> to calculate condition-specific stopping distance regressions.</li>
+          <li>Identify karein ki kis threshold speed ke baad Icy conditions me braking distance exponential runaway exhibit karti hai.</li>
+        </ol>
+
+        <div class="callout callout-tip">
+          <div class="callout-header"><i class="fas fa-user-graduate"></i> Solution Checklist</div>
+          <p>Aapka complete solution <code>scratch/seaborn_topic15_data/autonomous_vehicle_telemetry.csv</code> dataset ko cleanly read karega, verified statistics (<em>r</em> = 0.8091, Mean speed = 81.3 km/h, Max braking distance = 813.2 m) confirm karega, aur publication-ready high-DPI figure export karega.</p>
+        </div>
+      </div>
+
+      <!-- What's Next in Topic 16 -->
+      <div class="callout callout-info" style="margin-top: 40px;">
+        <div class="callout-header"><i class="fas fa-arrow-right"></i> What's Next in Seaborn Topic 16?</div>
+        <p>Aapne <code>sns.jointplot()</code> aur <code>sns.pairplot()</code> ke zariye bivariate relationships aur multivariate pairwise matrices ko master kar liya hai! Next topic me hum explore karenge <strong>Facet Grids &amp; Multi-Plot Grid Layouts (Topic 16)</strong> &mdash; jisme aap seekhenge ki kaise <code>sns.FacetGrid</code> aur multi-dimensional categorical conditioning se complex dataset ko clean row-and-column subplots me partition kiya jata hai!</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="margin-top: 60px; padding: 30px 20px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center; color: #888;">
+      <p style="margin-bottom: 10px;">CodeVerse Educational Platform &bull; Seaborn Mastery Curriculum</p>
+      <p style="font-size: 0.85rem;">Designed with offline-first responsive typography for Flutter mobile apps &amp; desktop viewports.</p>
+      <div style="margin-top: 20px;">
+        <button class="btn-top" onclick="window.scrollTo({top: 0, behavior: 'smooth'})" style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+          <i class="fas fa-arrow-up"></i> Back to Top
+        </button>
+      </div>
+    </footer>
+
+  </div><!-- End notes-container -->
+
+  <!-- Interactive Scripts -->
+  <script>
+    // Copy code snippet to clipboard
+    function copyCode(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const text = el.innerText || el.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = event.currentTarget || event.target;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.style.background = '#2ecc71';
+        btn.style.color = 'white';
+        setTimeout(() => {
+          btn.innerHTML = orig;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+      });
+    }
+
+    // Collapsible accordion toggle
+    function toggleAccordion(id) {
+      const content = document.getElementById(id);
+      const icon = document.getElementById(id + '-icon');
+      if (!content) return;
+      if (content.classList.contains('open')) {
+        content.classList.remove('open');
+        if (icon) {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        }
+      } else {
+        content.classList.add('open');
+        if (icon) {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      }
+    }
+  </script>
+</body>
+</html>

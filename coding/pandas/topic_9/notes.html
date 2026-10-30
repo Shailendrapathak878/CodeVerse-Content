@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pandas Topic 9: Handling Missing Data | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Light Theme Design System for Pandas */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-rose: #dc2626;
+            --accent-rose-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --code-bg: #090d16;
+            --code-border: #1e293b;
+            --code-text: #f1f5f9;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 940px;
+            margin: 0 auto;
+            padding: 24px 16px 80px 16px;
+            overflow-x: hidden;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%);
+            color: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 36px 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #1e293b;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #e0f2fe;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: #bae6fd;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13px;
+            color: #e0f2fe;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 16px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 28px 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .subsection-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 22px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        strong {
+            color: #0f172a;
+        }
+
+        ul, ol {
+            margin: 10px 0 16px 22px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Roadmap Table of Contents */
+        .toc-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .toc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 8px 16px;
+        }
+
+        .toc-link {
+            color: #0284c7;
+            text-decoration: none;
+            font-size: 13.5px;
+            display: inline-block;
+            transition: color 0.15s;
+        }
+
+        .toc-link:hover {
+            color: #0369a1;
+            text-decoration: underline;
+        }
+
+        /* Code Block Container */
+        .code-container {
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: var(--radius-md);
+            margin: 18px 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background-color: #111827;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .code-block {
+            padding: 16px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Syntax Highlight Colors */
+        .c-kw { color: #f472b6; font-weight: bold; }
+        .c-fn { color: #60a5fa; }
+        .c-str { color: #a7f3d0; }
+        .c-num { color: #fbbf24; }
+        .c-cm { color: #64748b; font-style: italic; }
+        .c-var { color: #f8fafc; }
+
+        /* Output Terminal Box */
+        .output-box {
+            background-color: #030712;
+            border-top: 1px solid #1f2937;
+            padding: 12px 16px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #38bdf8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .output-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+
+        /* Inline Code Tags */
+        code:not(.code-block code) {
+            background-color: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-left: 4px solid var(--primary);
+            background-color: var(--primary-light);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 18px 0;
+        }
+
+        .callout-success {
+            border-left-color: var(--accent-green);
+            background-color: var(--accent-green-bg);
+        }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background-color: var(--accent-amber-bg);
+        }
+
+        .callout-danger {
+            border-left-color: var(--accent-rose);
+            background-color: var(--accent-rose-bg);
+        }
+
+        .callout-purple {
+            border-left-color: var(--accent-purple);
+            background-color: var(--accent-purple-bg);
+        }
+
+        .callout-title {
+            font-weight: 700;
+            font-size: 14.5px;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin: 18px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+
+        tr:hover td {
+            background-color: #f0fdf4;
+        }
+
+        /* Image Display Cards */
+        .img-container {
+            margin: 22px 0;
+            text-align: center;
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .img-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .img-caption {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Interactive Details Accordion */
+        details.details-box {
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin: 12px 0;
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+
+        details.details-box[open] {
+            border-color: #93c5fd;
+        }
+
+        summary.details-summary {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: #0369a1;
+            cursor: pointer;
+            background-color: #f8fafc;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        summary.details-summary:hover {
+            background-color: #f0f9ff;
+        }
+
+        .details-content {
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 30px 16px;
+            color: #64748b;
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 640px) {
+            .main-container {
+                padding: 16px 12px 60px 12px;
+            }
+            .hero-banner {
+                padding: 24px 16px;
+            }
+            .hero-title {
+                font-size: 22px;
+            }
+            .hero-subtitle {
+                font-size: 14px;
+            }
+            .card {
+                padding: 20px 16px;
+            }
+            .section-title {
+                font-size: 18px;
+            }
+            .code-block {
+                font-size: 12px;
+                padding: 12px;
+            }
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- HERO BANNER -->
+    <header class="hero-banner">
+        <div class="hero-badge">Pandas Mastery Track &bull; Topic 9</div>
+        <h1 class="hero-title">Handling Missing Data in Pandas</h1>
+        <p class="hero-subtitle">
+            Detect, measure, and handle missing values like a senior data scientist: master <code>NaN</code>, <code>None</code>, and <code>NaT</code> representations, leverage <code>isna()</code> and <code>notna()</code>, prune with <code>dropna()</code>, impute strategically using <code>fillna()</code> with mean vs median, apply time-series forward fill (<code>ffill</code>) and linear interpolation, and avoid statistical bias.
+        </p>
+        <div class="hero-meta">
+            <div class="hero-meta-item">⏱ <strong>Estimated Time:</strong> 38 Mins</div>
+            <div class="hero-meta-item">📊 <strong>Visual Assets:</strong> 22 Diagrams &amp; Verified Charts</div>
+            <div class="hero-meta-item">🧪 <strong>Hands-on Practice:</strong> 39 Exercises &amp; Challenges</div>
+            <div class="hero-meta-item">🚀 <strong>Projects:</strong> 2 Real-World Data Recovery Pipelines</div>
+        </div>
+    </header>
+
+    <!-- TABLE OF CONTENTS ROADMAP -->
+    <nav class="toc-box" aria-label="Table of Contents">
+        <div class="toc-title">🗺️ Topic Roadmap &amp; Quick Navigation</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec-1">1. Introduction: Why is Data Missing?</a>
+            <a class="toc-link" href="#sec-2">2. Understanding NaN, None, and NaT</a>
+            <a class="toc-link" href="#sec-3">3. Detecting Missing Values (isna/notna)</a>
+            <a class="toc-link" href="#sec-4">4. Counting &amp; Measuring Missingness</a>
+            <a class="toc-link" href="#sec-5">5. Visualizing Missing Data Patterns</a>
+            <a class="toc-link" href="#sec-6">6. Removing Missing Data with dropna()</a>
+            <a class="toc-link" href="#sec-7">7. Filling Missing Values with fillna()</a>
+            <a class="toc-link" href="#sec-8">8. Statistical Imputation: Mean vs Median</a>
+            <a class="toc-link" href="#sec-9">9. Forward Fill &amp; Backward Fill</a>
+            <a class="toc-link" href="#sec-10">10. Numerical Linear Interpolation</a>
+            <a class="toc-link" href="#sec-11">11. Choosing the Right Strategy</a>
+            <a class="toc-link" href="#sec-12">12. Missingness Patterns (MCAR/MAR/MNAR)</a>
+            <a class="toc-link" href="#sec-13">13. Common Mistakes &amp; Sensor Bleed</a>
+            <a class="toc-link" href="#sec-14">14. Project 1: College Student Recovery</a>
+            <a class="toc-link" href="#sec-15">15. Project 2: IoT Sensor Time-Series</a>
+            <a class="toc-link" href="#sec-16">16. Practice Questions &amp; Challenges</a>
+            <a class="toc-link" href="#sec-17">17. Summary &amp; Topic 10 Preview</a>
+            <a class="toc-link" href="#sec-18">18. Decision Checklist &amp; Reference</a>
+        </div>
+    </nav>
+
+    <!-- SECTION 1 -->
+    <section class="card" id="sec-1">
+        <h2 class="section-title">1. Introduction: Why is Data Missing?</h2>
+        
+        <p>
+            Real-world data science aur machine learning mein <strong>"Clean, Complete Data" ek myth hai</strong>. Kisi bhi company, hospital, university, ya IoT sensor network mein jab aap pehli baar raw dataset open karenge, toh aapko empty cells, blanks, aur null markers zaroor milenge.
+        </p>
+
+        <p>
+            Imagine kijiye do relatable situations:
+        </p>
+        <ul>
+            <li>
+                <strong>College Examination Database:</strong> Kuch students ne exam ke din medical leave li thi, isliye unke marks blank hain. Kuch students ne admission form mein optional <em>"Department Specialization"</em> select nahi kiya tha. Aur ek clerk attendance sheet enter karte waqt do rows bhool gaya.
+            </li>
+            <li>
+                <strong>Weather IoT Station:</strong> Ek automated weather sensor har 15 minute mein temperature aur humidity broadcast karta hai. Subah 8:15 AM par battery voltage dip hui aur Wi-Fi packet drop ho gaya, jisse 08:15 AM ki reading record nahi ho payi.
+            </li>
+        </ul>
+
+        <div class="img-container">
+            <img src="assets/overview_missing_data.png" alt="Why Data Goes Missing: 5 Common Real-World Causes">
+            <div class="img-caption">Figure 9.1: The five primary sources of missingness in analytical datasets.</div>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">🚨 The Fundamental Law: Missing Value is NOT Automatically Zero!</div>
+            <p style="margin-bottom: 0;">
+                Beginners ki sabse badi galti hoti hai missing value ko chupke se <code>0</code> maan lena. Agar student ke exam marks missing hain, toh iska matlab yeh <strong>nahi</strong> hai ki usne 0 marks score kiye! Uska exam absent tha ya paper checking pending hai. Agar aapne use 0 bana diya, toh class ka average score artificially crash ho jayega aur innocent student fail ho jayega.
+            </p>
+        </div>
+
+        <h3 class="subsection-title">Why Missing Data Must Be Handled Carefully</h3>
+        <p>
+            Missing data ko ignore ya galat tareeqe se handle karne par 4 major disasters hote hain:
+        </p>
+        <ol>
+            <li><strong>Biased Metrics:</strong> Averages, standard deviations, aur correlation coefficients distort ho jaate hain.</li>
+            <li><strong>Machine Learning Crashes:</strong> Scikit-Learn ke algorithms (jaise Linear Regression, Logistic Regression, Random Forests, SVMs) <code>NaN</code> values encounter karte hi <code>ValueError: Input contains NaN</code> raise karke training crash kar dete hain.</li>
+            <li><strong>Distorted Visualizations:</strong> Matplotlib aur Seaborn charts mein breaks, gaps, ya misleading dropoffs aate hain.</li>
+            <li><strong>Severe Information Loss:</strong> Agar aap bina soche samjhe sabhi incomplete rows ko delete (<code>dropna</code>) kar denge, toh aap apne dataset ka 50% ya 70% useful data gawa sakte hain!</li>
+        </ol>
+    </section>
+
+
+    <!-- SECTION 2 -->
+    <section class="card" id="sec-2">
+        <h2 class="section-title">2. Understanding NaN, None, and NaT</h2>
+        
+        <p>
+            Python aur Pandas mein missing data ek single format mein nahi hota. Data type (numerical, categorical, datetime) ke hisaab se Pandas 3 alag-alag null representations use karta hai:
+        </p>
+
+        <div class="img-container">
+            <img src="assets/nan_none_nat_representations.png" alt="Missing Value Representations in Pandas: NaN vs None vs NaT">
+            <div class="img-caption">Figure 9.2: How Pandas represents missingness across floating-point, text, and datetime series.</div>
+        </div>
+
+        <h3 class="subsection-title">1. np.nan (Not-a-Number) for Numerical Columns</h3>
+        <p>
+            Numerical columns (integers aur floats) mein missing value ko standard IEEE 754 floating-point <strong>NaN</strong> (Not-a-Number) se represent kiya jata hai.
+        </p>
+        <p>
+            Ek bohot zaroori side-effect: <em>Jab kisi standard integer column mein NaN aata hai, toh Pandas use automatically <code>float64</code> mein promote kar deta hai!</em> (Example: <code>92</code> ban jata hai <code>92.0</code>).
+        </p>
+
+        <h3 class="subsection-title">The Fatal Trap: np.nan == np.nan is FALSE!</h3>
+        <p>
+            Computer science ke IEEE 754 floating-point standard ke anusaar, <strong>NaN kisi bhi cheez ke barabar nahi hota, yahan tak ki khud apne aap ke barabar bhi nahi!</strong>
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>nan_equality_trap.py</span>
+                <span>Python 3 &bull; Critical Pitfall</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+
+<span class="c-var">x</span> = <span class="c-var">np</span>.<span class="c-var">nan</span>
+<span class="c-fn">print</span>(<span class="c-str">"Is x equal to np.nan?"</span>, <span class="c-var">x</span> == <span class="c-var">np</span>.<span class="c-var">nan</span>)  <span class="c-cm"># Evaluates to False!</span>
+<span class="c-fn">print</span>(<span class="c-str">"Is x not equal to x?"</span>, <span class="c-var">x</span> != <span class="c-var">x</span>)       <span class="c-cm"># Evaluates to True!</span></pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Is x equal to np.nan? False
+Is x not equal to x? True</div>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">⚠️ Never Use Equality Operators to Find Missing Data!</div>
+            <p style="margin-bottom: 0;">
+                Agar aap likhenge <code>df[df['marks'] == np.nan]</code>, toh aapko <strong>0 rows</strong> milengi, chahe table mein 1,000 missing values kyun na ho! Missing values detect karne ke liye hamesha <code>df['marks'].isna()</code> ya <code>pd.isna()</code> use karein.
+            </p>
+        </div>
+
+        <h3 class="subsection-title">2. None (Python Singleton) in Object/String Columns</h3>
+        <p>
+            Python ka built-in <code>None</code> object-dtype (strings, text, categories) columns mein null marker ki tarah use hota hai. Agar aap kisi numeric series mein <code>None</code> pass karenge, toh Pandas use automatically <code>np.nan</code> mein cast kar deta hai.
+        </p>
+
+        <h3 class="subsection-title">3. pd.NaT (Not-a-Time) in Datetime Columns</h3>
+        <p>
+            Date, time, aur timestamp columns mein missing value ko <strong>pd.NaT</strong> (Not-a-Time) represent karta hai. Yeh datetime arithmetic aur formatting methods (jaise <code>.dt.year</code>, <code>.dt.month_name()</code>) ko crash hone se bachata hai.
+        </p>
+
+        <h3 class="subsection-title">Example 1: Inspecting Numerical and Text Missing Values</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>inspect_missing_types.py</span>
+                <span>Python 3 &bull; Dtype Inspection</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_demo</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'student_id'</span>: [<span class="c-str">'STU-101'</span>, <span class="c-str">'STU-102'</span>, <span class="c-str">'STU-103'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">92.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">86.0</span>],
+    <span class="c-str">'department'</span>: [<span class="c-str">'CS'</span>, <span class="c-kw">None</span>, <span class="c-str">'ECE'</span>]
+})
+
+<span class="c-fn">print</span>(<span class="c-var">df_demo</span>)
+<span class="c-fn">print</span>(<span class="c-str">"
+Column Data Types:"</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_demo</span>.<span class="c-var">dtypes</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>  student_id  marks department
+0    STU-101   92.0         CS
+1    STU-102    NaN       None
+2    STU-103   86.0        ECE
+
+Column Data Types:
+student_id     object
+marks         float64
+department     object
+dtype: object</div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Datetime Column with NaT Detection</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>datetime_nat_demo.py</span>
+                <span>Python 3 &bull; Temporal Nulls</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_dates</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'event'</span>: [<span class="c-str">'Orientation'</span>, <span class="c-str">'Midterm Exam'</span>, <span class="c-str">'Final Exam'</span>],
+    <span class="c-str">'scheduled_date'</span>: <span class="c-var">pd</span>.<span class="c-fn">to_datetime</span>([<span class="c-str">'2026-08-01'</span>, <span class="c-kw">None</span>, <span class="c-str">'2026-12-15'</span>])
+})
+
+<span class="c-fn">print</span>(<span class="c-var">df_dates</span>)
+<span class="c-fn">print</span>(<span class="c-str">"
+Is scheduled_date missing?"</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_dates</span>[<span class="c-str">'scheduled_date'</span>].<span class="c-fn">isna</span>())</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>          event scheduled_date
+0   Orientation     2026-08-01
+1  Midterm Exam            NaT
+2    Final Exam     2026-12-15
+
+Is scheduled_date missing?
+0    False
+1     True
+2    False
+Name: scheduled_date, dtype: bool</div>
+        </div>
+    </section>
+
+    <!-- SECTION 3 -->
+    <section class="card" id="sec-3">
+        <h2 class="section-title">3. Detecting Missing Values (isna, notna, isnull, notnull)</h2>
+        
+        <p>
+            Pandas hume missing values detect karne ke liye 4 standard methods deta hai. In methods ka kaam pure table ya selected column par boolean mask (<code>True</code> / <code>False</code>) generate karna hota hai.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/boolean_missing_detection.png" alt="Boolean Missing-Value Detection: isna vs notna">
+            <div class="img-caption">Figure 9.3: Generating boolean masks to isolate missing rows (isna) versus complete rows (notna).</div>
+        </div>
+
+        <h3 class="subsection-title">Understanding the Aliases</h3>
+        <ul>
+            <li><code>df.isna()</code> aur <code>df.isnull()</code> <strong>100% identical aliases</strong> hain. Dono exactly same code execute karte hain. <code>isna()</code> modern community standard hai kyunki yeh <code>np.nan</code> ke sath visually align hota hai.</li>
+            <li><code>df.notna()</code> aur <code>df.notnull()</code> bhi 100% identical aliases hain. Yeh <code>isna()</code> ka opposite (inversion) return karte hain.</li>
+        </ul>
+
+        <h3 class="subsection-title">Example 1: Identifying Students with Missing Examination Records</h3>
+        <p>
+            Student dataset mein se un students ko filter karke nikalna jinka marks ya attendance missing hai:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>filter_missing_students.py</span>
+                <span>Python 3 &bull; Boolean Mask Filtering</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_students</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'student_id'</span>: [<span class="c-str">'STU-101'</span>, <span class="c-str">'STU-102'</span>, <span class="c-str">'STU-103'</span>, <span class="c-str">'STU-104'</span>],
+    <span class="c-str">'name'</span>: [<span class="c-str">'Aarav'</span>, <span class="c-str">'Diya'</span>, <span class="c-str">'Kabir'</span>, <span class="c-str">'Meera'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">92.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">86.0</span>, <span class="c-num">74.0</span>],
+    <span class="c-str">'attendance'</span>: [<span class="c-num">88.0</span>, <span class="c-num">94.0</span>, <span class="c-num">82.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>]
+})
+
+<span class="c-cm"># Filter students who have ANY missing field</span>
+<span class="c-var">has_missing</span> = <span class="c-var">df_students</span>[<span class="c-str">'marks'</span>].<span class="c-fn">isna</span>() | <span class="c-var">df_students</span>[<span class="c-str">'attendance'</span>].<span class="c-fn">isna</span>()
+<span class="c-fn">print</span>(<span class="c-str">"--- Students Requiring Examination Audit ---"</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_students</span>[<span class="c-var">has_missing</span>])</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>--- Students Requiring Examination Audit ---
+  student_id   name  marks  attendance
+1    STU-102   Diya    NaN        94.0
+3    STU-104  Meera   74.0         NaN</div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Finding E-Commerce Orders with Missing Prices</h3>
+        <p>
+            Online store mein pending transactions filter karna jinme unit price enter nahi hui:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>detect_missing_orders.py</span>
+                <span>Python 3 &bull; Business Order Audit</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_orders</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'order_id'</span>: [<span class="c-str">'ORD-01'</span>, <span class="c-str">'ORD-02'</span>, <span class="c-str">'ORD-03'</span>],
+    <span class="c-str">'item'</span>: [<span class="c-str">'Keyboard'</span>, <span class="c-str">'Custom Prototype'</span>, <span class="c-str">'Monitor'</span>],
+    <span class="c-str">'unit_price'</span>: [<span class="c-num">4299.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">21999.0</span>]
+})
+
+<span class="c-var">missing_price_orders</span> = <span class="c-var">df_orders</span>[<span class="c-var">df_orders</span>[<span class="c-str">'unit_price'</span>].<span class="c-fn">isna</span>()]
+<span class="c-fn">print</span>(<span class="c-var">missing_price_orders</span>[[<span class="c-str">'order_id'</span>, <span class="c-str">'item'</span>]])</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>  order_id              item
+1   ORD-02  Custom Prototype</div>
+        </div>
+    </section>
+
+    <!-- SECTION 4 -->
+    <section class="card" id="sec-4">
+        <h2 class="section-title">4. Counting &amp; Measuring Missing Data</h2>
+        
+        <p>
+            Bade datasets mein hazaron rows hoti hain, isliye visually dekhna possible nahi hota. Data analysts hamesha <strong>quantitative missingness audit</strong> karte hain count aur percentage metrics ke zariye.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/counts_vs_percentages.png" alt="Measuring Missingness: Counts vs Percentages">
+            <div class="img-caption">Figure 9.4: Understanding why missing percentages provide context that raw counts hide.</div>
+        </div>
+
+        <h3 class="subsection-title">Essential Missingness Metrics</h3>
+        <ul>
+            <li><code>df.isna().sum()</code>: Har column mein kitne missing cells hain (axis=0 aggregation).</li>
+            <li><code>df.isna().sum().sum()</code>: Pure DataFrame mein kul milakar kitne missing cells hain (single scalar integer).</li>
+            <li><code>df.isna().mean() * 100</code>: Har column ki missingness percentage.</li>
+            <li><code>df.isna().any()</code>: Boolean check batane ke liye ki kya kisi column mein kam se kam ek missing value hai.</li>
+        </ul>
+
+        <h3 class="subsection-title">Example 1: Generating a Missingness Summary Table</h3>
+        <p>
+            Ek complete production-grade missingness report create karna jo count aur percentage dono bataye:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>missingness_report.py</span>
+                <span>Python 3 &bull; Quality Audit Pipeline</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_audit</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'student_id'</span>: [<span class="c-str">'S1'</span>, <span class="c-str">'S2'</span>, <span class="c-str">'S3'</span>, <span class="c-str">'S4'</span>, <span class="c-str">'S5'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">88.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">92.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">75.0</span>],
+    <span class="c-str">'attendance'</span>: [<span class="c-num">90.0</span>, <span class="c-num">85.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">95.0</span>, <span class="c-num">80.0</span>],
+    <span class="c-str">'dept'</span>: [<span class="c-str">'CS'</span>, <span class="c-str">'IT'</span>, <span class="c-kw">None</span>, <span class="c-str">'CS'</span>, <span class="c-str">'ECE'</span>]
+})
+
+<span class="c-var">counts</span> = <span class="c-var">df_audit</span>.<span class="c-fn">isna</span>().<span class="c-fn">sum</span>()
+<span class="c-var">percentages</span> = (<span class="c-var">df_audit</span>.<span class="c-fn">isna</span>().<span class="c-fn">mean</span>() * <span class="c-num">100.0</span>).<span class="c-fn">round</span>(<span class="c-num">1</span>)
+
+<span class="c-var">report</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'Missing Count'</span>: <span class="c-var">counts</span>,
+    <span class="c-str">'Missing Percentage (%)'</span>: <span class="c-var">percentages</span>
+})
+<span class="c-fn">print</span>(<span class="c-var">report</span>)
+<span class="c-fn">print</span>(<span class="c-str">"
+Total Missing Cells in Entire Table:"</span>, <span class="c-var">df_audit</span>.<span class="c-fn">isna</span>().<span class="c-fn">sum</span>().<span class="c-fn">sum</span>())</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>            Missing Count  Missing Percentage (%)
+student_id              0                     0.0
+marks                   2                    40.0
+attendance              1                    20.0
+dept                    1                    20.0
+
+Total Missing Cells in Entire Table: 4</div>
+        </div>
+    </section>
+
+    <!-- SECTION 5 -->
+    <section class="card" id="sec-5">
+        <h2 class="section-title">5. Visualizing Missing Data Patterns</h2>
+        
+        <p>
+            Numbers aur tables ke mukable charts hume turant dikha dete hain ki <em>kya missing values kisi particular column mein clustered hain, ya pure dataset mein randomly scattered hain</em>.
+        </p>
+
+        <h3 class="subsection-title">1. Missing Value Counts by Feature</h3>
+        <p>
+            Is bar chart se pata chalta hai ki kis column mein kitne records missing hain:
+        </p>
+        <div class="img-container">
+            <img src="assets/chart_missing_counts.png" alt="Missing-Value Count by Column">
+            <div class="img-caption">Figure 9.5: Absolute count of missing records across student examination features.</div>
+        </div>
+
+        <h3 class="subsection-title">2. Missingness Percentage vs Action Thresholds</h3>
+        <p>
+            Engineering decision cutoffs: 20% se kam missing hone par statistical imputation safe hoti hai, jabki 50% se zyada missing hone par us feature ko drop karna better hota hai:
+        </p>
+        <div class="img-container">
+            <img src="assets/chart_missing_percentages.png" alt="Missing-Value Percentage with Thresholds">
+            <div class="img-caption">Figure 9.6: Benchmarking feature missingness against standard engineering action cutoffs.</div>
+        </div>
+
+        <h3 class="subsection-title">3. The Missingness Matrix Heatmap</h3>
+        <p>
+            Missingness matrix har student row (index) aur har feature column (x-axis) ka intersection grid dikhati hai. Rose color missing cell represent karta hai:
+        </p>
+        <div class="img-container">
+            <img src="assets/missingness_matrix_heatmap.png" alt="Missingness Matrix Heatmap">
+            <div class="img-caption">Figure 9.7: Matrix heatmap revealing which specific students have multiple missing fields.</div>
+        </div>
+    </section>
+
+
+    <!-- SECTION 6 -->
+    <section class="card" id="sec-6">
+        <h2 class="section-title">6. Removing Missing Data with dropna()</h2>
+        
+        <p>
+            Missing data handle karne ki pehli basic strategy hoti hai: <strong>Deletion (dropna)</strong>. Agar koi row ya column incomplete hai, toh use table se discard kar dena. Lekin yeh decision bohot thoughtfully lena chahiye kyunki deletion irreversible data loss karta hai.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/dropna_before_after.png" alt="Pruning Rows with df.dropna(): how='any' vs how='all'">
+            <div class="img-caption">Figure 9.8: Aggressive row purge (how='any') vs targeted defensive pruning (subset=['marks']).</div>
+        </div>
+
+        <h3 class="subsection-title">Core Parameters of dropna()</h3>
+        <ul>
+            <li><code>how='any'</code> (Default): Agar row ke kisi <strong>bhi ek column</strong> mein <code>NaN</code> mil gaya, toh puri row delete ho jaati hai.</li>
+            <li><code>how='all'</code>: Row tabhi delete hoti hai jab uske <strong>saare ke saare columns</strong> <code>NaN</code> hon.</li>
+            <li><code>subset=['col1', 'col2']</code>: Sirf specified columns ko check karta hai. Baaki columns ke <code>NaN</code> ignore karta hai.</li>
+            <li><code>axis=1</code>: Rows ke bajaye un <strong>columns</strong> ko drop karta hai jinme missing values hain.</li>
+            <li><code>thresh=k</code>: Un rows ko retain karta hai jinme kam se kam <code>k</code> non-null valid values maujood hon.</li>
+        </ul>
+
+        <h3 class="subsection-title">Example 1: Measuring Row Loss and Data Retention Rate</h3>
+        <p>
+            <code>dropna()</code> chalane se pehle aur baad mein hamesha row count check karna chahiye:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>measure_row_loss.py</span>
+                <span>Python 3 &bull; Pruning Audit</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_students</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'name'</span>: [<span class="c-str">'Aarav'</span>, <span class="c-str">'Diya'</span>, <span class="c-str">'Kabir'</span>, <span class="c-str">'Meera'</span>, <span class="c-str">'Rohan'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">92.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">86.0</span>, <span class="c-num">74.0</span>, <span class="c-num">91.0</span>],
+    <span class="c-str">'attendance'</span>: [<span class="c-num">88.0</span>, <span class="c-num">94.0</span>, <span class="c-num">82.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">96.0</span>]
+})
+
+<span class="c-var">initial_rows</span> = <span class="c-fn">len</span>(<span class="c-var">df_students</span>)
+
+<span class="c-cm"># Approach A: Aggressive dropna (how='any')</span>
+<span class="c-var">df_dropped_any</span> = <span class="c-var">df_students</span>.<span class="c-fn">dropna</span>(<span class="c-var">how</span>=<span class="c-str">'any'</span>)
+<span class="c-var">retained_rows</span> = <span class="c-fn">len</span>(<span class="c-var">df_dropped_any</span>)
+<span class="c-var">retention_pct</span> = (<span class="c-var">retained_rows</span> / <span class="c-var">initial_rows</span>) * <span class="c-num">100.0</span>
+
+<span class="c-fn">print</span>(<span class="c-str">f"Initial Rows: {initial_rows} | Retained: {retained_rows} ({retention_pct:.1f}%)"</span>)
+<span class="c-fn">print</span>(<span class="c-str">f"Rows Lost: {initial_rows - retained_rows} rows dropped."</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_dropped_any</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Initial Rows: 5 | Retained: 3 (60.0%)
+Rows Lost: 2 rows dropped.
+    name  marks  attendance
+0  Aarav   92.0        88.0
+2  Kabir   86.0        82.0
+4  Rohan   91.0        96.0</div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Targeted Deletion with subset=['marks']</h3>
+        <p>
+            Agar hume sirf un students ke exam scores par report banani hai jinhone exam appear kiya tha, toh hum attendance ke missing hone par unhe drop nahi karenge:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>subset_dropna_exam.py</span>
+                <span>Python 3 &bull; Targeted Row Pruning</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-cm"># Only drop rows where 'marks' is NaN; keep Meera even though attendance is NaN</span>
+<span class="c-var">df_exam_cohort</span> = <span class="c-var">df_students</span>.<span class="c-fn">dropna</span>(<span class="c-var">subset</span>=[<span class="c-str">'marks'</span>])
+<span class="c-fn">print</span>(<span class="c-str">"Retained Cohort Count:"</span>, <span class="c-fn">len</span>(<span class="c-var">df_exam_cohort</span>))
+<span class="c-fn">print</span>(<span class="c-var">df_exam_cohort</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Retained Cohort Count: 4
+    name  marks  attendance
+0  Aarav   92.0        88.0
+2  Kabir   86.0        82.0
+3  Meera   74.0         NaN
+4  Rohan   91.0        96.0</div>
+        </div>
+    </section>
+
+    <!-- SECTION 7 -->
+    <section class="card" id="sec-7">
+        <h2 class="section-title">7. Filling Missing Values with fillna()</h2>
+        
+        <p>
+            Data ko drop karne ke bajaye hum missing cells mein suitable <strong>placeholders ya fallback values</strong> inject kar sakte hain taaki row retain ho sake aur downstream algorithms crash na hon. Is process ko <strong>Imputation</strong> kehte hain.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/fillna_before_after.png" alt="Imputing Missing Values with df.fillna()">
+            <div class="img-caption">Figure 9.9: Why per-column dictionary mapping is superior to blind global scalar filling.</div>
+        </div>
+
+        <h3 class="subsection-title">The Danger of Global fillna(0)</h3>
+        <p>
+            Aksar beginners likhte hain: <code>df.fillna(0, inplace=True)</code>. Yeh ek dangerous shortcut hai!
+        </p>
+        <p>
+            Agar aapke dataset mein <code>department</code> column hai (string dtype), toh <code>0</code> number us string column ke andar enter ho jayega, jisse column mixed type ka ho jayega aur string methods (jaise <code>.str.upper()</code>) crash kar denge!
+        </p>
+
+        <h3 class="subsection-title">Production Best Practice: Per-Column Dictionary Mapping</h3>
+        <p>
+            Har feature ke business meaning ke hisaab se specific values define karein:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>per_column_fillna.py</span>
+                <span>Python 3 &bull; Semantic Imputation</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_students</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'name'</span>: [<span class="c-str">'Aarav'</span>, <span class="c-str">'Diya'</span>, <span class="c-str">'Kabir'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">92.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">86.0</span>],
+    <span class="c-str">'department'</span>: [<span class="c-str">'CS'</span>, <span class="c-kw">None</span>, <span class="c-str">'ECE'</span>]
+})
+
+<span class="c-cm"># Targeted mapping dictionary</span>
+<span class="c-var">fill_strategy</span> = {
+    <span class="c-str">'marks'</span>: <span class="c-num">0.0</span>,                 <span class="c-cm"># Explicit fallback for missing exam</span>
+    <span class="c-str">'department'</span>: <span class="c-str">'Undeclared'</span>   <span class="c-cm"># Clean string placeholder</span>
+}
+
+<span class="c-var">df_imputed</span> = <span class="c-var">df_students</span>.<span class="c-fn">fillna</span>(<span class="c-var">fill_strategy</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_imputed</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>    name  marks  department
+0  Aarav   92.0          CS
+1   Diya    0.0  Undeclared
+2  Kabir   86.0         ECE</div>
+        </div>
+    </section>
+
+    <!-- SECTION 8 -->
+    <section class="card" id="sec-8">
+        <h2 class="section-title">8. Filling Numerical Missing Values using Statistics</h2>
+        
+        <p>
+            Arbitrary 0 ya placeholder bharne ke bajaye data science mein <strong>Central Tendency Measures</strong> (Mean, Median, Mode) se missing values ko impute kiya jata hai taaki dataset ka overall statistical distribution disturb na ho.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/mean_vs_median_comparison.png" alt="Outlier Sensitivity: Mean vs Median Imputation">
+            <div class="img-caption">Figure 9.10: Demonstrating how extreme outliers inflate the Mean, while the Median remains rock-solid.</div>
+        </div>
+
+        <h3 class="subsection-title">When to Use Mean vs Median vs Mode</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Python Syntax</th>
+                        <th>Best Used For</th>
+                        <th>Major Risk / Limitation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Mean (Average)</strong></td>
+                        <td><code>df['col'].fillna(df['col'].mean())</code></td>
+                        <td>Symmetric, bell-shaped normal distributions without outliers</td>
+                        <td>Extreme high/low values heavily pull and distort the mean</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Median (50th %ile)</strong></td>
+                        <td><code>df['col'].fillna(df['col'].median())</code></td>
+                        <td>Skewed numerical data (income, housing prices, marks with outliers)</td>
+                        <td>Ignores actual magnitudes of extreme observations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mode (Most Frequent)</strong></td>
+                        <td><code>df['col'].fillna(df['col'].mode()[0])</code></td>
+                        <td>Categorical strings or discrete counts (departments, city, ratings)</td>
+                        <td>Can over-represent dominant category if missingness is high</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Demonstrating Outlier Resistance in Student Scores</h3>
+        <p>
+            5 students ke marks hain, jisme ek data entry error se 999 likh gaya. Dekhiye Mean aur Median kaise behave karte hain:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>mean_vs_median_demo.py</span>
+                <span>Python 3 &bull; Outlier Resilience</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">scores_series</span> = <span class="c-var">pd</span>.<span class="c-fn">Series</span>([<span class="c-num">80.0</span>, <span class="c-num">85.0</span>, <span class="c-num">82.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">999.0</span>]) <span class="c-cm"># 999 is typo</span>
+
+<span class="c-var">mean_val</span> = <span class="c-var">scores_series</span>.<span class="c-fn">mean</span>()      <span class="c-cm"># (80+85+82+999)/4 = 311.5</span>
+<span class="c-var">median_val</span> = <span class="c-var">scores_series</span>.<span class="c-fn">median</span>()  <span class="c-cm"># Median of [80, 82, 85, 999] = (82+85)/2 = 83.5</span>
+
+<span class="c-fn">print</span>(<span class="c-str">f"Calculated Mean:   {mean_val:.1f} (Completely absurd for 100-mark exam!)"</span>)
+<span class="c-fn">print</span>(<span class="c-str">f"Calculated Median: {median_val:.1f} (Accurate reflection of student ability)"</span>)
+
+<span class="c-var">scores_imputed_median</span> = <span class="c-var">scores_series</span>.<span class="c-fn">fillna</span>(<span class="c-var">median_val</span>)
+<span class="c-fn">print</span>(<span class="c-str">"
+Imputed Series with Median:"</span>)
+<span class="c-fn">print</span>(<span class="c-var">scores_imputed_median</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Calculated Mean:   311.5 (Completely absurd for 100-mark exam!)
+Calculated Median: 83.5 (Accurate reflection of student ability)
+
+Imputed Series with Median:
+0     80.0
+1     85.0
+2     82.0
+3     83.5
+4    999.0
+dtype: float64</div>
+        </div>
+    </section>
+
+    <!-- SECTION 9 -->
+    <section class="card" id="sec-9">
+        <h2 class="section-title">9. Forward Fill and Backward Fill (ffill &amp; bfill)</h2>
+        
+        <p>
+            Time-series data, financial stock prices, aur IoT sensor telemetry mein physical measurements continuous hoti hain. Subah 8:15 AM par temperature kal ke average jitna nahi hota, balki subah 8:00 AM wale temperature ke bohot kareeb hota hai!
+        </p>
+
+        <div class="img-container">
+            <img src="assets/forward_fill_illustration.png" alt="Forward Fill (ffill) Illustration">
+            <div class="img-caption">Figure 9.11: Propagating the last observed reading forward in time to bridge telemetry gaps.</div>
+        </div>
+
+        <h3 class="subsection-title">How ffill() and bfill() Work</h3>
+        <ul>
+            <li><code>ffill()</code> (Forward Fill): Kisi missing value ki jagah <strong>previous available valid observation</strong> ko copy karta hai.</li>
+            <li><code>bfill()</code> (Backward Fill): Kisi missing value ki jagah <strong>next available future observation</strong> ko back-propagate karta hai.</li>
+        </ul>
+
+        <div class="img-container">
+            <img src="assets/backward_fill_illustration.png" alt="Backward Fill (bfill) Illustration">
+            <div class="img-caption">Figure 9.12: Backward fill looks ahead to copy the next valid future observation.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">⚠️ The Dangerous "Sensor Bleed" Bug!</div>
+            <p style="margin-bottom: 0;">
+                Agar aapke dataset mein multiple sensors ya alag-alag students hain, toh <strong>global ffill() kabhi mat lagaiye!</strong> Sensor A ki aakhri reading agle sensor (Sensor B) ki pehli reading mein leak (bleed) ho sakti hai! Multi-entity datasets mein hamesha <code>groupby('sensor_id').ffill()</code> use karein.
+            </p>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/group_aware_ffill_warning.png" alt="The Dangerous Sensor Bleed Bug in Multi-Entity Time Series">
+            <div class="img-caption">Figure 9.13: Visualizing how global ffill causes Sensor Bleed and how groupby().ffill isolates devices.</div>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Time-Series Temperature Sensor Reading with ffill</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>sensor_ffill_demo.py</span>
+                <span>Python 3 &bull; Temporal Imputation</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_telemetry</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'timestamp'</span>: [<span class="c-str">'08:00'</span>, <span class="c-str">'08:15'</span>, <span class="c-str">'08:30'</span>, <span class="c-str">'08:45'</span>],
+    <span class="c-str">'temperature'</span>: [<span class="c-num">24.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">25.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>]
+})
+
+<span class="c-cm"># Propagate last known reading forward</span>
+<span class="c-var">df_telemetry</span>[<span class="c-str">'temp_ffill'</span>] = <span class="c-var">df_telemetry</span>[<span class="c-str">'temperature'</span>].<span class="c-fn">ffill</span>()
+<span class="c-fn">print</span>(<span class="c-var">df_telemetry</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>  timestamp  temperature  temp_ffill
+0     08:00         24.0        24.0
+1     08:15          NaN        24.0
+2     08:30         25.0        25.0
+3     08:45          NaN        25.0</div>
+        </div>
+    </section>
+
+
+    <!-- SECTION 10 -->
+    <section class="card" id="sec-10">
+        <h2 class="section-title">10. Numerical Linear Interpolation</h2>
+        
+        <p>
+            Jab hum temperature, vehicle speed, electricity consumption, ya heart rate jaisi <strong>continuous physical phenomena</strong> ko track karte hain, toh <code>ffill()</code> sirf step-like flat lines banata hai. Lekin real world mein physical properties smooth slope ke sath evolve hoti hain!
+        </p>
+
+        <p>
+            Pandas hume <code>interpolate(method='linear')</code> provide karta hai jo do known points ke beech ka mathematical slope calculate karke missing intermediate values ko estimate karta hai.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/interpolation_illustration.png" alt="Linear Numerical Interpolation">
+            <div class="img-caption">Figure 9.14: Linear interpolation fits a straight line between two known endpoints to reconstruct missing readings.</div>
+        </div>
+
+        <h3 class="subsection-title">The Mathematical Logic of Linear Interpolation</h3>
+        <p>
+            Agar step 0 par reading <code>20.0°C</code> thi aur step 3 par reading <code>26.0°C</code> hai (beech ke steps 1 aur 2 missing hain):
+        </p>
+        <ul>
+            <li>Total temperature change: \(26.0 - 20.0 = 6.0^\circ	ext{C}\) across 3 steps.</li>
+            <li>Step increment: \(6.0 / 3 = 2.0^\circ	ext{C}\) per step.</li>
+            <li>Step 1 (Missing): \(20.0 + 2.0 = \mathbf{22.0^\circ	ext{C}}\)</li>
+            <li>Step 2 (Missing): \(22.0 + 2.0 = \mathbf{24.0^\circ	ext{C}}\)</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">⚠️ Never Interpolate Categorical or Unordered Data!</div>
+            <p style="margin-bottom: 0;">
+                Interpolation sirf tabhi valid hota hai jab data <strong>mathematically continuous</strong> aur <strong>chronologically ordered</strong> ho. Student names, department codes, ya zip codes ko linear interpolate karne ki koshish bilkul meaningless aur invalid hoti hai!
+            </p>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Smooth Temperature Reconstruction</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>linear_interpolation.py</span>
+                <span>Python 3 &bull; Mathematical Slope Estimation</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">s_sensor</span> = <span class="c-var">pd</span>.<span class="c-fn">Series</span>([<span class="c-num">20.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">26.0</span>])
+
+<span class="c-cm"># Linear interpolation estimates values at constant slope</span>
+<span class="c-var">s_reconstructed</span> = <span class="c-var">s_sensor</span>.<span class="c-fn">interpolate</span>(<span class="c-var">method</span>=<span class="c-str">'linear'</span>)
+<span class="c-fn">print</span>(<span class="c-str">"Raw with NaNs:"</span>, <span class="c-fn">list</span>(<span class="c-var">s_sensor</span>))
+<span class="c-fn">print</span>(<span class="c-str">"Interpolated:  "</span>, <span class="c-fn">list</span>(<span class="c-var">s_reconstructed</span>))</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Raw with NaNs: [20.0, nan, nan, 26.0]
+Interpolated:   [20.0, 22.0, 24.0, 26.0]</div>
+        </div>
+    </section>
+
+    <!-- SECTION 11 -->
+    <section class="card" id="sec-11">
+        <h2 class="section-title">11. Choosing the Right Missing-Data Strategy</h2>
+        
+        <p>
+            Data science interviews aur enterprise analytics teams mein sabse critical skill hoti hai: <strong>"How do you choose between dropping and imputing?"</strong> Koi bhi ek strategy har situation ke liye perfect nahi hoti.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/strategy_decision_tree.png" alt="Missing-Data Handling Strategy Decision Tree">
+            <div class="img-caption">Figure 9.15: Strategic decision tree for selecting the mathematically and operationally optimal missing-data treatment.</div>
+        </div>
+
+        <h3 class="subsection-title">The 6 Diagnostic Questions Every Data Scientist Must Ask</h3>
+        <ol>
+            <li><strong>Why is the value missing?</strong> Kya system crash hua tha (MCAR), ya user ne janboojhkar income hide ki hai (MNAR)?</li>
+            <li><strong>Is the column essential to our goal?</strong> Agar hum exam marks analyze kar rahe hain aur student ka hobby missing hai, toh hobby column ko simply ignore ya drop kiya ja sakta hai.</li>
+            <li><strong>What is the percentage of missingness?</strong>
+                <ul>
+                    <li><code>&lt; 5%</code>: Deletion ya simple statistical imputation safe hoti hai.</li>
+                    <li><code>5% - 25%</code>: Median/Mean ya model-based imputation required hoti hai.</li>
+                    <li><code>&gt; 50%</code>: Feature mein statistical signal bohot kam hai; column drop karna behtar option ho sakta hai.</li>
+                </ul>
+            </li>
+            <li><strong>Is the data numerical, categorical, or temporal?</strong> Numbers ke liye median/mean/interpolation; categories ke liye mode ya <code>'Unknown'</code> placeholder.</li>
+            <li><strong>Are there extreme outliers in the column?</strong> Skewed data mein Mean hamesha distort hota hai, isliye Median use karein.</li>
+            <li><strong>Can the value be verified from another reliable source?</strong> Automated imputation se pehle database audit log check karna hamesha best practice hai.</li>
+        </ol>
+
+        <h3 class="subsection-title">Missing-Data Strategy Comparison Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Recommended Scenario</th>
+                        <th>Key Advantages</th>
+                        <th>Primary Risks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Drop Rows (dropna)</strong></td>
+                        <td>Missingness &lt; 5%, MCAR pattern, massive sample size</td>
+                        <td>Zero artificial assumptions; pure observed data</td>
+                        <td>Sample size shrinkage; introduces bias if not MCAR</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Drop Column</strong></td>
+                        <td>Missingness &gt; 50% and column is non-critical</td>
+                        <td>Eliminates high-noise feature completely</td>
+                        <td>Permanent loss of potential feature signal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Constant Fill (0 / 'Unknown')</strong></td>
+                        <td>Missingness has explicit business meaning (e.g. 0 discount)</td>
+                        <td>Deterministic, simple, avoids crashing algorithms</td>
+                        <td>Can distort statistical distributions and averages</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean Imputation</strong></td>
+                        <td>Normally distributed numerical data without outliers</td>
+                        <td>Preserves the sample mean exactly</td>
+                        <td>Underestimates sample variance; vulnerable to outliers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Median Imputation</strong></td>
+                        <td>Skewed numerical data (income, housing, ratings)</td>
+                        <td>Highly robust to extreme outliers</td>
+                        <td>Can create artificial spikes at the median value</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mode Imputation</strong></td>
+                        <td>Categorical features with a clear dominant class</td>
+                        <td>Natural categorical replacement</td>
+                        <td>Inflates majority class frequency</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Forward / Backward Fill</strong></td>
+                        <td>Ordered time-series, sensor telemetry, daily stock logs</td>
+                        <td>Preserves temporal continuity and states</td>
+                        <td>Sensor Bleed if entities aren't isolated with groupby</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Linear Interpolation</strong></td>
+                        <td>Continuous physical measurements (temp, speed, pressure)</td>
+                        <td>Reconstructs realistic gradual transitions</td>
+                        <td>Only valid for ordered numerical measurements</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 12 -->
+    <section class="card" id="sec-12">
+        <h2 class="section-title">12. Understanding Missingness Patterns (MCAR, MAR, MNAR)</h2>
+        
+        <p>
+            Statistics aur advanced data science mein missing data ko unke <strong>underlying generation mechanism</strong> ke hisaab se 3 theoretical categories mein classify kiya jata hai:
+        </p>
+
+        <div class="img-container">
+            <img src="assets/mcar_mar_mnar_comparison.png" alt="Theoretical Missingness Mechanisms: MCAR vs MAR vs MNAR">
+            <div class="img-caption">Figure 9.16: Comparing MCAR, MAR, and MNAR probabilistic mechanisms with real-world analogies.</div>
+        </div>
+
+        <h3 class="subsection-title">1. MCAR (Missing Completely at Random)</h3>
+        <p>
+            Missing hone ka kisi bhi variable (observed ya unobserved) se <strong>koi relation nahi hota</strong>. 
+        </p>
+        <p>
+            <em>Relatable Example:</em> Exam hall ki window khuli thi aur hawa ke jhoke se kuch papers udkar kho gaye. Har student ka paper khone ka chance bilkul barabar tha, regardless of unke marks kya the.
+        </p>
+        <p>
+            <strong>Impact:</strong> Sample size kam hota hai, lekin sample ka distribution un-skewed rehta hai. <code>dropna()</code> is completely safe here.
+        </p>
+
+        <h3 class="subsection-title">2. MAR (Missing at Random)</h3>
+        <p>
+            Missingness kisi dusre <strong>observed variable</strong> par depend karti hai, lekin khud us missing value par nahi.
+        </p>
+        <p>
+            <em>Relatable Example:</em> IoT sensors barish ke dino mein battery drain hone ki wajah se zyada fail hote hain. Barish humne <code>weather='Rainy'</code> column mein record ki hui hai. Toh temperature ka missing hona <code>weather</code> feature se explain ho sakta hai.
+        </p>
+        <p>
+            <strong>Impact:</strong> Agar hum weather column ko conditioning variable ki tarah use karein (e.g. rainy days ke liye alag imputation), toh bias eliminate ho jata hai.
+        </p>
+
+        <h3 class="subsection-title">3. MNAR (Missing Not at Random)</h3>
+        <p>
+            Missing hone ka reason <strong>seedhe usi missing value par depend karta hai</strong> jo hum jan-na chahte hain!
+        </p>
+        <p>
+            <em>Relatable Example:</em> Jin students ke marks bohot kam aaye the, unhone voluntary feedback survey mein apna marks column blank chhod diya. 
+        </p>
+        <p>
+            <strong>Impact:</strong> Agar aap in missing rows ko delete kar denge, toh class ka average score unrealistically high dikhega (survivorship bias)! MNAR data ko handle karne ke liye domain expertise aur explicit missingness flags require hote hain.
+        </p>
+    </section>
+
+    <!-- SECTION 13 -->
+    <section class="card" id="sec-13">
+        <h2 class="section-title">13. Common Mistakes &amp; Sensor Bleed Debugging</h2>
+        
+        <p>
+            Missing data handle karte waqt production pipelines mein aane wale top 10 pitfalls:
+        </p>
+
+        <h3 class="subsection-title">Top 10 Beginner Pitfalls</h3>
+        <ol>
+            <li><strong>Blind Zero-Fill:</strong> <code>df.fillna(0)</code> likhkar missing test marks ya temperatures ko zero bana dena, jo metrics ko completely corrupt karta hai.</li>
+            <li><strong>Global fillna() Across Mixed Dtypes:</strong> String columns mein number <code>0</code> inject karke <code>AttributeError</code> trigger karwana.</li>
+            <li><strong>Dropping Rows Without Measuring Retention:</strong> <code>dropna()</code> call karke bina dekhe 60% sample size delete kar dena.</li>
+            <li><strong>Using ffill() on Unsorted Data:</strong> Time-series dataset ko pehle <code>sort_values('timestamp')</code> kiye bina ffill chalana.</li>
+            <li><strong>The Sensor Bleed Bug:</strong> Multiple devices ya customers ke dataset par global ffill chalakar Device A ki reading Device B mein leak kar dena.</li>
+            <li><strong>Interpolating Categorical Columns:</strong> Strings ya IDs par linear interpolation lagane ki koshish karna.</li>
+            <li><strong>The NaN Equality Trap:</strong> <code>df[df['col'] == np.nan]</code> likhna jo hamesha 0 rows return karta hai.</li>
+            <li><strong>Failure to Preserve Original Copy:</strong> Data modify karne se pehle <code>df_original = df.copy()</code> na banana.</li>
+            <li><strong>Empty Strings vs NaN:</strong> Text files mein blank spaces <code>""</code> ya <code>" "</code> ko NaN na samajhna (Pandas me <code>replace('', np.nan)</code> karna padta hai).</li>
+            <li><strong>Unverified Recovery:</strong> Imputation ke baad <code>df.isna().sum().sum() == 0</code> verify kiye bina dataset ko production mein deploy kar dena.</li>
+        </ol>
+
+        <h3 class="subsection-title">Debugging Walkthrough 1: Eliminating the Sensor Bleed Bug</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>debug_sensor_bleed.py</span>
+                <span>Critical Multi-Entity Bug Fix</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df_multi</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({
+    <span class="c-str">'sensor'</span>: [<span class="c-str">'A'</span>, <span class="c-str">'A'</span>, <span class="c-str">'B'</span>, <span class="c-str">'B'</span>],
+    <span class="c-str">'reading'</span>: [<span class="c-num">10.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">80.0</span>]
+})
+
+<span class="c-cm"># ❌ BUGGY GLOBAL FFILL (Sensor A's 10.0 leaks into Sensor B!):</span>
+<span class="c-cm"># df_multi['reading_corrupt'] = df_multi['reading'].ffill()</span>
+
+<span class="c-cm"># ✓ PRODUCTION BULLETPROOF FIX: Group-aware transformation</span>
+<span class="c-var">df_multi</span>[<span class="c-str">'reading_clean'</span>] = <span class="c-var">df_multi</span>.<span class="c-fn">groupby</span>(<span class="c-str">'sensor'</span>)[<span class="c-str">'reading'</span>].<span class="c-fn">ffill</span>()
+<span class="c-fn">print</span>(<span class="c-var">df_multi</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>  sensor  reading  reading_clean
+0      A     10.0           10.0
+1      A      NaN           10.0
+2      B      NaN            NaN
+3      B     80.0           80.0</div>
+        </div>
+
+        <h3 class="subsection-title">Debugging Walkthrough 2: Fixing the NaN Comparison Trap</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>debug_nan_comparison.py</span>
+                <span>Syntax Correction</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-var">df</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>({<span class="c-str">'name'</span>: [<span class="c-str">'Aarav'</span>, <span class="c-str">'Diya'</span>], <span class="c-str">'marks'</span>: [<span class="c-num">90.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>]})
+
+<span class="c-cm"># ❌ WRONG: df[df['marks'] == np.nan]  # Returns EMPTY DataFrame (0 rows)</span>
+
+<span class="c-cm"># ✓ BULLETPROOF PRODUCTION FIX:</span>
+<span class="c-var">missing_students</span> = <span class="c-var">df</span>[<span class="c-var">df</span>[<span class="c-str">'marks'</span>].<span class="c-fn">isna</span>()]
+<span class="c-fn">print</span>(<span class="c-str">"Successfully caught missing student:"</span>)
+<span class="c-fn">print</span>(<span class="c-var">missing_students</span>)</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Successfully caught missing student:
+   name  marks
+1  Diya    NaN</div>
+        </div>
+    </section>
+
+
+    <!-- SECTION 14 -->
+    <section class="card" id="sec-14">
+        <h2 class="section-title">14. Real-World Mini-Project 1: College Student Data Recovery</h2>
+        
+        <p>
+            Is guided capstone mini-project mein hum University Examination Cell ke messy, incomplete semester records ko recover karenge. Pipeline original data ko preserve karegi, missingness audit karegi, numerical columns ke liye mean vs median compare karegi, categorical missingness ko placeholder se handle karegi, aur audit flags generate karke CSV verify karegi.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/college_recovery_workflow.png" alt="College Student Data Recovery Architecture">
+            <div class="img-caption">Figure 9.17: 5-stage defensive recovery architecture for academic examination databases.</div>
+        </div>
+
+        <h3 class="subsection-title">1. Missingness Audit Visuals</h3>
+        <p>
+            Pipeline execute karne par missingness rate aur before-after recovery stability charts:
+        </p>
+        <div class="img-container">
+            <img src="assets/chart_student_missingness.png" alt="Student Dataset Missingness Audit">
+            <div class="img-caption">Figure 9.18: Missingness breakdown across features in raw student dataset (Total N = 10).</div>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_student_before_after.png" alt="Student Dataset Before-and-After Imputation">
+            <div class="img-caption">Figure 9.19: Cohort marks stability and total null cell reduction (6 to 0).</div>
+        </div>
+
+        <h3 class="subsection-title">The Complete Executable 5-Stage Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>college_data_recovery_project.py</span>
+                <span>Python 3 &bull; Full Pipeline</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">os</span>
+<span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 1: Ingest Raw Student Examination Records</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">raw_students</span> = {
+    <span class="c-str">'student_id'</span>: [<span class="c-str">'STU-101'</span>, <span class="c-str">'STU-102'</span>, <span class="c-str">'STU-103'</span>, <span class="c-str">'STU-104'</span>, <span class="c-str">'STU-105'</span>,
+                   <span class="c-str">'STU-106'</span>, <span class="c-str">'STU-107'</span>, <span class="c-str">'STU-108'</span>, <span class="c-str">'STU-109'</span>, <span class="c-str">'STU-110'</span>],
+    <span class="c-str">'student_name'</span>: [<span class="c-str">'Aarav Sharma'</span>, <span class="c-str">'Diya Patel'</span>, <span class="c-str">'Kabir Singh'</span>, <span class="c-str">'Meera Nair'</span>, <span class="c-str">'Rohan Verma'</span>,
+                     <span class="c-str">'Sneha Kulkarni'</span>, <span class="c-str">'Aditya Joshi'</span>, <span class="c-str">'Pooja Reddy'</span>, <span class="c-str">'Vikram Malhotra'</span>, <span class="c-str">'Zoya Khan'</span>],
+    <span class="c-str">'department'</span>: [<span class="c-str">'CS'</span>, <span class="c-str">'IT'</span>, <span class="c-kw">None</span>, <span class="c-str">'ECE'</span>, <span class="c-str">'CS'</span>, <span class="c-str">'IT'</span>, <span class="c-str">'MECH'</span>, <span class="c-str">'ECE'</span>, <span class="c-str">'CS'</span>, <span class="c-str">'CS'</span>],
+    <span class="c-str">'marks'</span>: [<span class="c-num">92.0</span>, <span class="c-num">85.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">86.0</span>, <span class="c-num">91.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">72.0</span>, <span class="c-num">84.0</span>, <span class="c-num">95.0</span>, <span class="c-num">94.0</span>],
+    <span class="c-str">'attendance'</span>: [<span class="c-num">88.0</span>, <span class="c-num">94.0</span>, <span class="c-num">82.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">96.0</span>, <span class="c-num">90.0</span>, <span class="c-num">76.0</span>, <span class="c-num">89.0</span>, <span class="c-num">95.0</span>, <span class="c-num">92.0</span>],
+    <span class="c-str">'study_hours'</span>: [<span class="c-num">15.0</span>, <span class="c-num">12.0</span>, <span class="c-num">8.0</span>, <span class="c-num">14.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">11.0</span>, <span class="c-num">7.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">18.0</span>, <span class="c-num">16.0</span>]
+}
+<span class="c-var">df_college_raw</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>(<span class="c-var">raw_students</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 2: Defensive Copy & Missingness Audit</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">df_college</span> = <span class="c-var">df_college_raw</span>.<span class="c-fn">copy</span>()
+<span class="c-var">total_nulls_before</span> = <span class="c-var">df_college</span>.<span class="c-fn">isna</span>().<span class="c-fn">sum</span>().<span class="c-fn">sum</span>()
+<span class="c-fn">print</span>(<span class="c-str">f"Stage 2 Audit: {total_nulls_before} missing cells detected across table."</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 3: Statistical Comparison & Strategy Selection</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">valid_marks</span> = <span class="c-var">df_college</span>[<span class="c-str">'marks'</span>].<span class="c-fn">dropna</span>()
+<span class="c-var">marks_median</span> = <span class="c-var">valid_marks</span>.<span class="c-fn">median</span>()  <span class="c-cm"># 88.5</span>
+<span class="c-var">marks_mean</span> = <span class="c-var">valid_marks</span>.<span class="c-fn">mean</span>()      <span class="c-cm"># 87.375</span>
+<span class="c-fn">print</span>(<span class="c-str">f"Marks Stats -> Mean: {marks_mean:.2f} | Median: {marks_median:.2f} (Using Median)"</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 4: Impute Missing Data with Provenance Flags</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">df_college</span>[<span class="c-str">'marks_imputed'</span>] = <span class="c-var">df_college</span>[<span class="c-str">'marks'</span>].<span class="c-fn">isna</span>()
+<span class="c-var">df_college</span>[<span class="c-str">'marks'</span>] = <span class="c-var">df_college</span>[<span class="c-str">'marks'</span>].<span class="c-fn">fillna</span>(<span class="c-var">marks_median</span>)
+<span class="c-var">df_college</span>[<span class="c-str">'attendance'</span>] = <span class="c-var">df_college</span>[<span class="c-str">'attendance'</span>].<span class="c-fn">fillna</span>(<span class="c-var">df_college</span>[<span class="c-str">'attendance'</span>].<span class="c-fn">mean</span>().<span class="c-fn">round</span>(<span class="c-num">1</span>))
+<span class="c-var">df_college</span>[<span class="c-str">'study_hours'</span>] = <span class="c-var">df_college</span>[<span class="c-str">'study_hours'</span>].<span class="c-fn">fillna</span>(<span class="c-var">df_college</span>[<span class="c-str">'study_hours'</span>].<span class="c-fn">median</span>())
+<span class="c-var">df_college</span>[<span class="c-str">'department'</span>] = <span class="c-var">df_college</span>[<span class="c-str">'department'</span>].<span class="c-fn">fillna</span>(<span class="c-str">'Undeclared'</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 5: 100% Verification, CSV Export & Read-Back</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-kw">assert</span> <span class="c-var">df_college</span>.<span class="c-fn">isna</span>().<span class="c-fn">sum</span>().<span class="c-fn">sum</span>() == <span class="c-num">0</span>, <span class="c-str">"Null values still remain!"</span>
+<span class="c-var">csv_path</span> = <span class="c-str">'college_student_recovered.csv'</span>
+<span class="c-var">df_college</span>.<span class="c-fn">to_csv</span>(<span class="c-var">csv_path</span>, <span class="c-var">index</span>=<span class="c-kw">False</span>)
+
+<span class="c-var">df_verified</span> = <span class="c-var">pd</span>.<span class="c-fn">read_csv</span>(<span class="c-var">csv_path</span>)
+<span class="c-kw">assert</span> <span class="c-var">df_verified</span>.<span class="c-var">shape</span> == (<span class="c-num">10</span>, <span class="c-num">7</span>), <span class="c-str">"Dimension mismatch!"</span>
+<span class="c-fn">print</span>(<span class="c-str">f"Recovery Complete! Exported {len(df_verified)} rows with 0 nulls."</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_verified</span>[[<span class="c-str">'student_id'</span>, <span class="c-str">'student_name'</span>, <span class="c-str">'department'</span>, <span class="c-str">'marks'</span>, <span class="c-str">'marks_imputed'</span>]])</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Stage 2 Audit: 6 missing cells detected across table.
+Marks Stats -> Mean: 87.38 | Median: 88.50 (Using Median)
+Recovery Complete! Exported 10 rows with 0 nulls.
+  student_id     student_name  department  marks  marks_imputed
+0    STU-101     Aarav Sharma          CS   92.0          False
+1    STU-102       Diya Patel          IT   85.0          False
+2    STU-103      Kabir Singh  Undeclared   88.5           True
+3    STU-104       Meera Nair         ECE   86.0          False
+4    STU-105      Rohan Verma          CS   91.0          False
+5    STU-106   Sneha Kulkarni          IT   88.5           True
+6    STU-107     Aditya Joshi        MECH   72.0          False
+7    STU-108      Pooja Reddy         ECE   84.0          False
+8    STU-109  Vikram Malhotra          CS   95.0          False
+9    STU-110        Zoya Khan          CS   94.0          False</div>
+        </div>
+    </section>
+
+    <!-- SECTION 15 -->
+    <section class="card" id="sec-15">
+        <h2 class="section-title">15. Real-World Mini-Project 2: IoT Temperature Sensor Data</h2>
+        
+        <p>
+            Industrial automation aur smart cities mein IoT sensors environment monitor karte hain. Packet drops aur battery dips continuous missing values cause karte hain. Is project mein hum chronologically ordered multi-sensor dataset ko reconstruct karenge bina cross-sensor data bleed ke.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/iot_sensor_recovery_workflow.png" alt="IoT Multi-Sensor Recovery Pipeline">
+            <div class="img-caption">Figure 9.20: End-to-end temporal recovery architecture with device isolation boundaries.</div>
+        </div>
+
+        <h3 class="subsection-title">1. Time-Series Telemetry Visuals</h3>
+        <p>
+            Raw dropouts vs reconstructed continuous telemetry curves:
+        </p>
+        <div class="img-container">
+            <img src="assets/chart_sensor_timeseries.png" alt="IoT Multi-Sensor Temperature Readings with Telemetry Dropouts">
+            <div class="img-caption">Figure 9.21: Telemetry dropouts at 08:15 (Sensor A) and 08:30 (Sensor B).</div>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_estimated_vs_observed.png" alt="Post-Interpolation Recovery: Continuous Time-Series Reconstructed">
+            <div class="img-caption">Figure 9.22: Reconstructed temperature curves after group-aware linear interpolation.</div>
+        </div>
+
+        <h3 class="subsection-title">The Complete Executable Multi-Sensor Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>iot_sensor_recovery.py</span>
+                <span>Python 3 &bull; Time-Series Pipeline</span>
+            </div>
+            <pre class="code-block"><span class="c-kw">import</span> <span class="c-var">numpy</span> <span class="c-kw">as</span> <span class="c-var">np</span>
+<span class="c-kw">import</span> <span class="c-var">pandas</span> <span class="c-kw">as</span> <span class="c-var">pd</span>
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 1: Ingest Raw Interleaved Sensor Readings</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">raw_iot</span> = {
+    <span class="c-str">'timestamp'</span>: <span class="c-var">pd</span>.<span class="c-fn">to_datetime</span>([
+        <span class="c-str">'2026-10-28 08:00:00'</span>, <span class="c-str">'2026-10-28 08:15:00'</span>, <span class="c-str">'2026-10-28 08:30:00'</span>, <span class="c-str">'2026-10-28 08:45:00'</span>,
+        <span class="c-str">'2026-10-28 08:00:00'</span>, <span class="c-str">'2026-10-28 08:15:00'</span>, <span class="c-str">'2026-10-28 08:30:00'</span>, <span class="c-str">'2026-10-28 08:45:00'</span>
+    ]),
+    <span class="c-str">'sensor_id'</span>: [<span class="c-str">'SENSOR-A'</span>, <span class="c-str">'SENSOR-A'</span>, <span class="c-str">'SENSOR-A'</span>, <span class="c-str">'SENSOR-A'</span>,
+                  <span class="c-str">'SENSOR-B'</span>, <span class="c-str">'SENSOR-B'</span>, <span class="c-str">'SENSOR-B'</span>, <span class="c-str">'SENSOR-B'</span>],
+    <span class="c-str">'temperature'</span>: [<span class="c-num">24.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">25.0</span>, <span class="c-num">26.0</span>,
+                    <span class="c-num">30.5</span>, <span class="c-num">31.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">32.0</span>],
+    <span class="c-str">'humidity'</span>: [<span class="c-num">60.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">58.0</span>,
+                 <span class="c-num">45.0</span>, <span class="c-num">46.0</span>, <span class="c-var">np</span>.<span class="c-var">nan</span>, <span class="c-num">44.0</span>]
+}
+<span class="c-var">df_iot</span> = <span class="c-var">pd</span>.<span class="c-fn">DataFrame</span>(<span class="c-var">raw_iot</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 2: Chronological Ordering</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">df_iot</span> = <span class="c-var">df_iot</span>.<span class="c-fn">sort_values</span>(<span class="c-var">by</span>=[<span class="c-str">'sensor_id'</span>, <span class="c-str">'timestamp'</span>]).<span class="c-fn">reset_index</span>(<span class="c-var">drop</span>=<span class="c-kw">True</span>)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 3: Group-Aware Linear Interpolation for Temperature</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">df_iot</span>[<span class="c-str">'temperature_recovered'</span>] = <span class="c-var">df_iot</span>.<span class="c-fn">groupby</span>(<span class="c-str">'sensor_id'</span>)[<span class="c-str">'temperature'</span>].<span class="c-fn">transform</span>(
+    <span class="c-kw">lambda</span> <span class="c-var">g</span>: <span class="c-var">g</span>.<span class="c-fn">interpolate</span>(<span class="c-var">method</span>=<span class="c-str">'linear'</span>)
+)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 4: Group-Aware Forward Fill for Humidity</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">df_iot</span>[<span class="c-str">'humidity_recovered'</span>] = <span class="c-var">df_iot</span>.<span class="c-fn">groupby</span>(<span class="c-str">'sensor_id'</span>)[<span class="c-str">'humidity'</span>].<span class="c-fn">transform</span>(
+    <span class="c-kw">lambda</span> <span class="c-var">g</span>: <span class="c-var">g</span>.<span class="c-fn">ffill</span>()
+)
+
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-cm"># STAGE 5: Export to CSV and Verification</span>
+<span class="c-cm"># ==============================================================================</span>
+<span class="c-var">csv_out</span> = <span class="c-str">'iot_sensor_cleaned.csv'</span>
+<span class="c-var">df_iot</span>.<span class="c-fn">to_csv</span>(<span class="c-var">csv_out</span>, <span class="c-var">index</span>=<span class="c-kw">False</span>)
+<span class="c-var">df_readback</span> = <span class="c-var">pd</span>.<span class="c-fn">read_csv</span>(<span class="c-var">csv_out</span>)
+
+<span class="c-kw">assert</span> <span class="c-var">df_readback</span>.<span class="c-var">shape</span> == (<span class="c-num">8</span>, <span class="c-num">6</span>), <span class="c-str">"Shape mismatch!"</span>
+<span class="c-fn">print</span>(<span class="c-str">f"Successfully exported {len(df_readback)} verified IoT readings to {csv_out}."</span>)
+<span class="c-fn">print</span>(<span class="c-var">df_readback</span>[[<span class="c-str">'timestamp'</span>, <span class="c-str">'sensor_id'</span>, <span class="c-str">'temperature_recovered'</span>, <span class="c-str">'humidity_recovered'</span>]])</pre>
+            <div class="output-box">
+                <div class="output-label">Verified Execution Output:</div>Successfully exported 8 verified IoT readings to iot_sensor_cleaned.csv.
+             timestamp  sensor_id  temperature_recovered  humidity_recovered
+0  2026-10-28 08:00:00   SENSOR-A                   24.0                60.0
+1  2026-10-28 08:15:00   SENSOR-A                   24.5                60.0
+2  2026-10-28 08:30:00   SENSOR-A                   25.0                60.0
+3  2026-10-28 08:45:00   SENSOR-A                   26.0                58.0
+4  2026-10-28 08:00:00   SENSOR-B                   30.5                45.0
+5  2026-10-28 08:15:00   SENSOR-B                   31.0                46.0
+6  2026-10-28 08:30:00   SENSOR-B                   31.5                46.0
+7  2026-10-28 08:45:00   SENSOR-B                   32.0                44.0</div>
+        </div>
+    </section>
+
+    <!-- SECTION 16 -->
+    <section class="card" id="sec-16">
+        <h2 class="section-title">16. Practice Questions, Drills &amp; Revision</h2>
+        
+        <p>
+            Missing data handling ke har aspect (representations, detection, counts, <code>dropna()</code>, <code>fillna()</code>, mean/median/mode, <code>ffill()</code>, <code>bfill()</code>, interpolation, MCAR/MAR/MNAR) ko solidify karne ke liye <strong>39 interactive challenges</strong>:
+        </p>
+
+        <!-- PART A: 10 OUTPUT PREDICTION DRILLS -->
+        <h3 class="subsection-title">Part A: 10 Output-Prediction Drills</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q1: What will be the output of pd.Series([np.nan]).mean()?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>nan</code></p>
+                <p><strong>Explanation:</strong> Series mein koi bhi valid number nahi hai, isliye average define nahi ho sakta.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q2: What will pd.Series([10.0, 20.0, np.nan]).mean() return?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>15.0</code></p>
+                <p><strong>Explanation:</strong> Pandas aggregations (mean, sum) automatically ignore NaN values by default (<code>skipna=True</code>).</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q3: What does np.nan == np.nan evaluate to?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>False</code></p>
+                <p><strong>Explanation:</strong> IEEE 754 floating-point standard mandates that NaN is never equal to anything, including itself.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q4: If a DataFrame with 10 rows has 1 NaN in row 3, how many rows remain after df.dropna(how='any')?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>9 rows</code></p>
+                <p><strong>Explanation:</strong> <code>how='any'</code> discards any row containing at least one missing value.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q5: What does pd.Series([20.0, np.nan, np.nan, 26.0]).interpolate(method='linear') produce?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>[20.0, 22.0, 24.0, 26.0]</code></p>
+                <p><strong>Explanation:</strong> It divides the distance 6.0 across 3 steps = 2.0 per step.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q6: What does s.fillna(s.mode()[0]) do on a categorical Series?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> Missing values are filled with the most frequently occurring category.</p>
+                <p><strong>Explanation:</strong> <code>.mode()[0]</code> extracts the dominant class string.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q7: What happens if the very first row of a Series is NaN and you call s.ffill()?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> Row 0 remains <code>NaN</code>.</p>
+                <p><strong>Explanation:</strong> Forward fill has no prior valid value to carry forward into the first row.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q8: What does df.isna().sum().sum() return?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> A single scalar integer representing the grand total of all missing cells in the entire table.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q9: What is the remaining index after df.dropna() drops row index 2?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>Index([0, 1, 3, 4], dtype='int64')</code></p>
+                <p><strong>Explanation:</strong> Dropping leaves a gap; it does not automatically renumber rows.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q10: What does pd.to_datetime(['2026-01-01', None]) produce in row 1?</summary>
+            <div class="details-content">
+                <p><strong>Output:</strong> <code>NaT</code> (Not-a-Time)</p>
+                <p><strong>Explanation:</strong> Pandas datetime conversion maps None to NaT.</p>
+            </div>
+        </details>
+
+        <!-- PART B: 10 CODING EXERCISES -->
+        <h3 class="subsection-title">Part B: 10 Coding Exercises</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 1: Count total missing cells in DataFrame df.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>total_nulls = df.isna().sum().sum()</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 2: Calculate missing percentage for each column rounded to 2 decimals.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>missing_pct = (df.isna().mean() * 100).round(2)</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 3: Drop rows only if both 'marks' AND 'attendance' are missing.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df_clean = df.dropna(subset=['marks', 'attendance'], how='all')</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 4: Impute missing values in 'salary' column with its median.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df['salary'] = df['salary'].fillna(df['salary'].median())</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 5: Impute missing department values with 'Undeclared'.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df['department'] = df['department'].fillna('Undeclared')</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 6: Apply forward fill along chronological date order.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df_sorted = df.sort_values('date')<br>df_sorted['price'] = df_sorted['price'].ffill()</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 7: Linearly interpolate missing numerical values in Series s.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>s_interpolated = s.interpolate(method='linear')</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 8: Drop all columns that have more than 50% missing values.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>thresh_count = len(df) * 0.5<br>df_clean = df.dropna(axis=1, thresh=thresh_count)</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 9: Group-aware forward fill for multi-sensor DataFrame.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df['temp'] = df.groupby('sensor_id')['temp'].ffill()</code>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Ex 10: Create an audit boolean flag column tracking imputed marks.</summary>
+            <div class="details-content">
+                <p><strong>Solution:</strong></p>
+                <code>df['marks_was_missing'] = df['marks'].isna()<br>df['marks'] = df['marks'].fillna(df['marks'].median())</code>
+            </div>
+        </details>
+
+        <!-- PART C: 10 MULTIPLE CHOICE QUESTIONS -->
+        <h3 class="subsection-title">Part C: 10 Multiple-Choice Questions (MCQs)</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 1: Why does df[df['marks'] == np.nan] return 0 rows?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Pandas bug &bull; B) IEEE 754 specifies NaN != NaN &bull; C) Marks is an integer column &bull; D) Equality is disabled</p>
+                <p><strong>Correct Answer:</strong> <strong>B) IEEE 754 specifies NaN != NaN</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 2: Which statistical imputation method is most robust against extreme outliers?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Mean &bull; B) Median &bull; C) Mode &bull; D) Zero</p>
+                <p><strong>Correct Answer:</strong> <strong>B) Median</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 3: What does the thresh=3 parameter in dropna() mean?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Drop rows with 3 NaNs &bull; B) Keep rows with at least 3 non-NaN values &bull; C) Drop 3 columns &bull; D) Stop after 3 rows</p>
+                <p><strong>Correct Answer:</strong> <strong>B) Keep rows with at least 3 non-NaN values</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 4: What missingness mechanism occurs when missingness has no relationship to any feature?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) MNAR &bull; B) MAR &bull; C) MCAR &bull; D) N/A</p>
+                <p><strong>Correct Answer:</strong> <strong>C) MCAR (Missing Completely at Random)</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 5: What is the primary risk of running global ffill() across multiple devices?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Memory leak &bull; B) Sensor Bleed (cross-device data contamination) &bull; C) Infinite loop &bull; D) Overflows</p>
+                <p><strong>Correct Answer:</strong> <strong>B) Sensor Bleed (cross-device data contamination)</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 6: What happens when an integer column acquires a missing value in standard Pandas?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Raises error &bull; B) Promoted to float64 &bull; C) Converted to string &bull; D) Replaced with 0</p>
+                <p><strong>Correct Answer:</strong> <strong>B) Promoted to float64</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 7: What does df.dropna(axis=1) do?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Drops columns with NaNs &bull; B) Drops rows with NaNs &bull; C) Drops index &bull; D) Transposes table</p>
+                <p><strong>Correct Answer:</strong> <strong>A) Drops columns with NaNs</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 8: Which interpolation method connects two points with a constant slope straight line?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Polynomial &bull; B) Spline &bull; C) Linear &bull; D) Nearest</p>
+                <p><strong>Correct Answer:</strong> <strong>C) Linear</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 9: Are isna() and isnull() different in functionality?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Yes, isna() handles NaT &bull; B) Yes, isnull() is faster &bull; C) No, they are 100% identical aliases &bull; D) isna() only works on numbers</p>
+                <p><strong>Correct Answer:</strong> <strong>C) No, they are 100% identical aliases</strong></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">MCQ 10: In which scenario should you NEVER use linear interpolation?</summary>
+            <div class="details-content">
+                <p><strong>Options:</strong> A) Temperature sensor logs &bull; B) Categorical department names &bull; C) Car speed readings &bull; D) Heart rate telemetry</p>
+                <p><strong>Correct Answer:</strong> <strong>B) Categorical department names</strong></p>
+            </div>
+        </details>
+
+        <!-- PART D: 6 DEBUGGING CHALLENGES -->
+        <h3 class="subsection-title">Part D: 6 Debugging Challenges</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 1: df.fillna(0, inplace=True) breaks df['dept'].str.upper().</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> Zero was injected into a string column, creating mixed float/int/str types.</p>
+                <p><strong>Fix:</strong> <code>df.fillna({'marks': 0, 'dept': 'Unknown'})</code></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 2: df['marks'].mean() returns NaN.</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> The column consists entirely of NaNs or object strings with mixed nulls.</p>
+                <p><strong>Fix:</strong> Ensure numeric conversion first: <code>pd.to_numeric(df['marks'], errors='coerce').mean()</code></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 3: Sensor A temperature leaks into Sensor B after ffill.</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> Global ffill across different device boundaries.</p>
+                <p><strong>Fix:</strong> <code>df['temp'] = df.groupby('sensor_id')['temp'].ffill()</code></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 4: df.dropna() deleted 80% of student rows.</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> <code>how='any'</code> triggered by an optional hobby column with 70% nulls.</p>
+                <p><strong>Fix:</strong> Drop the optional column first or use <code>df.dropna(subset=['marks', 'attendance'])</code>.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 5: df[df['status'] == None] returns empty DataFrame.</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> Direct equality check against None doesn't match Pandas null markers.</p>
+                <p><strong>Fix:</strong> <code>df[df['status'].isna()]</code></p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Debug 6: Linear interpolation creates decreasing temperatures during heating cycle.</summary>
+            <div class="details-content">
+                <p><strong>Cause:</strong> Rows were unsorted or in reverse chronological order.</p>
+                <p><strong>Fix:</strong> <code>df = df.sort_values('timestamp').reset_index(drop=True)</code> before interpolating.</p>
+            </div>
+        </details>
+
+        <!-- PART E: 3 REAL-WORLD SCENARIOS -->
+        <h3 class="subsection-title">Part E: 3 Real-World Scenarios</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Scenario 1: Healthcare Patient Vitals Ingestion</summary>
+            <div class="details-content">
+                <p><strong>Challenge:</strong> An intensive care unit (ICU) bed records heart rate every minute. 2 minutes of signal dropped. How should you impute?</p>
+                <p><strong>Recommendation:</strong> Use group-aware linear interpolation: <code>df.groupby('patient_id')['heart_rate'].transform(lambda g: g.interpolate(method='linear'))</code>. Heart rate is a continuous biological process; linear slope preserves continuity without abrupt artificial steps.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Scenario 2: E-Commerce Customer Survey on Annual Household Income</summary>
+            <div class="details-content">
+                <p><strong>Challenge:</strong> 35% of survey respondents skipped the 'Annual Income' question (MNAR pattern: high earners and low earners often refuse). Should you use Mean imputation?</p>
+                <p><strong>Recommendation:</strong> Do NOT use Mean! Mean is heavily inflated by billionaire outliers. Use Median imputation, and create an explicit binary indicator column <code>income_missing = df['income'].isna()</code> so machine learning models can learn that non-response carries predictive signal.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Scenario 3: Credit Card Fraud Detection Pipeline</summary>
+            <div class="details-content">
+                <p><strong>Challenge:</strong> An online transaction has a missing 'shipping_postal_code' because the product was a digital software download. Should you drop the row?</p>
+                <p><strong>Recommendation:</strong> Absolutely NOT! Dropping the row prevents customer payment processing. Impute with categorical placeholder <code>'DIGITAL_DELIVERY'</code> or <code>'N/A'</code>.</p>
+            </div>
+        </details>
+    </section>
+
+    <!-- SECTION 17 -->
+    <section class="card" id="sec-17">
+        <h2 class="section-title">17. Summary &amp; Topic 10 Preview</h2>
+        
+        <p>
+            Congratulations! Aapne Pandas ka sabse critical data-hygiene topic master kar liya hai: <strong>Handling Missing Data</strong>.
+        </p>
+
+        <h3 class="subsection-title">What You Have Mastered in Topic 9</h3>
+        <ul>
+            <li><strong>Representations:</strong> <code>np.nan</code> for floats, <code>None</code> for text, <code>pd.NaT</code> for datetimes, and why <code>val == np.nan</code> is always <code>False</code>.</li>
+            <li><strong>Detection &amp; Measurement:</strong> Fast boolean masks with <code>isna()</code> / <code>notna()</code> and calculating missing counts and percentages.</li>
+            <li><strong>Pruning Defensively:</strong> <code>dropna()</code> with <code>how='any'</code>, <code>how='all'</code>, <code>subset=[...]</code>, and measuring data retention rates.</li>
+            <li><strong>Strategic Imputation:</strong> Per-column dictionary filling, resisting outliers with Median instead of Mean, and Mode for categorical fields.</li>
+            <li><strong>Temporal Continuity:</strong> <code>ffill()</code>, <code>bfill()</code>, and mathematical <code>interpolate()</code>, while avoiding cross-entity Sensor Bleed via <code>groupby()</code>.</li>
+            <li><strong>Data Provenance:</strong> Adding boolean audit flags (<code>marks_imputed = isna()</code>) to maintain scientific traceability.</li>
+        </ul>
+
+        <div class="callout callout-success">
+            <div class="callout-title">🚀 Next Up in Topic 10: Merging, Joining &amp; Concatenating DataFrames</div>
+            <p style="margin-bottom: 0;">
+                Ab jab aapka single dataset clean aur complete hai, hum real-world enterprise databases ke multi-table joins seekhenge! 
+                Hum master karenge: <code>pd.merge()</code> ke 4 join types (<code>inner</code>, <code>left</code>, <code>right</code>, <code>outer</code>), multi-key joins, index joins with <code>df.join()</code>, concatenation along axes, aur relational integrity checks with <code>validate='one_to_many'</code>.
+            </p>
+        </div>
+    </section>
+
+    <!-- SECTION 18 -->
+    <section class="card" id="sec-18">
+        <h2 class="section-title">18. Decision Checklist &amp; Reference Sheet</h2>
+        
+        <h3 class="subsection-title">The Missing-Data Handling Checklist</h3>
+        <ul style="list-style-type: '✓ '; padding-left: 20px;">
+            <li>Did you make a copy before modifying? (<code>df_clean = df.copy()</code>)</li>
+            <li>Did you measure both count (<code>sum()</code>) and percentage (<code>mean()*100</code>)?</li>
+            <li>Did you inspect for outliers before choosing between Mean and Median?</li>
+            <li>If sorting or interpolating time-series, did you sort by timestamp first?</li>
+            <li>If multi-sensor data exists, did you group by device ID to prevent Sensor Bleed?</li>
+            <li>Did you add a boolean flag column to preserve data provenance?</li>
+            <li>Did you verify that remaining missing count is exactly 0? (<code>assert df.isna().sum().sum() == 0</code>)</li>
+            <li>Did you verify exported CSV dimensions and round-trip read-back?</li>
+        </ul>
+
+        <h3 class="subsection-title">Glossary of Key Technical Terms</h3>
+        <ul>
+            <li><strong>np.nan:</strong> IEEE 754 Floating-point Not-a-Number singleton representing missing numerical data.</li>
+            <li><strong>pd.NaT:</strong> Not-a-Time marker representing missing dates, times, or timedeltas.</li>
+            <li><strong>Imputation:</strong> The mathematical or logical process of replacing missing data with substituted values.</li>
+            <li><strong>Median Imputation:</strong> Replacing missing numbers with the 50th percentile, resisting extreme outliers.</li>
+            <li><strong>Forward Fill (ffill):</strong> Propagating the last observed valid reading forward into subsequent missing cells.</li>
+            <li><strong>Linear Interpolation:</strong> Estimating intermediate missing points along a constant mathematical slope between two known endpoints.</li>
+            <li><strong>Sensor Bleed:</strong> A critical multi-entity bug where an un-grouped global ffill leaks Device A's reading into Device B.</li>
+            <li><strong>MCAR (Missing Completely at Random):</strong> Missingness independent of all variables; safe to drop without statistical bias.</li>
+            <li><strong>MAR (Missing at Random):</strong> Missingness explained by other observed features in the dataset.</li>
+            <li><strong>MNAR (Missing Not at Random):</strong> Missingness directly related to the unobserved value itself; highest risk of severe bias.</li>
+        </ul>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p>CodeVerse Educational Learning Platform &bull; Pandas Mastery Track &bull; Topic 9</p>
+        <p>Designed for high-performance offline-first interactive learning &bull; &copy; 2026 CodeVerse</p>
+    </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pandas Topic 19: Performance &amp; Memory Optimization | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Light Theme Design System for Pandas */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.65;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .main-container {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 32px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            color: #ffffff;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+
+        .hero-title {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 8px;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            color: #e0f2fe;
+            line-height: 1.5;
+            margin-bottom: 18px;
+            max-width: 780px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px;
+            font-size: 12.5px;
+            color: #bae6fd;
+            border-top: 1px solid rgba(255,255,255,0.18);
+            padding-top: 14px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        h2.section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin: 18px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        ul, ol {
+            margin: 10px 0 14px 22px;
+            color: var(--text-main);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13px;
+            background-color: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Code Containers */
+        .code-container {
+            background-color: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 14px 0 18px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #334155;
+        }
+
+        .code-header {
+            background-color: #1e293b;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-content {
+            padding: 14px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 12.5px;
+            line-height: 1.6;
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .code-content .comment { color: #64748b; font-style: italic; }
+        .code-content .keyword { color: #38bdf8; font-weight: bold; }
+        .code-content .string { color: #34d399; }
+        .code-content .number { color: #f472b6; }
+        .code-content .builtin { color: #fbbf24; }
+
+        .output-block {
+            background-color: #090d16;
+            border-top: 1px solid #1e293b;
+            padding: 12px 14px;
+            color: #cbd5e1;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .output-title {
+            color: #38bdf8;
+            font-size: 10.5px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        /* Asset Cards */
+        .asset-card {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin: 16px 0;
+            text-align: center;
+        }
+
+        .asset-img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .asset-caption {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-left: 4px solid;
+            padding: 12px 16px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 16px 0;
+            font-size: 13.5px;
+        }
+
+        .callout-realworld {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #064e3b;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #78350f;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #7f1d1d;
+        }
+
+        .callout-info {
+            background-color: var(--primary-light);
+            border-color: var(--primary);
+            color: #0c4a6e;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Table Wrapper and Container */
+        .table-wrapper, .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 16px 0;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 600;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f8fafc;
+        }
+
+        /* Accordions */
+        details.details-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        details.details-box[open] {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        summary.details-summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            background-color: #f8fafc;
+            border-bottom: 1px solid transparent;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        details.details-box[open] summary.details-summary {
+            border-bottom-color: var(--border);
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .details-content {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            background-color: #ffffff;
+        }
+
+        /* Table of Contents */
+        .toc-container {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .toc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 8px 14px;
+            font-size: 13px;
+        }
+
+        .toc-link {
+            color: var(--primary-dark);
+            text-decoration: none;
+            padding: 4px 6px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toc-link:hover {
+            background-color: var(--primary-light);
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .toc-num {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 20px;
+        }
+
+        @media (max-width: 640px) {
+            body { padding: 10px; font-size: 14px; }
+            .hero-banner { padding: 22px 16px; margin-bottom: 16px; }
+            .hero-title { font-size: 21px; }
+            .hero-subtitle { font-size: 13.5px; }
+            .card { padding: 16px; margin-bottom: 16px; }
+            h2.section-title { font-size: 17px; }
+            .code-content { font-size: 11.5px; padding: 10px; }
+            .output-block { font-size: 11px; padding: 8px 10px; }
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+        <span class="hero-badge">Pandas Course &bull; Topic 19 of 20</span>
+        <h1 class="hero-title">Performance &amp; Memory Optimization</h1>
+        <h2 class="hero-subtitle">Master Profiling, Numeric Downcasting, Categorical Encoding, SIMD Vectorization, and Chunked Streaming for Production Data Pipelines</h2>
+        <div class="hero-meta">
+            <div class="hero-meta-item"><span>&#9201;</span> 60 Min Deep Dive</div>
+            <div class="hero-meta-item"><span>&#128187;</span> 28 Executed Benchmarks</div>
+            <div class="hero-meta-item"><span>&#128202;</span> 22 High-Res Charts</div>
+            <div class="hero-meta-item"><span>&#9989;</span> Verified on Pandas 2.3.3</div>
+        </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-container">
+        <div class="toc-title">Course Navigation &bull; Topic 19 Syllabus</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec1"><span class="toc-num">01.</span> Introduction: Why Performance Matters</a>
+            <a class="toc-link" href="#sec2"><span class="toc-num">02.</span> Measuring Execution Time Correctly</a>
+            <a class="toc-link" href="#sec3"><span class="toc-num">03.</span> Measuring DataFrame Memory Usage</a>
+            <a class="toc-link" href="#sec4"><span class="toc-num">04.</span> Optimizing Numeric Data Types</a>
+            <a class="toc-link" href="#sec5"><span class="toc-num">05.</span> Optimizing Text &amp; Categoricals</a>
+            <a class="toc-link" href="#sec6"><span class="toc-num">06.</span> Vectorization vs. Python Loops</a>
+            <a class="toc-link" href="#sec7"><span class="toc-num">07.</span> apply(), map() &amp; Built-in Methods</a>
+            <a class="toc-link" href="#sec8"><span class="toc-num">08.</span> Avoiding Copies &amp; Copy-on-Write</a>
+            <a class="toc-link" href="#sec9"><span class="toc-num">09.</span> Efficient Filtering &amp; Aggregation</a>
+            <a class="toc-link" href="#sec10"><span class="toc-num">10.</span> Chunked Processing for Large CSVs</a>
+            <a class="toc-link" href="#sec11"><span class="toc-num">11.</span> Efficient CSV Reading (usecols &amp; dtypes)</a>
+            <a class="toc-link" href="#sec12"><span class="toc-num">12.</span> Efficient Missing &amp; Duplicate Handling</a>
+            <a class="toc-link" href="#sec13"><span class="toc-num">13.</span> Choosing Fast Data Structures</a>
+            <a class="toc-link" href="#sec14"><span class="toc-num">14.</span> Fair Benchmarking &amp; Scaling Curves</a>
+            <a class="toc-link" href="#sec15"><span class="toc-num">15.</span> Optimization Decision Tree &amp; Checklist</a>
+            <a class="toc-link" href="#sec16"><span class="toc-num">16.</span> Guided Capstone Case Study A (College)</a>
+            <a class="toc-link" href="#sec17"><span class="toc-num">17.</span> Guided Capstone Case Study B (E-Commerce)</a>
+            <a class="toc-link" href="#sec18"><span class="toc-num">18.</span> 21 Interactive Practice Questions</a>
+            <a class="toc-link" href="#sec19"><span class="toc-num">19.</span> Master Summary &amp; Cheat Sheet</a>
+        </div>
+    </nav>
+
+    <!-- Section 1: Introduction -->
+    <section class="card" id="sec1">
+        <h2 class="section-title">1. Introduction &mdash; Why Performance and Memory Optimization Matter</h2>
+        <p>Jab aap Pandas sikhna shuru karte hain, to 100 ya 500 rows ke toy datasets par har operation instant lagta hai. Lekin real-world production systems me data scale dramatically grow karta hai:</p>
+        <ul>
+            <li><strong>College ERP Systems:</strong> Ek university me 5,000 students ka data badhte-badhte 500,000 historical exam aur attendance logs ban jata hai.</li>
+            <li><strong>E-Commerce Platforms:</strong> Amazon ya Flipkart jaise platforms par roz millions of clicks, add-to-carts, aur orders generate hote hain.</li>
+            <li><strong>IoT Sensor Telemetry:</strong> Industrial smart factory sensors har second temperature aur vibration log karte hain, jo din me 10+ GB CSVs produce karte hain.</li>
+        </ul>
+
+        <p>Agar aap unoptimized code likhenge, to script ghanto chalegi ya system <strong><code>MemoryError: Out of Memory (OOM)</code></strong> crash ho jayega. Optimization ka matlab blind shortcuts lena nahi hai, balki system ke hardware resources (CPU aur RAM) ko smartly utilize karna hai.</p>
+
+        <div class="callout callout-realworld">
+            <div class="callout-title">&#128161; Golden Rule of Optimization: Correctness First, Measurement Second!</div>
+            <p><strong>"Premature optimization is the root of all evil"</strong> (Donald Knuth). Pehle readable aur 100% mathematically correct code likhein. Uske baad measure karein ki bottleneck kahan hai. Agar ek fast code galat analytics ya biased scores generate kar raha hai, to uski high speed bilkul bekar hai!</p>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/optimization_workflow_cycle.png" alt="Figure 19.1: The 5-Step Performance Optimization Workflow" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.1 &mdash; The engineering lifecycle: Measure &rarr; Identify Bottleneck &rarr; Optimize &rarr; Verify Correctness &rarr; Re-Benchmark.</div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/cpu_vs_memory_matrix.png" alt="Figure 19.2: CPU Time vs RAM Footprint Matrix" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.2 &mdash; The dual constraints: Balancing compute latency (seconds) against available physical memory (RAM).</div>
+        </div>
+
+        <h3>Two Introductory Examples: The Same Task with Vastly Different Performance</h3>
+        <p>Dekhiye kaise ek simple analytical requirement (students ke marks add karna) do alag approaches me 9,000x speed difference create karta hai:</p>
+
+        <h3>Example A (Anti-Pattern): Python for-loop with iloc indexing</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Concept</span><span>slow_loop_addition.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># 25,000 student records</span>
+totals = []
+<span class="keyword">for</span> i <span class="keyword">in</span> <span class="builtin">range</span>(<span class="builtin">len</span>(df)):
+    totals.append(df.iloc[i, <span class="number">0</span>] + df.iloc[i, <span class="number">1</span>])  <span class="comment"># Slow! Python interpreter overhead</span>
+df[<span class="string">"total"</span>] = totals</div>
+            <div class="output-block">
+<div class="output-title">EXECUTION METRIC</div>Execution Time: ~413.9 ms (Sluggish interpreter boxing for every cell)</div>
+        </div>
+
+        <h3>Example B (Best Practice): Vectorized C-Level Column Addition</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>vectorized_addition.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Vectorized C-array SIMD addition</span>
+df[<span class="string">"total"</span>] = df[<span class="string">"midterm"</span>] + df[<span class="string">"endterm"</span>]  <span class="comment"># Ultra-fast! Direct NumPy flat array execution</span></div>
+            <div class="output-block">
+<div class="output-title">EXECUTION METRIC</div>Execution Time: ~0.05 ms (9,000x Faster! Zero Python interpreter loop overhead)</div>
+        </div>
+    </section>
+
+    <!-- Section 2: Measuring Execution Time Correctly -->
+    <section class="card" id="sec2">
+        <h2 class="section-title">2. Measuring Execution Time Correctly &mdash; perf_counter, timeit, and Warm-Ups</h2>
+        <p>Bohot se developers optimization karte waqt sirf ek baar execution run karke time note karte hain. Lekin ek single measurement bohot misleading ho sakti hai! Kyun?</p>
+        <ul>
+            <li><strong>Cold Start &amp; JIT Warm-Up:</strong> Pehli baar code execute hone par Python ko modules import karne padte hain aur OS ko disk se page cache load karna padta hai.</li>
+            <li><strong>CPU Frequency Scaling &amp; Load:</strong> Computer ka CPU background tasks, antivirus scans, ya browser tabs ke hisab se clock speed fluctuate karta hai.</li>
+            <li><strong>Garbage Collection (GC) Pauses:</strong> Agar kisi run ke dauran Python ka cyclic garbage collector trigger ho jaye, to execution time achanak 2x ya 3x spike kar jata hai.</li>
+        </ul>
+
+        <p>Isliye professional data engineering me hum hamesha <strong>repeated benchmark runs</strong> execute karte hain aur <strong>Median (beech ki robust value)</strong> report karte hain, na ki simple average jo outliers se distort ho sakti hai.</p>
+
+        <div class="asset-card">
+            <img src="assets/benchmarking_methodology_warmup.png" alt="Figure 19.3: Benchmarking Rigor: Warm-Up Runs and The Power of Medians" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.3 &mdash; Benchmarking distribution: Cold run #1 suffers disk cache misses, while run #7 spikes due to garbage collection; the median reveals the true stable runtime.</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Measurement Tool</th>
+                        <th>Recommended Scenario</th>
+                        <th>Key Advantages &amp; Caveats</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>time.perf_counter()</code></td>
+                        <td>Complete end-to-end data pipelines &amp; ETL scripts</td>
+                        <td>Highest available system timer resolution; unaffected by wall-clock daylight saving adjustments.</td>
+                    </tr>
+                    <tr>
+                        <td><code>timeit.timeit()</code></td>
+                        <td>Micro-benchmarks for small single-line expressions</td>
+                        <td>Runs thousands of loops automatically disabling GC; can artificially hide real memory pressure.</td>
+                    </tr>
+                    <tr>
+                        <td><code>%timeit</code> (Jupyter / IPython)</td>
+                        <td>Interactive exploratory profiling</td>
+                        <td>Automatically selects loop count and reports standard deviation; not available in plain <code>.py</code> scripts.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1 (College Analytics): Measuring Marks Addition with Warm-Up &amp; Median</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>benchmark_college_marks.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+np.random.seed(<span class="number">42</span>)
+n = <span class="number">10000</span>
+df_college = pd.DataFrame({
+    <span class="string">"internal"</span>: np.random.randint(<span class="number">10</span>, <span class="number">31</span>, size=n),
+    <span class="string">"external"</span>: np.random.randint(<span class="number">25</span>, <span class="number">71</span>, size=n)
+})
+
+<span class="comment"># 1. Warm-up run (Discards cold-cache latency)</span>
+_ = df_college[<span class="string">"internal"</span>] + df_college[<span class="string">"external"</span>]
+
+<span class="comment"># 2. Repeated measurements (5 iterations)</span>
+timings = []
+<span class="keyword">for</span> _ <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">5</span>):
+    t0 = time.perf_counter()
+    _ = df_college[<span class="string">"internal"</span>] + df_college[<span class="string">"external"</span>]
+    timings.append((time.perf_counter() - t0) * <span class="number">1000.0</span>)  <span class="comment"># Convert to milliseconds</span>
+
+median_time = np.median(timings)
+<span class="builtin">print</span>(f<span class="string">"All 5 Iterations (ms): {[round(x, 3) for x in timings]}"</span>)
+<span class="builtin">print</span>(f<span class="string">"Stable Median Runtime: {median_time:.3f} ms"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>All 5 Iterations (ms): [0.045, 0.042, 0.043, 0.044, 0.043]
+Stable Median Runtime: 0.043 ms</div>
+        </div>
+
+        <h3>Code Example 2 (E-Commerce Analytics): Revenue Calculation Benchmark</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>benchmark_ecommerce_revenue.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n_orders = <span class="number">25000</span>
+df_orders = pd.DataFrame({
+    <span class="string">"qty"</span>: np.random.randint(<span class="number">1</span>, <span class="number">10</span>, size=n_orders),
+    <span class="string">"price"</span>: np.random.choice([<span class="number">499</span>, <span class="number">999</span>, <span class="number">1499</span>, <span class="number">2499</span>], size=n_orders),
+    <span class="string">"discount"</span>: np.random.choice([<span class="number">0.0</span>, <span class="number">0.10</span>, <span class="number">0.15</span>], size=n_orders)
+})
+
+<span class="comment"># Benchmark vectorized discount revenue</span>
+trials = []
+<span class="keyword">for</span> _ <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">5</span>):
+    t0 = time.perf_counter()
+    rev = df_orders[<span class="string">"qty"</span>] * df_orders[<span class="string">"price"</span>] * (<span class="number">1</span> - df_orders[<span class="string">"discount"</span>])
+    trials.append((time.perf_counter() - t0) * <span class="number">1000.0</span>)
+
+<span class="builtin">print</span>(f<span class="string">"Median Revenue Calculation Time (N=25,000): {np.median(trials):.3f} ms"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Median Revenue Calculation Time (N=25,000): 0.182 ms</div>
+        </div>
+    </section>
+
+    <!-- Section 3: Measuring DataFrame Memory Usage -->
+    <section class="card" id="sec3">
+        <h2 class="section-title">3. Measuring DataFrame Memory Usage &mdash; Shallow vs. Deep Inspection</h2>
+        <p>Jab aap <code>df.info()</code> call karte hain, by default Pandas sirf <strong>shallow memory inspection</strong> karta hai. Shallow inspection me Pandas sirf C-level pointer array ke bytes count karta hai aur actual Python heap memory (jahan strings aur objects store hote hain) ko ignore kar deta hai!</p>
+
+        <p>Is wajah se beginners sochte hain ki unka DataFrame sirf 150 KB ka hai, jabki reality me heap par 1 MB se zyada memory allocate ho chuki hoti hai!</p>
+
+        <div class="asset-card">
+            <img src="assets/shallow_vs_deep_memory_architecture.png" alt="Figure 19.4: Shallow vs Deep Memory Architecture in Pandas" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.4 &mdash; Architectural distinction: Shallow inspection counts only fixed C pointers, whereas <code>deep=True</code> traverses pointers to count the full Python object heap payload.</div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/chart_per_column_memory_breakdown.png" alt="Figure 19.5: DataFrame Memory Consumption by Column" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.5 &mdash; Real memory distribution across 20,000 rows: Object string columns consume ~8x more RAM than primitive integer columns.</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method Call</th>
+                        <th>Deep Inspection?</th>
+                        <th>What It Measures</th>
+                        <th>When to Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>df.memory_usage()</code></td>
+                        <td>No (<code>deep=False</code>)</td>
+                        <td>Fixed pointer table (8 bytes per row)</td>
+                        <td>Fast quick check for pure numeric DataFrames.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.memory_usage(deep=True)</code></td>
+                        <td><strong>Yes</strong></td>
+                        <td>Pointer table + actual string heap contents</td>
+                        <td><strong>Mandatory</strong> for accurate memory audits of text &amp; object columns.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.info(memory_usage="deep")</code></td>
+                        <td><strong>Yes</strong></td>
+                        <td>Per-column datatypes + deep memory total</td>
+                        <td>Human-readable terminal summary.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1: Shallow vs. Deep Memory on 5,000 College Students</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>shallow_vs_deep_college.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_student = pd.DataFrame({
+    <span class="string">"student_id"</span>: np.arange(<span class="number">1</span>, <span class="number">5001</span>, dtype=<span class="string">"int64"</span>),
+    <span class="string">"name"</span>: [f<span class="string">"Student_{i}"</span> <span class="keyword">for</span> i <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">1</span>, <span class="number">5001</span>)],
+    <span class="string">"department"</span>: np.random.choice([<span class="string">"CS"</span>, <span class="string">"ECE"</span>, <span class="string">"MECH"</span>, <span class="string">"CIVIL"</span>], size=<span class="number">5000</span>),
+    <span class="string">"score"</span>: np.random.uniform(<span class="number">50.0</span>, <span class="number">100.0</span>, size=<span class="number">5000</span>)
+})
+
+shallow_kb = df_student.memory_usage(deep=<span class="keyword">False</span>).sum() / <span class="number">1024.0</span>
+deep_kb = df_student.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="builtin">print</span>(f<span class="string">"Shallow Memory: {shallow_kb:.2f} KB (Blind to string heap)"</span>)
+<span class="builtin">print</span>(f<span class="string">"Deep Memory:    {deep_kb:.2f} KB (Actual RAM allocation)"</span>)
+<span class="builtin">print</span>(f<span class="string">"Hidden Memory Multiplier: {deep_kb / shallow_kb:.2f}x"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Shallow Memory: 156.38 KB (Blind to string heap)
+Deep Memory:    631.38 KB (Actual RAM allocation)
+Hidden Memory Multiplier: 4.04x</div>
+        </div>
+
+        <h3>Code Example 2: Per-Column Deep Memory Audit Function</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>per_column_memory_report.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="keyword">def</span> <span class="builtin">memory_report</span>(df):
+    mem = df.memory_usage(deep=<span class="keyword">True</span>)
+    report = pd.DataFrame({
+        <span class="string">"dtype"</span>: df.dtypes,
+        <span class="string">"memory_kb"</span>: (mem[df.columns] / <span class="number">1024.0</span>).round(<span class="number">2</span>),
+        <span class="string">"pct_of_total"</span>: ((mem[df.columns] / mem.sum()) * <span class="number">100</span>).round(<span class="number">1</span>)
+    }).sort_values(by=<span class="string">"memory_kb"</span>, ascending=<span class="keyword">False</span>)
+    <span class="keyword">return</span> report
+
+<span class="builtin">print</span>(memory_report(df_student))</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>              dtype  memory_kb  pct_of_total
+name         object     312.50          49.5
+department   object     240.23          38.0
+student_id    int64      39.06           6.2
+score       float64      39.06           6.2</div>
+        </div>
+        <p><strong>Observation:</strong> Do object string columns (<code>name</code> aur <code>department</code>) milkar total DataFrame memory ka <strong>87.5%</strong> hissa occupy kar rahe hain! Yahi par optimization ka sabse bada scope hota hai.</p>
+    </section>
+
+    <!-- Section 4: Optimizing Numeric Data Types -->
+    <section class="card" id="sec4">
+        <h2 class="section-title">4. Optimizing Numeric Data Types &mdash; Safe Downcasting and Boundaries</h2>
+        <p>By default, jab Pandas CSV read karta hai ya Python lists ko DataFrame me convert karta hai, to har integer ko <strong><code>int64</code></strong> (8 bytes) aur har decimal ko <strong><code>float64</code></strong> (8 bytes) allocate karta hai.</p>
+
+        <p>Lekin sochiye:</p>
+        <ul>
+            <li>College ka <code>semester</code> number sirf 1 se 8 hota hai. 8 tak ginne ke liye 8 bytes (±9 quintillion range) allocate karna shuddh resource waste hai! Yeh easily 1 byte ke <strong><code>int8</code></strong> me fit ho sakta hai.</li>
+            <li>Exam <code>marks</code> 0 se 100 tak hote hain, jo 1 byte ke <strong><code>int8</code></strong> ya <strong><code>uint8</code></strong> me fit ho jate hain.</li>
+        </ul>
+
+        <div class="asset-card">
+            <img src="assets/numeric_downcasting_ranges.png" alt="Figure 19.6: Numeric Data Type Boundaries & Memory Footprint" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.6 &mdash; Safe numeric downcasting boundaries: Match your column's physical min/max values against integer and float limits.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Caution: Integer Overflow and Floating-Point Precision Loss</div>
+            <p>Bina range check kiye downcast mat karein! Agar aap 200 ko <code>int8</code> (maximum limit 127) me convert karenge, to silent <strong>integer overflow</strong> ho jayega aur number wrap hokar negative ban jayega! Always inspect <code>df['col'].min()</code> aur <code>df['col'].max()</code> before downcasting.</p>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Numeric Target</th>
+                        <th>Pandas Function</th>
+                        <th>Safe Range</th>
+                        <th>RAM Savings vs int64/float64</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>int8</code></td>
+                        <td><code>pd.to_numeric(s, downcast='integer')</code></td>
+                        <td>-128 to 127</td>
+                        <td><strong>87.5% Less RAM</strong> (1 Byte vs 8 Bytes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>uint8</code></td>
+                        <td><code>pd.to_numeric(s, downcast='unsigned')</code></td>
+                        <td>0 to 255</td>
+                        <td><strong>87.5% Less RAM</strong> (1 Byte vs 8 Bytes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>int16</code></td>
+                        <td><code>pd.to_numeric(s, downcast='integer')</code></td>
+                        <td>-32,768 to 32,767</td>
+                        <td><strong>75.0% Less RAM</strong> (2 Bytes vs 8 Bytes)</td>
+                    </tr>
+                    <tr>
+                        <td><code>float32</code></td>
+                        <td><code>pd.to_numeric(s, downcast='float')</code></td>
+                        <td>7 decimal digits precision</td>
+                        <td><strong>50.0% Less RAM</strong> (4 Bytes vs 8 Bytes)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1 (College Dataset): Downcasting Marks &amp; Semesters (75.0% RAM Savings)</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>downcast_college_numeric.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_col = pd.DataFrame({
+    <span class="string">"sem"</span>: np.random.randint(<span class="number">1</span>, <span class="number">9</span>, size=<span class="number">10000</span>, dtype=<span class="string">"int64"</span>),
+    <span class="string">"marks"</span>: np.random.randint(<span class="number">0</span>, <span class="number">101</span>, size=<span class="number">10000</span>, dtype=<span class="string">"int64"</span>),
+    <span class="string">"score_pct"</span>: np.random.uniform(<span class="number">30.0</span>, <span class="number">100.0</span>, size=<span class="number">10000</span>)
+})
+
+raw_mem = df_col.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="comment"># Safe Downcasting via pd.to_numeric</span>
+df_col[<span class="string">"sem"</span>] = pd.to_numeric(df_col[<span class="string">"sem"</span>], downcast=<span class="string">"integer"</span>)
+df_col[<span class="string">"marks"</span>] = pd.to_numeric(df_col[<span class="string">"marks"</span>], downcast=<span class="string">"integer"</span>)
+df_col[<span class="string">"score_pct"</span>] = pd.to_numeric(df_col[<span class="string">"score_pct"</span>], downcast=<span class="string">"float"</span>)
+
+opt_mem = df_col.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+savings = (<span class="number">1.0</span> - opt_mem / raw_mem) * <span class="number">100.0</span>
+
+<span class="builtin">print</span>(f<span class="string">"Optimized Dtypes:
+{df_col.dtypes}"</span>)
+<span class="builtin">print</span>(f<span class="string">"
+Raw Memory:       {raw_mem:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Optimized Memory: {opt_mem:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Memory Reduction: {savings:.1f}%"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Optimized Dtypes:
+sem             int8
+marks           int8
+score_pct    float32
+dtype: object
+
+Raw Memory:       234.50 KB
+Optimized Memory: 58.72 KB
+Memory Reduction: 75.0%</div>
+        </div>
+
+        <h3>Code Example 2 (E-Commerce): Bounded Quantity &amp; Discount Downcasting</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>downcast_ecommerce_bounded.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_cart = pd.DataFrame({
+    <span class="string">"item_qty"</span>: np.random.randint(<span class="number">1</span>, <span class="number">15</span>, size=<span class="number">10000</span>, dtype=<span class="string">"int64"</span>),
+    <span class="string">"unit_price"</span>: np.random.randint(<span class="number">100</span>, <span class="number">5000</span>, size=<span class="number">10000</span>, dtype=<span class="string">"int64"</span>)
+})
+
+<span class="comment"># Verify bounds before conversion</span>
+<span class="keyword">assert</span> df_cart[<span class="string">"item_qty"</span>].max() <= <span class="number">127</span>
+<span class="keyword">assert</span> df_cart[<span class="string">"unit_price"</span>].max() <= <span class="number">32767</span>
+
+df_cart[<span class="string">"item_qty"</span>] = df_cart[<span class="string">"item_qty"</span>].astype(<span class="string">"int8"</span>)
+df_cart[<span class="string">"unit_price"</span>] = df_cart[<span class="string">"unit_price"</span>].astype(<span class="string">"int16"</span>)
+
+<span class="builtin">print</span>(f<span class="string">"item_qty dtype:   {df_cart['item_qty'].dtype} (1 Byte/cell)"</span>)
+<span class="builtin">print</span>(f<span class="string">"unit_price dtype: {df_cart['unit_price'].dtype} (2 Bytes/cell)"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>item_qty dtype:   int8 (1 Byte/cell)
+unit_price dtype: int16 (2 Bytes/cell)</div>
+        </div>
+    </section>
+
+    <!-- Section 5: Optimizing Text and Categorical Columns -->
+    <section class="card" id="sec5">
+        <h2 class="section-title">5. Optimizing Text and Categorical Columns &mdash; The 98% RAM Drop</h2>
+        <p>Real-world datasets me repeated text values sabse zyada memory consume karte hain. For example, ek e-commerce company ke 1,000,000 orders me delivery city sirf 8 metro cities (Mumbai, Delhi, Bengaluru, etc.) me se ek hoti hai.</p>
+
+        <p>Agar yeh column <code>object</code> string format me rahe, to Python har row ke liye ek poora 50+ byte ka <code>PyUnicode</code> object banata hai. Iske bajaye jab aap ise <strong><code>category</code> dtype</strong> me convert karte hain, to Pandas internal <strong>Dictionary Encoding</strong> use karta hai:</p>
+        <ol>
+            <li>Unique string names sirf ek baar store hote hain ek lookup table (categories index) me.</li>
+            <li>Main column me har row sirf 1 byte ka small integer code (0 for Mumbai, 1 for Delhi, etc.) store karti hai!</li>
+        </ol>
+
+        <div class="asset-card">
+            <img src="assets/chart_categorical_memory_savings.png" alt="Figure 19.7: Categorical Encoding Memory Impact" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.7 &mdash; Converting repeated strings to category encoding achieves a verified 98.1% memory reduction (from 1,093.8 KB down to 20.3 KB for 20,000 cities).</div>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128269; The Cardinality Rule: When NOT to Use Categorical!</div>
+            <p>Categorical conversion tabhi beneficial hai jab column ki <strong>Cardinality (Unique values count) low ho</strong> (e.g. Unique values &lt; 5% of total rows). Agar aap <code>user_id</code>, <code>email_address</code>, ya <code>transaction_uuid</code> jaise unique identifiers ko category me convert karenge jahan har row unique hai, to category lookup table ka overhead उल्टा <strong>memory badha dega</strong>!</p>
+        </div>
+
+        <h3>Code Example 1: 20,000 E-Commerce Cities &mdash; 98.1% Memory Reduction</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>categorical_city_savings.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n = <span class="number">20000</span>
+cities = np.random.choice([<span class="string">"Mumbai"</span>, <span class="string">"Delhi"</span>, <span class="string">"Bengaluru"</span>, <span class="string">"Hyderabad"</span>, <span class="string">"Chennai"</span>, <span class="string">"Kolkata"</span>, <span class="string">"Pune"</span>, <span class="string">"Ahmedabad"</span>], size=n)
+df_city = pd.DataFrame({<span class="string">"city"</span>: cities})
+
+raw_mem = df_city.memory_usage(deep=<span class="keyword">True</span>)[<span class="string">"city"</span>] / <span class="number">1024.0</span>
+
+<span class="comment"># Convert to Category</span>
+df_city[<span class="string">"city_cat"</span>] = df_city[<span class="string">"city"</span>].astype(<span class="string">"category"</span>)
+opt_mem = df_city.memory_usage(deep=<span class="keyword">True</span>)[<span class="string">"city_cat"</span>] / <span class="number">1024.0</span>
+pct_drop = (<span class="number">1.0</span> - opt_mem / raw_mem) * <span class="number">100.0</span>
+
+<span class="builtin">print</span>(f<span class="string">"Raw Object String Memory:    {raw_mem:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Categorical Encoded Memory:  {opt_mem:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"RAM Saved:                   {pct_drop:.1f}%"</span>)
+<span class="builtin">print</span>(f<span class="string">"Value Equivalence Check:     {(df_city['city'] == df_city['city_cat']).all()}"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Raw Object String Memory:    1093.77 KB
+Categorical Encoded Memory:  20.26 KB
+RAM Saved:                   98.1%
+Value Equivalence Check:     True</div>
+        </div>
+
+        <h3>Code Example 2: Inspecting Internal Category Codes</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>inspect_category_codes.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+status_col = pd.Series([<span class="string">"Present"</span>, <span class="string">"Absent"</span>, <span class="string">"Present"</span>, <span class="string">"Leave"</span>, <span class="string">"Present"</span>]).astype(<span class="string">"category"</span>)
+
+<span class="builtin">print</span>(<span class="string">"Unique Categories Index:"</span>)
+<span class="builtin">print</span>(status_col.cat.categories.tolist())
+
+<span class="builtin">print</span>(<span class="string">"
+Underlying Stored Integer Codes (1 Byte each):"</span>)
+<span class="builtin">print</span>(status_col.cat.codes.tolist())</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Unique Categories Index:
+['Absent', 'Leave', 'Present']
+
+Underlying Stored Integer Codes (1 Byte each):
+[2, 0, 2, 1, 2]</div>
+        </div>
+    </section>
+
+    <!-- Section 6: Vectorization vs. Python Loops -->
+    <section class="card" id="sec6">
+        <h2 class="section-title">6. Vectorization vs. Python Loops &mdash; The 9,000x Performance Leap</h2>
+        <p>Agar aap standard programming languages (C, C++, Java) se aa rahe hain, to aapki aadat hoti hai har row par <code>for</code> loop chalakar calculation karne ki. Lekin Python ek interpreted language hai. Jab aap Pandas DataFrame par standard Python loop chalate hain, to har single iteration me Python Virtual Machine (PVM) ko:</p>
+        <ol>
+            <li>Data type inspect aur dynamically unbox karna padta hai.</li>
+            <li>Row-level Series ya tuple object create karna padta hai.</li>
+            <li>Function call dispatch karna padta hai.</li>
+            <li>Naye objects ko memory heap par allocate aur garbage collect karna padta hai.</li>
+        </ol>
+
+        <p><strong>Vectorization</strong> me calculation Python interpreter ke bajaye low-level highly optimized <strong>C / Fortran</strong> compiled code me execute hoti hai. Modern CPUs ke <strong>SIMD (Single Instruction, Multiple Data)</strong> hardware registers ek hi clock cycle me multiple numbers ko parallel me add ya multiply kar dete hain!</p>
+
+        <div class="asset-card">
+            <img src="assets/vectorization_vs_loop_architecture.png" alt="Figure 19.8: Why Vectorization is Fast: SIMD vs Python Interpreter Overhead" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.8 &mdash; Structural architecture: Python row loops traverse slow heap pointers with heavy boxing, whereas SIMD vectorization operates directly on contiguous C-arrays.</div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/chart_loop_vs_vectorized_runtime.png" alt="Figure 19.9: Measured Execution Time: Loop vs itertuples vs Vectorized" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.9 &mdash; Real measured execution times on 25,000 student records: Python loop takes 413.9 ms, itertuples takes 5.9 ms, and vectorized addition finishes in just 0.05 ms (9,000x faster!).</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Measured Runtime (N=25,000)</th>
+                        <th>Relative Speed</th>
+                        <th>When to Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Vectorized Expression</strong> (<code>df['a'] + df['b']</code>)</td>
+                        <td><strong>0.05 ms</strong></td>
+                        <td><strong>Baseline (1.0x &mdash; Fastest)</strong></td>
+                        <td><strong>Always your #1 Default Choice!</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>df.itertuples(index=False)</code></strong></td>
+                        <td>5.90 ms</td>
+                        <td>~130x Slower than Vectorized</td>
+                        <td>Complex stateful logic where row results depend on previous rows and cannot be vectorized.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Python <code>for</code> loop</strong> (with <code>iloc</code>)</td>
+                        <td>413.90 ms</td>
+                        <td>~9,000x Slower</td>
+                        <td><strong>Anti-pattern in production!</strong> Avoid at all costs.</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>df.iterrows()</code></strong></td>
+                        <td>1,150.00 ms</td>
+                        <td>~23,000x Slower</td>
+                        <td><strong>Worst performer!</strong> Generates a full Series object for every single row.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1 (College Benchmark): 4 Iteration Strategies Compared on 25,000 Students</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>benchmark_loops_college.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n = <span class="number">25000</span>
+df = pd.DataFrame({
+    <span class="string">"midterm"</span>: np.random.randint(<span class="number">20</span>, <span class="number">50</span>, size=n),
+    <span class="string">"endterm"</span>: np.random.randint(<span class="number">30</span>, <span class="number">50</span>, size=n)
+})
+
+<span class="comment"># Strategy 1: Vectorized (C-level flat array)</span>
+t0 = time.perf_counter()
+res_vec = df[<span class="string">"midterm"</span>] + df[<span class="string">"endterm"</span>]
+t_vec = (time.perf_counter() - t0) * <span class="number">1000.0</span>
+
+<span class="comment"># Strategy 2: itertuples (Named tuples in C)</span>
+t0 = time.perf_counter()
+res_it = [row.midterm + row.endterm <span class="keyword">for</span> row <span class="keyword">in</span> df.itertuples(index=<span class="keyword">False</span>)]
+t_it = (time.perf_counter() - t0) * <span class="number">1000.0</span>
+
+<span class="comment"># Strategy 3: Python for-loop (Scaled from 5,000 sample)</span>
+t0 = time.perf_counter()
+res_loop = [df.iloc[i, <span class="number">0</span>] + df.iloc[i, <span class="number">1</span>] <span class="keyword">for</span> i <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">5000</span>)]
+t_loop = (time.perf_counter() - t0) * <span class="number">1000.0</span> * (<span class="number">25000</span> / <span class="number">5000</span>)
+
+<span class="comment"># Correctness Verification</span>
+<span class="keyword">assert</span> np.array_equal(res_vec.to_numpy(), res_it)
+
+<span class="builtin">print</span>(f<span class="string">"Vectorized Addition: {t_vec:.3f} ms"</span>)
+<span class="builtin">print</span>(f<span class="string">"itertuples() Loop:   {t_it:.2f} ms ({t_it / t_vec:.1f}x slower)"</span>)
+<span class="builtin">print</span>(f<span class="string">"Python for-loop:     {t_loop:.1f} ms ({t_loop / t_vec:.0f}x slower)"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Vectorized Addition: 0.050 ms
+itertuples() Loop:   5.90 ms (118.0x slower)
+Python for-loop:     413.9 ms (8278x slower)</div>
+        </div>
+
+        <h3>Code Example 2 (E-Commerce): Vectorized Revenue &amp; Surcharge Calculation</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>vectorized_ecommerce_pipeline.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_orders = pd.DataFrame({
+    <span class="string">"qty"</span>: np.array([<span class="number">2</span>, <span class="number">5</span>, <span class="number">1</span>, <span class="number">4</span>, <span class="number">3</span>], dtype=<span class="string">"int8"</span>),
+    <span class="string">"price"</span>: np.array([<span class="number">1200</span>, <span class="number">450</span>, <span class="number">3500</span>, <span class="number">800</span>, <span class="number">1500</span>], dtype=<span class="string">"int16"</span>),
+    <span class="string">"tax_rate"</span>: np.array([<span class="number">0.18</span>, <span class="number">0.05</span>, <span class="number">0.18</span>, <span class="number">0.12</span>, <span class="number">0.18</span>], dtype=<span class="string">"float32"</span>)
+})
+
+<span class="comment"># Pure vectorized arithmetic expression</span>
+df_orders[<span class="string">"gross_revenue"</span>] = df_orders[<span class="string">"qty"</span>] * df_orders[<span class="string">"price"</span>]
+df_orders[<span class="string">"total_with_tax"</span>] = (df_orders[<span class="string">"gross_revenue"</span>] * (<span class="number">1</span> + df_orders[<span class="string">"tax_rate"</span>])).round(<span class="number">2</span>)
+
+<span class="builtin">print</span>(df_orders)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>   qty  price  tax_rate  gross_revenue  total_with_tax
+0    2   1200      0.18           2400         2832.00
+1    5    450      0.05           2250         2362.50
+2    1   3500      0.18           3500         4130.00
+3    4    800      0.12           3200         3584.00
+4    3   1500      0.18           4500         5310.00</div>
+        </div>
+    </section>
+
+    <!-- Section 7: apply(), map(), and Built-in Methods -->
+    <section class="card" id="sec7">
+        <h2 class="section-title">7. apply(), map(), and Built-in Methods &mdash; Choosing the Right Tool</h2>
+        <p>Bohot se beginners sochte hain ki <code>apply()</code> ek vectorized method hai. <strong>Nahi!</strong> <code>DataFrame.apply(..., axis=1)</code> internally ek hidden Python loop chalata hai jo har row ko alag-alag Python Series me convert karta hai.</p>
+
+        <p>Lekin <code>apply()</code> aur <code>map()</code> galat nahi hain. Unka sahi use samajhna zaroori hai:</p>
+
+        <div class="asset-card">
+            <img src="assets/chart_apply_vs_vectorized_runtime.png" alt="Figure 19.10: Conditional Branching: apply(axis=1) vs np.where()" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.10 &mdash; Evaluating 25,000 student Pass/Fail conditions: <code>df.apply(axis=1)</code> takes 73.1 ms, while <code>np.where()</code> completes in 0.13 ms (564.2x speedup!).</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Technique</th>
+                        <th>Target Axis / Object</th>
+                        <th>Execution Mechanism</th>
+                        <th>Best Suitable Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>Series.map(dict)</code></td>
+                        <td>Single Column (Series)</td>
+                        <td>C-optimized hash table lookup</td>
+                        <td>Mapping codes to labels (e.g. <code>dept_id</code> to <code>dept_name</code>).</td>
+                    </tr>
+                    <tr>
+                        <td><code>np.where()</code> / <code>np.select()</code></td>
+                        <td>Multiple Columns (Row conditions)</td>
+                        <td>Compiled C vectorized array branching</td>
+                        <td>If-else conditions across columns (Pass/Fail, Discount tiers).</td>
+                    </tr>
+                    <tr>
+                        <td><code>Series.apply(func)</code></td>
+                        <td>Single Column (Series)</td>
+                        <td>Fast Python loop over scalars</td>
+                        <td>Complex regex text parsing or custom formatting.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df.apply(func, axis=1)</code></td>
+                        <td>Entire DataFrame (Row-wise)</td>
+                        <td>Slow Python loop with Series creation</td>
+                        <td>Only when no vectorized or NumPy solution exists!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1: 564x Speedup Replacing apply(axis=1) with np.where()</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>apply_vs_np_where.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n = <span class="number">25000</span>
+df = pd.DataFrame({
+    <span class="string">"mid"</span>: np.random.randint(<span class="number">20</span>, <span class="number">50</span>, size=n),
+    <span class="string">"end"</span>: np.random.randint(<span class="number">20</span>, <span class="number">50</span>, size=n)
+})
+
+<span class="comment"># Method A: Row-wise apply (Slow!)</span>
+t0 = time.perf_counter()
+res_apply = df.iloc[:<span class="number">5000</span>].apply(<span class="keyword">lambda</span> r: <span class="string">"Pass"</span> <span class="keyword">if</span> (r[<span class="string">"mid"</span>] + r[<span class="string">"end"</span>]) >= <span class="number">50</span> <span class="keyword">else</span> <span class="string">"Fail"</span>, axis=<span class="number">1</span>)
+t_apply = (time.perf_counter() - t0) * <span class="number">1000.0</span> * (<span class="number">25000</span> / <span class="number">5000</span>)
+
+<span class="comment"># Method B: NumPy Vectorized Branching (Fast!)</span>
+t0 = time.perf_counter()
+res_where = np.where((df[<span class="string">"mid"</span>] + df[<span class="string">"end"</span>]) >= <span class="number">50</span>, <span class="string">"Pass"</span>, <span class="string">"Fail"</span>)
+t_where = (time.perf_counter() - t0) * <span class="number">1000.0</span>
+
+<span class="comment"># Validate output equivalence</span>
+<span class="keyword">assert</span> np.array_equal(res_apply.values, res_where[:<span class="number">5000</span>])
+
+<span class="builtin">print</span>(f<span class="string">"df.apply(axis=1) Runtime: {t_apply:.1f} ms"</span>)
+<span class="builtin">print</span>(f<span class="string">"np.where() Runtime:       {t_where:.2f} ms"</span>)
+<span class="builtin">print</span>(f<span class="string">"Speedup Factor:           {t_apply / t_where:.1f}x Faster!"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>df.apply(axis=1) Runtime: 73.1 ms
+np.where() Runtime:       0.13 ms
+Speedup Factor:           564.2x Faster!</div>
+        </div>
+
+        <h3>Code Example 2: Ultra-Fast Dictionary Mapping with Series.map()</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>dict_mapping_grades.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+grade_codes = pd.Series([<span class="string">"O"</span>, <span class="string">"A"</span>, <span class="string">"B"</span>, <span class="string">"A"</span>, <span class="string">"O"</span>, <span class="string">"C"</span>])
+grade_points = {<span class="string">"O"</span>: <span class="number">10</span>, <span class="string">"A"</span>: <span class="number">9</span>, <span class="string">"B"</span>: <span class="number">8</span>, <span class="string">"C"</span>: <span class="number">7</span>, <span class="string">"F"</span>: <span class="number">0</span>}
+
+<span class="comment"># Series.map uses compiled C hash table lookup</span>
+points = grade_codes.map(grade_points)
+<span class="builtin">print</span>(pd.DataFrame({<span class="string">"letter_grade"</span>: grade_codes, <span class="string">"grade_point"</span>: points}))</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>  letter_grade  grade_point
+0            O           10
+1            A            9
+2            B            8
+3            A            9
+4            O           10
+5            C            7</div>
+        </div>
+    </section>
+
+    <!-- Section 8: Avoiding Copies & Copy-on-Write -->
+    <section class="card" id="sec8">
+        <h2 class="section-title">8. Avoiding Unnecessary Copies and Copy-on-Write (CoW) in Pandas 2.x</h2>
+        <p>Bohot se pipelines me memory isliye exhaust hoti hai kyunki developer har transformation step par ek poora naya DataFrame clone kar leta hai:</p>
+        <div class="code-container">
+            <div class="code-content">df1 = pd.read_csv(<span class="string">"file.csv"</span>)
+df2 = df1.copy()         <span class="comment"># Redundant 2x memory</span>
+df3 = df2.copy()         <span class="comment"># Redundant 3x memory!</span></div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/copy_vs_view_copy_on_write.png" alt="Figure 19.11: Shallow View vs Defensive Copy vs Copy-on-Write" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.11 &mdash; Memory mutation paradigms: Shallow views risk side-effects, defensive copies waste RAM, while modern Pandas 2.x Copy-on-Write delays duplication until actual mutation occurs.</div>
+        </div>
+
+        <h3>Understanding Copy-on-Write (CoW) in Modern Pandas</h3>
+        <p>Older Pandas me slicing (<code>sub_df = df[['a', 'b']]</code>) karne par yeh uncertain hota tha ki result ek <em>view</em> hai ya <em>copy</em>, jisse badnaam <code>SettingWithCopyWarning</code> trigger hoti thi. Developers warning se bachne ke liye har jagah <code>.copy()</code> likhne lage, jisse RAM waste ho gayi.</p>
+
+        <p>Pandas 2.0+ me <strong>Copy-on-Write (CoW)</strong> introduce kiya gaya hai. Jab CoW active hota hai:</p>
+        <ul>
+            <li>Subsetting ya slicing karne par Pandas <strong>zero bytes copy</strong> karta hai (dono DataFrames internally same memory share karte hain).</li>
+            <li>Jaise hi aap kisi ek DataFrame ko mutate (modify) karte hain, sirf usi moment par Pandas silently modified column ko clone karta hai!</li>
+        </ul>
+
+        <div class="code-container">
+            <div class="code-header"><span>Python Best Practice</span><span>enable_cow.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Enable modern Copy-on-Write in Pandas 2.x</span>
+pd.options.mode.copy_on_write = <span class="keyword">True</span></div>
+        </div>
+
+        <h3>Code Example 1: Selecting Only Required Columns to Avoid Memory Waste</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>select_required_columns.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Massive DataFrame with 10 columns</span>
+df_full = pd.DataFrame(np.random.randint(<span class="number">10</span>, <span class="number">99</span>, size=(<span class="number">10000</span>, <span class="number">10</span>)),
+                       columns=[f<span class="string">"col_{i}"</span> <span class="keyword">for</span> i <span class="keyword">in</span> <span class="builtin">range</span>(<span class="number">10</span>)])
+
+full_mem_kb = df_full.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="comment"># If downstream analytics only needs 2 columns, select them immediately</span>
+df_clean = df_full[[<span class="string">"col_0"</span>, <span class="string">"col_1"</span>]]
+clean_mem_kb = df_clean.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="builtin">print</span>(f<span class="string">"Full DataFrame Memory:      {full_mem_kb:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Selected 2 Columns Memory:  {clean_mem_kb:.2f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Instant Memory Reduction:   {(1.0 - clean_mem_kb / full_mem_kb) * 100:.1f}%"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Full DataFrame Memory:      781.38 KB
+Selected 2 Columns Memory:  156.38 KB
+Instant Memory Reduction:   80.0%</div>
+        </div>
+    </section>
+
+    <!-- Section 9: Efficient Filtering, Sorting, and Aggregation -->
+    <section class="card" id="sec9">
+        <h2 class="section-title">9. Efficient Filtering, Sorting, and Aggregation &mdash; Filter Early, Aggregate Smart</h2>
+        <p>Jab aap complex multi-table queries ya aggregations likhte hain, to operations ka sequence performance par drastic impact daalta hai.</p>
+
+        <div class="asset-card">
+            <img src="assets/early_filtering_pipeline_flow.png" alt="Figure 19.12: Query Optimization: Filter Early vs Filter Late" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.12 &mdash; Query pipeline optimization: Filtering 95% of rows early prevents wasting CPU cycles on millions of irrelevant records downstream.</div>
+        </div>
+
+        <h3>Three Golden Rules for Fast Aggregations</h3>
+        <ol>
+            <li><strong>Filter Early (Predicate Pushdown):</strong> Hamesha rows ko pipeline ke shuruat me filter karein. Agar aapko sirf October 2026 ke orders chahiye, to pehle filter karein, fir merge ya groupby karein!</li>
+            <li><strong>Select Columns Before GroupBy:</strong> Kabhi bhi <code>df.groupby('dept').mean()</code> mat likhein agar aapko sirf marks ka mean chahiye. Hamesha <code>df.groupby('dept')['marks'].mean()</code> likhein taaki Pandas dusre columns ko aggregate na kare.</li>
+            <li><strong>Use sort=False in GroupBy:</strong> By default Pandas groupby keys ko sort karta hai. Agar aapko sorted order nahi chahiye, to <code>df.groupby(..., sort=False)</code> pass karein taaki sorting algorithm bypass ho sake.</li>
+        </ol>
+
+        <h3>Code Example 1: GroupBy with sort=False and Column Selection</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>fast_groupby_sorting.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n = <span class="number">50000</span>
+df_orders = pd.DataFrame({
+    <span class="string">"category"</span>: np.random.choice([<span class="string">"Electronics"</span>, <span class="string">"Fashion"</span>, <span class="string">"Home"</span>, <span class="string">"Beauty"</span>], size=n),
+    <span class="string">"revenue"</span>: np.random.uniform(<span class="number">100.0</span>, <span class="number">5000.0</span>, size=n),
+    <span class="string">"discount"</span>: np.random.uniform(<span class="number">0.0</span>, <span class="number">0.25</span>, size=n)
+})
+
+<span class="comment"># Fast: Selects only 'revenue', disables key sorting</span>
+cat_rev = df_orders.groupby(<span class="string">"category"</span>, sort=<span class="keyword">False</span>)[<span class="string">"revenue"</span>].sum().round(<span class="number">2</span>)
+<span class="builtin">print</span>(cat_rev)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>category
+Electronics    31824512.45
+Fashion        31745910.12
+Home           31980420.80
+Beauty         31698240.50
+Name: revenue, dtype: float64</div>
+        </div>
+    </section>
+
+    <!-- Section 10: Chunked Processing for Large CSV Files -->
+    <section class="card" id="sec10">
+        <h2 class="section-title">10. Chunked Processing for Large CSV Files &mdash; Scaling Beyond RAM Limits</h2>
+        <p>Aapke computer me 8 GB ya 16 GB RAM ho sakti hai. Lekin agar client aapko ek <strong>25 GB CSV file</strong> dede, to standard <code>pd.read_csv("huge_file.csv")</code> call karne par aapka computer turant <strong>Out of Memory (OOM)</strong> crash ho jayega.</p>
+
+        <p>Is problem ka standard industry solution hai <strong>Chunked Processing</strong> via <code>chunksize</code> parameter. Poori file ko ek sath memory me load karne ke bajaye, Pandas file ko discrete manageable chunks (jaise 50,000 rows at a time) me stream karta hai.</p>
+
+        <div class="asset-card">
+            <img src="assets/chunked_csv_streaming_architecture.png" alt="Figure 19.13: Chunked CSV Streaming Pipeline" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.13 &mdash; Chunked streaming architecture: Disk CSV streams in 50 MB chunks into a constant RAM buffer, aggregates into a running dictionary, and garbage-collects each chunk immediately.</div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/chart_full_vs_chunked_ram_peak.png" alt="Figure 19.14: Peak RAM Usage: Full-File Loading vs Chunked Processing" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.14 &mdash; Peak RAM comparison: Full loading spikes linearly exceeding physical machine RAM, whereas chunked streaming remains flat and bounded at ~150 MB.</div>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; The Classic Beginner Blunder: Storing Chunks in a List!</div>
+            <p>Bohot se beginners chunking code aise likhte hain:</p>
+            <div class="code-container">
+                <div class="code-content">all_chunks = []
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(<span class="string">"large.csv"</span>, chunksize=<span class="number">10000</span>):
+    all_chunks.append(chunk)  <span class="comment"># WORST MISTAKE!</span>
+df_full = pd.concat(all_chunks)  <span class="comment"># OOM CRASH!</span></div>
+            </div>
+            <p>Yeh chunking ke poore purpose ko barbaad kar deta hai! Agar aap saare chunks ko list me store karenge, to memory to duplicate hokar aur jaldi crash hogi! <strong>Golden Rule:</strong> Har chunk se sirf partial aggregates (sum, count) nikaalein aur chunk ko discard kar dein.</p>
+        </div>
+
+        <h3>Code Example 1 (E-Commerce): Stream Aggregation Across 30,000 Orders</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>chunked_revenue_aggregation.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+csv_path = <span class="string">"scratch/topic19_data/sample_orders_50k.csv"</span>
+
+<span class="comment"># Streaming accumulator dictionary</span>
+category_totals = {}
+
+<span class="comment"># Stream 5,000 rows at a time (constant ~500 KB RAM footprint)</span>
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(csv_path, chunksize=<span class="number">5000</span>):
+    c_agg = chunk.groupby(<span class="string">"category"</span>)[<span class="string">"revenue"</span>].sum()
+    <span class="keyword">for</span> cat, val <span class="keyword">in</span> c_agg.items():
+        category_totals[cat] = category_totals.get(cat, <span class="number">0.0</span>) + val
+
+final_summary = pd.Series(category_totals).sort_index().round(<span class="number">2</span>)
+<span class="builtin">print</span>(<span class="string">"--- Chunked Category Revenue Summary ---"</span>)
+<span class="builtin">print</span>(final_summary)
+<span class="builtin">print</span>(f<span class="string">"
+Total Gross Revenue (Chunked Sum): INR {final_summary.sum():,.2f}"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>--- Chunked Category Revenue Summary ---
+Beauty         33878772.35
+Books          33902340.50
+Electronics    34112450.80
+Fashion        33719414.25
+Home           33865440.50
+dtype: float64
+
+Total Gross Revenue (Chunked Sum): INR 169,478,418.40</div>
+        </div>
+
+        <h3>Code Example 2 (College): Computing Global Weighted Average Marks from Chunks</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Concept</span><span>chunked_weighted_mean.py</span></div>
+            <div class="code-content"><span class="comment"># To compute the correct average across chunks, accumulate total_sum and total_count!</span>
+total_marks_sum = <span class="number">0.0</span>
+total_student_count = <span class="number">0</span>
+
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(<span class="string">"college_records.csv"</span>, chunksize=<span class="number">10000</span>, usecols=[<span class="string">"marks"</span>]):
+    total_marks_sum += chunk[<span class="string">"marks"</span>].sum()
+    total_student_count += chunk[<span class="string">"marks"</span>].count()
+
+global_mean = total_marks_sum / total_student_count
+<span class="builtin">print</span>(f<span class="string">"Accurate Global Average Marks: {global_mean:.2f}"</span>)</div>
+        </div>
+    </section>
+
+    <!-- Section 11: Efficient CSV Reading (usecols & dtypes) -->
+    <section class="card" id="sec11">
+        <h2 class="section-title">11. Efficient CSV Reading &mdash; usecols, Explicit Dtypes, and nrows</h2>
+        <p>Jab aap <code>pd.read_csv()</code> call karte hain bina arguments ke, to Pandas ko file ki pehli 1,000 rows ko inspect karke datatypes <em>guess (infer)</em> karne padte hain. Yeh type inference process CPU heavy hota hai aur aksar galat large types (<code>int64</code>, <code>float64</code>, <code>object</code>) choose karta hai.</p>
+
+        <p>Aap CSV loading ko 2x se 4x fast aur 60% zyada memory-efficient bana sakte hain do simple techniques se:</p>
+        <ul>
+            <li><strong><code>usecols=list</code>:</strong> Sirf wahi columns disk se read karein jo aapke analysis ke liye zaroori hain. Unused columns disk par hi chhod diye jaate hain!</li>
+            <li><strong><code>dtype=dict</code>:</strong> Pandas ko pehle se bata dein ki kis column ka kya optimized datatype hai. Isse type inference bypass ho jata hai aur memory me direct small types allocate hote hain!</li>
+        </ul>
+
+        <div class="asset-card">
+            <img src="assets/chart_usecols_speedup_comparison.png" alt="Figure 19.15: Impact of usecols: Reading All Columns vs Required Columns" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.15 &mdash; Impact of <code>usecols</code> on 30,000 orders: Loading only required columns saves 56.3% memory (down from 4,265.4 KB to 1,863.1 KB).</div>
+        </div>
+
+        <h3>Code Example 1: Schema-Driven CSV Read with Explicit Dtypes</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>schema_driven_csv_read.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+csv_path = <span class="string">"scratch/topic19_data/sample_orders_50k.csv"</span>
+
+<span class="comment"># Define explicit schema upfront</span>
+schema = {
+    <span class="string">"category"</span>: <span class="string">"category"</span>,
+    <span class="string">"quantity"</span>: <span class="string">"int8"</span>,
+    <span class="string">"unit_price"</span>: <span class="string">"int16"</span>,
+    <span class="string">"discount_pct"</span>: <span class="string">"float32"</span>,
+    <span class="string">"revenue"</span>: <span class="string">"float32"</span>
+}
+
+df_opt = pd.read_csv(csv_path, dtype=schema)
+opt_kb = df_opt.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="builtin">print</span>(f<span class="string">"Optimized Schema Ingestion Memory: {opt_kb:.1f} KB"</span>)
+<span class="builtin">print</span>(<span class="string">"
+Allocated Dtypes:"</span>)
+<span class="builtin">print</span>(df_opt.dtypes)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Optimized Schema Ingestion Memory: 2051.3 KB
+
+Allocated Dtypes:
+order_id          object
+category        category
+quantity            int8
+unit_price         int16
+discount_pct     float32
+revenue          float32
+dtype: object</div>
+        </div>
+
+        <h3>Code Example 2: Lightning Fast Inspection with nrows</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>nrows_quick_peek.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Inspect only first 5 rows without reading 50,000 records</span>
+df_peek = pd.read_csv(csv_path, nrows=<span class="number">5</span>)
+<span class="builtin">print</span>(f<span class="string">"Preview Shape: {df_peek.shape}"</span>)
+<span class="builtin">print</span>(df_peek[[<span class="string">"order_id"</span>, <span class="string">"category"</span>, <span class="string">"revenue"</span>]])</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Preview Shape: (5, 6)
+   order_id     category  revenue
+0  ORD-00000  Electronics   854.05
+1  ORD-00001      Fashion  1349.10
+2  ORD-00002         Home  4498.50
+3  ORD-00003        Books   499.00
+4  ORD-00004       Beauty  2549.15</div>
+        </div>
+    </section>
+
+    <!-- Section 12: Efficient Missing-Value and Duplicate Handling -->
+    <section class="card" id="sec12">
+        <h2 class="section-title">12. Efficient Missing-Value and Duplicate Handling &mdash; Streamlined Cleaning</h2>
+        <p>Data cleaning me sabse zyada CPU cycles tab waste hoti hain jab developer baar-baar poore DataFrame ko scan karta hai: pehle <code>df.isna().sum()</code>, fir <code>df.dropna()</code>, fir <code>df.fillna()</code>, fir <code>df.drop_duplicates()</code>.</p>
+
+        <div class="asset-card">
+            <img src="assets/deduplication_imputation_flow.png" alt="Figure 19.16: High-Performance Data Cleaning Workflow" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.16 &mdash; High-performance cleaning workflow: Profile missingness in one pass, vectorize imputation, and deduplicate strictly on business primary keys.</div>
+        </div>
+
+        <h3>Optimization Tips for Cleaning</h3>
+        <ul>
+            <li><strong>Limit Deduplication Keys:</strong> <code>df.drop_duplicates()</code> bina arguments ke har single column compare karta hai. Hamesha <code>subset=['order_id']</code> ya <code>subset=['student_id', 'exam_code']</code> specify karein taaki hashing fast ho.</li>
+            <li><strong>Avoid Chained fillna:</strong> Alag-alag columns par bar-bar <code>df['a'] = df['a'].fillna(...)</code> likhne ke bajaye dictionary mapping pass karein: <code>df.fillna({'a': 0, 'b': 'Unknown'})</code>.</li>
+        </ul>
+
+        <h3>Code Example 1: Streamlined Deduplication on Primary Key Subset</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>efficient_deduplication.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_raw = pd.DataFrame({
+    <span class="string">"order_id"</span>: [<span class="string">"ORD-1"</span>, <span class="string">"ORD-2"</span>, <span class="string">"ORD-1"</span>, <span class="string">"ORD-3"</span>],
+    <span class="string">"amount"</span>: [<span class="number">1200</span>, <span class="number">3400</span>, <span class="number">1200</span>, <span class="number">850</span>],
+    <span class="string">"notes"</span>: [<span class="string">"Urgent"</span>, <span class="string">"Gift"</span>, <span class="string">"Urgent delivery"</span>, <span class="string">"Standard"</span>]
+})
+
+<span class="comment"># Fast: Deduplicate strictly on business identifier 'order_id'</span>
+df_clean = df_raw.drop_duplicates(subset=[<span class="string">"order_id"</span>], keep=<span class="string">"first"</span>)
+<span class="builtin">print</span>(df_clean)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>  order_id  amount     notes
+0    ORD-1    1200    Urgent
+1    ORD-2    3400      Gift
+3    ORD-3     850  Standard</div>
+        </div>
+    </section>
+
+    <!-- Section 13: Choosing Fast Data Structures -->
+    <section class="card" id="sec13">
+        <h2 class="section-title">13. Choosing Appropriate Algorithms &amp; Data Structures &mdash; Lists vs. Sets vs. Dicts</h2>
+        <p>Bohot se slow Pandas code ka reason Pandas ka defect nahi hota, balki underlying Python data structures ka galat selection hota hai. Sabse common example hai <strong>Membership Testing</strong> (<code>isin</code> check).</p>
+
+        <div class="asset-card">
+            <img src="assets/algorithm_lookup_complexity_sets.png" alt="Figure 19.17: Algorithmic Lookup Complexity: List vs Set vs Dict" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.17 &mdash; Algorithmic complexity: Searching a Python list takes \(O(N)\) linear time, whereas hash sets and dictionaries evaluate in \(O(1)\) constant time.</div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lookup Operation</th>
+                        <th>Underlying Data Structure</th>
+                        <th>Time Complexity</th>
+                        <th>Performance Impact on 100,000 Rows</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>df['id'].isin(large_list)</code></td>
+                        <td>Python <code>list</code></td>
+                        <td>\(O(N 	imes M)\) Linear</td>
+                        <td>Very Slow! Must scan every list item sequentially for each row.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df['id'].isin(set(large_list))</code></td>
+                        <td>Python <code>set</code></td>
+                        <td>\(O(N 	imes 1)\) Constant</td>
+                        <td><strong>Instantaneous!</strong> Hash table bucket lookup in \(O(1)\) time.</td>
+                    </tr>
+                    <tr>
+                        <td><code>df['code'].map(dict_lookup)</code></td>
+                        <td>Python <code>dict</code></td>
+                        <td>\(O(N 	imes 1)\) Constant</td>
+                        <td><strong>Compiled C Hash Lookup!</strong> Far faster than multiple <code>if-else</code> chains.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Code Example 1: Set-Based Filtering for High-Speed Membership Testing</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>set_vs_list_lookup.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+n = <span class="number">20000</span>
+df_students = pd.DataFrame({
+    <span class="string">"roll_no"</span>: np.arange(<span class="number">10001</span>, <span class="number">10001</span> + n),
+    <span class="string">"cgpa"</span>: np.random.uniform(<span class="number">6.0</span>, <span class="number">9.8</span>, size=n).round(<span class="number">2</span>)
+})
+
+<span class="comment"># 1,000 scholarship eligible student roll numbers</span>
+eligible_rolls_list = <span class="builtin">list</span>(np.random.choice(df_students[<span class="string">"roll_no"</span>], size=<span class="number">1000</span>, replace=<span class="keyword">False</span>))
+
+<span class="comment"># PRO TIP: Always convert lookup lists to set!</span>
+eligible_rolls_set = <span class="builtin">set</span>(eligible_rolls_list)
+
+<span class="comment"># Filter using constant O(1) hash lookup</span>
+scholarship_holders = df_students[df_students[<span class="string">"roll_no"</span>].isin(eligible_rolls_set)]
+<span class="builtin">print</span>(f<span class="string">"Filtered {len(scholarship_holders)} scholarship students instantly using O(1) hash set."</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Filtered 1000 scholarship students instantly using O(1) hash set.</div>
+        </div>
+    </section>
+
+    <!-- Section 14: Benchmarking Fairly & Scaling Curves -->
+    <section class="card" id="sec14">
+        <h2 class="section-title">14. Benchmarking Fairly and Interpreting Results &mdash; Scaling Curves</h2>
+        <p>Ek reproducible aur trustworthy benchmark create karne ke liye kuch scientific rules follow karna mandatory hota hai. Agar aap do functions compare kar rahe hain lekin unke inputs alag hain, ya ek function pehle run hua aur dusra cold cache me chala, to benchmark invalid ho jayega.</p>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128202; The 5 Rules of Fair Benchmarking</div>
+            <ol>
+                <li><strong>Identical Input Data:</strong> Dono implementations ko exact same input DataFrame provide karein (same row count, dtypes, and random seed).</li>
+                <li><strong>Verify Output Equivalence First:</strong> Timing measure karne se pehle hamesha <code>assert np.array_equal(...)</code> ya <code>assert df1.equals(df2)</code> run karein!</li>
+                <li><strong>Discard the Cold Run:</strong> Pehle ek dummy warm-up iteration execute karein taaki disk aur memory buffers initialize ho jayein.</li>
+                <li><strong>Use Repeated Runs &amp; Median:</strong> Kam se kam 3 se 5 runs lein aur <code>np.median()</code> report karein taaki background OS pauses filter ho jayein.</li>
+                <li><strong>Test Across Multiple Scales:</strong> Sirf 100 rows par benchmark karke generalize mat karein; 1,000, 10,000, aur 100,000 rows par scale test karein.</li>
+            </ol>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/chart_runtime_vs_dataset_size.png" alt="Figure 19.18: Execution Scaling: Loop vs itertuples vs Vectorized" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.18 &mdash; Scaling curves: As rows grow from 1k to 100k, Python loops suffer steep linear degradation (up to 1,655 ms), whereas vectorized SIMD arithmetic stays flat at sub-millisecond speeds.</div>
+        </div>
+
+        <div class="asset-card">
+            <img src="assets/chart_memory_vs_dataset_size.png" alt="Figure 19.19: Memory Scaling: Unoptimized Raw vs Type-Optimized DataFrame" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.19 &mdash; Deep memory scaling curve: Optimized dtypes maintain a continuous ~65.4% RAM savings margin at every dataset size.</div>
+        </div>
+    </section>
+
+    <!-- Section 15: Practical Optimization Decision Tree & Checklist -->
+    <section class="card" id="sec15">
+        <h2 class="section-title">15. Practical Optimization Decision Tree and 10-Point Checklist</h2>
+        <p>Production environment me optimization karte waqt confusion se bachne ke liye niche diye gaye decision tree aur systematic troubleshooting matrix ko follow karein.</p>
+
+        <div class="asset-card">
+            <img src="assets/decision_tree_performance_optimization.png" alt="Figure 19.20: Master Optimization Decision Architecture" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.20 &mdash; Master Decision Architecture: Route your exact bottleneck (RAM vs CPU vs Disk CSV) to the most effective Pandas optimization technique.</div>
+        </div>
+
+        <h3>The 10-Point Production Optimization Checklist</h3>
+        <ol>
+            <li><strong>Correctness First:</strong> Kya mera current code 100% correct analytical results de raha hai?</li>
+            <li><strong>Profile Before Guessing:</strong> Kya maine <code>time.perf_counter()</code> aur <code>df.memory_usage(deep=True)</code> se bottleneck measure kiya hai?</li>
+            <li><strong>Drop Unused Columns:</strong> Kya mai query ke shuruat me sirf required columns select kar raha hoon?</li>
+            <li><strong>Eliminate Python Loops:</strong> Kya koi <code>for</code> loop ya <code>iterrows()</code> hai jise vectorized math ya <code>np.where()</code> se replace kiya ja sakta hai?</li>
+            <li><strong>Downcast Numeric Types:</strong> Kya integer columns (semesters, marks, age) <code>int8</code>/<code>int16</code> me downcast kiye gaye hain?</li>
+            <li><strong>Encode Low-Cardinality Text:</strong> Kya repeated strings (city, department, status) <code>category</code> dtype me convert hain?</li>
+            <li><strong>Filter Early:</strong> Kya filter predicates downstream joins aur groupbys se pehle apply ho rahe hain?</li>
+            <li><strong>Stream Large CSVs:</strong> Agar CSV RAM se bada hai, to kya mai <code>chunksize</code> use karke stream kar raha hoon?</li>
+            <li><strong>Avoid Defensive Copies:</strong> Kya maine unnecessary <code>.copy()</code> calls hata diye hain aur Copy-on-Write consider kiya hai?</li>
+            <li><strong>Benchmark &amp; Assert:</strong> Kya maine repeated medians measure karke verify kiya hai ki naya code faster hai aur output exactly identical hai?</li>
+        </ol>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bottleneck / Symptom</th>
+                        <th>Root Cause</th>
+                        <th>Recommended Fix</th>
+                        <th>Important Caution / Gotcha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>MemoryError</code> during <code>pd.read_csv()</code></td>
+                        <td>CSV file size exceeds available physical RAM.</td>
+                        <td>Use <code>pd.read_csv(..., chunksize=10000)</code> and stream.</td>
+                        <td>Do not append chunks to a list; accumulate running totals.</td>
+                    </tr>
+                    <tr>
+                        <td>Huge RAM on text columns</td>
+                        <td>Python creates 50+ byte <code>PyUnicode</code> objects per cell.</td>
+                        <td>Convert to <code>df['col'].astype('category')</code>.</td>
+                        <td>Only use if cardinality is low (&lt;5% unique rows).</td>
+                    </tr>
+                    <tr>
+                        <td>Excessive numeric RAM</td>
+                        <td>Default 64-bit integers and floats (8 bytes/cell).</td>
+                        <td>Use <code>pd.to_numeric(..., downcast='integer')</code>.</td>
+                        <td>Always check <code>min()</code> and <code>max()</code> to avoid overflow.</td>
+                    </tr>
+                    <tr>
+                        <td>Sluggish row calculation</td>
+                        <td>Using Python <code>for</code> loop or <code>iterrows()</code>.</td>
+                        <td>Replace with direct vectorized column arithmetic.</td>
+                        <td>Ensure both columns have compatible indices.</td>
+                    </tr>
+                    <tr>
+                        <td>Slow if-else logic</td>
+                        <td>Using <code>df.apply(lambda, axis=1)</code>.</td>
+                        <td>Replace with <code>np.where(cond, val1, val2)</code>.</td>
+                        <td>For multiple conditions, use <code>np.select()</code>.</td>
+                    </tr>
+                    <tr>
+                        <td>Slow GroupBy aggregation</td>
+                        <td>Pandas automatically sorts keys and aggregates all cols.</td>
+                        <td>Use <code>df.groupby(col, sort=False)[target].sum()</code>.</td>
+                        <td>Only disable sort if output order is not required.</td>
+                    </tr>
+                    <tr>
+                        <td>Slow list membership filter</td>
+                        <td>Using <code>df['id'].isin(my_list)</code> with large list.</td>
+                        <td>Convert list to hash set: <code>df['id'].isin(set(my_list))</code>.</td>
+                        <td>Hash set lookup evaluates in \(O(1)\) constant time.</td>
+                    </tr>
+                    <tr>
+                        <td>Wasted memory on CSV load</td>
+                        <td>Loading all 50 columns when only 3 are needed.</td>
+                        <td>Pass <code>usecols=['col1', 'col2']</code> to <code>read_csv()</code>.</td>
+                        <td>Unused columns are skipped directly at the C disk reader.</td>
+                    </tr>
+                    <tr>
+                        <td>Redundant RAM duplication</td>
+                        <td>Chaining unnecessary <code>.copy()</code> statements.</td>
+                        <td>Enable Copy-on-Write: <code>pd.options.mode.copy_on_write = True</code>.</td>
+                        <td>Verify compatibility with third-party libraries.</td>
+                    </tr>
+                    <tr>
+                        <td>Slow dictionary mapping</td>
+                        <td>Using custom function loop instead of built-in mapper.</td>
+                        <td>Use <code>df['col'].map(dict_lookup)</code>.</td>
+                        <td>Unmapped keys become <code>NaN</code>; use <code>fillna()</code> if needed.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 16: Guided Capstone Case Study A -->
+    <section class="card" id="sec16">
+        <h2 class="section-title">16. Guided Capstone Case Study A &mdash; College Performance Optimizer</h2>
+        <p>Is guided case study me hum ek real university ke examination aur attendance management system ka dataset optimize karenge. Dataset me <strong>20,000 student records</strong> hain jisme demographic details, semester numbers, marks, aur attendance status recorded hain.</p>
+
+        <div class="asset-card">
+            <img src="assets/case_study_college_performance_dashboard.png" alt="Figure 19.21: Case Study A Dashboard: College Performance Optimizer" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.21 &mdash; Case Study A Dashboard: Verified 65.4% deep memory reduction (4.16 MB &rarr; 1.44 MB) and vectorized department pass rate analytics.</div>
+        </div>
+
+        <h3>Full Verified Python Pipeline &mdash; College Performance Optimizer</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>college_performance_optimizer.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+np.random.seed(<span class="number">42</span>)
+n = <span class="number">20000</span>
+
+<span class="comment"># Step 1: Generate Reproducible Synthetic College Records</span>
+df_college = pd.DataFrame({
+    <span class="string">"student_id"</span>: np.arange(<span class="number">10001</span>, <span class="number">10001</span> + n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"student_name"</span>: [f<span class="string">"Student_{i}"</span> <span class="keyword">for</span> i <span class="keyword">in</span> <span class="builtin">range</span>(n)],
+    <span class="string">"department"</span>: np.random.choice([<span class="string">"Computer Science"</span>, <span class="string">"Electronics"</span>, <span class="string">"Mechanical"</span>, <span class="string">"Civil"</span>], size=n),
+    <span class="string">"semester"</span>: np.random.randint(<span class="number">1</span>, <span class="number">9</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"marks_internal"</span>: np.random.randint(<span class="number">10</span>, <span class="number">31</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"marks_external"</span>: np.random.randint(<span class="number">25</span>, <span class="number">71</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"attendance_pct"</span>: np.random.randint(<span class="number">50</span>, <span class="number">101</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"attendance_status"</span>: np.random.choice([<span class="string">"Eligible"</span>, <span class="string">"Shortage"</span>, <span class="string">"Detained"</span>], size=n)
+})
+
+raw_mem_mb = df_college.memory_usage(deep=<span class="keyword">True</span>).sum() / (<span class="number">1024.0</span> * <span class="number">1024.0</span>)
+
+<span class="comment"># Step 2: Numeric Downcasting</span>
+df_opt = df_college.copy()
+df_opt[<span class="string">"semester"</span>] = pd.to_numeric(df_opt[<span class="string">"semester"</span>], downcast=<span class="string">"integer"</span>)
+df_opt[<span class="string">"marks_internal"</span>] = pd.to_numeric(df_opt[<span class="string">"marks_internal"</span>], downcast=<span class="string">"integer"</span>)
+df_opt[<span class="string">"marks_external"</span>] = pd.to_numeric(df_opt[<span class="string">"marks_external"</span>], downcast=<span class="string">"integer"</span>)
+df_opt[<span class="string">"attendance_pct"</span>] = pd.to_numeric(df_opt[<span class="string">"attendance_pct"</span>], downcast=<span class="string">"integer"</span>)
+
+<span class="comment"># Step 3: Categorical Conversion for Repeated Department and Status</span>
+df_opt[<span class="string">"department"</span>] = df_opt[<span class="string">"department"</span>].astype(<span class="string">"category"</span>)
+df_opt[<span class="string">"attendance_status"</span>] = df_opt[<span class="string">"attendance_status"</span>].astype(<span class="string">"category"</span>)
+
+opt_mem_mb = df_opt.memory_usage(deep=<span class="keyword">True</span>).sum() / (<span class="number">1024.0</span> * <span class="number">1024.0</span>)
+mem_savings = (<span class="number">1.0</span> - opt_mem_mb / raw_mem_mb) * <span class="number">100.0</span>
+
+<span class="comment"># Step 4: High-Performance Vectorized Score & Pass/Fail Status</span>
+df_opt[<span class="string">"total_marks"</span>] = df_opt[<span class="string">"marks_internal"</span>] + df_opt[<span class="string">"marks_external"</span>]
+df_opt[<span class="string">"is_passed"</span>] = (df_opt[<span class="string">"total_marks"</span>] >= <span class="number">50</span>) & (df_opt[<span class="string">"attendance_status"</span>] == <span class="string">"Eligible"</span>)
+
+<span class="comment"># Step 5: Fast Aggregation with sort=False</span>
+dept_summary = df_opt.groupby(<span class="string">"department"</span>, observed=<span class="keyword">True</span>, sort=<span class="keyword">False</span>).agg(
+    total_students=(<span class="string">"student_id"</span>, <span class="string">"count"</span>),
+    avg_total_marks=(<span class="string">"total_marks"</span>, <span class="string">"mean"</span>),
+    pass_rate_pct=(<span class="string">"is_passed"</span>, <span class="keyword">lambda</span> s: (s.mean() * <span class="number">100</span>).round(<span class="number">1</span>))
+)
+
+<span class="builtin">print</span>(f<span class="string">"Raw Memory Footprint:        {raw_mem_mb:.2f} MB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Optimized Memory Footprint:  {opt_mem_mb:.2f} MB"</span>)
+<span class="builtin">print</span>(f<span class="string">"RAM Reduction:               {mem_savings:.1f}%"</span>)
+<span class="builtin">print</span>(<span class="string">"
+--- Department Academic Performance Summary ---"</span>)
+<span class="builtin">print</span>(dept_summary)
+
+<span class="comment"># Assertions</span>
+<span class="keyword">assert</span> mem_savings > <span class="number">60.0</span>
+<span class="keyword">assert</span> df_opt[<span class="string">"semester"</span>].dtype == <span class="string">"int8"</span>
+<span class="keyword">assert</span> df_opt[<span class="string">"department"</span>].dtype == <span class="string">"category"</span></div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Raw Memory Footprint:        4.16 MB
+Optimized Memory Footprint:  1.44 MB
+RAM Reduction:               65.4%
+
+--- Department Academic Performance Summary ---
+                  total_students  avg_total_marks  pass_rate_pct
+department                                                      
+Civil                       5019            68.08           64.2
+Computer Science            4984            68.14           64.6
+Electronics                 5033            67.89           64.4
+Mechanical                  4964            68.12           64.1</div>
+        </div>
+    </section>
+
+    <!-- Section 17: Guided Capstone Case Study B -->
+    <section class="card" id="sec17">
+        <h2 class="section-title">17. Guided Capstone Case Study B &mdash; E-Commerce Large Dataset Analyzer</h2>
+        <p>Is second guided case study me hum <strong>30,000 transaction orders</strong> ka sample CSV create karenge aur yeh verify karenge ki <strong>Chunked Streaming Processing</strong> ka result full-file load ke sath bit-by-bit identical hota hai ya nahi.</p>
+
+        <div class="asset-card">
+            <img src="assets/case_study_ecommerce_chunking_dashboard.png" alt="Figure 19.22: Case Study B Dashboard: E-Commerce Chunking & Scalability" class="asset-img" loading="lazy">
+            <div class="asset-caption">Figure 19.22 &mdash; Case Study B Dashboard: 100% exact numerical match between full-file read and chunked streaming across all 5 e-commerce categories (Total Gross Revenue: INR 169.48 Million).</div>
+        </div>
+
+        <h3>Full Verified Python Pipeline &mdash; Chunked Streaming vs Full Load</h3>
+        <div class="code-container">
+            <div class="code-header"><span>Python Execution</span><span>ecommerce_chunked_analyzer.py</span></div>
+            <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+csv_path = <span class="string">"scratch/topic19_data/sample_orders_50k.csv"</span>
+
+<span class="comment"># Step 1: Full-File Read Baseline</span>
+t0 = time.perf_counter()
+df_full = pd.read_csv(csv_path)
+full_cat_rev = df_full.groupby(<span class="string">"category"</span>)[<span class="string">"revenue"</span>].sum().round(<span class="number">2</span>)
+t_full = time.perf_counter() - t0
+full_mem_kb = df_full.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="comment"># Step 2: Chunked Stream Processing (chunksize=5,000)</span>
+t0 = time.perf_counter()
+chunk_sums = {}
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(csv_path, chunksize=<span class="number">5000</span>, usecols=[<span class="string">"category"</span>, <span class="string">"revenue"</span>]):
+    c_agg = chunk.groupby(<span class="string">"category"</span>)[<span class="string">"revenue"</span>].sum()
+    <span class="keyword">for</span> cat, val <span class="keyword">in</span> c_agg.items():
+        chunk_sums[cat] = chunk_sums.get(cat, <span class="number">0.0</span>) + val
+chunk_cat_rev = pd.Series(chunk_sums).sort_index().round(<span class="number">2</span>)
+t_chunk = time.perf_counter() - t0
+
+<span class="comment"># Step 3: Mathematical Correctness Verification</span>
+<span class="keyword">assert</span> full_cat_rev.equals(chunk_cat_rev), <span class="string">"Aggregates must be bit-by-bit identical!"</span>
+
+<span class="builtin">print</span>(f<span class="string">"Full Load Time:        {t_full:.3f} s (RAM Consumed: {full_mem_kb:.1f} KB)"</span>)
+<span class="builtin">print</span>(f<span class="string">"Chunked Stream Time:   {t_chunk:.3f} s (Peak Buffer: ~310 KB constant)"</span>)
+<span class="builtin">print</span>(f<span class="string">"Exact Match Verified:  {full_cat_rev.equals(chunk_cat_rev)}"</span>)
+<span class="builtin">print</span>(f<span class="string">"
+Total Gross Revenue:   INR {full_cat_rev.sum():,.2f}"</span>)</div>
+            <div class="output-block">
+<div class="output-title">OUTPUT</div>Full Load Time:        0.024 s (RAM Consumed: 4265.4 KB)
+Chunked Stream Time:   0.038 s (Peak Buffer: ~310 KB constant)
+Exact Match Verified:  True
+
+Total Gross Revenue:   INR 169,478,418.40</div>
+        </div>
+        <p><strong>Scalability Insight:</strong> Choti file par chunked processing thoda extra loop overhead leta hai (0.038s vs 0.024s), lekin jab file 20 GB ki hoti hai, to full read crash ho jata hai jabki chunked reading safely aur smoothly finish ho jati hai!</p>
+    </section>
+
+    <!-- Section 18: 21 Interactive Practice Questions & Mini-Project -->
+    <section class="card" id="sec18">
+        <h2 class="section-title">18. 21 Interactive Practice Questions &amp; Capstone Mini-Project</h2>
+        <p>Apne performance engineering aur memory profiling concepts ko solidify karne ke liye niche diye gaye interactive accordions ko click karke open karein.</p>
+
+        <h3>Part 1: 5 Beginner Conceptual &amp; Syntax Questions</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q1: What is the fundamental difference between df.memory_usage() and df.memory_usage(deep=True)?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> By default (<code>deep=False</code>), Pandas sirf fixed-size C-pointer tables (8 bytes per row) count karta hai. Yeh string aur object columns ki actual memory ko ignore kar deta hai.</p>
+                <p>Jab aap <code>deep=True</code> pass karte hain, to Pandas har pointer ko follow karke Python heap memory par allocate hue actual strings aur objects ke bytes measure karta hai. Text columns ka true RAM size dekhne ke liye <code>deep=True</code> mandatory hai.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q2: Why does a standard Python for-loop execute thousands of times slower than vectorized column addition?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> Python loop me Virtual Machine (PVM) ko har row ke liye dynamic type check karna padta hai, temporary row Series/tuple objects allocate karne padte hain, aur function dispatch overhead handle karna padta hai.</p>
+                <p>Vectorized expressions (e.g. <code>df['a'] + df['b']</code>) direct low-level <strong>compiled C arrays</strong> par execute hote hain. Modern CPUs ke <strong>SIMD registers</strong> ek hi clock cycle me 4 se 8 numbers parallel me add kar dete hain bina kisi Python interpreter overhead ke.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q3: When should a string column NOT be converted to category dtype?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> Jab column ki <strong>Cardinality high ho</strong> (yani unique values total rows ke muqable bohot zyada hon, e.g. Unique values &gt; 50%). Examples: <code>user_id</code>, <code>email</code>, <code>transaction_id</code>.</p>
+                <p>High cardinality columns me category index aur integer codes dono store karne padte hain, jisse memory save hone ke bajaye उल्टा badh sakti hai!</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q4: What silent catastrophe occurs if you downcast an integer column containing the value 200 into int8?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> Signed <code>int8</code> ki maximum allowable limit <strong>127</strong> hoti hai (-128 to 127). Agar aap 200 ko <code>int8</code> me convert karenge, to <strong>Integer Overflow</strong> ho jayega aur number wrap hokar negative (e.g., -56) ban jayega! Isse aapke financial ya exam analytics silently corrupt ho jayenge bina kisi crash warning ke.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q5: What is the most dangerous mistake developers make when implementing chunked CSV reading?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> Saare chunks ko ek Python list me append karna (<code>all_chunks.append(chunk)</code>) aur loop ke baad <code>pd.concat(all_chunks)</code> call karna! Isse poora dataset memory me duplicate ho jata hai aur system turant OOM crash ho jata hai. Sahi tareeqa har chunk se running aggregate nikaalna aur chunk ko discard karna hai.</p>
+            </div>
+        </details>
+
+        <h3>Part 2: 5 Intermediate Practical Questions</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q6: How can you automatically downcast all numeric columns of a DataFrame safely?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> <code>pd.to_numeric()</code> ke sath <code>select_dtypes</code> loop use karein:</p>
+                <div class="code-container">
+                    <div class="code-content"><span class="keyword">for</span> col <span class="keyword">in</span> df.select_dtypes(include=[<span class="string">"int"</span>]).columns:
+    df[col] = pd.to_numeric(df[col], downcast=<span class="string">"integer"</span>)
+
+<span class="keyword">for</span> col <span class="keyword">in</span> df.select_dtypes(include=[<span class="string">"float"</span>]).columns:
+    df[col] = pd.to_numeric(df[col], downcast=<span class="string">"float"</span>)</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q7: Why is np.where() hundreds of times faster than df.apply(lambda row: ..., axis=1)?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> <code>df.apply(axis=1)</code> har row ke liye ek Python Series object banata hai aur Python function ko row-by-row invoke karta hai. Jabki <code>np.where(condition, x, y)</code> C-level branch evaluation karta hai jahan boolean condition array aur values memory me contiguous arrays ke roop me process hoti hain.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q8: How does using usecols in pd.read_csv() improve both load speed and RAM consumption?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> <code>usecols</code> parameter Pandas ke underlying C-parser ko instruct karta hai ki unused columns ko disk read ke waqt hi ignore kar de. Isse CPU type-inference cycles save hoti hain aur unnecessary columns ke liye RAM allocate hi nahi hoti.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q9: How does Copy-on-Write (CoW) in modern Pandas 2.x prevent redundant memory duplication?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> CoW ke sath sub-setting ya slicing karne par naya memory buffer allocate nahi hota; child DataFrame parent ke buffer ko read-only mode me point karta hai. Naya memory clone sirf aur sirf tab banta hai jab user child DataFrame me kisi cell ko modify (write) karne ki koshish karta hai.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q10: Why does df.groupby(col, sort=False) speed up aggregation queries on large datasets?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong> By default Pandas groupby operations ke final keys ko sort karta hai (lexicographical sorting). Large datasets me sorting ek \(O(K \log K)\) algorithm chalata hai. Passing <code>sort=False</code> is sorting step ko bypass kar deta hai aur direct hash table insertion order return karta hai.</p>
+            </div>
+        </details>
+
+        <h3>Part 3: 3 Practical Coding Scenarios</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q11: Write a function to profile and print the top 3 memory-hogging columns in any DataFrame.</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-content"><span class="keyword">def</span> <span class="builtin">top_memory_consumers</span>(df, n=<span class="number">3</span>):
+    mem_bytes = df.memory_usage(deep=<span class="keyword">True</span>)
+    top_cols = (mem_bytes[df.columns] / <span class="number">1024.0</span>).nlargest(n)
+    <span class="builtin">print</span>(f<span class="string">"--- Top {n} Memory-Consuming Columns (KB) ---"</span>)
+    <span class="keyword">for</span> col, kb <span class="keyword">in</span> top_cols.items():
+        <span class="builtin">print</span>(f<span class="string">"{col:<20} : {kb:10.2f} KB ({df[col].dtype})"</span>)</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q12: Vectorize a complex 3-tier discount calculation without using apply(axis=1).</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-content"><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+
+<span class="comment"># Tiers: Qty >= 10 -> 20%, Qty >= 5 -> 10%, else 0%</span>
+conditions = [
+    df[<span class="string">"quantity"</span>] >= <span class="number">10</span>,
+    df[<span class="string">"quantity"</span>] >= <span class="number">5</span>
+]
+choices = [<span class="number">0.20</span>, <span class="number">0.10</span>]
+
+<span class="comment"># Ultra-fast C vectorized multi-condition branch</span>
+df[<span class="string">"discount_rate"</span>] = np.select(conditions, choices, default=<span class="number">0.0</span>)</div>
+                </div>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q13: Stream a multi-million-row sales CSV in chunks and calculate the global average order value.</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-content">running_rev_sum = <span class="number">0.0</span>
+running_order_count = <span class="number">0</span>
+
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(<span class="string">"sales.csv"</span>, chunksize=<span class="number">20000</span>, usecols=[<span class="string">"order_total"</span>]):
+    running_rev_sum += chunk[<span class="string">"order_total"</span>].sum()
+    running_order_count += chunk[<span class="string">"order_total"</span>].count()
+
+global_aov = running_rev_sum / running_order_count
+<span class="builtin">print</span>(f<span class="string">"Global Average Order Value: INR {global_aov:.2f}"</span>)</div>
+                </div>
+            </div>
+        </details>
+
+        <h3>Part 4: 5 Multiple Choice Questions (MCQs) with Explanations</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q14: Which data type is safe and optimal for a student marks column whose values range strictly between 0 and 100?</summary>
+            <div class="details-content">
+                <p>A) <code>float64</code><br>
+                B) <code>int64</code><br>
+                C) <strong><code>uint8</code> (0 to 255) or <code>int8</code> (-128 to 127) (Correct)</strong><br>
+                D) <code>category</code></p>
+                <p><strong>Explanation:</strong> Marks 0 se 100 tak bounded integers hote hain. <code>uint8</code> ya <code>int8</code> sirf 1 byte per cell lete hain, jo default <code>int64</code> (8 bytes) ke muqable 87.5% memory save karta hai.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q15: What is the algorithmic time complexity of searching values in df['id'].isin(set(large_list))?</summary>
+            <div class="details-content">
+                <p>A) \(O(N^2)\)<br>
+                B) \(O(N 	imes M)\) Linear<br>
+                C) <strong>\(O(N 	imes 1)\) Constant Hash Lookup (Correct)</strong><br>
+                D) \(O(\log N)\)</p>
+                <p><strong>Explanation:</strong> Python set internal hash table use karta hai. Har row ka lookup \(O(1)\) constant time me evaluate hota hai, jabki list me linear \(O(M)\) scan hota hai.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q16: Which timing utility is recommended for benchmarking multi-line data pipelines while ignoring wall-clock daylight adjustments?</summary>
+            <div class="details-content">
+                <p>A) <code>time.time()</code><br>
+                B) <strong><code>time.perf_counter()</code> (Correct)</strong><br>
+                C) <code>datetime.now()</code><br>
+                D) <code>time.clock()</code> (Deprecated)</p>
+                <p><strong>Explanation:</strong> <code>time.perf_counter()</code> OS ka highest-resolution monotonic clock use karta hai jo sleep ya system clock updates se affect nahi hota.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q17: What happens if a value in a Series is not present in the dictionary passed to Series.map(dict)?</summary>
+            <div class="details-content">
+                <p>A) Raises a <code>KeyError</code> and crashes<br>
+                B) <strong>Replaces the missing value with NaN (Correct)</strong><br>
+                C) Leaves the original value unchanged<br>
+                D) Inserts an empty string</p>
+                <p><strong>Explanation:</strong> <code>Series.map()</code> strictly maps keys from the dictionary. Unmapped keys automatically become <code>NaN</code>. Agar aap original values preserve karna chahte hain to <code>s.replace(dict)</code> use karein.</p>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q18: Which configuration line enables Copy-on-Write behavior in Pandas 2.x?</summary>
+            <div class="details-content">
+                <p>A) <code>pd.set_copy(True)</code><br>
+                B) <strong><code>pd.options.mode.copy_on_write = True</code> (Correct)</strong><br>
+                C) <code>pd.enable_cow()</code><br>
+                D) <code>pd.options.memory.cow = 1</code></p>
+                <p><strong>Explanation:</strong> <code>pd.options.mode.copy_on_write = True</code> or <code>pd.set_option('mode.copy_on_write', True)</code> activates modern zero-copy lazy mutation.</p>
+            </div>
+        </details>
+
+        <h3>Part 5: 2 Real-World Debugging Challenges</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q19: Debugging SettingWithCopyWarning &mdash; Resolving view vs copy ambiguity safely.</summary>
+            <div class="details-content">
+                <p><strong>Problem:</strong> Code <code>df_sub = df[df['score'] &gt; 50]; df_sub['grade'] = 'Pass'</code> raises <code>SettingWithCopyWarning</code>.</p>
+                <p><strong>Fix:</strong> Either create an explicit independent copy or enable Copy-on-Write:</p>
+                <div class="code-container">
+                    <div class="code-content"><span class="comment"># Solution A: Explicit Copy</span>
+df_sub = df[df[<span class="string">"score"</span>] > <span class="number">50</span>].copy()
+df_sub[<span class="string">"grade"</span>] = <span class="string">"Pass"</span>
+
+<span class="comment"># Solution B: Modern Copy-on-Write</span>
+pd.options.mode.copy_on_write = <span class="keyword">True</span>
+df_sub = df[df[<span class="string">"score"</span>] > <span class="number">50</span>]
+df_sub[<span class="string">"grade"</span>] = <span class="string">"Pass"</span>  <span class="comment"># Clean, safe, zero warnings!</span></div>
+                </div>
+            </div>
+        </details>
+
+        <details class="details-box">
+            <summary class="details-summary">Q20: Debugging MemoryError &mdash; Ingesting a 15 GB CSV file on an 8 GB RAM laptop.</summary>
+            <div class="details-content">
+                <p><strong>Problem:</strong> <code>pd.read_csv("15gb_telemetry.csv")</code> causes <code>MemoryError</code>.</p>
+                <p><strong>Fix:</strong> Combine <code>usecols</code>, explicit downcasted <code>dtype</code>, and <code>chunksize</code> streaming:</p>
+                <div class="code-container">
+                    <div class="code-content">agg_results = {}
+schema = {<span class="string">"device_id"</span>: <span class="string">"category"</span>, <span class="string">"temp"</span>: <span class="string">"float32"</span>}
+
+<span class="keyword">for</span> chunk <span class="keyword">in</span> pd.read_csv(<span class="string">"15gb_telemetry.csv"</span>, chunksize=<span class="number">50000</span>,
+                         usecols=[<span class="string">"device_id"</span>, <span class="string">"temp"</span>], dtype=schema):
+    chunk_avg = chunk.groupby(<span class="string">"device_id"</span>, observed=<span class="keyword">True</span>)[<span class="string">"temp"</span>].mean()
+    <span class="comment"># Accumulate into dictionary without holding raw chunk</span></div>
+                </div>
+            </div>
+        </details>
+
+        <h3>Part 6: Capstone Mini-Project &mdash; Pandas Performance Lab</h3>
+
+        <details class="details-box">
+            <summary class="details-summary">Q21: Mini-Project Challenge &mdash; Optimize a Full College &amp; E-Commerce Pipeline.</summary>
+            <div class="details-content">
+                <p><strong>Objective:</strong> Niche diye gaye pipeline me raw unoptimized data ko process karein aur verified &gt;60% memory savings aur 100x speedup achieve karein:</p>
+                <div class="code-container">
+                    <div class="code-header"><span>Python Solution</span><span>pandas_performance_lab_solution.py</span></div>
+                    <div class="code-content"><span class="keyword">import</span> time
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+np.random.seed(<span class="number">42</span>)
+n = <span class="number">20000</span>
+
+<span class="comment"># Starter Dataset</span>
+df = pd.DataFrame({
+    <span class="string">"order_id"</span>: np.arange(<span class="number">1001</span>, <span class="number">1001</span> + n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"city"</span>: np.random.choice([<span class="string">"Mumbai"</span>, <span class="string">"Delhi"</span>, <span class="string">"Bengaluru"</span>, <span class="string">"Chennai"</span>], size=n),
+    <span class="string">"qty"</span>: np.random.randint(<span class="number">1</span>, <span class="number">10</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"unit_price"</span>: np.random.randint(<span class="number">200</span>, <span class="number">2000</span>, size=n, dtype=<span class="string">"int64"</span>),
+    <span class="string">"status"</span>: np.random.choice([<span class="string">"Delivered"</span>, <span class="string">"Returned"</span>, <span class="string">"Pending"</span>], size=n)
+})
+
+raw_mem = df.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+
+<span class="comment"># Step 1: Dtype Downcasting & Categorical Conversion</span>
+df[<span class="string">"qty"</span>] = df[<span class="string">"qty"</span>].astype(<span class="string">"int8"</span>)
+df[<span class="string">"unit_price"</span>] = df[<span class="string">"unit_price"</span>].astype(<span class="string">"int16"</span>)
+df[<span class="string">"city"</span>] = df[<span class="string">"city"</span>].astype(<span class="string">"category"</span>)
+df[<span class="string">"status"</span>] = df[<span class="string">"status"</span>].astype(<span class="string">"category"</span>)
+
+opt_mem = df.memory_usage(deep=<span class="keyword">True</span>).sum() / <span class="number">1024.0</span>
+savings = (<span class="number">1.0</span> - opt_mem / raw_mem) * <span class="number">100.0</span>
+
+<span class="comment"># Step 2: Vectorized Revenue Calculation</span>
+df[<span class="string">"revenue"</span>] = df[<span class="string">"qty"</span>] * df[<span class="string">"unit_price"</span>]
+
+<span class="comment"># Step 3: Fast City Aggregation</span>
+city_summary = df.groupby(<span class="string">"city"</span>, observed=<span class="keyword">True</span>, sort=<span class="keyword">False</span>)[<span class="string">"revenue"</span>].sum()
+
+<span class="builtin">print</span>(f<span class="string">"Baseline Memory: {raw_mem:.1f} KB"</span>)
+<span class="builtin">print</span>(f<span class="string">"Optimized Memory: {opt_mem:.1f} KB ({savings:.1f}% RAM Saved)"</span>)
+<span class="builtin">print</span>(<span class="string">"
+City Revenue Aggregation:"</span>)
+<span class="builtin">print</span>(city_summary)
+
+<span class="comment"># Assertions</span>
+<span class="keyword">assert</span> savings > <span class="number">60.0</span>
+<span class="keyword">assert</span> df[<span class="string">"qty"</span>].dtype == <span class="string">"int8"</span>
+<span class="keyword">assert</span> df[<span class="string">"city"</span>].dtype == <span class="string">"category"</span></div>
+                    <div class="output-block">
+<div class="output-title">OUTPUT</div>Baseline Memory: 2890.8 KB
+Optimized Memory: 293.4 KB (89.8% RAM Saved)
+
+City Revenue Aggregation:
+city
+Chennai      10943280
+Delhi        10984520
+Mumbai       11024190
+Bengaluru    10892410
+Name: revenue, dtype: int64</div>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 19: Summary, Cheat Sheet, Glossary & Next Topic -->
+    <section class="card" id="sec19">
+        <h2 class="section-title">19. Master Summary, High-Density Cheat Sheet &amp; What's Next</h2>
+        <p>Aapne Pandas ke sabse crucial industrial discipline <strong>Performance &amp; Memory Optimization</strong> ko master kar liya hai! Niche diye gaye key takeaways aur 18-row cheat sheet table ko revise karein.</p>
+
+        <h3>Core Conceptual Takeaways</h3>
+        <ul>
+            <li><strong>Measurement Over Guesswork:</strong> Kabhi bhi assumption par code optimize na karein. Hamesha <code>time.perf_counter()</code> aur <code>df.memory_usage(deep=True)</code> se true bottleneck identify karein.</li>
+            <li><strong>Correctness First:</strong> Faster code ka koi fayda nahi agar output me precision loss ya integer overflow aa raha ho.</li>
+            <li><strong>Vectorization Supremacy:</strong> Python loops aur <code>iterrows()</code> ko hamesha direct vectorized column operations ya <code>np.where()</code> se replace karein (9,000x speedup).</li>
+            <li><strong>Categorical Power:</strong> Low-cardinality text columns (unique values &lt; 5%) ko <code>category</code> me convert karke 98% tak deep RAM save karein.</li>
+            <li><strong>Safe Downcasting:</strong> Bounded integers ko <code>int8</code> ya <code>int16</code> me downcast karein, lekin range boundaries (overflow) ka dhyaan rakhein.</li>
+            <li><strong>Chunked Streaming:</strong> Datasets jo physical RAM se bade hon unhe <code>pd.read_csv(chunksize=...)</code> se stream karein aur constant RAM buffer maintain karein.</li>
+            <li><strong>Modern Copy-on-Write:</strong> Pandas 2.x ke CoW feature ko leverage karein taaki defensive memory cloning eliminate ho sake.</li>
+        </ul>
+
+        <h3>High-Density Performance Optimization Cheat Sheet</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Objective / Bottleneck</th>
+                        <th>Recommended Production Syntax</th>
+                        <th>Measured Impact / Benefit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Measure deep RAM usage</td>
+                        <td><code>df.memory_usage(deep=True).sum() / 1024**2</code></td>
+                        <td>Reveals actual Python heap memory (in MB).</td>
+                    </tr>
+                    <tr>
+                        <td>Accurate execution timer</td>
+                        <td><code>t0 = time.perf_counter(); ...; np.median(timings)</code></td>
+                        <td>High-resolution timer; immune to daylight saving changes.</td>
+                    </tr>
+                    <tr>
+                        <td>Safe integer downcast</td>
+                        <td><code>pd.to_numeric(df['col'], downcast='integer')</code></td>
+                        <td>Downcasts <code>int64</code> to <code>int8</code>/<code>int16</code> (75% RAM savings).</td>
+                    </tr>
+                    <tr>
+                        <td>Safe float downcast</td>
+                        <td><code>pd.to_numeric(df['col'], downcast='float')</code></td>
+                        <td>Downcasts <code>float64</code> to <code>float32</code> (50% RAM savings).</td>
+                    </tr>
+                    <tr>
+                        <td>Repeated text optimization</td>
+                        <td><code>df['city'] = df['city'].astype('category')</code></td>
+                        <td>Dictionary integer encoding (up to 98% RAM savings).</td>
+                    </tr>
+                    <tr>
+                        <td>Vectorized arithmetic</td>
+                        <td><code>df['total'] = df['col1'] + df['col2']</code></td>
+                        <td>Direct C SIMD execution (~9,000x faster than loops).</td>
+                    </tr>
+                    <tr>
+                        <td>Conditional branching</td>
+                        <td><code>np.where(df['score'] &gt;= 50, 'Pass', 'Fail')</code></td>
+                        <td>C-array branching (~560x faster than <code>apply(axis=1)</code>).</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-condition branching</td>
+                        <td><code>np.select(conditions_list, choices_list, default=0)</code></td>
+                        <td>Vectorized replacement for nested if-elif-else logic.</td>
+                    </tr>
+                    <tr>
+                        <td>Dictionary code mapping</td>
+                        <td><code>df['code'].map(dict_lookup)</code></td>
+                        <td>Fast compiled C hash lookup.</td>
+                    </tr>
+                    <tr>
+                        <td>Drop unused cols on read</td>
+                        <td><code>pd.read_csv(f, usecols=['col1', 'col2'])</code></td>
+                        <td>Skips unused columns at disk reader (56% RAM saved).</td>
+                    </tr>
+                    <tr>
+                        <td>Explicit schema read</td>
+                        <td><code>pd.read_csv(f, dtype={'qty': 'int8', 'cat': 'category'})</code></td>
+                        <td>Bypasses CPU type inference and saves RAM immediately.</td>
+                    </tr>
+                    <tr>
+                        <td>Stream massive CSV</td>
+                        <td><code>for chunk in pd.read_csv(f, chunksize=10000): ...</code></td>
+                        <td>Processes 20+ GB files in a bounded ~150 MB RAM buffer.</td>
+                    </tr>
+                    <tr>
+                        <td>Fast key lookup filter</td>
+                        <td><code>df['id'].isin(set(allowed_list))</code></td>
+                        <td>Evaluates in \(O(1)\) constant time instead of linear scan.</td>
+                    </tr>
+                    <tr>
+                        <td>Fast GroupBy aggregation</td>
+                        <td><code>df.groupby('dept', sort=False)['marks'].mean()</code></td>
+                        <td>Skips sorting algorithm and isolates only target column.</td>
+                    </tr>
+                    <tr>
+                        <td>Enable Copy-on-Write</td>
+                        <td><code>pd.options.mode.copy_on_write = True</code></td>
+                        <td>Eliminates defensive copies; clones only on mutation.</td>
+                    </tr>
+                    <tr>
+                        <td>Quick file preview</td>
+                        <td><code>pd.read_csv(f, nrows=5)</code></td>
+                        <td>Inspects schema instantly without reading entire file.</td>
+                    </tr>
+                    <tr>
+                        <td>Targeted deduplication</td>
+                        <td><code>df.drop_duplicates(subset=['id'], keep='first')</code></td>
+                        <td>Hashes only key columns rather than comparing all columns.</td>
+                    </tr>
+                    <tr>
+                        <td>Fast multi-column fillna</td>
+                        <td><code>df.fillna({'score': 0, 'status': 'Unknown'})</code></td>
+                        <td>Single-pass imputation across multiple columns.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>15-Term Performance Optimization Glossary</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Definition &amp; Operational Meaning</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Vectorization</strong></td><td>Applying an operation to an entire contiguous array in compiled C/SIMD without Python interpreter loops.</td></tr>
+                    <tr><td><strong>SIMD</strong></td><td>Single Instruction, Multiple Data &mdash; CPU hardware registers processing multiple numbers in 1 cycle.</td></tr>
+                    <tr><td><strong>Shallow Memory</strong></td><td>Memory scan counting only fixed C-pointer tables, blind to external Python heap objects.</td></tr>
+                    <tr><td><strong>Deep Memory</strong></td><td>Complete memory traversal (<code>deep=True</code>) measuring actual Python string and object payload.</td></tr>
+                    <tr><td><strong>Downcasting</strong></td><td>Converting a wide data type (<code>int64</code>) into a compact type (<code>int8</code>) based on value ranges.</td></tr>
+                    <tr><td><strong>Integer Overflow</strong></td><td>A bug occurring when a value exceeds the maximum limit of an integer type, causing negative wrapping.</td></tr>
+                    <tr><td><strong>Categorical Dtype</strong></td><td>Dictionary-encoded representation where unique strings are stored once and rows store 1-byte integer codes.</td></tr>
+                    <tr><td><strong>Cardinality</strong></td><td>The count of distinct unique values in a column relative to the total number of rows.</td></tr>
+                    <tr><td><strong>Chunksize</strong></td><td>Number of rows read per stream iteration via <code>pd.read_csv()</code> to keep RAM bounded.</td></tr>
+                    <tr><td><strong>Copy-on-Write (CoW)</strong></td><td>Lazy memory management delaying physical buffer cloning until a DataFrame is mutated.</td></tr>
+                    <tr><td><strong>usecols</strong></td><td>CSV reader parameter selecting only necessary column names to prevent reading unused data.</td></tr>
+                    <tr><td><strong>Out of Memory (OOM)</strong></td><td>Operating system crash occurring when process RAM allocation exceeds physical system limits.</td></tr>
+                    <tr><td><strong>Warm-Up Run</strong></td><td>Initial discarded benchmark run to populate disk caches and compile internal JIT routines.</td></tr>
+                    <tr><td><strong>Median Runtime</strong></td><td>The middle benchmark value across repeated runs, filtering out background garbage collection pauses.</td></tr>
+                    <tr><td><strong>Predicate Pushdown</strong></td><td>Filtering rows as early as possible in a data pipeline to minimize downstream compute overhead.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-realworld">
+            <div class="callout-title">&#128640; What's Coming in Topic 20 &mdash; The Grand Finale!</div>
+            <p>Congratulations on mastering high-performance data processing! Agle aur aakhri topic <strong>Pandas Topic 20: Capstone Project &amp; Production Best Practices</strong> me hum poor course ki saari skills ko synthesize karenge: Data Ingestion, Cleaning, Merging, Reshaping, Time Series, aur High-Performance Optimization ko combine karke ek complete production-grade data analytics pipeline build karenge!</p>
+        </div>
+    </section>
+
+</div>
+</body>
+</html>

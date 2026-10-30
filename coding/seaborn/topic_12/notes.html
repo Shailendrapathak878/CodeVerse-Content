@@ -1,0 +1,2433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 12: Scatter Plots &amp; Relational Visualization in Seaborn</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      background: rgba(56, 189, 248, 0.2);
+      border: 1px solid var(--accent-blue);
+      color: var(--accent-blue);
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .hero-meta-item strong {
+      color: var(--text-primary);
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .toc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .toc-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.88rem;
+      transition: all 0.2s ease;
+      background: rgba(148, 163, 184, 0.04);
+      border: 1px solid transparent;
+    }
+
+    .toc-link:hover {
+      background: rgba(56, 189, 248, 0.08);
+      color: var(--accent-blue);
+      border-color: rgba(56, 189, 248, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .toc-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    /* Section Structure */
+    section {
+      margin-bottom: 44px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text-primary);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: var(--accent-blue);
+      color: #0f172a;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 800;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+
+    h3 {
+      font-size: 1.18rem;
+      font-weight: 600;
+      margin: 22px 0 12px 0;
+      color: var(--accent-indigo);
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 0.98rem;
+    }
+
+    p strong, li strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin: 0 0 18px 22px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+      font-size: 0.96rem;
+    }
+
+    /* Figures and Visuals */
+    .figure-wrapper {
+      margin: 24px 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #ffffff;
+    }
+
+    .figure-caption {
+      padding: 12px 16px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.4);
+      line-height: 1.5;
+    }
+
+    @media (prefers-color-scheme: light) {
+      .figure-caption {
+        background: rgba(241, 245, 249, 0.8);
+      }
+    }
+
+    /* Code Blocks */
+    .code-block {
+      position: relative;
+      margin: 18px 0;
+      background: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background: rgba(30, 41, 59, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .copy-btn {
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--accent-blue);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-blue);
+      color: #0f172a;
+    }
+
+    pre {
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      background: rgba(148, 163, 184, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--accent-blue);
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+      border-radius: 0;
+    }
+
+    /* Responsive Tables */
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background: rgba(30, 41, 59, 0.8);
+      color: var(--accent-blue);
+      padding: 12px 14px;
+      font-weight: 700;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    @media (prefers-color-scheme: light) {
+      th {
+        background: #e2e8f0;
+        color: var(--accent-blue);
+      }
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(148, 163, 184, 0.03);
+    }
+
+    /* Callout Boxes */
+    .callout {
+      padding: 16px 18px;
+      border-radius: 10px;
+      margin: 20px 0;
+      border-left: 4px solid;
+      background: var(--bg-card);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info {
+      border-left-color: var(--accent-blue);
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .callout-info .callout-title {
+      color: var(--accent-blue);
+    }
+
+    .callout-warning {
+      border-left-color: var(--accent-amber);
+      background: rgba(251, 191, 36, 0.05);
+    }
+    .callout-warning .callout-title {
+      color: var(--accent-amber);
+    }
+
+    .callout-tip {
+      border-left-color: var(--accent-green);
+      background: rgba(52, 211, 153, 0.05);
+    }
+    .callout-tip .callout-title {
+      color: var(--accent-green);
+    }
+
+    .callout-danger {
+      border-left-color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.05);
+    }
+    .callout-danger .callout-title {
+      color: var(--accent-rose);
+    }
+
+    /* Accordions */
+    details.accordion {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+    }
+
+    summary {
+      padding: 13px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+      font-size: 0.94rem;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+    }
+
+    .accordion-content {
+      padding: 14px 18px 18px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.94rem;
+      background: rgba(15, 23, 42, 0.2);
+    }
+
+    @media (prefers-color-scheme: light) {
+      .accordion-content {
+        background: rgba(248, 250, 252, 0.6);
+      }
+    }
+
+    .exercise-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+
+    .exercise-title {
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 8px;
+      font-size: 1.02rem;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+      }
+      .hero {
+        padding: 20px 16px;
+      }
+      .hero h1 {
+        font-size: 1.65rem;
+      }
+      .toc-grid {
+        grid-template-columns: 1fr;
+      }
+      h2 {
+        font-size: 1.25rem;
+      }
+      pre {
+        font-size: 0.8rem;
+        padding: 12px;
+      }
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const pre = btn.closest('.code-block').querySelector('pre');
+      const text = pre.innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.style.background = "var(--accent-green)";
+        btn.style.color = "#0f172a";
+        setTimeout(() => {
+          btn.innerText = originalText;
+          btn.style.background = "";
+          btn.style.color = "";
+        }, 2000);
+      }).catch(err => {
+        console.error("Copy failed", err);
+      });
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Hero Banner -->
+    <header class="hero">
+      <div class="topic-badge">Topic 12 &bull; Relationships &amp; Regression</div>
+      <h1>Scatter Plots &amp; Relational Visualization in Seaborn</h1>
+      <p>Do continuous numerical variables ke beech ka hidden connection khojna: Positive aur negative correlation se lekar <code>hue</code>, <code>size</code>, <code>style</code> semantic encodings, <code>relplot()</code> figure-level multi-panel faceting, aur <code>regplot()</code> trend lines ki complete practical guide in natural Hinglish.</p>
+      
+      <div class="hero-meta">
+        <div class="hero-meta-item">Functions: <strong>sns.scatterplot() &bull; sns.relplot() &bull; sns.regplot()</strong></div>
+        <div class="hero-meta-item">Seaborn Version: <strong>0.13.2 Compatible</strong></div>
+        <div class="hero-meta-item">Core Focus: <strong>Bivariate Relationships &bull; Multivariate Mappings &bull; Correlation vs Causation</strong></div>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card" aria-label="Table of Contents">
+      <div class="toc-header">
+        <div class="toc-title">&#128218; Table of Contents (20 Comprehensive Sections)</div>
+      </div>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-link"><span class="toc-num">1</span><span class="toc-text">Scatter Plot Kya Hota Hai? Intuition &amp; Anatomy</span></a>
+        <a href="#sec-2" class="toc-link"><span class="toc-num">2</span><span class="toc-text">Understand Your Data Before Plotting</span></a>
+        <a href="#sec-3" class="toc-link"><span class="toc-num">3</span><span class="toc-text">Your First <code>sns.scatterplot()</code> &mdash; Study Hours vs Marks</span></a>
+        <a href="#sec-4" class="toc-link"><span class="toc-num">4</span><span class="toc-text">Business Scenario: Advertising Spend vs Sales</span></a>
+        <a href="#sec-5" class="toc-link"><span class="toc-num">5</span><span class="toc-text">Relationship Patterns: Positive, Negative, Weak &amp; Nonlinear</span></a>
+        <a href="#sec-6" class="toc-link"><span class="toc-num">6</span><span class="toc-text">Adding Color with <code>hue</code>: Categorical Breakdown</span></a>
+        <a href="#sec-7" class="toc-link"><span class="toc-num">7</span><span class="toc-text">Encoding a Third Numerical Variable with <code>size</code></span></a>
+        <a href="#sec-8" class="toc-link"><span class="toc-num">8</span><span class="toc-text">Encoding Categorical Dimension with <code>style</code></span></a>
+        <a href="#sec-9" class="toc-link"><span class="toc-num">9</span><span class="toc-text">Multivariate Scatter Plots: Combining Hue, Size &amp; Style</span></a>
+        <a href="#sec-10" class="toc-link"><span class="toc-num">10</span><span class="toc-text">Figure-Level Relational Visualization with <code>sns.relplot()</code></span></a>
+        <a href="#sec-11" class="toc-link"><span class="toc-num">11</span><span class="toc-text">Advanced Faceting with <code>row</code>, <code>col</code>, and <code>col_wrap</code></span></a>
+        <a href="#sec-12" class="toc-link"><span class="toc-num">12</span><span class="toc-text">Adding Trend Lines &amp; Regression with <code>sns.regplot()</code></span></a>
+        <a href="#sec-13" class="toc-link"><span class="toc-num">13</span><span class="toc-text">Correlation vs Causation: Pearson <i>r</i> &amp; Nonlinear Limits</span></a>
+        <a href="#sec-14" class="toc-link"><span class="toc-num">14</span><span class="toc-text">Case Study 1: College Academic Performance Analytics</span></a>
+        <a href="#sec-15" class="toc-link"><span class="toc-num">15</span><span class="toc-text">Case Study 2: E-Commerce Marketing ROI &amp; Regional Spend</span></a>
+        <a href="#sec-16" class="toc-link"><span class="toc-num">16</span><span class="toc-text">Case Study 3: Retail Product Price vs Customer Rating</span></a>
+        <a href="#sec-17" class="toc-link"><span class="toc-num">17</span><span class="toc-text">Case Study 4: Production SRE &amp; Cloud API Telemetry</span></a>
+        <a href="#sec-18" class="toc-link"><span class="toc-num">18</span><span class="toc-text">14+ Common Pitfalls, Anti-Patterns &amp; Debugging</span></a>
+        <a href="#sec-19" class="toc-link"><span class="toc-num">19</span><span class="toc-text">Quick Reference Cheat Sheet &amp; Decision Matrix</span></a>
+        <a href="#sec-20" class="toc-link"><span class="toc-num">20</span><span class="toc-text">21 Comprehensive Exercises, Capstone &amp; Topic 13 Preview</span></a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Scatter Plot Kya Hota Hai? Intuition &amp; Anatomy</h2>
+      <p>Data science aur analytics me jab bhi hum do continuous numerical variables ke beech ka connection explore karna chahte hain, to hamara sabse pehla aur sabse powerful tool hota hai: <strong>Scatter Plot</strong>.</p>
+
+      <p>Sochiye ek natural real-life question: <em>"Kya zyada ghante padhai karne wale students ke marks generally zyada aate hain?"</em> Aur <em>"Kya phone ki price badhne ke sath uski battery capacity bhi badhti hai ya koi trade-off hota hai?"</em></p>
+
+      <p>Aise sawalon ka jawab dhoondhne ke liye hum tabular data ke dono numbers ko 2D Cartesian coordinate plane par map karte hain. Jahan har ek individual row (observation) ek <strong>single dot</strong> ban jati hai!</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Core Concept: Observation Dot Ka Asli Matlab</div>
+        <p>Scatter plot me har dot ek single data record ko represent karta hai &mdash; jaise ek specific student, ek specific smartphone, ya ek advertising campaign. Dot ka horizontal position uske <strong>X-axis variable</strong> ki value batata hai aur vertical position uske <strong>Y-axis variable</strong> ki value batata hai.</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_plot_concept_anatomy.png" alt="Anatomy of a Scatter Plot showing axes, dots, trendline, clusters, and outliers">
+        <div class="figure-caption">Figure 12.1: The Anatomy of a Scatter Plot &mdash; Independent variable on X-axis, Dependent outcome variable on Y-axis. Every dot represents an empirical observation pair (x, y). The green dashed line indicates the overall directional trend, while red and yellow dots highlight individual points and outliers!</div>
+      </div>
+
+      <h3>X-Axis vs Y-Axis: Independent aur Dependent Variables</h3>
+      <p>Data visualization me axes ka assignment meaningful hona chahiye:</p>
+      <ul>
+        <li><strong>Independent Variable (X-Axis):</strong> Isko Predictor, Feature, ya Input variable bhi kehte hain. Ye wo cheez hoti hai jo hum control ya measure karte hain &mdash; jaise weekly <em>Study Hours</em> ya marketing <em>Ad Spend</em>.</li>
+        <li><strong>Dependent Variable (Y-Axis):</strong> Isko Outcome, Response, ya Target variable kehte hain. Ye wo cheez hoti hai jo change ho sakti hai jab X change hota hai &mdash; jaise student ke <em>Exam Marks</em> ya business ka <em>Sales Revenue</em>.</li>
+      </ul>
+
+      <h3>Introductory Example 1: Study Hours vs Exam Marks</h3>
+      <p>Jab students zyada ghante padhai karte hain, to kya unke marks badhte hain? Niche di gayi verified graph dekhiye jisme 120 students ka real data plot kiya gaya hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/study_hours_vs_marks_intro.png" alt="Study hours versus marks introductory scatter plot">
+        <div class="figure-caption">Figure 12.2: Study Hours vs Exam Marks (N = 120) &mdash; Notice the clear upward diagonal slope! As weekly study hours increase from 10 to 40 hours, exam marks steadily climb from 40 to 95+. This is a classic Strong Positive Relationship.</div>
+      </div>
+
+      <h3>Introductory Example 2: Mobile Phone Price vs Battery Capacity</h3>
+      <p>Ab ek aur dilchasp sawal: <em>"Agar phone mehenga hai, to kya uski battery bhi badi hogi?"</em> Reality aksar intuition se ulte hoti hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/mobile_price_vs_battery_intro.png" alt="Mobile phone price versus battery capacity showing negative relationship">
+        <div class="figure-caption">Figure 12.3: Mobile Price vs Battery Capacity (r = -0.728) &mdash; Budget phones ($150 - $350) usually have massive 5,000 to 6,000 mAh batteries. On the other hand, slim premium flagship phones ($900 - $1,300) prioritize lightweight aesthetics and advanced cameras, packing smaller 4,000 - 4,500 mAh batteries! This is a classic Negative Linear Trade-off.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Golden Rule: Correlation is NOT Causation!</div>
+        <p>Agar do variables ek sath move kar rahe hain, to iska matlab ye <strong>har-giz nahi hai</strong> ki ek variable ne dusre ko cause kiya! Ho sakta hai koi teesra hidden confounding factor dono ko drive kar raha ho, ya fir ye sirf ek coincidence (spurious correlation) ho. Scatter plot sirf <em>association</em> dikhata hai, <em>causation</em> ka proof nahi deta!</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Understand Your Data Before Plotting</h2>
+      <p>Experienced data analysts chart draw karne se pehle hamesha data ko inspect aur clean karte hain. Agar dataset me missing values, incorrect data types, ya extreme outliers hain, to scatter plot misleading pattern create kar sakta hai.</p>
+
+      <h3>Data Inspection Checklist</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Inspection Step</th>
+              <th>Pandas Command</th>
+              <th>Why It Matters for Scatter Plots</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Check Shape &amp; Structure</strong></td>
+              <td><code>df.shape</code></td>
+              <td>Confirms the number of observations (rows) and potential visual clutter.</td>
+            </tr>
+            <tr>
+              <td><strong>Verify Data Types</strong></td>
+              <td><code>df.dtypes</code></td>
+              <td>Both X and Y must be numeric (<code>int64</code> or <code>float64</code>); strings will break continuous axes.</td>
+            </tr>
+            <tr>
+              <td><strong>Detect Missing Values</strong></td>
+              <td><code>df.isna().sum()</code></td>
+              <td>Seaborn silently drops rows with NaN in X or Y; you must know how many rows were excluded.</td>
+            </tr>
+            <tr>
+              <td><strong>Check Summary Statistics</strong></td>
+              <td><code>df.describe()</code></td>
+              <td>Detects negative values, unexpected zeroes, or extreme scale differences.</td>
+            </tr>
+            <tr>
+              <td><strong>Inspect Units &amp; Scales</strong></td>
+              <td>Domain Review</td>
+              <td>Ensure axes are labeled with clear units (e.g. <i>Hours</i>, <i>$ Thousands</i>, <i>mAh</i>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Code Walkthrough: Inspecting the Student Dataset</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Data Inspection &amp; Cleaning</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import pandas as pd
+import numpy as np
+
+# Load our verified dataset
+df_students = pd.read_csv("student_study_performance.csv")
+
+# 1. Inspect structure
+print("Dataset Shape:", df_students.shape)
+print("
+Column Data Types:
+", df_students.dtypes)
+
+# 2. Check for missing values
+print("
+Missing Values Count:
+", df_students.isna().sum())
+
+# 3. View 5-number numerical summaries
+print("
+Descriptive Statistics:
+", df_students[["Study_Hours", "Exam_Score", "Attendance_Pct"]].describe())
+
+# 4. View sample records
+print("
+First 3 Records:
+", df_students.head(3))</code></pre>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Verified Inspection Output</div>
+        <p>Hamara student dataset 120 rows aur 7 columns contain karta hai. Zero missing values hain. <code>Study_Hours</code> ki mean value 24.22 hours hai (range: 8.2 - 41.6 hrs) aur <code>Exam_Score</code> ki mean value 67.43 marks hai (range: 40.2 - 98.0). Data bilkul clean aur ready for plotting hai!</p>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Your First <code>sns.scatterplot()</code> &mdash; Study Hours vs Marks</h2>
+      <p>Seaborn me scatter plot banana bohot clean aur intuitive hai. Iska basic syntax hai:</p>
+
+      <div class="code-block">
+        <div class="code-header"><span>Seaborn Syntax</span></div>
+        <pre><code>sns.scatterplot(data=df, x="Independent_Var", y="Dependent_Var", **kwargs)</code></pre>
+      </div>
+
+      <h3>Supported Parameters in Seaborn 0.13.2</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Description &amp; Purpose</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td>DataFrame</td>
+              <td>Tidy pandas DataFrame containing the variables.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td>str column names</td>
+              <td>Variables specified for the horizontal and vertical spatial positions.</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td>str column name</td>
+              <td>Grouping variable that produces points with different colors.</td>
+            </tr>
+            <tr>
+              <td><code>size</code></td>
+              <td>str column name</td>
+              <td>Grouping variable that produces points with different marker sizes.</td>
+            </tr>
+            <tr>
+              <td><code>style</code></td>
+              <td>str column name</td>
+              <td>Grouping variable that produces points with different marker glyphs (shapes).</td>
+            </tr>
+            <tr>
+              <td><code>palette</code></td>
+              <td>str / dict / list</td>
+              <td>Color palette mapping for <code>hue</code>.</td>
+            </tr>
+            <tr>
+              <td><code>sizes</code></td>
+              <td>tuple <code>(min, max)</code></td>
+              <td>Range of marker sizes when <code>size</code> variable is mapped.</td>
+            </tr>
+            <tr>
+              <td><code>alpha</code></td>
+              <td>float (0.0 - 1.0)</td>
+              <td>Point transparency via <code>**kwargs</code> to relieve overplotting.</td>
+            </tr>
+            <tr>
+              <td><code>ax</code></td>
+              <td>matplotlib.axes.Axes</td>
+              <td>Pre-existing axes for the plot; otherwise uses current active axes.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Complete Runnable Code: First Scatter Plot</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; First sns.scatterplot()</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load verified dataset
+df_students = pd.read_csv("student_study_performance.csv")
+
+plt.figure(figsize=(9, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Generate scatter plot
+sns.scatterplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    color="#10B981",
+    s=75,
+    alpha=0.85,
+    edgecolor="#064E3B",
+    linewidth=0.6
+)
+
+plt.title("Figure 12.4: First sns.scatterplot() Implementation on Student Data", fontweight="bold", pad=12)
+plt.xlabel("Weekly Study Hours (Hours)", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/first_scatterplot_student_scores.png" alt="First scatterplot implementation showing study hours vs exam scores">
+        <div class="figure-caption">Figure 12.4: First Scatter Plot &mdash; Notice how each student is represented by an emerald dot. As you look from left to right along the X-axis, the points consistently move upwards along the Y-axis. The relationship is unmistakably positive!</div>
+      </div>
+
+      <h3>How to Read an Individual Dot</h3>
+      <p>Agar aap kisi specific dot ko dekhte hain &mdash; jaise X = 32 hours par ek dot Y = 80 par hai &mdash; iska matlab hai ki us student ne week me 32 hours padhai ki aur exam me 80 marks score kiye. Notice karein ki 32 hours par sabhi students ke exact 80 marks nahi hain! Kuch ke 75 hain, kuch ke 84. Ye natural <strong>variance (noise)</strong> hai jo real human data me hamesha hoti hai.</p>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Business Scenario: Advertising Spend vs Sales</h2>
+      <p>Ab aaiye corporate business environment me scatter plot ki power dekhte hain. Ek marketing agency ne 160 campaigns run kiye hain. Hamara sawal hai: <em>"Jab hum advertising par zyada spend karte hain, to kya sales revenue reliably increase hota hai?"</em></p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Marketing Ad Spend vs Revenue</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_marketing = pd.read_csv("marketing_campaign_sales.csv")
+
+plt.figure(figsize=(9.5, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+sns.scatterplot(
+    data=df_marketing,
+    x="Ad_Spend_Thousands",
+    y="Revenue_Thousands",
+    color="#EA580C",
+    s=70,
+    alpha=0.8,
+    edgecolor="#431407",
+    linewidth=0.5
+)
+
+plt.title("Figure 12.5: Marketing Ad Spend vs Revenue Generated (r = 0.977)", fontweight="bold", pad=12)
+plt.xlabel("Advertising Expenditure ($ Thousands)", labelpad=10)
+plt.ylabel("Sales Revenue ($ Thousands)", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/ad_spend_vs_sales_scatter.png" alt="Marketing Ad Spend vs Revenue generated scatter plot">
+        <div class="figure-caption">Figure 12.5: Marketing Performance &mdash; Advertising spend exhibits an extremely strong positive correlation (r = 0.977) with sales revenue. Notice the slight curve at higher spend levels &mdash; proving diminishing marginal returns on heavy marketing investment!</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Business Analytical Insights from Figure 12.5</div>
+        <ul>
+          <li><strong>Initial Stage ($20k - $60k spend):</strong> Revenue rapidly jumps from $80k to $200k. Har extra dollar bohot high ROI generate karta hai.</li>
+          <li><strong>Mature Stage ($100k - $160k spend):</strong> Curve thoda flat hone lagta hai (diminishing returns). $140k spend par revenue $360k - $400k ke beech saturate hone lagta hai.</li>
+          <li><strong>Non-Causal Reality:</strong> Graph ye prove nahi karta ki akele ad spend ne sales create ki. Product quality, pricing, discounts, aur customer service sabhi contribute karte hain.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> Relationship Patterns: Positive, Negative, Weak &amp; Nonlinear</h2>
+      <p>Scatter plot ka sabse bada benefit ye hai ki ye human brain ko raw numbers ke beech ke <strong>geometric patterns</strong> ko instantly detect karne me help karta hai. Real-world data me relationships 4 major categories me fall karti hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/relationship_patterns_comparison_4panel.png" alt="Four fundamental relationship patterns in scatter plots comparison">
+        <div class="figure-caption">Figure 12.6: Four Core Relationship Patterns &mdash; Panel A: Strong Positive (Study Hours vs Marks). Panel B: Negative Trade-Off (Phone Price vs Battery). Panel C: Weak / Absent (Product Price vs Rating). Panel D: Deterministic Nonlinear U-Curve (Temperature vs Comfort) where Pearson r fails!</div>
+      </div>
+
+      <h3>Detailed Breakdown of the 4 Patterns</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Pattern Type</th>
+              <th>Visual Direction &amp; Shape</th>
+              <th>Real-Life Example</th>
+              <th>Pearson Correlation (<i>r</i>)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Positive Linear</strong></td>
+              <td>Bottom-left se top-right ki taraf upward slope.</td>
+              <td>Study Hours vs Exam Marks; Height vs Weight.</td>
+              <td>Strong Positive: <i>r &gt; +0.70</i> (Hamara: <i>+0.94</i>)</td>
+            </tr>
+            <tr>
+              <td><strong>2. Negative Linear</strong></td>
+              <td>Top-left se bottom-right ki taraf downward slope.</td>
+              <td>Car Age vs Resale Price; Phone Price vs Battery mAh.</td>
+              <td>Strong Negative: <i>r &lt; -0.70</i> (Hamara: <i>-0.73</i>)</td>
+            </tr>
+            <tr>
+              <td><strong>3. Weak / No Relation</strong></td>
+              <td>Points random cloud (cloud of dust) ki tarah scattered hote hain.</td>
+              <td>Product Price vs Customer Star Rating.</td>
+              <td>Near Zero: <i>-0.20 &le; r &le; +0.20</i> (Hamara: <i>-0.12</i>)</td>
+            </tr>
+            <tr>
+              <td><strong>4. Nonlinear Curve</strong></td>
+              <td>U-shape, inverted U, S-curve, ya exponential hockey stick.</td>
+              <td>Room Temperature vs Comfort; API Load vs Latency.</td>
+              <td>Misleading: <i>r &approx; 0.05</i> despite near-perfect relation!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Critical Insight: Real Data Contains Noise!</div>
+        <p>Textbook physics me data points ek straight line par fall karte hain (<i>y = mx + c</i>). Lekin business aur human biology me hamesha natural variability aur measurement noise hoti hai. Agar points perfectly single line par na hon balki ek <em>cigar-shaped cloud</em> banayein, to bhi relationship statistically strong aur valid hoti hai!</p>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> Adding Color with <code>hue</code>: Categorical Breakdown</h2>
+      <p>Scatter plot sirf do numerical variables tak limited nahi hai. Seaborn ka <code>hue</code> parameter pass karke aap ek third <strong>categorical variable</strong> ko color ke roop me encode kar sakte hain!</p>
+
+      <p>Isse chart ek single 2D plane par ek sath multiple groups ki performance ko distinguish karne lagta hai bina audience ko confuse kiye.</p>
+
+      <h3>Example 1: Student Marks by Study Method</h3>
+      <p>Aaiye dekhte hain ki kya Self-Study, Group Study, aur Coaching lene wale students ke study hours aur marks me koi distinct cluster banta hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Scatter Plot with hue</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_study_performance.csv")
+
+plt.figure(figsize=(9.5, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Color points by categorical Study_Method
+sns.scatterplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    hue="Study_Method",
+    palette="Set1",
+    s=75,
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 12.7: Student Exam Scores by Study Hours and Study Method", fontweight="bold", pad=12)
+plt.xlabel("Weekly Study Hours (Hours)", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.legend(title="Study Method", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_hue_study_methods.png" alt="Scatter plot with hue showing study methods">
+        <div class="figure-caption">Figure 12.7: Categorical Hue Encoding &mdash; Red dots represent Self-Study (N = 42), Blue dots represent Coaching (N = 41), and Green dots represent Group Study (N = 37). Notice how all three methods follow the same general upward trajectory, proving consistent effort drives marks regardless of preparation format!</div>
+      </div>
+
+      <h3>Example 2: Ad Spend vs Sales by Region</h3>
+      <p>Marketing campaigns me geographical regions (North, South, East, West) ko color-code karke dekhne se regional performance disparities instantly spotlight ho jati hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_hue_regional_sales.png" alt="Scatter plot with hue showing sales across marketing regions">
+        <div class="figure-caption">Figure 12.8: Regional Sales Breakdown &mdash; Using <code>palette="Dark2"</code> to separate North, South, East, and West campaigns. North region (mean revenue $236.61k) consistently occupies the higher revenue tiers for equivalent ad spend!</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Accessible Color Palette Best Practices</div>
+        <p>Hamesha color-blind safe palettes use karein (jaise <code>palette="Dark2"</code>, <code>"tab10"</code>, ya <code>"colorblind"</code>). Avoid using subtle pastel colors for points kyunki small dots light background par unreadable ho jate hain. Adding a subtle dark outline (<code>edgecolor="black", linewidth=0.5</code>) ensures maximum point clarity.</p>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Encoding a Third Numerical Variable with <code>size</code></h2>
+      <p>Jab aapke paas <strong>teen continuous numerical variables</strong> hon, to aap 2 variables ko X aur Y axes par place kar sakte hain aur teesre numerical variable ko <strong>marker ke size (diameter)</strong> par map kar sakte hain! Is type ke visualization ko classical data science me <em>Bubble Chart</em> bhi kaha jata hai.</p>
+
+      <h3>Parameters to Control Marker Sizing</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Usage / Syntax</th>
+              <th>Importance</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>size</code></td>
+              <td><code>size="Numerical_Column"</code></td>
+              <td>Continuous column jo dot ke size ko scale karega.</td>
+            </tr>
+            <tr>
+              <td><code>sizes</code></td>
+              <td><code>sizes=(min_size, max_size)</code></td>
+              <td>Point diameter bounds (e.g. <code>sizes=(35, 230)</code>) taaki small points disappear na hon aur large points screen block na karein.</td>
+            </tr>
+            <tr>
+              <td><code>size_norm</code></td>
+              <td><code>matplotlib.colors.Normalize</code></td>
+              <td>Normalization scaling (linear ya logarithmic) for marker area.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example 1: Study Hours vs Marks with Size = Attendance %</h3>
+      <p>Niche student study performance me marker size student ki class attendance percentage (55% se 99%) ko represent kar raha hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Scatter Plot with size Encoding</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_study_performance.csv")
+
+plt.figure(figsize=(10, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Map continuous Attendance_Pct to marker size
+sns.scatterplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    size="Attendance_Pct",
+    sizes=(35, 230),     # Minimum and maximum marker size limits
+    color="#2563EB",
+    alpha=0.75,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 12.9: Study Hours vs Marks with Marker Size = Attendance %", fontweight="bold", pad=12)
+plt.xlabel("Weekly Study Hours (Hours)", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.legend(title="Attendance %", frameon=True, bbox_to_anchor=(1.02, 1), loc="upper left")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_size_attendance_encoded.png" alt="Scatter plot with size encoding student attendance percentage">
+        <div class="figure-caption">Figure 12.9: Numerical Size Encoding &mdash; Notice how the larger bubbles (high attendance &gt; 90%) dominate the upper-right quadrant. Students with high study hours and high attendance consistently secure the top exam scores!</div>
+      </div>
+
+      <h3>Example 2: Ad Spend vs Sales with Size = Campaign Reach</h3>
+      <p>Marketing me ad spend aur revenue ke sath total digital reach (millions of impressions) ko size ke roop me encode karne se campaign scale ka perspective milta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_size_campaign_reach_encoded.png" alt="Scatter plot with size encoding marketing campaign reach">
+        <div class="figure-caption">Figure 12.10: Ad Spend vs Revenue with Size = Campaign Reach &mdash; Large bubbles demonstrate campaigns that achieved massive market penetration (6M - 8M users), while smaller bubbles reflect niche, targeted campaigns.</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; The Area vs Diameter Sizing Trap</div>
+        <p>Human perception area (<i>&pi; r&sup2;</i>) ko perceive karti hai, diameter (<i>2r</i>) ko nahi! Agar aap value double hone par diameter double kar denge, to dot ka area 4 guna bada dikhega, jisse reader ko lagega ki value 4 times hai! Seaborn automatically area-based scaling use karta hai, jo scientifically correct visual encoding ensure karta hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Encoding Categorical Dimension with <code>style</code></h2>
+      <p>Agar aapke paas color (<code>hue</code>) ke alawa ek aur categorical factor hai &mdash; ya aap monochrome / grayscale print publishing ke liye chart design kar rahe hain &mdash; to <strong>Marker Style (Shape)</strong> best choice hai.</p>
+
+      <p>Seaborn ka <code>style</code> parameter har category ko distinct glyph provide karta hai &mdash; jaise Circle (<code>'o'</code>), Square (<code>'s'</code>), Triangle (<code>'^'</code>), Diamond (<code>'D'</code>), ya Cross (<code>'X'</code>).</p>
+
+      <h3>Example 1: Midterm vs Final Exam Distinction</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Scatter Plot with style Encoding</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_study_performance.csv")
+
+plt.figure(figsize=(9.5, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Encode exam type through marker shape
+sns.scatterplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    style="Exam_Type",
+    markers={"Midterm": "o", "Final": "s"},  # Explicit circle vs square glyphs
+    color="#4F46E5",
+    s=80,
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 12.11: Distinguishing Exam Types Using Marker Shapes (style)", fontweight="bold", pad=12)
+plt.xlabel("Weekly Study Hours (Hours)", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.legend(title="Exam Type", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_style_exam_types.png" alt="Scatter plot with style encoding exam types">
+        <div class="figure-caption">Figure 12.11: Marker Shape Encoding &mdash; Circles denote Midterm assessments while Squares represent Final comprehensive examinations. Both exam types follow an identical linear trajectory.</div>
+      </div>
+
+      <h3>Example 2: Marketing Channels Encoded via Shape</h3>
+      <p>Video Ads, Search Ads, aur Social Media campaigns ko distinct shapes dekar visual clarity double ho jati hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_style_campaign_channels.png" alt="Scatter plot with style encoding marketing channels">
+        <div class="figure-caption">Figure 12.12: Marketing Channels via Shapes &mdash; Circles for Social Media, Triangles for Search Ads, and Diamonds for Video Ads. This enables immediate identification even in black-and-white photocopy printouts!</div>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Multivariate Scatter Plots: Combining Hue, Size &amp; Style</h2>
+      <p>Data science me real insights tab nikalte hain jab hum ek sath multiple dimensions ko analyze karte hain. Seaborn hume allow karta hai ki hum ek single chart me <strong>4 alag-alag variables</strong> ko simultaneously encode karein:</p>
+      <ul>
+        <li><strong>Variable 1 (X-Axis):</strong> Continuous Numerical &mdash; <code>Study_Hours</code></li>
+        <li><strong>Variable 2 (Y-Axis):</strong> Continuous Numerical &mdash; <code>Exam_Score</code></li>
+        <li><strong>Variable 3 (Hue Color):</strong> Categorical &mdash; <code>Study_Method</code> (Self-Study, Coaching, Group Study)</li>
+        <li><strong>Variable 4 (Bubble Size):</strong> Continuous Numerical &mdash; <code>Attendance_Pct</code> (55% to 99%)</li>
+        <li><strong>Variable 5 (Marker Style):</strong> Categorical &mdash; <code>Exam_Type</code> (Midterm Circle vs Final Square)</li>
+      </ul>
+
+      <h3>Full 4-Variable Multivariate Scatter Plot</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; 4-Variable Multivariate Scatter</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_study_performance.csv")
+
+plt.figure(figsize=(10.5, 6.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Simultaneous multi-dimensional encoding
+sns.scatterplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    hue="Study_Method",
+    size="Attendance_Pct",
+    style="Exam_Type",
+    sizes=(40, 240),
+    palette="Set2",
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 12.13: Multivariate Scatter Plot Encoding 4 Dimensions Simultaneously", fontweight="bold", pad=14)
+plt.xlabel("Weekly Study Hours (Hours)", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.legend(frameon=True, bbox_to_anchor=(1.02, 1), loc="upper left")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/multivariate_scatter_4variables.png" alt="Multivariate scatter plot encoding study hours, exam score, method, attendance, and exam type">
+        <div class="figure-caption">Figure 12.13: 4-Variable Simultaneous Plot &mdash; Position shows study time vs score, color distinguishes study methods, bubble diameter indicates class attendance, and glyph shape (circle vs square) separates midterm from final exams!</div>
+      </div>
+
+      <h3>Simple vs Multivariate: The Cognitive Load Trade-Off</h3>
+      <p>Data visualization me ek famous design principle hai: <em>"Just because you can encode 5 variables, doesn't mean you should!"</em> Niche di gayi side-by-side comparison ko dhyan se dekhiye:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/simple_vs_multivariate_comparison.png" alt="Simple 2-variable scatter plot versus complex multivariate scatter plot side by side">
+        <div class="figure-caption">Figure 12.14: Simplicity vs Complexity &mdash; Panel A (Simple 2-Var) gives the reader an immediate 2-second answer: Study hours increase marks. Panel B (Multivariate 4-Var) holds rich intelligence for specialized researchers, but requires 30 seconds of legend decryption. Choose based on your audience!</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Figure-Level Relational Visualization with <code>sns.relplot()</code></h2>
+      <p>Ab tak humne jo bhi scatter plot banaye wo <strong>Axes-Level</strong> function <code>sns.scatterplot()</code> se bane the. Lekin jab dataset me 4-5 categories hon aur unko ek hi plot me dikhane par visual clutter ban raha ho, to Seaborn hume deta hai <strong>Figure-Level</strong> function: <code>sns.relplot()</code>!</p>
+
+      <h3>Axes-Level vs Figure-Level: The Key Differences</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Axes-Level: <code>sns.scatterplot()</code></th>
+              <th>Figure-Level: <code>sns.relplot()</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Target Canvas</strong></td>
+              <td>Draws on a single pre-existing <code>ax</code></td>
+              <td>Creates and manages its own <code>FacetGrid</code> figure</td>
+            </tr>
+            <tr>
+              <td><strong>Subplot Faceting</strong></td>
+              <td>No direct support (requires manual matplotlib subplots)</td>
+              <td>Native automatic faceting via <code>row</code>, <code>col</code>, <code>col_wrap</code></td>
+            </tr>
+            <tr>
+              <td><strong>Figure Sizing</strong></td>
+              <td>Controlled via <code>plt.figure(figsize=(w, h))</code></td>
+              <td>Controlled via <code>height=...</code> and <code>aspect=...</code></td>
+            </tr>
+            <tr>
+              <td><strong>Multi-Kind Switch</strong></td>
+              <td>Dedicated to scatter plots only</td>
+              <td>Can switch between <code>kind="scatter"</code> and <code>kind="line"</code></td>
+            </tr>
+            <tr>
+              <td><strong>Matplotlib Integration</strong></td>
+              <td>Directly works with <code>plt.subplot()</code></td>
+              <td>Returns a <code>FacetGrid</code> object (<code>g.fig</code>, <code>g.axes</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: Regional Marketing Faceting with <code>relplot()</code></h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; sns.relplot() with col_wrap</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_marketing = pd.read_csv("marketing_campaign_sales.csv")
+
+# Create figure-level faceted scatter plots by Region
+g = sns.relplot(
+    data=df_marketing,
+    x="Ad_Spend_Thousands",
+    y="Revenue_Thousands",
+    hue="Channel",
+    col="Region",
+    col_wrap=2,          # Wraps 4 regions into a neat 2x2 grid!
+    kind="scatter",
+    palette="tab10",
+    height=3.6,
+    aspect=1.3,
+    s=65,
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+g.fig.subplots_adjust(top=0.90)
+g.fig.suptitle("Figure 12.15: Regional Ad Spend vs Revenue Faceted by Region (sns.relplot)", fontweight="bold")
+g.set_axis_labels("Ad Spend ($ Thousands)", "Revenue ($ Thousands)")
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/relplot_regional_sales_faceting.png" alt="sns.relplot regional sales faceting showing ad spend vs revenue across 4 regions">
+        <div class="figure-caption">Figure 12.15: Figure-Level Faceting &mdash; Each region (South, North, West, East) gets its own dedicated subplot with shared identical axis scales. This eliminates clutter completely and allows effortless side-by-side comparison.</div>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Advanced Faceting with <code>row</code>, <code>col</code>, and <code>col_wrap</code></h2>
+      <p>Faceting (also known as <em>Small Multiples</em>) data science me Edward Tufte ka ek famous principle hai: <em>"Instead of stacking 10 colors in one crowded chart, divide the canvas into small, clean, synchronized panels."</em></p>
+
+      <h3>1. Semester-by-Semester Student Trajectory</h3>
+      <p>Students ki performance ko <code>col="Semester"</code> ke sath 3 horizontal panels me divide karke dekhne se semester-over-semester consistency confirm hoti hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/relplot_student_semesters_faceting.png" alt="Student performance across semesters faceted with relplot">
+        <div class="figure-caption">Figure 12.16: Faceting by Academic Semester &mdash; Study Hours vs Exam Marks split cleanly across Semester 1, Semester 2, and Semester 3. The linear relationship holds solidly stable across all 3 academic terms!</div>
+      </div>
+
+      <h3>2. Product Catalog Categories 2&times;2 Grid</h3>
+      <p>E-commerce me 200 products across 4 categories (Electronics, Apparel, Home &amp; Kitchen, Fitness) ko <code>col_wrap=2</code> karke render karne se pricing clusters reveal hote hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/relplot_product_categories_grid.png" alt="Product categories grid faceted using relplot col_wrap">
+        <div class="figure-caption">Figure 12.17: Product Categories Grid &mdash; 4 panels in a 2x2 grid. In every category, product ratings hover between 3.5 and 4.8 stars regardless of whether the product costs $50 or $700!</div>
+      </div>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Adding Trend Lines &amp; Regression with <code>sns.regplot()</code></h2>
+      <p>Scatter plot me dots raw data points dikhate hain, lekin audience aksar puchti hai: <em>"In points ka central direction kya hai? Ek average student ko kitne marks expect karne chahiye?"</em></p>
+
+      <p>Is mathematical trendline ko draw karne ke liye Seaborn ka dedicated function hai: <strong><code>sns.regplot()</code></strong>!</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128200; What Does <code>sns.regplot()</code> Compute?</div>
+        <p>1. <strong>Ordinary Least Squares (OLS) Line:</strong> Data points ke distance ko mathematically minimize karke best-fit straight line (<i>y = mx + c</i>) draw karta hai.<br>
+        2. <strong>95% Bootstrap Confidence Interval Band:</strong> Line ke charo taraf jo translucent shaded band dikhta hai, wo ye batata hai ki true statistical population regression line kis range me 95% certainty ke sath fall karti hai.<br>
+        3. <strong>Polynomial Order:</strong> Agar data curve me hai, to <code>order=2</code> pass karke parabolic trendline draw ki ja sakti hai!</p>
+      </div>
+
+      <h3>Comparing Linear vs Polynomial Regression Fits</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; sns.regplot() Linear &amp; Polynomial</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("student_study_performance.csv")
+df_marketing = pd.read_csv("marketing_campaign_sales.csv")
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Panel 1: Standard Linear Fit
+sns.regplot(
+    data=df_students,
+    x="Study_Hours",
+    y="Exam_Score",
+    ax=axes[0],
+    color="#2563EB",
+    scatter_kws=dict(alpha=0.6, s=50, edgecolors="black"),
+    line_kws=dict(color="#DC2626", linewidth=2.2)
+)
+axes[0].set_title("A: Linear Regression Fit (Study Hours vs Marks)", fontweight="bold")
+axes[0].set_xlabel("Weekly Study Hours")
+axes[0].set_ylabel("Exam Score")
+
+# Panel 2: Polynomial (Order=2) Fit for Diminishing Returns
+sns.regplot(
+    data=df_marketing,
+    x="Ad_Spend_Thousands",
+    y="Revenue_Thousands",
+    order=2,             # Fits a 2nd-degree parabola!
+    ax=axes[1],
+    color="#059669",
+    scatter_kws=dict(alpha=0.6, s=50, edgecolors="black"),
+    line_kws=dict(color="#D97706", linewidth=2.2)
+)
+axes[1].set_title("B: Polynomial (Order=2) Fit on Diminishing Returns", fontweight="bold")
+axes[1].set_xlabel("Ad Spend ($ Thousands)")
+axes[1].set_ylabel("Revenue ($ Thousands)")
+
+plt.suptitle("Figure 12.18: Overlaying Fitted Trendlines with sns.regplot()", fontsize=14, fontweight="bold", y=0.99)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/scatter_with_regplot_trendline.png" alt="Overlaying fitted trendlines using sns.regplot for linear and polynomial models">
+        <div class="figure-caption">Figure 12.18: Trendlines with Regplot &mdash; Panel A fits a linear regression line with tight 95% confidence intervals. Panel B uses <code>order=2</code> polynomial regression to capture diminishing returns where heavy marketing investment begins to plateau.</div>
+      </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Correlation vs Causation: Pearson <i>r</i> &amp; Nonlinear Limits</h2>
+      <p>Statistics me <strong>Pearson Correlation Coefficient (<i>r</i>)</strong> do continuous variables ke beech ki <em>linear association</em> ko measure karta hai. Iski value hamesha <strong>-1.0 se +1.0</strong> ke beech hoti hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Pearson <i>r</i> Range</th>
+              <th>Statistical Interpretation</th>
+              <th>Observed Shape in Scatter Plot</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><i>+0.80 to +1.00</i></td>
+              <td>Very Strong Positive Linear Relationship</td>
+              <td>Tightly packed upward diagonal line.</td>
+            </tr>
+            <tr>
+              <td><i>+0.40 to +0.79</i></td>
+              <td>Moderate Positive Linear Relationship</td>
+              <td>Upward trending dispersed cloud.</td>
+            </tr>
+            <tr>
+              <td><i>-0.39 to +0.39</i></td>
+              <td>Weak or Absent Linear Relationship</td>
+              <td>Circular/amorphous cloud with no clear tilt.</td>
+            </tr>
+            <tr>
+              <td><i>-0.40 to -0.79</i></td>
+              <td>Moderate Negative Linear Relationship</td>
+              <td>Downward trending dispersed cloud.</td>
+            </tr>
+            <tr>
+              <td><i>-0.80 to -1.00</i></td>
+              <td>Very Strong Negative Linear Relationship</td>
+              <td>Tightly packed downward diagonal line.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Trap 1: The Outlier Vulnerability</h3>
+      <p>Pearson <i>r</i> extreme outliers ke samne bohot zyada sensitive hota hai. Ek single high-leverage erroneous observation correlation score ko drastically distort kar sakti hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/outlier_impact_on_correlation.png" alt="Demonstration of outlier impact on Pearson correlation">
+        <div class="figure-caption">Figure 12.19: Outlier Vulnerability &mdash; In Panel A (clean data), Pearson r = 0.89. In Panel B, adding just a single extreme leverage outlier (high X, zero Y) drags the correlation all the way down to r = 0.48! Always inspect scatter plots visually before trusting r!</div>
+      </div>
+
+      <h3>Trap 2: The Nonlinear Parabolic Trap (Anscombe's Warning)</h3>
+      <p>Pearson <i>r</i> sirf aur sirf <strong>linear (straight line)</strong> relationships ko detect kar sakta hai! Agar relationship curved ho (jaise U-shape <i>y = x&sup2;</i>), to Pearson <i>r</i> zero ke kareeb aa jata hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/nonlinear_relationship_low_pearson.png" alt="Parabolic nonlinear relationship with near-zero Pearson correlation">
+        <div class="figure-caption">Figure 12.20: The Pearson Trap &mdash; Here, y is almost perfectly deterministic (y &approx; x&sup2;). Yet Pearson r is 0.02 (near zero!) because the positive slope on the right perfectly cancels out the negative slope on the left. A low Pearson correlation does NOT mean there is no relationship!</div>
+      </div>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Case Study 1: College Academic Performance Analytics</h2>
+      <p>Higher education institutions me academic directors aur student counselors ye samajhna chahte hain ki continuous weekly study time aur class attendance student ke final grades ko kis hadd tak predict kar sakte hain.</p>
+
+      <h3>Empirical Dataset Analysis (120 Students)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Variable</th>
+              <th>Metric Type</th>
+              <th>Mean &plusmn; Std</th>
+              <th>Observed Range [Min, Max]</th>
+              <th>Correlation with Exam Score (<i>r</i>)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Study Hours (Weekly)</strong></td>
+              <td>Continuous Predictor</td>
+              <td>24.22 hrs</td>
+              <td>[8.2, 41.6] hrs</td>
+              <td><strong>+0.937</strong> (Very Strong Positive)</td>
+            </tr>
+            <tr>
+              <td><strong>Attendance %</strong></td>
+              <td>Continuous Metric</td>
+              <td>76.8%</td>
+              <td>[55%, 99%]</td>
+              <td><strong>+0.805</strong> (Strong Positive)</td>
+            </tr>
+            <tr>
+              <td><strong>Exam Score</strong></td>
+              <td>Target Outcome</td>
+              <td>67.43 marks</td>
+              <td>[40.2, 98.0] marks</td>
+              <td>1.000 (Self)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Study Method Subgroup Breakdown</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Preparation Method</th>
+              <th>Student Count (<i>N</i>)</th>
+              <th>Average Weekly Hours</th>
+              <th>Average Exam Score</th>
+              <th>Key Academic Finding</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Group Study</strong></td>
+              <td>37</td>
+              <td>25.22 hrs</td>
+              <td>69.42 marks</td>
+              <td>Highest mean score; peer discussions enhance conceptual clarity.</td>
+            </tr>
+            <tr>
+              <td><strong>Self-Study</strong></td>
+              <td>42</td>
+              <td>24.87 hrs</td>
+              <td>67.08 marks</td>
+              <td>Consistent performance across self-disciplined students.</td>
+            </tr>
+            <tr>
+              <td><strong>Coaching / Tuition</strong></td>
+              <td>41</td>
+              <td>22.66 hrs</td>
+              <td>66.0 marks</td>
+              <td>Slightly lower baseline hours; benefits dependent on individual homework.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Actionable Educational Policy Takeaway</div>
+        <p>Scatter plot aur regression analysis prove karte hain ki 30+ weekly study hours maintain karne wale students me se 95% ne 75+ marks score kiye. College management remedial mentorship program design kar sakti hai specifically un students ke liye jinke study hours &lt; 15 hrs hain.</p>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Case Study 2: E-Commerce Marketing ROI &amp; Regional Spend</h2>
+      <p>Digital retail businesses har quarter me multi-million dollar ad campaigns execute karte hain across Facebook, Google Search, aur YouTube Video. Chief Marketing Officers (CMOs) ko ye decide karna hota hai ki ad budget kis region aur channel me allocate kiya jaye.</p>
+
+      <h3>Verified Marketing Metrics (160 Campaigns)</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Sales Region</th>
+              <th>Campaign Count</th>
+              <th>Average Ad Spend</th>
+              <th>Average Revenue Generated</th>
+              <th>Return on Ad Spend (ROAS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>North</strong></td>
+              <td>43</td>
+              <td>$84.2k</td>
+              <td>$236.61k</td>
+              <td><strong>2.81x</strong> (Top performing territory)</td>
+            </tr>
+            <tr>
+              <td><strong>West</strong></td>
+              <td>36</td>
+              <td>$83.5k</td>
+              <td>$227.78k</td>
+              <td><strong>2.73x</strong> (High tech adoption, strong ROI)</td>
+            </tr>
+            <tr>
+              <td><strong>East</strong></td>
+              <td>36</td>
+              <td>$81.9k</td>
+              <td>$223.8k</td>
+              <td><strong>2.73x</strong> (Stable organic conversion)</td>
+            </tr>
+            <tr>
+              <td><strong>South</strong></td>
+              <td>45</td>
+              <td>$80.5k</td>
+              <td>$215.57k</td>
+              <td><strong>2.68x</strong> (Competitive market, higher CAC)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Diminishing Returns &amp; Confounding Factors</div>
+        <p>Scatter plot me quadratic curve clearly dikhati hai ki ad spend $120k cross karne ke baad revenue curve flatten hone lagti hai. Agar marketing team blind hokar ad spend $200k tak badha degi, to customer acquisition cost (CAC) profitability ko erode kar degi!</p>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> Case Study 3: Retail Product Price vs Customer Satisfaction</h2>
+      <p>Bohot se retail managers ka ye assumption hota hai: <em>"Agar product premium aur mehenga hai, to customer ratings automatically high hongi."</em> Aaiye hamare 200 products ke verified e-commerce dataset par is hypothesis ko test karte hain:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Product Price vs Rating Case Study</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_products = pd.read_csv("ecommerce_product_ratings.csv")
+
+plt.figure(figsize=(10, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+sns.scatterplot(
+    data=df_products,
+    x="Price_USD",
+    y="Rating_Stars",
+    hue="Category",
+    palette="Dark2",
+    s=70,
+    alpha=0.8,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.axhline(4.0, color="#64748B", linestyle=":", linewidth=1.5, label="Average CSAT Benchmark (4.0 Stars)")
+plt.title("Figure 12.21: Retail Case Study — Product Price vs Customer Satisfaction Rating", fontweight="bold", pad=14)
+plt.xlabel("Product Retail Price ($ USD)", labelpad=10)
+plt.ylabel("Customer Review Rating (1 - 5 Stars)", labelpad=10)
+plt.legend(title="Merchandise Category", frameon=True, bbox_to_anchor=(1.02, 1), loc="upper left")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/case_study_price_vs_customer_rating.png" alt="Retail case study showing product price versus customer satisfaction rating">
+        <div class="figure-caption">Figure 12.21: Price vs Customer Satisfaction (r = -0.124) &mdash; Pearson correlation is effectively near-zero! Products priced at $35 achieve 4.5+ stars, while $700 electronics frequently receive 2.5 - 3.5 stars due to high buyer expectations. Price does NOT buy customer love!</div>
+      </div>
+
+      <h3>Why Price Does NOT Correlate with Ratings</h3>
+      <ul>
+        <li><strong>Expectation Gap:</strong> Jab koi customer $25 ki t-shirt ya budget earphones khareedta hai, to uski expectations moderate hoti hain. Agar product 6 mahine bhi chal jaye to customer 5 stars de deta hai!</li>
+        <li><strong>Hyper-Critical Luxury Buyers:</strong> Jab koi customer $750 ka flagship device khareedta hai, to choti si software bug ya packaging imperfection par bhi 1-star review chhodta hai.</li>
+        <li><strong>Visual Association:</strong> Scatter plot proves ki quality control, reliable shipping, aur after-sales support rating decide karte hain &mdash; price tag nahi.</li>
+      </ul>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> Case Study 4: Production SRE &amp; Cloud API Telemetry</h2>
+      <p>Cloud infrastructure aur DevOps engineering me scatter plot microservices ki <strong>saturation capacity</strong> ko diagnose karne ke liye gold standard visualization hai. Request volume (Requests Per Second &mdash; RPS) aur Response Latency (Milliseconds) ke beech ka relationship linear nahi hota!</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; SRE API Telemetry Scatter Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_telemetry = pd.read_csv("api_load_latency_telemetry.csv")
+
+plt.figure(figsize=(10, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+sns.scatterplot(
+    data=df_telemetry,
+    x="Requests_Per_Sec",
+    y="Latency_ms",
+    hue="Service",
+    palette={"Authentication": "#3B82F6", "Product Search": "#10B981", "Checkout Service": "#F59E0B"},
+    s=70,
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+# SRE thresholds
+plt.axvline(1600, color="#DC2626", linestyle="--", linewidth=1.8, label="Saturation Knee Point (1,600 RPS)")
+plt.axhline(200, color="#991B1B", linestyle=":", linewidth=1.5, label="200ms Critical SLA Limit")
+
+plt.title("Figure 12.22: Cloud Microservice Telemetry — Load (RPS) vs Latency (ms)", fontweight="bold", pad=14)
+plt.xlabel("Throughput Demand (Requests Per Second)", labelpad=10)
+plt.ylabel("Service Response Latency (Milliseconds)", labelpad=10)
+plt.legend(loc="upper left", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/case_study_api_load_vs_latency.png" alt="Cloud microservice telemetry showing throughput vs latency with knee point">
+        <div class="figure-caption">Figure 12.22: SRE Telemetry Audit &mdash; Baseline latency stays well below 100ms up to 1,500 RPS. Past the red 1,600 RPS Saturation Knee Point, queueing contention causes an exponential hockey-stick spike, breaching the critical 200ms SLA!</div>
+      </div>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">&#128680; SRE Architectural Recommendation</div>
+        <p>Telemetry proves that the cluster needs <strong>Horizontal Pod Autoscaling (HPA)</strong> triggered at 1,400 RPS &mdash; well before the 1,600 RPS knee point &mdash; to prevent latency explosions and cascading database connection timeouts during flash sales.</p>
+      </div>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> 14+ Common Pitfalls, Anti-Patterns &amp; Debugging</h2>
+      <p>Scatter plots banate waqt beginners aur junior analysts aksar ye 14 critical mistakes karte hain. Aaiye inke root causes aur concrete debugging strategies samajhte hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Common Pitfall / Anti-Pattern</th>
+              <th>Underlying Root Cause</th>
+              <th>Correct Professional Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Swapping X and Y Variables</strong></td>
+              <td>Target/outcome variable ko X-axis par rakh dena</td>
+              <td>Independent predictor ko X par aur dependent response ko Y par rakhein</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Treating Correlation as Causation</strong></td>
+              <td>Assume karna ki X ne Y ko direct cause kiya</td>
+              <td>Always acknowledge confounding variables and experimental limits</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Assuming All Relations are Linear</strong></td>
+              <td>Forcing straight line on U-curves or saturation curves</td>
+              <td>Use <code>order=2</code> polynomial fits or inspect raw scatter dots</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>Ignoring Silent NaN Dropping</strong></td>
+              <td>Seaborn drops rows with missing values without alert</td>
+              <td>Always check <code>df.isna().sum()</code> before plotting</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Ignoring Units on Axes</strong></td>
+              <td>Generic labels like "Spend" instead of "$ Thousands"</td>
+              <td>Always append physical units in parentheses: <code>(Hours)</code>, <code>($ USD)</code></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Visual Encoding Overkill</strong></td>
+              <td>Using 5 different colors, 4 sizes, and 5 shapes in one plot</td>
+              <td>Limit to max 3 dimensions per plot; use faceting (<code>relplot</code>) for more</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Legend Blocking Data Points</strong></td>
+              <td>Default legend rendering right on top of dense clusters</td>
+              <td>Use <code>bbox_to_anchor=(1.02, 1)</code> to place legend outside canvas</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Extreme Marker Size Ratios</strong></td>
+              <td>Default <code>sizes</code> making small dots disappear</td>
+              <td>Explicitly set comfortable bounds: <code>sizes=(40, 240)</code></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Blindly Deleting Outliers</strong></td>
+              <td>Assuming every outlier is a data collection error</td>
+              <td>Investigate domain context; outliers often represent critical fraud or spikes</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Misinterpreting Outliers as Data Flaws</strong></td>
+              <td>Deleting $4,500 laptops because median is $600</td>
+              <td>Keep genuine luxury products; use robust statistics (median/IQR)</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Unsynced Subplot Scales in Faceting</strong></td>
+              <td>Comparing panels with independent free axes</td>
+              <td>Keep <code>sharex=True, sharey=True</code> for accurate visual comparison</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Assuming Regression Line Proves Causality</strong></td>
+              <td>Using OLS trendline to claim A causes B</td>
+              <td>Explain that regression measures conditional expectation, not mechanism</td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td><strong>Passing <code>ax=ax</code> to <code>sns.relplot()</code></strong></td>
+              <td>Figure-level function does not accept axes argument</td>
+              <td>Use <code>sns.scatterplot(..., ax=ax)</code> for single axes placement</td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td><strong>Categorical Numeric Column Read as String</strong></td>
+              <td>Numbers sorted alphabetically ("10", "100", "2")</td>
+              <td>Convert with <code>pd.to_numeric()</code> before plotting continuous axes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 1: Passing <code>ax</code> to Figure-Level <code>sns.relplot()</code></h3>
+      <div class="code-block">
+        <div class="code-header"><span>Python &bull; Buggy Implementation</span></div>
+        <pre><code># BUGGY: relplot is a Figure-Level function; it does NOT accept ax parameter!
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.relplot(data=df, x="Hours", y="Score", ax=ax)
+# Result: UserWarning or unexpected figure created outside ax!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code># CORRECTED OPTION A: If you need axes-level placement, use sns.scatterplot()
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.scatterplot(data=df, x="Hours", y="Score", ax=ax)
+
+# CORRECTED OPTION B: If you need figure-level faceting, use height & aspect directly
+g = sns.relplot(data=df, x="Hours", y="Score", col="Subject", height=4.5, aspect=1.2)</code></pre>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 2: Legend Colliding with Data Points</h3>
+      <div class="code-block">
+        <div class="code-header"><span>Python &bull; Buggy Implementation</span></div>
+        <pre><code># BUGGY: Multi-variable legend drawn inside axes covers points in upper right
+sns.scatterplot(data=df, x="Hours", y="Score", hue="Method", size="Attendance")
+# Result: 20 data points hidden behind the opaque legend box!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code># CORRECTED: Position legend safely outside the plot canvas
+ax = sns.scatterplot(data=df, x="Hours", y="Score", hue="Method", size="Attendance")
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", frameon=True)
+plt.tight_layout()</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> Quick Reference Cheat Sheet &amp; Decision Matrix</h2>
+      <p>Production data science me right tool choose karne ke liye quick reference guide:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Functional Capability</th>
+              <th><code>sns.scatterplot()</code></th>
+              <th><code>sns.relplot(kind='scatter')</code></th>
+              <th><code>sns.regplot()</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Architecture Level</strong></td>
+              <td>Axes-level</td>
+              <td>Figure-level (FacetGrid)</td>
+              <td>Axes-level</td>
+            </tr>
+            <tr>
+              <td><strong>Primary Purpose</strong></td>
+              <td>Single-axes scatter plot</td>
+              <td>Multi-panel faceted grids</td>
+              <td>Linear/Polynomial trendline</td>
+            </tr>
+            <tr>
+              <td><strong>Subplot Faceting (row/col)</strong></td>
+              <td>Manual Matplotlib subplots</td>
+              <td>Built-in (<code>row</code>, <code>col</code>, <code>col_wrap</code>)</td>
+              <td>Manual Matplotlib subplots</td>
+            </tr>
+            <tr>
+              <td><strong>Trendline &amp; CI Band</strong></td>
+              <td>No built-in line</td>
+              <td>No built-in line</td>
+              <td>Automatic OLS line + 95% CI</td>
+            </tr>
+            <tr>
+              <td><strong>Semantic Encodings</strong></td>
+              <td><code>hue</code>, <code>size</code>, <code>style</code></td>
+              <td><code>hue</code>, <code>size</code>, <code>style</code></td>
+              <td>No <code>hue</code>/<code>style</code> mapping</td>
+            </tr>
+            <tr>
+              <td><strong>Sizing Control</strong></td>
+              <td><code>plt.figure(figsize=(w,h))</code></td>
+              <td><code>height=...</code>, <code>aspect=...</code></td>
+              <td><code>plt.figure(figsize=(w,h))</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_relational_visualization_guide.png" alt="Relational Visualization Decision Architecture Mind Map">
+        <div class="figure-caption">Figure 12.23: Relational Visualization Decision Architecture &mdash; Systematic decision framework to select between single-axes scatterplot, multi-panel faceted relplot, and regression trendlines.</div>
+      </div>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> 21 Comprehensive Exercises, Capstone &amp; Topic 13 Preview</h2>
+      <p>Test your conceptual understanding and hands-on coding mastery of scatter plots, relational visualizations, and regression models:</p>
+
+      <h3>Part A: 10 Multiple-Choice Questions (MCQs)</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q1: Fundamental Purpose of a Scatter Plot</div>
+        <p>Scatter plot primary roop se kin do variables ke beech relationship explore karne ke liye design kiya gaya hai?</p>
+        <p>A) Do categorical variables ke beech frequency counts.<br>
+        B) Do continuous numerical variables ke beech correlation aur distribution patterns.<br>
+        C) Single time-series variable ka seasonal decompose.<br>
+        D) Text data ke sentiment scores.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Scatter plot continuous bivariate numerical data (X and Y) ko 2D Cartesian plane par plot karta hai taaki linear, nonlinear, ya clustered relationships ko visually observe kiya ja sake.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q2: Observation Representation</div>
+        <p>Scatter plot canvas par ek single dot kya represent karta hai?</p>
+        <p>A) Pure dataset ka mathematical average.<br>
+        B) Ek single row/observation ka (x, y) coordinate pair.<br>
+        C) Category ka standard deviation.<br>
+        D) Normal distribution curve ka peak.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Har dot dataset ki ek specific observation hoti hai &mdash; jaise ek student jiske study hours x-coordinate par hain aur exam score y-coordinate par hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q3: Pearson Correlation Range</div>
+        <p>Pearson Correlation Coefficient (<i>r</i>) ki valid mathematical range kya hoti hai?</p>
+        <p>A) 0 se &infin;<br>
+        B) 0 se 1.0<br>
+        C) -1.0 se +1.0<br>
+        D) -100 se +100</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: C</strong></p>
+            <p><strong>Explanation:</strong> Pearson <i>r</i> strictly -1.0 (perfect negative linear relationship) se +1.0 (perfect positive linear relationship) ke beech scale hota hai. 0 ka matlab no linear association hota hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q4: Axes-Level vs Figure-Level Architecture</div>
+        <p>Agar aapko ek hi call me multiple subplots across categories (facets) banane hon, to kaunsa function best suited hai?</p>
+        <p>A) <code>sns.scatterplot()</code><br>
+        B) <code>sns.relplot(kind="scatter")</code><br>
+        C) <code>sns.regplot()</code><br>
+        D) <code>plt.plot()</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> <code>sns.relplot()</code> ek figure-level function hai jo internally <code>FacetGrid</code> manage karta hai aur <code>col</code>, <code>row</code>, aur <code>col_wrap</code> parameters ke sath effortlessly multi-panel subplots generate karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q5: Marker Size Perception</div>
+        <p>Seaborn me continuous variable ko marker size par map karte waqt visual perception kis basis par hoti hai?</p>
+        <p>A) Marker ke perimeter ke basis par.<br>
+        B) Marker ke 2D area (<i>&pi; r&sup2;</i>) ke proportional scaling ke basis par.<br>
+        C) Marker ke color opacity ke basis par.<br>
+        D) Random pixel allocation ke basis par.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Human eye 2D objects ke area ko perceive karti hai. Agar diameter double kiya jaye to visual volume 4x ho jata hai. Seaborn area-proportional scaling apply karke accurate visual perception maintain karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q6: Regression Confidence Interval Shading</div>
+        <p><code>sns.regplot()</code> me fitted regression line ke charo taraf translucent shaded band kya represent karta hai?</p>
+        <p>A) Data points ka standard error bar.<br>
+        B) Outlier detection boundary.<br>
+        C) Bootstrap-calculated 95% Confidence Interval band for the mean regression estimate.<br>
+        D) Sensor noise limit.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: C</strong></p>
+            <p><strong>Explanation:</strong> Seaborn by default 1,000 bootstrap iterations run karke regression line ka 95% confidence interval calculate karta hai, jo estimate ki statistical reliability show karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q7: Nonlinear Parabolic Trap</div>
+        <p>Agar data perfectly parabolic relationship follow karta hai (<i>y = x&sup2;</i> jahan x zero ke around centered hai), to Pearson correlation coefficient (<i>r</i>) kya hoga?</p>
+        <p>A) Exactly 1.0<br>
+        B) Lagbhag 0.0 (near zero)<br>
+        C) Exactly -1.0<br>
+        D) Undefined</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Pearson <i>r</i> sirf linear patterns measure karta hai. Parabola me left side negative slope aur right side positive slope aapas me cancel ho jate hain, jisse <i>r &approx; 0</i> ho jata hai chahe relationship 100% deterministic ho!</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q8: Relplot Sizing Control</div>
+        <p><code>sns.relplot()</code> me subplot panels ka size control karne ke liye kaunse parameters use hote hain?</p>
+        <p>A) <code>plt.figure(figsize=(10, 6))</code><br>
+        B) <code>height</code> aur <code>aspect</code><br>
+        C) <code>scale_x</code> aur <code>scale_y</code><br>
+        D) <code>panel_size</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> <code>relplot()</code> ek figure-level function hai jo external <code>figsize</code> ko override karta hai. Har individual panel ka height (inches) <code>height=...</code> se aur width <code>height * aspect</code> se define hoti hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q9: Outlier Vulnerability</div>
+        <p>Clean linear dataset me ek single extreme outlier add karne se correlation score par kya impact padta hai?</p>
+        <p>A) Score hamesha exactly 1.0 ban jata hai.<br>
+        B) Score completely unchange rehta hai.<br>
+        C) Outlier ke leverage ke hisab se Pearson correlation drastically decrease ya artificially increase ho sakta hai.<br>
+        D) Seaborn error throw karta hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: C</strong></p>
+            <p><strong>Explanation:</strong> Pearson formula mean differences ke product par based hai, isliye extreme leverage points correlation score ko severe distort kar dete hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q10: Correlation vs Causation Reality</div>
+        <p>Ice-cream sales aur Shark attacks ke beech strong positive correlation (<i>r = 0.85</i>) dekhi gayi. Iska kya scientific conclusion hai?</p>
+        <p>A) Ice-cream khane se shark attack cause hota hai.<br>
+        B) Dono variables garmiyon ke season (Temperature) namak ek confounding variable se positively linked hain; koi causal relation nahi hai.<br>
+        C) Sharks ice-cream pasand karti hain.<br>
+        D) Data false hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Ye classical spurious correlation hai. Garmiyon me zyada log ice-cream khate hain aur zyada log beach par swimming karne jate hain (leading to shark attacks). Common cause (Summer heat) dono ko drive kar raha hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part B: 5 Visual Graph Interpretation Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 11: Interpreting Figure 12.3 (Mobile Price vs Battery)</div>
+        <p>Figure 12.3 me smartphone price aur battery capacity ke beech negative correlation (<i>r = -0.728</i>) dekha gaya. Ek non-technical person isko dekh kar bol sakta hai: <em>"Mehenga phone khareedne se battery kharab milti hai!"</em> Is graphical trend ka sahi domain engineering explanation kya hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Budget phones ($150 - $350) utilitarian hote hain &mdash; thick chassis, heavier plastic body jo 5,500 - 6,000 mAh battery pack karne ki physical space deti hai. Flagship phones ($900 - $1,300) ultra-slim design, aerospace glass/titanium, multiple periscope camera lenses, aur wireless charging coils pack karte hain, jisse battery compartment ke liye physical space kam bachti hai (4,000 - 4,500 mAh). Graph consumer compromise aur physical industrial engineering constraints ko reflect karta hai &mdash; product defect ko nahi.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 12: Interpreting Figure 12.5 (Marketing Ad Spend Saturation)</div>
+        <p>Figure 12.5 me ad spend $120k cross karne ke baad revenue curve kaisa behavior display karti hai? CMO ko budget doubling plan par kya advise denge?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Curve diminishing returns (concave down) show karti hai. Initial $40k spend par revenue $80k se $180k (+$100k) jump karta hai, lekin $120k se $160k (+40k) spend karne par revenue sirf $330k se $360k (+$30k) grow hota hai. CMO ko advise deni chahiye ki ad spend $130k par cap karein aur bacha hua budget conversion optimization ya customer retention me lagayein.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 13: Interpreting Figure 12.18 Panel B (Polynomial Fit)</div>
+        <p>Figure 12.18 me Panel B me linear fit ki jagah <code>order=2</code> polynomial fit kyun use kiya gaya? Linear fit karne se kya analytical error ho sakta tha?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Linear model assume karta hai ki har extra $1 spend hamesha constant revenue create karega. Agar hum straight line fit karte, to wo high ad spend ($160k+) par revenue ko artificially over-predict karti aur low spend par under-predict karti. <code>order=2</code> quadratic model saturation curve ko mathematically follow karta hai aur residuals ko minimize karta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 14: Interpreting Figure 12.21 (Price vs Customer Rating)</div>
+        <p>Figure 12.21 me 200 products ka retail price aur customer satisfaction rating plot kiya gaya hai. Correlation near-zero (<i>r = -0.124</i>) aayi. Kya iska matlab hai ki retail store ko premium products bechna band kar dena chahiye?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> Bilkul nahi! Premium products ka primary purpose high gross profit margin aur brand prestige hota hai, na ki highest numerical review count. Graph prove karta hai ki customer rating product ke price se nahi, balki <em>value-for-money expectation match</em> se drive hoti hai. Store ko premium products continue rakhne chahiye lekin marketing me unke features ko accurately set karna chahiye taaki unrealistic customer expectations build na hon.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 15: Interpreting Figure 12.22 (SRE Saturation Knee Point)</div>
+        <p>Figure 12.22 me 1,600 RPS par vertical dashed red line mark ki gayi hai. SRE engineer is scatter plot ko dekh kar cloud autoscaling threshold kahan set karega aur kyun?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Expert Interpretation:</strong> 1,600 RPS se pehle latency flat (&lt; 80ms) rehti hai. Lekin 1,600 RPS ke baad server CPU queues saturate ho jati hain aur latency hockey-stick curve me explode hokar 400ms+ ho jati hai. Kubernetes HPA autoscaling trigger threshold ko <strong>1,350 &ndash; 1,400 RPS</strong> par set karna chahiye taaki naye pods spawn hokar ready ho jayein <em>before</em> traffic reaches the destructive 1,600 RPS knee point!</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part C: 3 Practical Python Coding Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 16: Faceted Scatter Plot with Custom Palette</div>
+        <p><strong>Task:</strong> Ek reproducible DataFrame create kijiye jisme 3 manufacturing factories (<code>"Factory A"</code>, <code>"Factory B"</code>, <code>"Factory C"</code>) ke production machines ka <code>Operating_Hours</code> aur <code>Defect_Count</code> recorded ho. <code>sns.relplot()</code> use karke teeno factories ke liye alag-alag subplots (columns) banaiye, jisme machine operator type <code>hue="Shift"</code> (Day vs Night) ke roop me encoded ho.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(42)
+records = []
+for fac in ["Factory A", "Factory B", "Factory C"]:
+    for shift in ["Day", "Night"]:
+        n = 30
+        hours = np.random.uniform(50, 400, n)
+        base_defect = 2 if shift == "Day" else 5
+        defects = np.clip(base_defect + (hours * 0.04) + np.random.normal(0, 2, n), 0, 30)
+        for h, d in zip(hours, defects):
+            records.append({"Factory": fac, "Shift": shift, "Hours": round(h, 1), "Defects": round(d, 1)})
+
+df_factory = pd.DataFrame(records)
+
+g = sns.relplot(
+    data=df_factory,
+    x="Hours",
+    y="Defects",
+    hue="Shift",
+    col="Factory",
+    kind="scatter",
+    palette={"Day": "#2563EB", "Night": "#DC2626"},
+    s=65,
+    alpha=0.8,
+    edgecolor="black",
+    linewidth=0.5,
+    height=4,
+    aspect=1.1
+)
+g.fig.subplots_adjust(top=0.85)
+g.fig.suptitle("Machine Operating Hours vs Defect Count across Factories", fontweight="bold")
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 17: Multivariate Bubble Scatter with Bounded Sizing</div>
+        <p><strong>Task:</strong> Ek car dealership dataset banaiye jisme <code>Engine_Size_Liters</code>, <code>Fuel_Economy_MPG</code>, <code>Vehicle_Class</code> (Sedan, SUV, Truck), aur <code>Horsepower</code> hon. <code>sns.scatterplot()</code> use karke Engine Size vs MPG plot kijiye, Vehicle Class ko <code>hue</code> banaiye, aur Horsepower ko bubble size banaiye using safe bounded limits <code>sizes=(40, 250)</code>.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(101)
+n = 100
+engine = np.random.uniform(1.2, 5.0, n)
+mpg = np.clip(45 - 5.5 * engine + np.random.normal(0, 3, n), 12, 50)
+hp = np.clip(80 + 55 * engine + np.random.normal(0, 20, n), 90, 450).astype(int)
+classes = np.random.choice(["Sedan", "SUV", "Truck"], size=n, p=[0.45, 0.35, 0.20])
+
+df_cars = pd.DataFrame({"Engine_Size": np.round(engine, 1), "MPG": np.round(mpg, 1), "Horsepower": hp, "Class": classes})
+
+plt.figure(figsize=(9.5, 6))
+sns.set_theme(style="whitegrid")
+sns.scatterplot(
+    data=df_cars,
+    x="Engine_Size",
+    y="MPG",
+    hue="Class",
+    size="Horsepower",
+    sizes=(40, 250),
+    palette="Dark2",
+    alpha=0.8,
+    edgecolor="black",
+    linewidth=0.5
+)
+plt.title("Vehicle Fuel Economy vs Engine Displacement with Horsepower Sizing", fontweight="bold")
+plt.legend(bbox_to_anchor=(1.02, 1), loc="upper left", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 18: Linear vs Quadratic Regression Overlay</div>
+        <p><strong>Task:</strong> Ek non-linear dataset par <code>sns.regplot()</code> run kijiye jisme ek plot linear trendline (<code>order=1</code>) dikhaye aur dusra plot quadratic polynomial curve (<code>order=2</code>) dikhaye taaki reader model fit difference compare kar sake.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+
+np.random.seed(42)
+x = np.linspace(5, 50, 60)
+y = 100 - 0.08 * (x - 20)**2 + np.random.normal(0, 4, 60)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+sns.set_theme(style="whitegrid")
+
+# Linear fit
+sns.regplot(x=x, y=y, order=1, ax=axes[0], color="#2563EB",
+            scatter_kws=dict(s=50, edgecolors="black"), line_kws=dict(color="#DC2626", lw=2))
+axes[0].set_title("Order=1: Linear Regression (Poor Fit on Curve)", fontweight="bold")
+
+# Quadratic fit
+sns.regplot(x=x, y=y, order=2, ax=axes[1], color="#059669",
+            scatter_kws=dict(s=50, edgecolors="black"), line_kws=dict(color="#D97706", lw=2))
+axes[1].set_title("Order=2: Polynomial Fit (Accurately Tracks Curve)", fontweight="bold")
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part D: 2 Output Prediction Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 19: Predict the Output &mdash; String Dtype on Numerical Axis</div>
+        <p>Niche diye gaye code snippet ka output kya hoga? Matplotlib / Seaborn axes par continuous numeric scale draw hoga ya discrete ticks?</p>
+        <div class="code-block">
+          <pre><code>df_test = pd.DataFrame({"Price": ["10", "20", "100", "5"], "Rating": [4.1, 4.3, 4.8, 3.9]})
+sns.scatterplot(data=df_test, x="Price", y="Rating")</code></pre>
+        </div>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> X-axis par continuous number line nahi banegi! Ticks alphabetical categorical order me draw honge: <code>["10", "100", "20", "5"]</code> (notice karein "100" "20" se pehle aa jayega!).</p>
+            <p><strong>Explanation:</strong> Kyunki values quotes me strings hain (<code>object</code> dtype), Seaborn continuous axis create nahi kar sakta. Solution: <code>df_test["Price"] = pd.to_numeric(df_test["Price"])</code>.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 20: Predict the Output &mdash; Over-Fitted Polynomial Regression</div>
+        <p>Agar hum ek dataset jisme sirf 15 noisy points hon par <code>sns.regplot(x=x, y=y, order=8)</code> pass karein, to regression line kaisa behavior display karegi?</p>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> Regression line extreme roller-coaster oscillations (wild wave curves) draw karegi jo har individual point ko touch karne ke chakkar me canvas boundaries se bahar nikal sakti hai!</p>
+            <p><strong>Explanation:</strong> Isko statistical <strong>Overfitting (Runge's Phenomenon)</strong> kehte hain. High polynomial degree noise ko memorize kar leti hai aur model predictive validity lose kar deta hai. Practice me <code>order=1</code> ya maximum <code>order=2</code> hi use karna chahiye.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part E: Capstone Mini-Project</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 21: E-Commerce Customer Lifetime Value (CLV) &amp; Churn Risk Audit</div>
+        <p><strong>Business Scenario:</strong> Aap ek global subscription e-commerce platform me Lead Analytics Specialist hain. Executive committee Q4 Strategy Meeting me customer retention aur revenue concentration evaluate karna chahti hai. 300 customers ka telemetry dataset analyze kijiye jisme <code>Customer_Tenure_Months</code>, <code>Total_Spend_USD</code>, <code>Loyalty_Score</code> (1-100), <code>Tier</code> (Bronze, Silver, Gold), aur <code>Churn_Status</code> (Active vs Churned) recorded hai.</p>
+        <p><strong>Deliverables:</strong></p>
+        <ol>
+          <li>Deterministic synthetic dataset generate kijiye (seed 42) jisme spend tenure ke sath positively grow ho lekin churned customers low engagement display karein.</li>
+          <li><code>sns.relplot()</code> use karke tenure vs spend ko <code>col="Tier"</code> ke sath 3 synchronized subplots me divide kijiye.</li>
+          <li>Active vs Churned customers ko high-contrast <code>hue</code> se differentiate kijiye.</li>
+          <li>Loyalty score ko bubble <code>size</code> par map kijiye using <code>sizes=(35, 220)</code>.</li>
+          <li>Executive summary generate kijiye stating high-risk churn thresholds.</li>
+        </ol>
+
+        <details class="accordion">
+          <summary>View Complete Capstone Mini-Project Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Step 1: Generate reproducible Customer CLV Dataset
+np.random.seed(42)
+n_cust = 300
+tenure = np.random.uniform(2, 48, n_cust)
+tiers = np.random.choice(["Bronze", "Silver", "Gold"], size=n_cust, p=[0.4, 0.35, 0.25])
+
+spend_list = []
+loyalty_list = []
+churn_list = []
+
+for t, tier in zip(tenure, tiers):
+    tier_mult = {"Bronze": 1.0, "Silver": 1.8, "Gold": 3.2}[tier]
+    base_spend = (t * 45 * tier_mult) + np.random.normal(0, 150)
+    spend = max(50.0, round(float(base_spend), 1))
+    spend_list.append(spend)
+    
+    loyalty = np.clip(int(30 + t * 1.1 + np.random.normal(0, 10)), 5, 99)
+    loyalty_list.append(loyalty)
+    
+    # Churn probability higher if tenure < 12 and loyalty < 40
+    churn_prob = 0.55 if (t < 12 and loyalty < 40) else (0.10 if tier == "Gold" else 0.22)
+    churn = "Churned" if np.random.random() < churn_prob else "Active"
+    churn_list.append(churn)
+
+df_clv = pd.DataFrame({
+    "Tenure_Months": np.round(tenure, 1),
+    "Total_Spend_USD": spend_list,
+    "Loyalty_Score": loyalty_list,
+    "Tier": tiers,
+    "Status": churn_list
+})
+
+# Step 2: Multi-Panel Faceted Relational Visualization
+g = sns.relplot(
+    data=df_clv,
+    x="Tenure_Months",
+    y="Total_Spend_USD",
+    hue="Status",
+    size="Loyalty_Score",
+    sizes=(35, 220),
+    col="Tier",
+    col_order=["Bronze", "Silver", "Gold"],
+    palette={"Active": "#059669", "Churned": "#DC2626"},
+    alpha=0.85,
+    edgecolor="black",
+    linewidth=0.5,
+    height=4.5,
+    aspect=1.05
+)
+
+g.fig.subplots_adjust(top=0.85)
+g.fig.suptitle("Capstone Project: Customer Lifetime Value (CLV) & Churn Risk by Membership Tier", fontweight="bold")
+g.set_axis_labels("Customer Account Tenure (Months)", "Total Cumulative Spend ($ USD)")
+plt.show()
+
+# Step 3: Verified Analytical Metrics
+print("Customer CLV Audit Summary:")
+print("Total Analyzed Accounts:", len(df_clv))
+print("Overall Active / Churned:", df_clv["Status"].value_counts().to_dict())
+print("Median Spend by Tier:
+", df_clv.groupby("Tier")["Total_Spend_USD"].median())</code></pre>
+            </div>
+            <p><strong>Capstone Executive Insight:</strong> Faceted visualization se prove hota hai ki Gold tier accounts me churn rate lowest (&lt; 12%) hai jabki Bronze tier me initial 12 months ke andar churn spike karta hai. Loyalty score &lt; 35 wale early accounts sabse high churn risk represent karte hain &mdash; retention marketing team ko onboarding phase me targeted engagement playbooks activate karne chahiye!</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128640; What's Next in Topic 13?</div>
+        <p>Agla topic hai <strong>Seaborn Topic 13: Line Plots &amp; Time-Based Relationships</strong>! Wahan hum seekhenge ki ordered temporal data, continuous stock movements, trend tracking, aur multi-condition time-series aggregation ko <code>sns.lineplot()</code> ke through kaise visualize kiya jata hai!</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

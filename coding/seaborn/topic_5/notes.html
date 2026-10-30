@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seaborn Topic 5: Histograms &amp; KDE Plots &mdash; CodeVerse</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --primary-light: #e0f2fe;
+            --accent: #f59e0b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --code-bg: #0f172a;
+            --code-border: #1e293b;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Courier New', Courier, monospace;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            overflow-x: hidden;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            line-height: 1.65;
+            font-size: 15px;
+            padding: 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .main-container {
+            max-width: 960px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 40%, #075985 100%);
+            color: #ffffff;
+            padding: 32px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 15px;
+            line-height: 1.5;
+            color: #e0f2fe;
+            margin-bottom: 18px;
+            max-width: 840px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 12.5px;
+            color: #f0f9ff;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 14px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section Styling */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            font-size: 16.5px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 20px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+            line-height: 1.68;
+        }
+
+        ul, ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            background: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: var(--radius-md);
+            margin: 16px 0 20px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .code-header {
+            background: #1e293b;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #94a3b8;
+            font-family: var(--font-mono);
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-content {
+            padding: 14px;
+            margin: 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            line-height: 1.55;
+            color: #f8fafc;
+            background: #0f172a;
+        }
+
+        .code-content code {
+            font-family: inherit;
+        }
+
+        .output-block {
+            background: #020617;
+            border-top: 1px dashed #334155;
+            padding: 12px 14px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: #38bdf8;
+            white-space: pre-wrap;
+        }
+
+        .output-title {
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        /* Syntax Highlighting */
+        .keyword { color: #f472b6; font-weight: 600; }
+        .string { color: #a5f3fc; }
+        .comment { color: #64748b; font-style: italic; }
+        .number { color: #fde047; }
+        .built_in { color: #c084fc; }
+
+        /* Inline Code */
+        code:not(.code-content code) {
+            font-family: var(--font-mono);
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Figure Cards */
+        .figure-card {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin: 20px 0;
+            text-align: center;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-md);
+        }
+
+        .figure-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .figure-caption {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .callout-warning {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
+
+        .callout-danger {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #b91c1c;
+        }
+
+        .callout-realworld {
+            background: #f8fafc;
+            border-color: #6366f1;
+            color: #312e81;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper, .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-light);
+            color: #334155;
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background: #fafafa;
+        }
+
+        /* Table of Contents */
+        .toc-container {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toc-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px 16px;
+        }
+
+        .toc-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 13px;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toc-link:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .toc-num {
+            font-family: var(--font-mono);
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 20px;
+        }
+
+        /* Interactive Details / Accordions */
+        .details-box {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+        }
+
+        .details-box[open] {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .details-summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #1e293b;
+            cursor: pointer;
+            background: #f8fafc;
+            user-select: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .details-summary:hover {
+            background: #f1f5f9;
+        }
+
+        .details-summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .details-summary::after {
+            content: "▼";
+            font-size: 10px;
+            color: var(--accent);
+            transition: transform 0.2s ease;
+        }
+
+        .details-box[open] .details-summary::after {
+            transform: rotate(180deg);
+        }
+
+        .details-content {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            font-size: 13.5px;
+            color: #334155;
+            background: #ffffff;
+            line-height: 1.6;
+        }
+
+        /* Responsive Mobile Adjustments */
+        @media (max-width: 640px) {
+            body {
+                padding: 10px;
+                font-size: 14.5px;
+            }
+
+            .card {
+                padding: 16px;
+                border-radius: var(--radius-md);
+                margin-bottom: 18px;
+            }
+
+            .hero-banner {
+                padding: 22px 16px;
+                border-radius: var(--radius-md);
+            }
+
+            .hero-title {
+                font-size: 22px;
+            }
+
+            .hero-subtitle {
+                font-size: 13.5px;
+            }
+
+            .hero-meta {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .section-title {
+                font-size: 18px;
+            }
+
+            .code-content {
+                font-size: 12px;
+                padding: 10px;
+            }
+
+            .toc-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+        <span class="hero-badge">Seaborn Course &bull; Topic 5 of 20 (Distribution Visualization)</span>
+        <h1 class="hero-title">Histograms &amp; KDE Plots</h1>
+        <p class="hero-subtitle">Master Numerical Distributions: Bins, Bandwidth Smoothing, Density vs. Frequency, Skewness, Multimodal Peaks, and Boundary Constraints with histplot() and kdeplot()</p>
+        <div class="hero-meta">
+            <span class="hero-meta-item">&#9201; 60 Min Interactive Mastery</span>
+            <span class="hero-meta-item">&#128187; 24 Runnable Python Examples</span>
+            <span class="hero-meta-item">&#128202; 20 High-Res Charts (@ 160 DPI)</span>
+            <span class="hero-meta-item">&#9989; Verified on Seaborn 0.13.2, Pandas 2.3 &amp; Python 3.13</span>
+        </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-container" aria-label="Table of Contents">
+        <div class="toc-title">&#128209; Curriculum Table of Contents (20 In-Depth Sections)</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec-1"><span class="toc-num">01.</span> What is a Data Distribution?</a>
+            <a class="toc-link" href="#sec-2"><span class="toc-num">02.</span> Understanding Histograms</a>
+            <a class="toc-link" href="#sec-3"><span class="toc-num">03.</span> Using sns.histplot() Parameters</a>
+            <a class="toc-link" href="#sec-4"><span class="toc-num">04.</span> Bins, Bin Width &amp; Bin Range</a>
+            <a class="toc-link" href="#sec-5"><span class="toc-num">05.</span> Count, Frequency &amp; Density</a>
+            <a class="toc-link" href="#sec-6"><span class="toc-num">06.</span> Grouped Histograms with hue</a>
+            <a class="toc-link" href="#sec-7"><span class="toc-num">07.</span> What is KDE? (Intuition &amp; Concept)</a>
+            <a class="toc-link" href="#sec-8"><span class="toc-num">08.</span> Using sns.kdeplot() Parameters</a>
+            <a class="toc-link" href="#sec-9"><span class="toc-num">09.</span> KDE Bandwidth &amp; Smoothing</a>
+            <a class="toc-link" href="#sec-10"><span class="toc-num">10.</span> Histogram versus KDE Comparison</a>
+            <a class="toc-link" href="#sec-11"><span class="toc-num">11.</span> Skewness, Peaks &amp; Outliers</a>
+            <a class="toc-link" href="#sec-12"><span class="toc-num">12.</span> Discrete &amp; Bounded Data</a>
+            <a class="toc-link" href="#sec-13"><span class="toc-num">13.</span> Two-Dimensional KDE Contours</a>
+            <a class="toc-link" href="#sec-14"><span class="toc-num">14.</span> Case Study A: College Explorer</a>
+            <a class="toc-link" href="#sec-15"><span class="toc-num">15.</span> Case Study B: E-Commerce Orders</a>
+            <a class="toc-link" href="#sec-16"><span class="toc-num">16.</span> Common Pitfalls &amp; Debugging</a>
+            <a class="toc-link" href="#sec-17"><span class="toc-num">17.</span> Quick Reference Cheat Sheet</a>
+            <a class="toc-link" href="#sec-18"><span class="toc-num">18.</span> 21 Practice Qs &amp; Mini-Project</a>
+            <a class="toc-link" href="#sec-19"><span class="toc-num">19.</span> Capstone Solution Code</a>
+            <a class="toc-link" href="#sec-20"><span class="toc-num">20.</span> Summary &amp; What's Next</a>
+        </div>
+    </nav>
+
+    <!-- Section 1: What is a Data Distribution? -->
+    <section id="sec-1" class="card">
+        <h2 class="section-title">&#128202; 01. What is a Data Distribution? (Beyond Single Summary Numbers)</h2>
+
+        <p>Imagine kijiye ek college administration ko 500 students ke semester exam marks ka evaluation karna hai. HOD ne kaha: <em>"Hamari class ka Average (Mean) Marks 72.6 hai."</em> Sunne me yeh number kaafi accha lagta hai, lekin ek single summary number pure sach ko reveal nahi kar sakta:</p>
+
+        <ul>
+            <li>Kya lagbhag sabhi students 70&ndash;75 ke beech score kar rahe hain?</li>
+            <li>Ya fir aadhe students 95 score kar rahe hain aur baaki aadhe 40 par fail ho rahe hain?</li>
+            <li>Kya marks ka distribution perfectly balanced hai, ya lower/higher marks ki taraf lamba tail hai?</li>
+            <li>Kya class me do alag-alag ability groups (cohorts) present hain?</li>
+        </ul>
+
+        <p>Yahi reason hai ki statistics aur data science me hum <strong>Data Distribution</strong> study karte hain. Distribution ka matlab hota hai: <em>"Observations numerical range ke andar kahan-kahan spread hain aur unki frequency kahan zyada concentrated hai."</em></p>
+
+        <div class="figure-card">
+            <img src="assets/distribution_workflow_diagram.png" alt="Distribution Understanding Workflow Diagram" loading="lazy">
+            <div class="figure-caption">Figure 5.1: The Distribution Understanding Pipeline &mdash; Raw Numbers &rarr; Discrete Intervals (Bins) &rarr; Frequency Histogram &rarr; Continuous Kernel Density Estimation (KDE).</div>
+        </div>
+
+        <div class="callout callout-realworld">
+            <div class="callout-title">&#129300; The Mental Model: Scatter of Marbles vs. Sand Dunes</div>
+            <p>Sochiye aapke paas 500 marbles (data points) hain jo zameen par bikhre hue hain. Agar aap zameen par 10 boxes (bins) rakh kar har box me girne wale marbles ginte hain, toh banta hai <strong>Histogram</strong>. Aur agar aap unhi marbles ke upar ek smooth sheet ya ret (sand) daal kar ek continuous curve shape banate hain, toh banta hai <strong>KDE (Kernel Density Estimate)</strong>!</p>
+        </div>
+
+        <h3>Key Properties of Any Numerical Distribution</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Distribution Property</th>
+                        <th>Statistical Meaning</th>
+                        <th>Seaborn Visual Manifestation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Center (Central Tendency)</strong></td>
+                        <td>Data ka typical ya middle value (Mean, Median, Mode).</td>
+                        <td>Histogram ka main center mass ya KDE peak ka X-coordinate.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Spread (Dispersion)</strong></td>
+                        <td>Observations kitni broad ya tightly grouped hain (Standard Deviation, IQR).</td>
+                        <td>Histogram ki total base width across the X-axis.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Peaks (Modality)</strong></td>
+                        <td>High density concentration regions (Unimodal, Bimodal, Multimodal).</td>
+                        <td>Histogram me tallest bars ya KDE me curved crests.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Tails (Skewness)</strong></td>
+                        <td>Extreme low ya extreme high values ka drop-off slope.</td>
+                        <td>Right tail (positive skew) ya Left tail (negative skew).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+    <!-- Section 2: Understanding Histograms -->
+    <section id="sec-2" class="card">
+        <h2 class="section-title">&#128202; 02. Understanding Histograms: Bins, Intervals &amp; Frequency</h2>
+
+        <p>Ek <strong>Histogram</strong> continuous numerical variable ko graphical format me represent karne ka sabse standard visual tool hai. Histogram continuous data range ko consecutive, non-overlapping intervals me divide karta hai jinhe <strong>Bins</strong> kaha jata hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/basic_histogram_exam_marks.png" alt="Basic Histogram of Exam Marks" loading="lazy">
+            <div class="figure-caption">Figure 5.2: Basic Histogram of Final Exam Marks (N = 500 Students) &mdash; Continuous variable grouped into equal-width bins with frequency counts on the Y-axis.</div>
+        </div>
+
+        <h3>Histogram vs. Regular Bar Chart (Crucial Distinction)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Histogram (<code>sns.histplot</code>)</th>
+                        <th>Categorical Bar Chart (<code>sns.barplot</code>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Data Nature</strong></td>
+                        <td>Continuous Quantitative numbers (e.g. Marks, Price, Age, Salary).</td>
+                        <td>Discrete Nominal categories (e.g. Department, City, Payment Type).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>X-Axis Intervals</strong></td>
+                        <td>Ordered, numerical continuous scale with mathematical bin edges.</td>
+                        <td>Discrete arbitrary category names (order can be freely swapped).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Space Between Bars</strong></td>
+                        <td>Bars touch each other (gap = 0) to represent continuum of values.</td>
+                        <td>Distinct gaps exist between bars to signify independent categories.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bar Width Meaning</strong></td>
+                        <td>Bar width mathematical interval size represent karti hai (e.g. 5 marks).</td>
+                        <td>Bar width purely aesthetic hoti hai without quantitative meaning.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/basic_histogram_order_values.png" alt="Basic Histogram of Order Values" loading="lazy">
+            <div class="figure-caption">Figure 5.3: Basic Histogram of E-Commerce Order Values &mdash; Showing right-skewed purchasing patterns with heavy concentration below ₹5,000.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Generating Your First Seaborn Histogram</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+<span class="comment"># Load verified college performance dataset</span>
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">7.5</span>, <span class="number">4</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Standard histogram call</span>
+sns.histplot(data=df_college, x=<span class="string">"exam_marks"</span>, color=<span class="string">"#0284c7"</span>, ax=ax)
+
+ax.set_title(<span class="string">"Final Exam Marks Distribution (N = 500)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Exam Marks (/100)"</span>)
+ax.set_ylabel(<span class="string">"Student Frequency Count"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">f"Exam Marks Mean: {df_college['exam_marks'].mean():.2f}"</span>)
+<span class="built_in">print</span>(<span class="string">f"Exam Marks Median: {df_college['exam_marks'].median():.2f}"</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Exam Marks Mean: 72.65
+Exam Marks Median: 72.00
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Using sns.histplot() Parameters -->
+    <section id="sec-3" class="card">
+        <h2 class="section-title">&#9881; 03. Mastering sns.histplot() Parameters: The Complete Toolkit</h2>
+
+        <p>Seaborn 0.11+ me <code>sns.histplot()</code> legacy <code>sns.distplot()</code> ko officially replace karta hai. Yeh modern function continuous, discrete, aur categorical data ke liye unified, high-performance distribution plotting provide karta hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type &amp; Default</th>
+                        <th>What It Controls</th>
+                        <th>When to Use It</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>data</code></td>
+                        <td><code>pd.DataFrame</code></td>
+                        <td>Dataset containing the plotting variables.</td>
+                        <td>Always passed in tidy tabular workflows.</td>
+                    </tr>
+                    <tr>
+                        <td><code>x</code> / <code>y</code></td>
+                        <td><code>str</code> (column name)</td>
+                        <td>Variable to compute distribution over (<code>x</code> for vertical bars, <code>y</code> for horizontal bars).</td>
+                        <td>Pass column name as string.</td>
+                    </tr>
+                    <tr>
+                        <td><code>bins</code></td>
+                        <td><code>int</code> / <code>str = "auto"</code></td>
+                        <td>Total number of discrete intervals or auto-estimator rule (e.g. <code>"fd"</code>, <code>"sturges"</code>).</td>
+                        <td>When you need precise control over bin granularity.</td>
+                    </tr>
+                    <tr>
+                        <td><code>binwidth</code></td>
+                        <td><code>float</code> / <code>int</code></td>
+                        <td>Physical width of each bin interval in data units (e.g. <code>binwidth=5</code> marks).</td>
+                        <td>When bin intervals must match meaningful domain steps.</td>
+                    </tr>
+                    <tr>
+                        <td><code>binrange</code></td>
+                        <td><code>tuple (min, max)</code></td>
+                        <td>Lowest and highest bin edges, ignoring data outside range.</td>
+                        <td>Filtering out extreme outliers without mutating dataframe.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stat</code></td>
+                        <td><code>str = "count"</code></td>
+                        <td>Aggregate statistic on Y-axis: <code>"count"</code>, <code>"frequency"</code>, <code>"probability"</code>, <code>"percent"</code>, <code>"density"</code>.</td>
+                        <td>Normalizing datasets of different sample sizes.</td>
+                    </tr>
+                    <tr>
+                        <td><code>kde</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>Overlays a smooth continuous Kernel Density Estimate curve.</td>
+                        <td>Evaluating underlying continuous probability shape.</td>
+                    </tr>
+                    <tr>
+                        <td><code>element</code></td>
+                        <td><code>str = "bars"</code></td>
+                        <td>Visual representation: <code>"bars"</code>, <code>"step"</code>, or <code>"poly"</code>.</td>
+                        <td>When comparing multiple overlapping categories cleanly.</td>
+                    </tr>
+                    <tr>
+                        <td><code>multiple</code></td>
+                        <td><code>str = "layer"</code></td>
+                        <td>Group stacking behavior: <code>"layer"</code>, <code>"dodge"</code>, <code>"stack"</code>, or <code>"fill"</code>.</td>
+                        <td>When <code>hue</code> is specified for categorical breakdown.</td>
+                    </tr>
+                    <tr>
+                        <td><code>discrete</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>Centers bins directly on integer values without sub-bin gaps.</td>
+                        <td>Integer data (e.g. dice rolls, order quantities, survey ratings).</td>
+                    </tr>
+                    <tr>
+                        <td><code>cumulative</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>Plots running cumulative sum of bins (CDF &mdash; Cumulative Distribution Function).</td>
+                        <td>Answering "What % of students scored &le; X marks?".</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Example 3.1 &mdash; Advanced histplot() with Multiple Controls</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Advanced histplot() Parameter Showcase</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4.2</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Combining binwidth, kde overlay, and probability scaling</span>
+sns.histplot(
+    data=df_college,
+    x=<span class="string">"exam_marks"</span>,
+    binwidth=<span class="number">5</span>,
+    stat=<span class="string">"probability"</span>,
+    kde=<span class="keyword">True</span>,
+    color=<span class="string">"#0284c7"</span>,
+    edgecolor=<span class="string">"#0369a1"</span>,
+    ax=ax
+)
+
+ax.set_title(<span class="string">"Marks Probability Distribution (binwidth=5 Marks + KDE)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Final Exam Marks (/100)"</span>)
+ax.set_ylabel(<span class="string">"Relative Probability (Sum = 1.0)"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Calculated Min Marks:"</span>, df_college[<span class="string">"exam_marks"</span>].min())
+<span class="built_in">print</span>(<span class="string">"Calculated Max Marks:"</span>, df_college[<span class="string">"exam_marks"</span>].max())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Calculated Min Marks: 43.0
+Calculated Max Marks: 98.0
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 4: Understanding Bins, Bin Width & Bin Range -->
+    <section id="sec-4" class="card">
+        <h2 class="section-title">&#128207; 04. Understanding Bins, Bin Width &amp; Bin Range (The Goldilocks Rule)</h2>
+
+        <p>Histogram ka sabse critical decision hota hai: <strong>Bin Selection</strong>. Bins na sirf bars ki count decide karte hain, balki woh chart ke apparent statistical shape ko completely alter kar sakte hain bina underlying data ko touch kiye:</p>
+
+        <h3>Visualizing the Impact of Bin Sizing</h3>
+        <p>Aaiye dekhte hain ki jab hum same exam marks dataset par 5, 10, aur 20 bins apply karte hain toh visual distribution kaise transform hoti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/histogram_bins_5_comparison.png" alt="Histogram with 5 Bins (Underfitting)" loading="lazy">
+            <div class="figure-caption">Figure 5.4: Underfitting with <code>bins=5</code> &mdash; Extremely broad bins oversimplify the distribution and hide subtle structural patterns.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/histogram_bins_10_comparison.png" alt="Histogram with 10 Bins (Balanced)" loading="lazy">
+            <div class="figure-caption">Figure 5.5: Balanced Estimation with <code>bins=10</code> &mdash; Clear, readable view showing a balanced approximation of student performance.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/histogram_bins_20_comparison.png" alt="Histogram with 20 Bins (Granular)" loading="lazy">
+            <div class="figure-caption">Figure 5.6: Granular Resolution with <code>bins=20</code> &mdash; Fine-grained intervals revealing exact mode concentration around 72 marks.</div>
+        </div>
+
+        <h3>The 3 Golden Rules of Bin Selection</h3>
+        <ul>
+            <li><strong>Too Few Bins (Under-fitting):</strong> Agar aapne sirf 3 ya 5 bins use kiye, toh real-world distribution ka true shape (jaise subtle bimodal peaks ya skewness) ek single massive block ke andar chup jata hai.</li>
+            <li><strong>Too Many Bins (Over-fitting):</strong> Agar aapne 50 ya 100 bins use kiye, toh bars bohot narrow ho jaate hain aur random sampling noise ki wajah se empty slots aur spiky jagged towers create ho jaate hain.</li>
+            <li><strong>The Goldilocks Sweet Spot:</strong> Chhote datasets (<i>N</i> &lt; 500) ke liye 10&ndash;15 bins ideal hote hain; bade datasets (<i>N</i> &gt; 5000) ke liye 30&ndash;50 bins meaningful patterns reveal karte hain.</li>
+        </ul>
+
+        <div class="figure-card">
+            <img src="assets/histogram_binwidth_comparison.png" alt="Controlling Interval Width Explicitly with binwidth" loading="lazy">
+            <div class="figure-caption">Figure 5.7: Explicit Interval Sizing with <code>binwidth=...</code> &mdash; Using domain-driven intervals (3 marks vs. 8 marks vs. 15 marks).</div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; bins vs. binwidth: Which One to Choose?</div>
+            <p>Agar aapko mathematical domain reasoning chahiye (e.g. "Har bar exactly ₹500 ya 5 marks ka interval represent kare"), toh <code>binwidth=5</code> use karein. Agar aapko screen layout ke hisaab se fixed number of bars chahiye, toh <code>bins=15</code> specify karein.</p>
+        </div>
+    </section>
+
+
+    <!-- Section 5: Count, Frequency, Probability & Density -->
+    <section id="sec-5" class="card">
+        <h2 class="section-title">&#128200; 05. Statistical Scaling: Count, Frequency, Probability &amp; Density</h2>
+
+        <p>Seaborn ka <code>stat=...</code> parameter Y-axis ke mathematical scaling mode ko control karta hai. Beginners aksar count aur density ke beech confuse ho jaate hain. Aaiye inke rigorous differences ko decode karein:</p>
+
+        <div class="figure-card">
+            <img src="assets/count_vs_probability_histogram.png" alt="Count vs Probability Histogram Comparison" loading="lazy">
+            <div class="figure-caption">Figure 5.8: <code>stat="count"</code> (Raw Observations, Sum = 500) vs. <code>stat="probability"</code> (Relative Proportions, Sum = 1.0).</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/count_vs_density_histogram.png" alt="Count vs Density Histogram Comparison" loading="lazy">
+            <div class="figure-caption">Figure 5.9: <code>stat="count"</code> vs. <code>stat="density"</code> &mdash; In density histograms, the total area under all bars integrated together equals 1.0.</div>
+        </div>
+
+        <h3>Comparing stat Options</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Formula / Meaning</th>
+                        <th>Y-Axis Interpretation</th>
+                        <th>Summing Behavior</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>stat="count"</code></td>
+                        <td><i>n<sub>i</sub></i> (Number of observations in bin <i>i</i>).</td>
+                        <td>Raw integer frequency count.</td>
+                        <td>Sum of bar heights = Total sample size <i>N</i>.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stat="probability"</code></td>
+                        <td><i>P(i) = n<sub>i</sub> / N</i> (Proportion in bin <i>i</i>).</td>
+                        <td>Relative proportion / probability (0.0 to 1.0).</td>
+                        <td>Sum of bar heights = 1.0 (100%).</td>
+                    </tr>
+                    <tr>
+                        <td><code>stat="percent"</code></td>
+                        <td><i>% = (n<sub>i</sub> / N) &times; 100</i>.</td>
+                        <td>Percentage of observations in each bin.</td>
+                        <td>Sum of bar heights = 100%.</td>
+                    </tr>
+                    <tr>
+                        <td><code>stat="density"</code></td>
+                        <td><i>D<sub>i</sub> = n<sub>i</sub> / (N &times; binwidth<sub>i</sub>)</i>.</td>
+                        <td>Probability density per unit of X.</td>
+                        <td><strong>Total Area (&sum; Height &times; Width) = 1.0</strong>.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#9888; Critical Concept: Density Height is NOT Probability!</div>
+            <p>Density histogram me kisi single bar ki height probability nahi hoti! Bar height <strong>Density</strong> hoti hai, aur probability bar ka <strong>Area</strong> (Height &times; Width) hota hai. Density value 1.0 se badi bhi ho sakti hai agar bin width bohot choti (&lt; 1) ho!</p>
+        </div>
+    </section>
+
+    <!-- Section 6: Grouped Histograms with hue -->
+    <section id="sec-6" class="card">
+        <h2 class="section-title">&#128101; 06. Grouped Histograms with hue (layer, dodge, stack, fill)</h2>
+
+        <p>Real-world datasets me hume aksar do ya zyada groups ke distributions ko directly compare karna hota hai (jaise Computer Science vs. Mechanical engineering students ke marks, ya UPI vs. Credit Card order values). Seaborn me <code>hue</code> parameter distribute karta hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/grouped_histogram_hue.png" alt="Grouped Histogram using hue" loading="lazy">
+            <div class="figure-caption">Figure 5.10: Grouped Histogram of Exam Marks Across 4 Departments using <code>hue="department"</code> and <code>multiple="layer"</code>.</div>
+        </div>
+
+        <div class="figure-card">
+            <img src="assets/layered_vs_stacked_histogram.png" alt="Layered vs Stacked Histogram Modes" loading="lazy">
+            <div class="figure-caption">Figure 5.11: Comparing Grouping Behaviors &mdash; <code>multiple="layer"</code> (Transparent Overlaid) vs. <code>multiple="dodge"</code> (Side-by-Side) vs. <code>multiple="stack"</code> (Cumulative Total).</div>
+        </div>
+
+        <h3>The 4 Grouping Modes of multiple=...</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Option</th>
+                        <th>Visual Layout</th>
+                        <th>When to Choose</th>
+                        <th>Key Considerations</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>multiple="layer"</code></td>
+                        <td>Bars overlap at the exact same X-coordinates.</td>
+                        <td>2 to 3 categories with distinct centers.</td>
+                        <td>Always set <code>alpha=0.4</code> to prevent foreground bars from hiding background bars.</td>
+                    </tr>
+                    <tr>
+                        <td><code>multiple="dodge"</code></td>
+                        <td>Bars stand side-by-side inside each bin interval.</td>
+                        <td>Comparing exact frequencies side-by-side.</td>
+                        <td>Bins become crowded if more than 3 categories are dodged.</td>
+                    </tr>
+                    <tr>
+                        <td><code>multiple="stack"</code></td>
+                        <td>Bars are stacked vertically on top of each other.</td>
+                        <td>Displaying overall class total + subcategory contribution.</td>
+                        <td>Subcategory shapes become distorted because they don't share a flat baseline.</td>
+                    </tr>
+                    <tr>
+                        <td><code>multiple="fill"</code></td>
+                        <td>Bars are normalized to 100% height across each bin.</td>
+                        <td>Analyzing probability ratios (e.g. "What % failed in bin 40-50?").</td>
+                        <td>Raw observation sample counts are completely hidden.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Dodged Grouped Histogram</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.2</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Dodged comparison between Pass and Fail students</span>
+sns.histplot(
+    data=df_college,
+    x=<span class="string">"study_hours"</span>,
+    hue=<span class="string">"result"</span>,
+    multiple=<span class="string">"dodge"</span>,
+    palette={<span class="string">"Pass"</span>: <span class="string">"#10b981"</span>, <span class="string">"Fail"</span>: <span class="string">"#ef4444"</span>},
+    bins=<span class="number">8</span>,
+    shrink=<span class="number">0.85</span>,
+    ax=ax
+)
+
+ax.set_title(<span class="string">"Study Hours Distribution by Academic Result (multiple='dodge')"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Weekly Study Hours"</span>)
+ax.set_ylabel(<span class="string">"Student Count"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Total Pass Students:"</span>, (df_college[<span class="string">"result"</span>] == <span class="string">"Pass"</span>).<span class="built_in">sum</span>())
+<span class="built_in">print</span>(<span class="string">"Total Fail Students:"</span>, (df_college[<span class="string">"result"</span>] == <span class="string">"Fail"</span>).<span class="built_in">sum</span>())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Total Pass Students: 454
+Total Fail Students: 46
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 7: What is KDE? -->
+    <section id="sec-7" class="card">
+        <h2 class="section-title">&#128302; 07. What is KDE? (Kernel Density Estimation Intuition &amp; Curve Anatomy)</h2>
+
+        <p>Jab hum histogram banate hain, toh bin boundaries ke selection ki wajah se artificial step-like edges bante hain. <strong>Kernel Density Estimation (KDE)</strong> ek non-parametric statistical technique hai jo discrete observations ko ek smooth, continuous probability density function me transform kar deti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/basic_kde_curve.png" alt="Basic Kernel Density Estimate Curve" loading="lazy">
+            <div class="figure-caption">Figure 5.12: Basic One-Dimensional KDE Curve of Exam Marks &mdash; Continuous probability density estimation revealing peak mode and distribution tails.</div>
+        </div>
+
+        <h3>How Does KDE Actually Work? (The Gentle Intuition)</h3>
+        <ol>
+            <li><strong>Place a "Kernel" on Each Point:</strong> Har data point ke upar ek chhota continuous bell-curve (usually a Gaussian/Normal kernel) place kiya jata hai.</li>
+            <li><strong>Sum Up All Kernels:</strong> Jab sabhi 500 chote bell curves ko mathematical sum kiya jata hai, toh jahan data points dense hote hain wahan curves aapas me jud kar ek <strong>Uncha Peak</strong> bana dete hain. Jahan data sparse hota hai, wahan <strong>Low Flat Tail</strong> banta hai.</li>
+            <li><strong>Normalize Area:</strong> Pure smooth curve ke neeche ka total mathematical area exactly 1.0 par scale kiya jata hai.</li>
+        </ol>
+
+        <div class="figure-card">
+            <img src="assets/filled_kde_curve.png" alt="Filled KDE Curves Across Departments" loading="lazy">
+            <div class="figure-caption">Figure 5.13: Filled KDE Curves across Departments using <code>fill=True</code> and <code>alpha=0.35</code> &mdash; Elegant, uncluttered comparison of overlapping cohort densities.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">&#128065; Crucial Concept: KDE Values Are NOT Counts</div>
+            <p>KDE plot ke Y-axis par likha <code>0.035</code> yeh nahi batata ki 35 students hain! Yeh <strong>Probability Density (<i>f(x)</i>)</strong> hai. Continuous distribution me kisi single exact point (e.g. exactly 72.000 marks) par probability technically zero hoti hai; probability hamesha do points ke beech ka <strong>Area under the Curve</strong> hoti hai!</p>
+        </div>
+    </section>
+
+
+    <!-- Section 8: Using sns.kdeplot() Parameters -->
+    <section id="sec-8" class="card">
+        <h2 class="section-title">&#127914; 08. Mastering sns.kdeplot() Parameters: Precision Curve Control</h2>
+
+        <p>Seaborn ka standalone <code>sns.kdeplot()</code> function smooth density estimation curves draw karne ke liye surgical controls provide karta hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type &amp; Default</th>
+                        <th>Visual Effect &amp; Functionality</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>data</code></td>
+                        <td><code>pd.DataFrame</code></td>
+                        <td>Dataset object.</td>
+                    </tr>
+                    <tr>
+                        <td><code>x</code> / <code>y</code></td>
+                        <td><code>str</code></td>
+                        <td>Variables to estimate (1D for curve, both <code>x</code> and <code>y</code> for 2D bivariate contours).</td>
+                    </tr>
+                    <tr>
+                        <td><code>hue</code></td>
+                        <td><code>str</code></td>
+                        <td>Categorical grouping variable for multi-curve overlays.</td>
+                    </tr>
+                    <tr>
+                        <td><code>fill</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>Area under the curve ko translucent color se fill karta hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>bw_adjust</code></td>
+                        <td><code>float = 1.0</code></td>
+                        <td>Bandwidth multiplier factor (&lt; 1 = more jagged/noisy, &gt; 1 = smoother).</td>
+                    </tr>
+                    <tr>
+                        <td><code>cut</code></td>
+                        <td><code>float = 3</code></td>
+                        <td>Factor determining how far the curve extends beyond data extremes in bandwidth units.</td>
+                    </tr>
+                    <tr>
+                        <td><code>clip</code></td>
+                        <td><code>tuple (min, max)</code></td>
+                        <td>Hard boundary constraints (e.g. <code>clip=(0, 100)</code> for percentage marks).</td>
+                    </tr>
+                    <tr>
+                        <td><code>common_norm</code></td>
+                        <td><code>bool = True</code></td>
+                        <td>If <code>False</code>, each category curve normalizes independently to area 1.0.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cumulative</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>Plots the cumulative distribution function (CDF) ranging from 0.0 to 1.0.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Production kdeplot() with Hard Boundaries (clip)</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Constrain estimation strictly to [0, 100] marks boundary</span>
+sns.kdeplot(
+    data=df_college,
+    x=<span class="string">"exam_marks"</span>,
+    hue=<span class="string">"result"</span>,
+    palette={<span class="string">"Pass"</span>: <span class="string">"#10b981"</span>, <span class="string">"Fail"</span>: <span class="string">"#ef4444"</span>},
+    fill=<span class="keyword">True</span>,
+    common_norm=<span class="keyword">False</span>,
+    alpha=<span class="number">0.35</span>,
+    clip=(<span class="number">0.0</span>, <span class="number">100.0</span>),
+    linewidth=<span class="number">2.0</span>,
+    ax=ax
+)
+
+ax.set_title(<span class="string">"Bounded Density Curves: Pass vs. Fail (clip=(0, 100))"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Exam Marks (/100)"</span>)
+ax.set_ylabel(<span class="string">"Independent Density"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Exam Marks Standard Deviation:"</span>, df_college[<span class="string">"exam_marks"</span>].std())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Exam Marks Standard Deviation: 10.222956291583344
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 9: KDE Bandwidth & Smoothing -->
+    <section id="sec-9" class="card">
+        <h2 class="section-title">&#127918; 09. KDE Bandwidth &amp; Smoothing: The bw_adjust Trade-off</h2>
+
+        <p>Jaise histogram me bins count change karne se visual intervals change hote hain, waise hi KDE me <strong>Bandwidth</strong> decide karta hai ki curve kitna tight ya kitna smooth hoga. Bandwidth individual kernel bell curves ki standard deviation hoti hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/kde_bandwidth_comparison.png" alt="KDE Bandwidth Adjustment Comparison" loading="lazy">
+            <div class="figure-caption">Figure 5.14: Impact of Bandwidth Adjustment (<code>bw_adjust</code>) on Identical Data &mdash; Under-smoothed (0.3: Spurious Noise Peaks) vs. Standard (1.0: Balanced) vs. Over-smoothed (2.5: Erased Real Structure).</div>
+        </div>
+
+        <h3>The Two Dangers of Extreme Bandwidth</h3>
+        <ul>
+            <li><strong>Under-smoothing (<code>bw_adjust &lt; 0.5</code>):</strong> Bandwidth bohot choti hone par har individual sample point ek alag mini-peak bana deta hai. Chart jagged dikhne lagta hai aur viewer spurious random fluctuations ko "real data trends" samajh baith-ta hai.</li>
+            <li><strong>Over-smoothing (<code>bw_adjust &gt; 2.0</code>):</strong> Bandwidth bohot badi hone par curve itna flat aur round ho jata hai ki real-world bimodal cohorts (jaise Fail vs Pass groups) completely merge hokar gayab ho jaate hain.</li>
+            <li><strong>Default Setting (<code>bw_adjust=1.0</code>):</strong> Seaborn by default <em>Scott's rule</em> ya <em>Silverman's rule of thumb</em> calculate karta hai jo Gaussian data ke liye mathematically optimal balance provide karta hai.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Critical Warning: Smoother Does NOT Mean More Accurate!</div>
+            <p>Beginners aksar sochte hain ki <code>bw_adjust=2.0</code> lagane se chart "clean aur modern" lag raha hai toh woh zyada accurate hai. <strong>Galat!</strong> Excessive smoothing data ki intrinsic variance ko destroy karti hai aur tail density ko artificially inflate kar deti hai.</p>
+        </div>
+    </section>
+
+
+    <!-- Section 10: Histogram versus KDE Comparison -->
+    <section id="sec-10" class="card">
+        <h2 class="section-title">&#9878; 10. Histogram versus KDE: Head-to-Head Comparison</h2>
+
+        <p>Aapko kab Histogram use karna chahiye aur kab KDE? Dono ke apne unique statistical advantages aur limitations hain:</p>
+
+        <div class="figure-card">
+            <img src="assets/histogram_vs_kde_comparison.png" alt="Histogram vs KDE Head to Head Comparison" loading="lazy">
+            <div class="figure-caption">Figure 5.15: Side-by-Side Comparison on Identical 500 Students &mdash; Histogram Only (Discrete Interval Counts) vs. KDE Only (Smooth Density Curve) vs. Combined Overlay (<code>kde=True</code>).</div>
+        </div>
+
+        <h3>Comprehensive Comparison Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comparison Dimension</th>
+                        <th>Histogram (<code>sns.histplot</code>)</th>
+                        <th>KDE Plot (<code>sns.kdeplot</code>)</th>
+                        <th>Combined (<code>histplot(..., kde=True)</code>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Representation</strong></td>
+                        <td>Discrete vertical bars over bounded intervals.</td>
+                        <td>Continuous smooth probability density curve.</td>
+                        <td>Bars for sample counts + curve for shape trend.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Core Tuning Parameter</strong></td>
+                        <td><code>bins</code> or <code>binwidth</code>.</td>
+                        <td><code>bw_adjust</code> (bandwidth).</td>
+                        <td>Both bins and bandwidth independently.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Raw Observation Counts</strong></td>
+                        <td>Directly visible on Y-axis (<code>stat="count"</code>).</td>
+                        <td>Not displayed (Y-axis is always density <i>f(x)</i>).</td>
+                        <td>Available on Y-axis with secondary scaled KDE.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Boundary Leakage Risk</strong></td>
+                        <td>Zero (Bars strictly respect data min/max).</td>
+                        <td>Possible (Tail can extend beyond natural limits).</td>
+                        <td>Bars anchor the true data bounds visually.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Multiple Categories Comparison</strong></td>
+                        <td>Can become messy if &gt;3 categories overlap.</td>
+                        <td><strong>Superior</strong> (Multi-curve line overlays remain legible).</td>
+                        <td>Recommended only for 2 categories max.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best Production Fit</strong></td>
+                        <td>Inspecting exact frequency counts and interval gaps.</td>
+                        <td>Comparing multiple group shapes and distributions.</td>
+                        <td>Single variable comprehensive analysis dashboards.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+    <!-- Section 11: Skewness, Peaks & Outliers -->
+    <section id="sec-11" class="card">
+        <h2 class="section-title">&#128205; 11. Skewness, Peaks &amp; Outliers (Distribution Shape Anatomy)</h2>
+
+        <p>Distribution ka graphical shape aapko data ke underlying generative process ke bare me deep insights deta hai. Real world me 3 standard distribution shapes sabse common hoti hain:</p>
+
+        <h3>1. Approximately Symmetric (Bell-Shaped / Gaussian)</h3>
+        <p>Jab data points central value ke dono sides barabar distribute hote hain. Isme <strong>Mean &asymp; Median &asymp; Mode</strong> hota hai (jaise hamare college exam marks: Mean 72.65, Median 72.0, Skewness = +0.056):</p>
+
+        <div class="figure-card">
+            <img src="assets/symmetric_distribution_example.png" alt="Symmetric Normal Distribution Example" loading="lazy">
+            <div class="figure-caption">Figure 5.16: Symmetric Distribution of Exam Marks &mdash; Mean (72.65) and Median (72.00) coincide near the center peak.</div>
+        </div>
+
+        <h3>2. Right-Skewed (Positive Skew &mdash; Long Tail on Right)</h3>
+        <p>Jab majority data points choti values par pack hote hain, lekin kuch extreme high-value outliers curve ko right side khinchte hain. Isme <strong>Mean &gt; Median</strong> hota hai (jaise e-commerce order values: Median ₹2,383 vs. Mean ₹8,287, Skewness = +5.031):</p>
+
+        <div class="figure-card">
+            <img src="assets/right_skewed_distribution_example.png" alt="Right-Skewed Distribution Example" loading="lazy">
+            <div class="figure-caption">Figure 5.17: Right-Skewed E-Commerce Order Values &mdash; High-value luxury orders pull Mean (₹8,287) far to the right of Median (₹2,383).</div>
+        </div>
+
+        <h3>3. Multimodal / Bimodal (Multiple Peaks)</h3>
+        <p>Agar aapke distribution me do alag-alag unche peaks dikh rahe hain, toh iska matlab yeh hai ki aapka dataset ek single uniform group nahi hai &mdash; uske andar <strong>do distinct sub-populations</strong> mix ho chuki hain (jaise Foundational vs. Advanced students):</p>
+
+        <div class="figure-card">
+            <img src="assets/multimodal_distribution_example.png" alt="Multimodal Bimodal Distribution Example" loading="lazy">
+            <div class="figure-caption">Figure 5.18: Bimodal Distribution &mdash; Revealing two distinct student cohorts: Foundational Track (Peak ~48 Marks) and Advanced Track (Peak ~82 Marks).</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Computing Skewness and Shape Metrics</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+df_ecom = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/ecommerce_orders.csv"</span>)
+
+<span class="built_in">print</span>(<span class="string">"College Exam Marks Skewness:"</span>, <span class="built_in">round</span>(df_college[<span class="string">"exam_marks"</span>].skew(), <span class="number">3</span>))
+<span class="built_in">print</span>(<span class="string">"E-Commerce Order Values Skewness:"</span>, <span class="built_in">round</span>(df_ecom[<span class="string">"order_value"</span>].skew(), <span class="number">3</span>))
+<span class="built_in">print</span>(<span class="string">"E-Commerce Mean:"</span>, <span class="built_in">round</span>(df_ecom[<span class="string">"order_value"</span>].mean(), <span class="number">2</span>))
+<span class="built_in">print</span>(<span class="string">"E-Commerce Median:"</span>, <span class="built_in">round</span>(df_ecom[<span class="string">"order_value"</span>].median(), <span class="number">2</span>))</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+College Exam Marks Skewness: 0.056
+E-Commerce Order Values Skewness: 5.031
+E-Commerce Mean: 8287.19
+E-Commerce Median: 2383.73
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 12: Discrete, Bounded & Non-Negative Data -->
+    <section id="sec-12" class="card">
+        <h2 class="section-title">&#128683; 12. Discrete, Bounded &amp; Non-Negative Data (Boundary Pitfalls)</h2>
+
+        <p>Statistical algorithms assume karte hain ki data infinite continuous number line (&minus;&infin; to +&infin;) par exist karta hai. Lekin real world me data <strong>Bounded</strong> (jaise Exam Marks 0 se 100) ya <strong>Discrete</strong> (jaise Order Quantity: 1, 2, 3 items) hota hai:</p>
+
+        <h3>1. Discrete Integer Trap (Fractional Bins)</h3>
+        <p>Agar aap order quantity (1, 2, 3, 4, 5) par default <code>sns.histplot()</code> call karenge, toh Seaborn floating intervals (e.g. <code>1.4 to 2.2 items</code>) create kar dega jo mathematically meaningless hain! Solution hai <strong><code>discrete=True</code></strong>:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; discrete=True for Integer Data</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_ecom = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/ecommerce_orders.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">7</span>, <span class="number">3.8</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Centers each bar exactly over integers 1, 2, 3, 4, 5</span>
+sns.histplot(data=df_ecom, x=<span class="string">"quantity"</span>, discrete=<span class="keyword">True</span>, color=<span class="string">"#10b981"</span>, edgecolor=<span class="string">"#047857"</span>, ax=ax)
+
+ax.set_title(<span class="string">"Order Quantity Distribution (discrete=True)"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Purchased Units per Order"</span>)
+ax.set_ylabel(<span class="string">"Order Count"</span>)
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Quantity Value Counts:\n"</span>, df_ecom[<span class="string">"quantity"</span>].value_counts().sort_index().to_dict())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Quantity Value Counts:
+ {1: 247, 2: 139, 3: 65, 4: 34, 5: 15}
+            </div>
+        </div>
+
+        <h3>2. KDE Boundary Spillover (The Negative Value Illusion)</h3>
+        <p>Agar aap Exam Marks (0 to 100) ya Order Value (&ge; 0) par plain KDE plot karenge, toh Gaussian kernels mathematically boundary ke bahar extend ho jaate hain aur curve par <strong>negative marks (e.g. -5.0)</strong> ya 105% attendance dikhne lagti hai! Isse prevent karne ke liye <strong><code>clip=(min, max)</code></strong> pass karein:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Constraining KDE Support with clip=(min, max)</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">11</span>, <span class="number">4</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Without clip: spills over 100</span>
+sns.kdeplot(data=df_college, x=<span class="string">"exam_marks"</span>, color=<span class="string">"#ef4444"</span>, ax=axes[<span class="number">0</span>])
+axes[<span class="number">0</span>].set_title(<span class="string">"Unbounded KDE (Tail spills past 100)"</span>)
+
+<span class="comment"># With clip: strictly truncated at physical limits</span>
+sns.kdeplot(data=df_college, x=<span class="string">"exam_marks"</span>, color=<span class="string">"#10b981"</span>, clip=(<span class="number">0.0</span>, <span class="number">100.0</span>), ax=axes[<span class="number">1</span>])
+axes[<span class="number">1</span>].set_title(<span class="string">"Bounded KDE: clip=(0, 100)"</span>)
+
+plt.tight_layout()
+plt.show()</code></pre>
+        </div>
+    </section>
+
+
+    <!-- Section 13: Two-Dimensional KDE & Joint Distributions -->
+    <section id="sec-13" class="card">
+        <h2 class="section-title">&#127757; 13. Two-Dimensional KDE Contours &amp; Joint Distributions</h2>
+
+        <p>Jab aap do continuous numerical variables ke beech correlation aur joint density visualize karna chahte hain (jaise <em>Study Hours vs. Exam Marks</em>), toh standard scatter plot dense clusters me heavy <strong>overplotting</strong> create karta hai jahan hazaron points ek doosre ke upar overlap ho jaate hain. <strong>2D Bivariate KDE</strong> is problem ko topographic contour lines ya smooth filled color maps se solve karta hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type &amp; Default</th>
+                        <th>Functionality in 2D Space</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>x</code> &amp; <code>y</code></td>
+                        <td><code>str</code></td>
+                        <td>Two continuous numerical column names.</td>
+                    </tr>
+                    <tr>
+                        <td><code>fill</code></td>
+                        <td><code>bool = False</code></td>
+                        <td>True karne par continuous shaded elevation gradient draw karta hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>levels</code></td>
+                        <td><code>int = 10</code></td>
+                        <td>Number of topographic elevation contour layers.</td>
+                    </tr>
+                    <tr>
+                        <td><code>thresh</code></td>
+                        <td><code>float = 0.05</code></td>
+                        <td>Lowest density threshold jiske bahar background clear rakha jata hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cmap</code></td>
+                        <td><code>str = "Blues"</code></td>
+                        <td>Sequential colormap encoding density height.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; 2D Bivariate KDE Contour Map</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"white"</span>)
+fig, ax = plt.subplots(figsize=(<span class="number">7.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># 2D Bivariate density plot</span>
+sns.kdeplot(
+    data=df_college,
+    x=<span class="string">"study_hours"</span>,
+    y=<span class="string">"exam_marks"</span>,
+    cmap=<span class="string">"Blues"</span>,
+    fill=<span class="keyword">True</span>,
+    thresh=<span class="number">0.05</span>,
+    levels=<span class="number">8</span>,
+    ax=ax
+)
+
+ax.set_title(<span class="string">"2D Bivariate KDE Density: Study Hours vs. Exam Marks"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Weekly Study Hours (hrs)"</span>)
+ax.set_ylabel(<span class="string">"Final Exam Marks (/100)"</span>)
+sns.despine()
+plt.tight_layout()
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Verified Bivariate Correlation:"</span>, <span class="built_in">round</span>(df_college[<span class="string">"study_hours"</span>].corr(df_college[<span class="string">"exam_marks"</span>]), <span class="number">3</span>))</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Verified Bivariate Correlation: 0.788
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 14: Real-Life Case Study A - College Performance Distribution Explorer -->
+    <section id="sec-14" class="card">
+        <h2 class="section-title">&#127891; 14. Real-Life Case Study A: College Performance Distribution Explorer</h2>
+
+        <p>Aaiye ek multi-panel academic performance dashboard develop karein jo 500 students ke semester results ke complete distribution profile ko comprehensively summarize kare:</p>
+
+        <div class="figure-card">
+            <img src="assets/college_performance_distribution_dashboard.png" alt="College Performance Distribution Explorer Dashboard" loading="lazy">
+            <div class="figure-caption">Figure 5.19: Case Study A Dashboard &mdash; 4-panel distribution explorer tracking marks histograms with KDE, study hours density, departmental performance profiles, and joint bivariate contours.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Case Study A Complete Implementation</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>, palette=<span class="string">"Set2"</span>)
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">12</span>, <span class="number">8</span>), dpi=<span class="number">160</span>)
+
+<span class="comment"># 1. Marks Histogram + KDE Overlay</span>
+sns.histplot(df[<span class="string">"exam_marks"</span>], kde=<span class="keyword">True</span>, color=<span class="string">"#0284c7"</span>, ax=axes[<span class="number">0</span>, <span class="number">0</span>])
+axes[<span class="number">0</span>, <span class="number">0</span>].axvline(<span class="number">60.0</span>, color=<span class="string">"#ef4444"</span>, linestyle=<span class="string">"--"</span>, label=<span class="string">"Pass Cutoff (60)"</span>)
+axes[<span class="number">0</span>, <span class="number">0</span>].set_title(<span class="string">"1. Exam Marks Histogram & KDE (Mean: 72.65)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>, <span class="number">0</span>].set_xlabel(<span class="string">"Exam Marks (/100)"</span>)
+axes[<span class="number">0</span>, <span class="number">0</span>].legend()
+
+<span class="comment"># 2. Study Hours Distribution</span>
+sns.histplot(df[<span class="string">"study_hours"</span>], kde=<span class="keyword">True</span>, color=<span class="string">"#10b981"</span>, ax=axes[<span class="number">0</span>, <span class="number">1</span>])
+axes[<span class="number">0</span>, <span class="number">1</span>].set_title(<span class="string">"2. Weekly Study Hours Distribution (Mean: 5.8 hrs)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>, <span class="number">1</span>].set_xlabel(<span class="string">"Weekly Study Hours (hrs)"</span>)
+
+<span class="comment"># 3. Department KDE Curves</span>
+sns.kdeplot(data=df, x=<span class="string">"exam_marks"</span>, hue=<span class="string">"department"</span>, palette=<span class="string">"Set2"</span>, fill=<span class="keyword">True</span>, common_norm=<span class="keyword">False</span>, alpha=<span class="number">0.3</span>, ax=axes[<span class="number">1</span>, <span class="number">0</span>])
+axes[<span class="number">1</span>, <span class="number">0</span>].set_title(<span class="string">"3. Department Marks Density Curves"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>, <span class="number">0</span>].set_xlabel(<span class="string">"Exam Marks (/100)"</span>)
+
+<span class="comment"># 4. Joint 2D Density</span>
+sns.kdeplot(data=df, x=<span class="string">"study_hours"</span>, y=<span class="string">"exam_marks"</span>, cmap=<span class="string">"Blues"</span>, fill=<span class="keyword">True</span>, thresh=<span class="number">0.05</span>, levels=<span class="number">8</span>, ax=axes[<span class="number">1</span>, <span class="number">1</span>])
+axes[<span class="number">1</span>, <span class="number">1</span>].set_title(<span class="string">"4. Joint 2D Density: Study Hours vs Marks"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>, <span class="number">1</span>].set_xlabel(<span class="string">"Study Hours (hrs)"</span>)
+axes[<span class="number">1</span>, <span class="number">1</span>].set_ylabel(<span class="string">"Exam Marks"</span>)
+
+fig.suptitle(<span class="string">"College Academic Performance Distribution Explorer Dashboard"</span>, fontsize=<span class="number">13.5</span>, fontweight=<span class="string">"bold"</span>)
+plt.subplots_adjust(top=<span class="number">0.92</span>, hspace=<span class="number">0.35</span>, wspace=<span class="number">0.25</span>)
+plt.savefig(<span class="string">"scratch/case_study_college_dashboard.png"</span>, dpi=<span class="number">160</span>, bbox_inches=<span class="string">"tight"</span>)
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Verified College Case Study generated successfully."</span>)</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Verified College Case Study generated successfully.
+            </div>
+        </div>
+    </section>
+
+
+    <!-- Section 15: Real-Life Case Study B - E-Commerce Order Value Explorer -->
+    <section id="sec-15" class="card">
+        <h2 class="section-title">&#128722; 15. Real-Life Case Study B: E-Commerce Order Value Explorer</h2>
+
+        <p>Retail sales data me heavy positive skewness hoti hai. Aaiye dekhein ki kaise raw distribution, log-transformed normalization, aur discrete purchase quantities ko analyze kiya jata hai:</p>
+
+        <div class="figure-card">
+            <img src="assets/ecommerce_distribution_dashboard.png" alt="E-Commerce Order Value Distribution Dashboard" loading="lazy">
+            <div class="figure-caption">Figure 5.20: Case Study B Dashboard &mdash; 4-panel retail order distribution dashboard demonstrating raw skewness (5.03), log-transformed bell curve normalization, category density comparisons, and discrete quantity histograms.</div>
+        </div>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Case Study B Complete Implementation</span>
+                <span>Verified Execution</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+
+df_ecom = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/ecommerce_orders.csv"</span>)
+
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, axes = plt.subplots(<span class="number">2</span>, <span class="number">2</span>, figsize=(<span class="number">12.5</span>, <span class="number">8.2</span>), dpi=<span class="number">160</span>)
+
+<span class="comment"># 1. Raw Order Value (Heavy Right-Skew: 5.03)</span>
+sns.histplot(df_ecom[<span class="string">"order_value"</span>], kde=<span class="keyword">True</span>, color=<span class="string">"#f59e0b"</span>, bins=<span class="number">30</span>, ax=axes[<span class="number">0</span>, <span class="number">0</span>])
+axes[<span class="number">0</span>, <span class="number">0</span>].set_title(<span class="string">"1. Raw Order Value (Heavy Right-Skew: 5.03)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>, <span class="number">0</span>].set_xlabel(<span class="string">"Order Value (INR)"</span>)
+
+<span class="comment"># 2. Log10 Transformed to normalize</span>
+sns.histplot(np.log10(df_ecom[<span class="string">"order_value"</span>]), kde=<span class="keyword">True</span>, color=<span class="string">"#0284c7"</span>, bins=<span class="number">20</span>, ax=axes[<span class="number">0</span>, <span class="number">1</span>])
+axes[<span class="number">0</span>, <span class="number">1</span>].set_title(<span class="string">"2. Log10 Transformed Order Value (Normal Bell Shape)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>, <span class="number">1</span>].set_xlabel(<span class="string">"Log10 Order Value [log10(INR)]"</span>)
+
+<span class="comment"># 3. Category Value Densities</span>
+cat_colors = {<span class="string">"Electronics"</span>: <span class="string">"#2563eb"</span>, <span class="string">"Home & Kitchen"</span>: <span class="string">"#f59e0b"</span>, <span class="string">"Fashion"</span>: <span class="string">"#ec4899"</span>, <span class="string">"Beauty"</span>: <span class="string">"#8b5cf6"</span>, <span class="string">"Books"</span>: <span class="string">"#10b981"</span>}
+sns.kdeplot(
+    data=df_ecom[df_ecom[<span class="string">"order_value"</span>] &lt;= <span class="number">20000</span>], x=<span class="string">"order_value"</span>, hue=<span class="string">"category"</span>,
+    palette=cat_colors, fill=<span class="keyword">False</span>, common_norm=<span class="keyword">False</span>, linewidth=<span class="number">2</span>, ax=axes[<span class="number">1</span>, <span class="number">0</span>]
+)
+axes[<span class="number">1</span>, <span class="number">0</span>].set_title(<span class="string">"3. Category Value Densities (&le; ₹20,000)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>, <span class="number">0</span>].set_xlabel(<span class="string">"Order Value (INR)"</span>)
+
+<span class="comment"># 4. Discrete Order Quantity Frequency</span>
+sns.histplot(data=df_ecom, x=<span class="string">"quantity"</span>, discrete=<span class="keyword">True</span>, color=<span class="string">"#10b981"</span>, edgecolor=<span class="string">"#047857"</span>, ax=axes[<span class="number">1</span>, <span class="number">1</span>])
+axes[<span class="number">1</span>, <span class="number">1</span>].set_title(<span class="string">"4. Discrete Order Quantity Frequency (discrete=True)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>, <span class="number">1</span>].set_xlabel(<span class="string">"Quantity per Order"</span>)
+
+fig.suptitle(<span class="string">"E-Commerce Order Value Distribution Analytics Dashboard"</span>, fontsize=<span class="number">13.5</span>, fontweight=<span class="string">"bold"</span>)
+plt.subplots_adjust(top=<span class="number">0.92</span>, hspace=<span class="number">0.38</span>, wspace=<span class="number">0.25</span>)
+plt.savefig(<span class="string">"scratch/case_study_ecommerce_dashboard.png"</span>, dpi=<span class="number">160</span>, bbox_inches=<span class="string">"tight"</span>)
+plt.show()
+
+<span class="built_in">print</span>(<span class="string">"Total Order Value Verified:"</span>, df_ecom[<span class="string">"order_value"</span>].sum())</code></pre>
+            <div class="output-block">
+                <div class="output-title">Executed Output</div>
+Total Order Value Verified: 4143594.03
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 16: Common Pitfalls & Debugging Guide -->
+    <section id="sec-16" class="card">
+        <h2 class="section-title">&#128679; 16. Common Pitfalls &amp; Debugging Guide</h2>
+
+        <p>Distribution visualization me statistical aur visual traps bahut aam hote hain. Ek choti si parameter mistake poore dataset ke conclusion ko invert kar sakti hai! Yahan distribution analysis ke <strong>16 sabse critical pitfalls</strong>, unke piche ka mathematical reason, aur copy-paste ready fixes diye gaye hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 170px;">Pitfall / Trap</th>
+                        <th style="min-width: 200px;">Kyun Hota Hai? (Root Cause)</th>
+                        <th style="min-width: 250px;">Recommended Fix &amp; Code Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1. Over-smoothing in KDE</strong></td>
+                        <td><code>bw_adjust</code> ko bahut bada set karne se algorithm distinct modes (e.g. Bimodal exam cohorts 48 &amp; 82 marks) ko merge karke single unimodal curve bana deta hai.</td>
+                        <td>Default <code>bw_adjust=1.0</code> use karein ya multi-modal datasets me <code>bw_adjust=0.5</code> se <code>0.7</code> par test karein:<br><code>sns.kdeplot(data=df, x="marks", bw_adjust=0.6)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>2. Under-smoothing / Wiggly KDE</strong></td>
+                        <td><code>bw_adjust</code> ko bahut chota (e.g. <code>0.15</code>) rakhne se KDE random sampling noise ko real distribution peaks samajh leta hai.</td>
+                        <td>Bandwidth adjust ko <code>0.5</code> se kam na karein unless aapke paas huge dataset (&gt; 10,000 rows) ho:<br><code>sns.kdeplot(data=df, x="marks", bw_adjust=1.0)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Physically Impossible Negative Spillover</strong></td>
+                        <td>Gaussian kernels infinite bounds assume karte hain. Zero-bounded data (jaise marks &ge; 0 ya order values &ge; 0) par KDE curve negative axis me bleed ho jata hai.</td>
+                        <td><code>cut=0</code> lagayein taaki curve data ke min/max par stop ho jaye, ya <code>clip=(min, max)</code> specify karein:<br><code>sns.kdeplot(df["marks"], cut=0, clip=(0, 100))</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4. Comparing Raw Counts with Unequal Groups</strong></td>
+                        <td>Agar Boys group me 400 students aur Girls group me 100 students hain, toh default <code>stat="count"</code> me Boys ka graph hamesha bada dikhega chahe percentage distribution identical ho.</td>
+                        <td>Hamesha <code>stat="density"</code> ya <code>stat="probability"</code> use karein aur <code>common_norm=False</code> set karein:<br><code>sns.histplot(df, x="marks", hue="gender", stat="probability", common_norm=False)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Too Few Bins (Oversimplification)</strong></td>
+                        <td><code>bins=4</code> ya <code>5</code> set karne se rich bimodal ya skewed data flat rectangular block jaisa dikhta hai, details hide ho jaati hain.</td>
+                        <td>Freedman-Diaconis rule use karein ya <code>bins="auto"</code> / explicit <code>binwidth</code> specify karein:<br><code>sns.histplot(df, x="marks", bins="auto")</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>6. Too Many Bins (Comb / Spiky Noise)</strong></td>
+                        <td>500 rows ke dataset me <code>bins=100</code> set karne se har bin me sirf 0 ya 1 value aati hai, jisse spiky jagged comb pattern banta hai.</td>
+                        <td>Sturges formula rule of thumb follow karein (<i>k</i> &approx; log<sub>2</sub>(<i>n</i>) + 1 &approx; 10&ndash;25 bins for 500 points):<br><code>sns.histplot(df, x="marks", bins=20)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. Bar Occlusion in Multi-Hue Histograms</strong></td>
+                        <td>Default <code>multiple="layer"</code> me aage wala solid bar piche wale group ke bars ko poori tarah hide kar deta hai.</td>
+                        <td><code>multiple="dodge"</code> (side-by-side) ya <code>element="step", fill=False</code> use karein:<br><code>sns.histplot(df, x="marks", hue="dept", multiple="dodge")</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>8. KDE Y-Axis Misinterpretation (&gt; 1.0)</strong></td>
+                        <td>Users sochte hain ki Y-axis probability percentage hai, aur agar value 0.035 aaye toh confuse ho jaate hain. Y-axis Probability <strong>Density</strong> hai (P = Area = Height &times; Width).</td>
+                        <td>Y-axis labels ko clearly <em>Probability Density</em> mark karein aur curve ke area ko 1.0 samjhein:<br><code>ax.set_ylabel("Probability Density f(x)")</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>9. Discrete Integer Fraction Trap</strong></td>
+                        <td>Feedback rating (1 to 5) par continuous histogram lagane se bins [1.4 to 2.2] ban jaate hain jo customer review context me invalid hain.</td>
+                        <td><code>discrete=True</code> add karein taaki bars exactly whole integers par center hon:<br><code>sns.histplot(df, x="rating", discrete=True)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>10. Squashed Skewed Data Bars</strong></td>
+                        <td>E-commerce order values me extreme luxury orders (₹65,000) hone se default linear scale me 95% data pehle bin me squash ho jata hai.</td>
+                        <td><code>log_scale=True</code> enable karein ya log<sub>10</sub> transform karke plot karein:<br><code>sns.histplot(df, x="order_val", log_scale=True, kde=True)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>11. Confusing percent vs probability</strong></td>
+                        <td><code>stat="percent"</code> me bar heights ka sum 100% hota hai; <code>stat="probability"</code> me sum 1.0 hota hai. Dono ko mix karne se labels misleading ho jaate hain.</td>
+                        <td>Explicit units use karein: Percentage ke liye Y-axis par <code>%</code> symbol aur probability ke liye <code>[0.0 - 1.0]</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>12. Bivariate KDE Contours Invisible</strong></td>
+                        <td><code>sns.kdeplot(x=x, y=y)</code> call karte waqt default <code>thresh=0.05</code> ke kaaran low-density contours hide ho jaate hain ya background me fade ho jaate hain.</td>
+                        <td><code>levels=10</code>, <code>thresh=0.02</code> aur <code>cmap="viridis"</code> ya <code>fill=True</code> specify karein:<br><code>sns.kdeplot(df, x="hrs", y="marks", fill=True, levels=10, thresh=0.02)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>13. Missing / NaN Values Breaking Calculations</strong></td>
+                        <td>Pandas column me null values hone se summary stats ya skewness calculations me NaN propagate ho jata hai.</td>
+                        <td>Plot karne se pehle <code>.dropna()</code> karein ya explicit subset pass karein:<br><code>sns.histplot(df["marks"].dropna(), kde=True)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>14. Using Deprecated sns.distplot()</strong></td>
+                        <td>Internet par purane tutorials me <code>sns.distplot()</code> dikhta hai jo Seaborn 0.11 me deprecate ho chuka tha aur Seaborn 0.14+ me remove ho gaya hai.</td>
+                        <td>Hamesha modern modular functions use karein: <code>sns.histplot()</code>, <code>sns.kdeplot()</code>, ya <code>sns.displot()</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>15. Forgetting Dual Axis on kde=True</strong></td>
+                        <td><code>sns.histplot(x, kde=True, stat="count")</code> me KDE curve counts ke scale par overlay hota hai. Users confuse hote hain ki KDE density kaise count se match kar rahi hai.</td>
+                        <td>Samjhein ki Seaborn automatically KDE curve ko count units me re-scale kar deta hai visual alignment ke liye.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>16. Crowded Multi-Category KDEs</strong></td>
+                        <td>5 se zyada categories par solid <code>fill=True</code> KDEs overlay karne se graph completely illegible mess ban jata hai.</td>
+                        <td>5+ categories ke liye <code>fill=False, linewidth=2</code> use karein ya <code>sns.displot(col="category")</code> se subplots banayein.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 17: Quick Reference Cheat Sheet -->
+    <section id="sec-17" class="card">
+        <h2 class="section-title">&#128203; 17. Quick Reference: Histograms &amp; KDE Cheat Sheet</h2>
+
+        <p>Yeh comprehensive cheat sheet distribution visualization ke sabhi common tasks, unke optimal Seaborn functions, critical parameters, aur production validation checks ko summarize karti hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="min-width: 140px;">Data Goal</th>
+                        <th style="min-width: 130px;">Function</th>
+                        <th style="min-width: 200px;">Key Parameters</th>
+                        <th style="min-width: 220px;">Use-Case Example</th>
+                        <th style="min-width: 180px;">Quality Assertion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Basic Frequency Check</strong></td>
+                        <td><code>sns.histplot()</code></td>
+                        <td><code>x="col", bins=20, kde=False</code></td>
+                        <td>Check exam marks count distribution</td>
+                        <td>Bars touch correctly, no gaps if continuous</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Smooth Curve Estimation</strong></td>
+                        <td><code>sns.kdeplot()</code></td>
+                        <td><code>x="col", fill=True, bw_adjust=1.0, cut=0</code></td>
+                        <td>Estimate student score probability density</td>
+                        <td>Area under curve integrates exactly to 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Combined Shape &amp; Freq</strong></td>
+                        <td><code>sns.histplot()</code></td>
+                        <td><code>x="col", kde=True, bins=25, alpha=0.6</code></td>
+                        <td>Analyze skewness while seeing actual data counts</td>
+                        <td>KDE tracks bar tops faithfully without overfitting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Discrete Integer Data</strong></td>
+                        <td><code>sns.histplot()</code></td>
+                        <td><code>x="col", discrete=True, shrink=0.85</code></td>
+                        <td>Customer satisfaction ratings (1 to 5 stars)</td>
+                        <td>Each bar centered strictly over integer ticks</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Heavy Skewed Data</strong></td>
+                        <td><code>sns.histplot()</code></td>
+                        <td><code>x="col", log_scale=True, kde=True</code></td>
+                        <td>E-commerce order amounts, website session durations</td>
+                        <td>Transforms log-normal tail into readable bell shape</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Normalized Group Compare</strong></td>
+                        <td><code>sns.histplot()</code></td>
+                        <td><code>x="col", hue="grp", stat="probability", common_norm=False</code></td>
+                        <td>Compare test scores between CSE and Mechanical depts</td>
+                        <td>Each group's bar heights independently sum to 1.0</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Bivariate Density</strong></td>
+                        <td><code>sns.kdeplot()</code></td>
+                        <td><code>x="col1", y="col2", levels=8, thresh=0.05, cmap="mako"</code></td>
+                        <td>Study hours vs Exam performance density clusters</td>
+                        <td>Smooth concentric contour rings identifying joint mode</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Production Distribution Profiler Function</h3>
+        <p>Aap is reusable Python function ko kisi bhi tabular dataset par run karke distribution ka deep automated statistical &amp; visual profile generate kar sakte hain:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>Python &bull; Automated Distribution Profiler Pipeline</span>
+                <span>Production Reusable</span>
+            </div>
+            <pre class="code-content"><code><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="keyword">def</span> <span class="built_in">plot_distribution_profile</span>(df, column, title=<span class="keyword">None</span>, bins=<span class="string">"auto"</span>, clip_range=<span class="keyword">None</span>):
+    <span class="string">"""
+    Generates a production-grade distribution analysis plot with automated skewness detection,
+    mean/median markers, and boundary clipping.
+    """</span>
+    sns.set_theme(style=<span class="string">"whitegrid"</span>)
+    series = df[column].dropna()
+    mean_val = series.mean()
+    median_val = series.median()
+    skew_val = series.skew()
+    
+    fig, ax = plt.subplots(figsize=(<span class="number">8.5</span>, <span class="number">4.5</span>), dpi=<span class="number">140</span>)
+    
+    <span class="comment"># Automated log-scale suggestion for heavy skew</span>
+    use_log = <span class="keyword">True</span> <span class="keyword">if</span> skew_val &gt; <span class="number">3.0</span> <span class="keyword">and</span> (series &gt; <span class="number">0</span>).all() <span class="keyword">else</span> <span class="keyword">False</span>
+    
+    sns.histplot(
+        data=df, x=column, kde=<span class="keyword">True</span>, bins=bins, log_scale=use_log,
+        color=<span class="string">"#0284c7"</span>, edgecolor=<span class="string">"#0369a1"</span>, alpha=<span class="number">0.65</span>, ax=ax
+    )
+    
+    <span class="comment"># Add Mean & Median lines if not log-scaled</span>
+    <span class="keyword">if</span> <span class="keyword">not</span> use_log:
+        ax.axvline(mean_val, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Mean: {mean_val:.2f}"</span>)
+        ax.axvline(median_val, color=<span class="string">"#10b981"</span>, linestyle=<span class="string">"-"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Median: {median_val:.2f}"</span>)
+        ax.legend(loc=<span class="string">"upper right"</span>, frameon=<span class="keyword">True</span>)
+        
+    plot_title = title <span class="keyword">if</span> title <span class="keyword">else</span> <span class="string">f"Distribution Profile: {column}"</span>
+    ax.set_title(<span class="string">f"{plot_title} (Skewness: {skew_val:.2f})"</span>, fontsize=<span class="number">12.5</span>, fontweight=<span class="string">"bold"</span>)
+    ax.set_ylabel(<span class="string">"Record Count"</span>)
+    plt.tight_layout()
+    <span class="keyword">return</span> fig, ax</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 18: 20 Practice Questions -->
+    <section id="sec-18" class="card">
+        <h2 class="section-title">&#128170; 18. Practice Questions &amp; Conceptual Exercises</h2>
+
+        <p>Neeche diye gaye 20 conceptual questions, analytical challenges, aur debugging problems ko solve karke apna distribution visualization concept test karein. Har question ke solution ko dekhne ke liye accordion par click karein:</p>
+
+        <!-- Q1 -->
+        <details class="details-box">
+            <summary class="details-summary">Q01: Frequency Count aur Probability Density me kya fundamental difference hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><strong>Frequency Count (<code>stat="count"</code>):</strong> Kisi bin ke andar aane wale actual data records ki absolute ginti hoti hai (e.g. 85 students scoring between 70 and 80 marks). Bars ki heights ka sum total sample size (<i>N</i>) ke barabar hota hai.</li>
+                    <li><strong>Probability Density (<code>stat="density"</code>):</strong> Bar height <i>D = n<sub>i</sub> / (N &times; binwidth)</i> hoti hai. Yahan individual bar height 1 se zyada ho sakti hai, lekin sabhi bars ka <strong>Total Integrated Area (&sum; Height &times; Width)</strong> hamesha strictly 1.0 ke barabar hota hai.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q2 -->
+        <details class="details-box">
+            <summary class="details-summary">Q02: KDE curve zero se kam (negative marks ya negative prices) kyun chali jaati hai aur ise kaise rokain?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>KDE har observation par ek mathematical Gaussian (Normal) bell curve place karta hai, jo theoretical &minus;&infin; se +&infin; tak extend hoti hai. Jab observations 0 ke paas hoti hain, toh Gaussian curve ke tails negative side spill over ho jaate hain.</p>
+                <p><strong>Solution:</strong> Seaborn me <code>cut=0</code> pass karein (jo estimation ko data ke minimum aur maximum par strictly truncate kar deta hai) ya explicit <code>clip=(0, None)</code> set karein:</p>
+                <code>sns.kdeplot(df["marks"], cut=0, clip=(0, 100))</code>
+            </div>
+        </details>
+
+        <!-- Q3 -->
+        <details class="details-box">
+            <summary class="details-summary">Q03: kdeplot() me bw_adjust parameter badhane ya ghatane se curve par kya asar padta hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><code>bw_adjust &lt; 1.0</code> (e.g. <code>0.3</code>): Bandwidth shrink ho jaati hai &mdash; curve extremely sensitive ho kar har sample point ke paas spiky ho jaati hai (Under-smoothing / Overfitting).</li>
+                    <li><code>bw_adjust &gt; 1.0</code> (e.g. <code>2.0</code>): Bandwidth expand ho jaati hai &mdash; curve over-smooth ho jaati hai, jisse bimodal peaks merge hokar single broad bell curve ban jaati hain (Over-smoothing / Underfitting).</li>
+                    <li>Default <code>bw_adjust=1.0</code> Scott's / Silverman's optimal rule use karta hai.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q4 -->
+        <details class="details-box">
+            <summary class="details-summary">Q04: Histogram kab KDE plot se better choice hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li>Jab sample size bahut chota ho (<i>N</i> &lt; 30), kyunki KDE chote data me false smooth modes hallucinate kar sakta hai.</li>
+                    <li>Jab audience non-technical ho jise Probability Density samajhna mushkil lage aur unhe simple raw headcounts dekhni hon.</li>
+                    <li>Jab data discrete integers ho (jaise product ratings 1, 2, 3, 4, 5) jahan <code>discrete=True</code> histogram exact count dikhata hai.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q5 -->
+        <details class="details-box">
+            <summary class="details-summary">Q05: Heavily right-skewed data me Mean ke muqable Median better central measure kyun hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Right-skewed data (jaise E-commerce orders ya income) me extreme high-value outliers (₹65,000 orders) hote hain. Mean in extreme values ki wajah se right side pull ho jata hai (Verified mean: ₹8,287.19), jabki median 50th percentile par stable rehta hai (Verified median: ₹2,383.73). Isliye median aam customer ka representative spending reflect karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q6 -->
+        <details class="details-box">
+            <summary class="details-summary">Q06: stat="density" me peak bar height 1.0 se badi ho sakti hai? Explain karein.</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p><strong>Haan, bilkul!</strong> Density probability nahi hoti, balki <em>Probability per Unit Width</em> hoti hai (<i>D = P / &Delta;x</i>). Agar data bahut narrow range me tightly clustered ho (e.g. binwidth = 0.05 units), toh <i>D = 0.40 / 0.05 = 8.0</i> ho sakti hai! Essential rule yeh hai ki &int; <i>D(x) dx</i> = 1.0, na ki <i>D(x)</i> &le; 1.0.</p>
+            </div>
+        </details>
+
+        <!-- Q7 -->
+        <details class="details-box">
+            <summary class="details-summary">Q07: Multi-group KDE plot me common_norm=False ka kya role hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Default <code>common_norm=True</code> me Seaborn sabhi groups ke areas ka sum milakar 1.0 banata hai. Agar Group A me 900 records aur Group B me 100 records hon, toh Group B ka curve microscopic flat line ban jayega! Jab aap <code>common_norm=False</code> lagate hain, toh har group ka individual area 1.0 normalize hota hai, jisse unki internal distribution shapes directly compare ki ja sakti hain.</p>
+            </div>
+        </details>
+
+        <!-- Q8 -->
+        <details class="details-box">
+            <summary class="details-summary">Q08: sns.histplot() me multiple="dodge" aur multiple="stack" me kya antar hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <ul>
+                    <li><code>multiple="dodge"</code>: Groups ke bars ko side-by-side place karta hai. Yeh groups ke beech head-to-head comparison ke liye best hai.</li>
+                    <li><code>multiple="stack"</code>: Bars ko ek doosre ke upar stack karta hai. Yeh total aggregate volume aur uske composition breakdown ko simultaneously dekhne ke liye best hai.</li>
+                </ul>
+            </div>
+        </details>
+
+        <!-- Q9 -->
+        <details class="details-box">
+            <summary class="details-summary">Q09: discrete=True parameter ka use kab aur kyun kiya jata hai?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Jab column me integer discrete values hon (e.g. order quantity: 1, 2, 3, 4, 5 ya star ratings 1 to 5). Continuous binning floating edges (jaise 1.5 - 2.5) draw karti hai jo misleading hoti hain. <code>discrete=True</code> har bar ko exact whole integer value par center aur align karta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q10 -->
+        <details class="details-box">
+            <summary class="details-summary">Q10: Histogram aur KDE se Bimodal distribution ko kaise diagnose karein?</summary>
+            <div class="details-content">
+                <p><strong>Answer:</strong></p>
+                <p>Bimodal distribution me data do alag-alag populations ya sub-cohorts ka combination hota hai. Graph me <strong>do distinct peaks (modes)</strong> aur unke beech ek <strong>trough (valley)</strong> dikhai deti hai (jaise hamare bimodal exam data me 48 marks aur 82 marks par peaks hain). Histogram me sufficient bins (e.g. 20 bins) aur KDE me <code>bw_adjust=0.6</code> se dono modes crystal clear nazar aate hain.</p>
+            </div>
+        </details>
+
+        <!-- Q11 -->
+        <details class="details-box">
+            <summary class="details-summary">Q11: Practical Coding Challenge &mdash; Skewed Order Values ke liye Log-Scale Histogram banayein.</summary>
+            <div class="details-content">
+                <p><strong>Problem:</strong> <code>df_ecom</code> dataframe ke <code>order_value</code> column ko log-scale aur KDE ke sath plot karein.</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python Solution</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>))
+sns.histplot(data=df_ecom, x=<span class="string">"order_value"</span>, log_scale=<span class="keyword">True</span>, kde=<span class="keyword">True</span>, color=<span class="string">"#0284c7"</span>, ax=ax)
+ax.set_title(<span class="string">"Log-Scaled Order Value Distribution"</span>, fontweight=<span class="string">"bold"</span>)
+ax.set_xlabel(<span class="string">"Order Value (INR, Log10 Scale)"</span>)
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q12 -->
+        <details class="details-box">
+            <summary class="details-summary">Q12: Practical Coding Challenge &mdash; Histogram par Mean aur Median ki reference lines add karein.</summary>
+            <div class="details-content">
+                <p><strong>Problem:</strong> Exam marks histogram par Red dashed line se Mean aur Green solid line se Median draw karein.</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python Solution</span>
+                    </div>
+                    <pre class="code-content"><code>mean_m = df_college[<span class="string">"exam_marks"</span>].mean()
+median_m = df_college[<span class="string">"exam_marks"</span>].median()
+
+fig, ax = plt.subplots(figsize=(<span class="number">8</span>, <span class="number">4</span>))
+sns.histplot(data=df_college, x=<span class="string">"exam_marks"</span>, kde=<span class="keyword">True</span>, color=<span class="string">"#4f46e5"</span>, ax=ax)
+ax.axvline(mean_m, color=<span class="string">"red"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Mean ({mean_m:.1f})"</span>)
+ax.axvline(median_m, color=<span class="string">"green"</span>, linestyle=<span class="string">"-"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Median ({median_m:.1f})"</span>)
+ax.legend()
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q13 -->
+        <details class="details-box">
+            <summary class="details-summary">Q13: Practical Coding Challenge &mdash; 2D Bivariate KDE Contours plot karein.</summary>
+            <div class="details-content">
+                <p><strong>Problem:</strong> <code>study_hours</code> aur <code>exam_marks</code> ke beech joint continuous probability contours plot karein.</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python Solution</span>
+                    </div>
+                    <pre class="code-content"><code>fig, ax = plt.subplots(figsize=(<span class="number">7</span>, <span class="number">5</span>))
+sns.kdeplot(
+    data=df_college, x=<span class="string">"study_hours"</span>, y=<span class="string">"exam_marks"</span>,
+    fill=<span class="keyword">True</span>, levels=<span class="number">8</span>, thresh=<span class="number">0.05</span>, cmap=<span class="string">"Blues"</span>, ax=ax
+)
+ax.set_title(<span class="string">"Bivariate KDE: Study Hours vs. Exam Marks"</span>, fontweight=<span class="string">"bold"</span>)
+plt.show()</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q14 -->
+        <details class="details-box">
+            <summary class="details-summary">Q14: Multiple Choice &mdash; KDE curve ki smoothness ko adjust karne ke liye kaunsa parameter use hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which parameter controls the kernel bandwidth multiplier in <code>sns.kdeplot()</code>?</p>
+                <ul>
+                    <li>A) <code>bins</code></li>
+                    <li>B) <code>bw_adjust</code> &mdash; <strong>Correct!</strong></li>
+                    <li>C) <code>smooth_level</code></li>
+                    <li>D) <code>kernel_size</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>bw_adjust</code> bandwidth ka factor multiplier hota hai. <code>bw_adjust=0.5</code> half bandwidth (more rough) aur <code>bw_adjust=2.0</code> double bandwidth (more smooth) deta hai.</p>
+            </div>
+        </details>
+
+        <!-- Q15 -->
+        <details class="details-box">
+            <summary class="details-summary">Q15: Multiple Choice &mdash; Kis stat parameter se bar heights ka total sum 100% hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which <code>stat</code> option scales histogram bars such that their sum equals 100?</p>
+                <ul>
+                    <li>A) <code>stat="count"</code></li>
+                    <li>B) <code>stat="density"</code></li>
+                    <li>C) <code>stat="percent"</code> &mdash; <strong>Correct!</strong></li>
+                    <li>D) <code>stat="frequency"</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>stat="percent"</code> sabhi bar heights ko normalize karta hai taaki &sum; <i>h<sub>i</sub></i> = 100%. <code>stat="probability"</code> me sum 1.0 hota hai.</p>
+            </div>
+        </details>
+
+        <!-- Q16 -->
+        <details class="details-box">
+            <summary class="details-summary">Q16: Multiple Choice &mdash; Seaborn 0.11+ me deprecated sns.distplot() ka modern replacement kaunsa hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which modern function replaces the old <code>sns.distplot()</code>?</p>
+                <ul>
+                    <li>A) <code>sns.distribution()</code></li>
+                    <li>B) <code>sns.histplot()</code> &amp; <code>sns.displot()</code> &mdash; <strong>Correct!</strong></li>
+                    <li>C) <code>sns.freqplot()</code></li>
+                    <li>D) <code>sns.normplot()</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>sns.distplot</code> ko Seaborn 0.11 me deprecate kiya gaya aur 0.14+ me remove kar diya gaya. Modern code me <code>sns.histplot()</code> (Axes-level) ya <code>sns.displot()</code> (Figure-level) use hota hai.</p>
+            </div>
+        </details>
+
+        <!-- Q17 -->
+        <details class="details-box">
+            <summary class="details-summary">Q17: Multiple Choice &mdash; sns.histplot() me element="step" ka kya effect hota hai?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> What does <code>element="step"</code> do in a histogram?</p>
+                <ul>
+                    <li>A) Bars ko 3D steps me render karta hai.</li>
+                    <li>B) Solid filled rectangles ki jagah sirf outline staircase line render karta hai. &mdash; <strong>Correct!</strong></li>
+                    <li>C) Step-by-step animation banata hai.</li>
+                    <li>D) Sirf odd-numbered bins draw karta hai.</li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>element="step"</code> outline staircase draw karta hai jo multiple overlapping groups ko compare karte waqt bar occlusion se bachata hai.</p>
+            </div>
+        </details>
+
+        <!-- Q18 -->
+        <details class="details-box">
+            <summary class="details-summary">Q18: Multiple Choice &mdash; KDE curve ko boundaries ke bahar spill hone se rokne ke liye kaunsa parameter lagate hain?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Which parameter stops the KDE evaluation at physical data limits?</p>
+                <ul>
+                    <li>A) <code>stop_at_edges=True</code></li>
+                    <li>B) <code>cut=0</code> ya <code>clip=(min, max)</code> &mdash; <strong>Correct!</strong></li>
+                    <li>C) <code>limit_tails=True</code></li>
+                    <li>D) <code>bounded=True</code></li>
+                </ul>
+                <p><strong>Explanation:</strong> <code>cut=0</code> evaluation grid ko data ke actual minimum aur maximum par restrict karta hai, jisse negative marks ya negative prices graph par nahi aate.</p>
+            </div>
+        </details>
+
+        <!-- Q19 -->
+        <details class="details-box">
+            <summary class="details-summary">Q19: Debugging Exercise &mdash; Negative Customer Ages in KDE</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Buggy Snippet</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Bug: KDE curve shows probability for age = -5 to 0 years!</span>
+sns.kdeplot(df_customers[<span class="string">"age"</span>], fill=<span class="keyword">True</span>)</code></pre>
+                </div>
+                <p><strong>Problem:</strong> Gaussian smoothing tails negative age tak expand ho rahi hain.</p>
+                <p><strong>Fixed Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Corrected Snippet</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Fix: Enforce minimum boundary at 0 years</span>
+sns.kdeplot(df_customers[<span class="string">"age"</span>], fill=<span class="keyword">True</span>, cut=<span class="number">0</span>, clip=(<span class="number">0</span>, <span class="keyword">None</span>))</code></pre>
+                </div>
+            </div>
+        </details>
+
+        <!-- Q20 -->
+        <details class="details-box">
+            <summary class="details-summary">Q20: Debugging Exercise &mdash; Complete Bar Occlusion in Multi-Hue Histogram</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Buggy Snippet</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Bug: Group 2 completely hides Group 1 bars behind it!</span>
+sns.histplot(data=df, x=<span class="string">"marks"</span>, hue=<span class="string">"gender"</span>)</code></pre>
+                </div>
+                <p><strong>Problem:</strong> Default <code>multiple="layer"</code> me opaque bars piche wale data ko block kar dete hain.</p>
+                <p><strong>Fixed Code:</strong></p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Corrected Snippet</span>
+                    </div>
+                    <pre class="code-content"><code><span class="comment"># Fix: Use dodge (side-by-side) or element="step"</span>
+sns.histplot(data=df, x=<span class="string">"marks"</span>, hue=<span class="string">"gender"</span>, multiple=<span class="string">"dodge"</span>, shrink=<span class="number">0.85</span>)</code></pre>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 19: Capstone Mini-Project Solution Code -->
+    <section id="sec-19" class="card">
+        <h2 class="section-title">&#128373; 19. Capstone Mini-Project: Distribution Detective (Question 21)</h2>
+
+        <p>Aapko college academic data aur e-commerce order values ka automated distribution audit conduct karna hai. Yeh end-to-end task student score symmetry aur e-commerce right-skewness ko mathematically aur visually reconcile karega:</p>
+
+        <!-- Q21 Capstone Details Box -->
+        <details class="details-box" open>
+            <summary class="details-summary">Q21 Capstone Project: End-to-End Distribution Detective Pipeline</summary>
+            <div class="details-content">
+                <p><strong>Mission Objectives:</strong></p>
+                <ol>
+                    <li>Load both <code>college_performance.csv</code> and <code>ecommerce_orders.csv</code>.</li>
+                    <li>Compute statistical moments: Mean, Median, Std Dev, and Skewness.</li>
+                    <li>Plot a professional 2-panel comparative dashboard:
+                        <ul>
+                            <li>Panel 1: College Marks histogram + KDE + Mean/Median markers.</li>
+                            <li>Panel 2: E-Commerce Order Value log10-scaled histogram + KDE.</li>
+                        </ul>
+                    </li>
+                    <li>Print executive audit summary proving symmetry vs. heavy skew.</li>
+                </ol>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>Python &bull; Complete Capstone Solution Code</span>
+                        <span>Verified Execution</span>
+                    </div>
+                    <pre class="code-content"><code><span class="keyword">import</span> numpy <span class="keyword">as</span> np
+<span class="keyword">import</span> pandas <span class="keyword">as</span> pd
+<span class="keyword">import</span> matplotlib.pyplot <span class="keyword">as</span> plt
+<span class="keyword">import</span> seaborn <span class="keyword">as</span> sns
+
+<span class="comment"># 1. Load Datasets</span>
+df_college = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/college_performance.csv"</span>)
+df_ecom = pd.read_csv(<span class="string">"scratch/seaborn_topic5_data/ecommerce_orders.csv"</span>)
+
+<span class="comment"># 2. Compute Statistics</span>
+c_mean = df_college[<span class="string">"exam_marks"</span>].mean()
+c_median = df_college[<span class="string">"exam_marks"</span>].median()
+c_skew = df_college[<span class="string">"exam_marks"</span>].skew()
+
+e_mean = df_ecom[<span class="string">"order_value"</span>].mean()
+e_median = df_ecom[<span class="string">"order_value"</span>].median()
+e_skew = df_ecom[<span class="string">"order_value"</span>].skew()
+
+<span class="comment"># 3. Create Comparative Figure</span>
+sns.set_theme(style=<span class="string">"whitegrid"</span>)
+fig, axes = plt.subplots(<span class="number">1</span>, <span class="number">2</span>, figsize=(<span class="number">12</span>, <span class="number">4.8</span>), dpi=<span class="number">140</span>)
+
+<span class="comment"># Panel 1: Symmetric College Performance</span>
+sns.histplot(
+    data=df_college, x=<span class="string">"exam_marks"</span>, kde=<span class="keyword">True</span>, bins=<span class="number">20</span>,
+    color=<span class="string">"#4f46e5"</span>, edgecolor=<span class="string">"#312e81"</span>, alpha=<span class="number">0.6</span>, ax=axes[<span class="number">0</span>]
+)
+axes[<span class="number">0</span>].axvline(c_mean, color=<span class="string">"#dc2626"</span>, linestyle=<span class="string">"--"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Mean: {c_mean:.2f}"</span>)
+axes[<span class="number">0</span>].axvline(c_median, color=<span class="string">"#10b981"</span>, linestyle=<span class="string">"-"</span>, linewidth=<span class="number">2</span>, label=<span class="string">f"Median: {c_median:.2f}"</span>)
+axes[<span class="number">0</span>].set_title(<span class="string">f"College Marks: Symmetric Bell Curve\n(Skewness: {c_skew:.3f} ~ Normal)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">0</span>].set_xlabel(<span class="string">"Exam Marks (0 to 100)"</span>)
+axes[<span class="number">0</span>].set_ylabel(<span class="string">"Student Count"</span>)
+axes[<span class="number">0</span>].legend(loc=<span class="string">"upper right"</span>)
+
+<span class="comment"># Panel 2: Log10 Normalized E-Commerce Orders</span>
+sns.histplot(
+    data=df_ecom, x=<span class="string">"order_value"</span>, log_scale=<span class="keyword">True</span>, kde=<span class="keyword">True</span>, bins=<span class="number">25</span>,
+    color=<span class="string">"#0284c7"</span>, edgecolor=<span class="string">"#0369a1"</span>, alpha=<span class="number">0.65</span>, ax=axes[<span class="number">1</span>]
+)
+axes[<span class="number">1</span>].set_title(<span class="string">f"E-Commerce Orders: Log10 Normalization\n(Raw Skewness: {e_skew:.2f} &gt; 3.0)"</span>, fontweight=<span class="string">"bold"</span>)
+axes[<span class="number">1</span>].set_xlabel(<span class="string">"Order Value (INR, Log Scale)"</span>)
+axes[<span class="number">1</span>].set_ylabel(<span class="string">"Order Count"</span>)
+
+plt.tight_layout()
+plt.savefig(<span class="string">"scratch/capstone_distribution_detective.png"</span>, dpi=<span class="number">160</span>)
+plt.show()
+
+<span class="comment"># 4. Print Executive Output</span>
+<span class="built_in">print</span>(<span class="string">"=== DISTRIBUTION DETECTIVE EXECUTIVE AUDIT ==="</span>)
+<span class="built_in">print</span>(<span class="string">f"College Marks  - Mean: {c_mean:.2f}, Median: {c_median:.2f}, Skewness: {c_skew:.3f} -&gt; Symmetric Normal"</span>)
+<span class="built_in">print</span>(<span class="string">f"E-Commerce Val - Mean: INR {e_mean:.2f}, Median: INR {e_median:.2f}, Skewness: {e_skew:.3f} -&gt; Extreme Right-Skew"</span>)</code></pre>
+                    <div class="output-block">
+                        <div class="output-title">Verified Executed Output</div>
+=== DISTRIBUTION DETECTIVE EXECUTIVE AUDIT ===
+College Marks  - Mean: 72.65, Median: 72.00, Skewness: 0.056 -&gt; Symmetric Normal
+E-Commerce Val - Mean: INR 8287.19, Median: INR 2383.73, Skewness: 5.031 -&gt; Extreme Right-Skew
+                    </div>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 20: Summary & What's Next -->
+    <section id="sec-20" class="card">
+        <h2 class="section-title">&#127937; 20. Summary &amp; What's Next</h2>
+
+        <p>Congratulations! Aapne Seaborn distribution visualization ke dono sabse powerful pillars &mdash; <strong>Histograms (<code>histplot</code>)</strong> aur <strong>Kernel Density Estimation (<code>kdeplot</code>)</strong> &mdash; par complete practical aur theoretical mastery achieve kar li hai.</p>
+
+        <h3>6 Golden Rules of Distribution Visualization</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule #</th>
+                        <th>Core Principle</th>
+                        <th>Actionable Rule of Thumb</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>1</strong></td>
+                        <td><strong>Always check Skewness first</strong></td>
+                        <td>Agar skewness &gt; 2.0 ho, linear histogram sab kuch pehle bin me squash kar dega. Hamesha <code>log_scale=True</code> use karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>2</strong></td>
+                        <td><strong>Mean vs. Median alignment</strong></td>
+                        <td>Symmetric data me Mean &asymp; Median hota hai. Right-skewed me Mean &gt; Median hota hai. Hamesha dono lines draw karke verify karein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3</strong></td>
+                        <td><strong>Tune bins intentionally</strong></td>
+                        <td>Default bins par blindly rely na karein. Test <i>k</i> &approx; log<sub>2</sub>(<i>n</i>) + 1 ya <code>binwidth</code> specify karein taaki hidden bimodal peaks reveal hon.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>4</strong></td>
+                        <td><strong>Guard physical boundaries</strong></td>
+                        <td>Non-negative data par <code>cut=0</code> ya <code>clip=(min, max)</code> lagayein taaki KDE impossible values estimate na kare.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5</strong></td>
+                        <td><strong>Normalize unequal groups</strong></td>
+                        <td>Unequal sample sizes ko compare karte waqt <code>stat="density"</code> ya <code>stat="probability"</code> aur <code>common_norm=False</code> lagayein.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>6</strong></td>
+                        <td><strong>Honor discrete nature</strong></td>
+                        <td>Integer counts aur discrete ratings par <code>discrete=True</code> use karein taaki fractional binning artifacts create na hon.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-tip" style="margin-top: 24px;">
+            <div class="callout-title">&#128640; What's Next in Seaborn Topic 6?</div>
+            <p>Ab tak humne continuous numerical variables ki distribution dekhi. Topic 6 me hum explore karenge <strong>Categorical Visualizations</strong>: <code>sns.countplot()</code>, <code>sns.barplot()</code>, <code>sns.boxplot()</code>, aur <code>sns.violinplot()</code> &mdash; jahan category-wise comparisons, interquartile ranges (IQR), aur distributions ka direct combination seekhenge!</p>
+        </div>
+    </section>
+</div>
+</body>
+</html>

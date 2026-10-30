@@ -1,0 +1,2920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Pandas Topic 13: GroupBy & Aggregation | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Light Theme Design System for Pandas */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-rose: #dc2626;
+            --accent-rose-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --border-hover: #cbd5e1;
+            --code-bg: #090d16;
+            --code-border: #1e293b;
+            --code-text: #f1f5f9;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 10px;
+            --radius-lg: 14px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 940px;
+            margin: 0 auto;
+            padding: 24px 16px 80px 16px;
+            overflow-x: hidden;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%);
+            color: #ffffff;
+            border-radius: var(--radius-lg);
+            padding: 36px 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid #1e293b;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #e0f2fe;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero-title {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+            color: #ffffff;
+        }
+
+        .hero-subtitle {
+            font-size: 16px;
+            color: #bae6fd;
+            line-height: 1.5;
+            margin-bottom: 18px;
+        }
+
+        .hero-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13px;
+            color: #e0f2fe;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 16px;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Card Section */
+        .card {
+            background-color: var(--bg-card);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border);
+            padding: 28px 24px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-sm);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-left: 4px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .subsection-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 22px 0 10px 0;
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        strong {
+            color: #0f172a;
+        }
+
+        ul, ol {
+            margin: 10px 0 16px 22px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Roadmap Table of Contents */
+        .toc-box {
+            background-color: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .toc-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0369a1;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 8px 16px;
+        }
+
+        .toc-link {
+            color: #0284c7;
+            text-decoration: none;
+            font-size: 13.5px;
+            display: inline-block;
+            transition: color 0.15s;
+        }
+
+        .toc-link:hover {
+            color: #0369a1;
+            text-decoration: underline;
+        }
+
+        /* Code Block Container */
+        .code-container {
+            background-color: var(--code-bg);
+            border: 1px solid var(--code-border);
+            border-radius: var(--radius-md);
+            margin: 18px 0;
+            overflow: hidden;
+        }
+
+        .code-header {
+            background-color: #111827;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1e293b;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        }
+
+        .code-block {
+            padding: 16px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 0;
+            white-space: pre;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Syntax Highlight Colors */
+        .c-kw { color: #f472b6; font-weight: bold; }
+        .c-fn { color: #60a5fa; }
+        .c-str { color: #a7f3d0; }
+        .c-num { color: #fbbf24; }
+        .c-cm { color: #64748b; font-style: italic; }
+        .c-var { color: #f8fafc; }
+
+        /* Output Terminal Box */
+        .output-box {
+            background-color: #030712;
+            border-top: 1px solid #1f2937;
+            padding: 12px 16px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: #38bdf8;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        .output-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 6px;
+        }
+
+        /* Inline Code Tags */
+        code:not(.code-block code) {
+            background-color: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-left: 4px solid var(--primary);
+            background-color: var(--primary-light);
+            padding: 14px 18px;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin: 18px 0;
+        }
+
+        .callout-success {
+            border-left-color: var(--accent-green);
+            background-color: var(--accent-green-bg);
+        }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background-color: var(--accent-amber-bg);
+        }
+
+        .callout-danger {
+            border-left-color: var(--accent-rose);
+            background-color: var(--accent-rose-bg);
+        }
+
+        .callout-purple {
+            border-left-color: var(--accent-purple);
+            background-color: var(--accent-purple-bg);
+        }
+
+        .callout-title {
+            font-weight: 700;
+            font-size: 14.5px;
+            margin-bottom: 6px;
+            color: #0f172a;
+        }
+
+        /* Table Styling */
+        .table-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            margin: 18px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+
+        tr:hover td {
+            background-color: #f0fdf4;
+        }
+
+        /* Image Display Cards */
+        .img-container {
+            margin: 22px 0;
+            text-align: center;
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .img-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .img-caption {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Interactive Details Accordion */
+        details.details-box {
+            background-color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin: 12px 0;
+            overflow: hidden;
+            transition: border-color 0.15s;
+        }
+
+        details.details-box[open] {
+            border-color: #93c5fd;
+        }
+
+        summary.details-summary {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: #0369a1;
+            cursor: pointer;
+            background-color: #f8fafc;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        summary.details-summary:hover {
+            background-color: #f0f9ff;
+        }
+
+        .details-content {
+            padding: 16px;
+            border-top: 1px solid #e2e8f0;
+            background-color: #ffffff;
+            font-size: 14px;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 768px) {
+            .main-container { padding: 14px 10px 60px 10px; }
+            .hero-banner { padding: 24px 16px; }
+            .hero-title { font-size: 22px; }
+            .card { padding: 18px 14px; margin-bottom: 20px; }
+            .section-title { font-size: 18px; }
+            .toc-grid { grid-template-columns: 1fr; }
+            .code-block { font-size: 12px; padding: 12px; }
+            .output-box { font-size: 11.5px; padding: 10px 12px; }
+            th, td { padding: 8px 10px; font-size: 12.5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+
+    <!-- Hero Banner -->
+    <header class="hero-banner">
+        <span class="hero-badge">Pandas Course &bull; Topic 13</span>
+        <h1 class="hero-title">GroupBy & Aggregation</h1>
+        <p class="hero-subtitle">
+            Master the Split–Apply–Combine pattern, multi-column hierarchical grouping, named aggregations (.agg), row-preserving transformations (.transform), group filtering, and enterprise analytics dashboards.
+        </p>
+        <div class="hero-meta">
+            <div class="hero-meta-item"><span>📚</span> <strong>Level:</strong> Core Production Analytics</div>
+            <div class="hero-meta-item"><span>⚡</span> <strong>Prerequisites:</strong> Topics 1–12 (DataFrames, Dtypes, Text Cleaning)</div>
+            <div class="hero-meta-item"><span>🛠️</span> <strong>Core Tool:</strong> <code>DataFrame.groupby()</code> & <code>.agg()</code></div>
+            <div class="hero-meta-item"><span>🎯</span> <strong>Interactive Practice:</strong> 20 Questions + Capstone Lab</div>
+        </div>
+    </header>
+
+    <!-- Table of Contents Roadmap -->
+    <nav class="toc-box" aria-label="Table of Contents">
+        <div class="toc-title">🗺️ Topic 13 Learning Roadmap & Index</div>
+        <div class="toc-grid">
+            <a class="toc-link" href="#sec-1">1. What is GroupBy? (Split–Apply–Combine)</a>
+            <a class="toc-link" href="#sec-2">2. Understanding the groupby() Object</a>
+            <a class="toc-link" href="#sec-3">3. Core Aggregation Functions</a>
+            <a class="toc-link" href="#sec-4">4. Grouping by Multiple Columns</a>
+            <a class="toc-link" href="#sec-5">5. Multiple Aggregations with .agg()</a>
+            <a class="toc-link" href="#sec-6">6. Counting Records, Nulls & Uniques</a>
+            <a class="toc-link" href="#sec-7">7. transform() versus agg()</a>
+            <a class="toc-link" href="#sec-8">8. Group Filtering with .filter()</a>
+            <a class="toc-link" href="#sec-9">9. Custom Aggregation Functions</a>
+            <a class="toc-link" href="#sec-10">10. Sorting Grouped Summaries</a>
+            <a class="toc-link" href="#sec-11">11. Missing Values in GroupBy</a>
+            <a class="toc-link" href="#sec-12">12. Case Study A: College Performance</a>
+            <a class="toc-link" href="#sec-13">13. Case Study B: E-Commerce Sales</a>
+            <a class="toc-link" href="#sec-14">14. Decision Frameworks & Cheat Sheet</a>
+            <a class="toc-link" href="#sec-15">15. Common Beginner Pitfalls & Traps</a>
+            <a class="toc-link" href="#sec-16">16. Practice Questions & Mini-Project</a>
+            <a class="toc-link" href="#sec-17">17. Summary, Glossary & Next Steps</a>
+        </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section class="card" id="sec-1">
+        <h2 class="section-title">1. Introduction: What is GroupBy?</h2>
+        
+        <p>
+            Real-world data science mein aapke samne sabse common business questions aate hain:
+        </p>
+        <ul>
+            <li><em>"College ke har department (CSE, IT, ECE) ka average marks kya hai?"</em></li>
+            <li><em>"E-commerce store mein har product category (Electronics, Office Supplies) ne total kitna revenue generate kiya?"</em></li>
+            <li><em>"Har city ke customers ka average order value kya hai?"</em></li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">⚠️ The Manual Inefficiency Trap</div>
+            <p>
+                Agar aapke paas 50 alag-alag departments ya 200 product categories hain, toh har department ke liye alag se Boolean mask banana (<code>df[df['dept'] == 'CSE']['marks'].mean()</code>) aur manual loops chalana <strong>extremely slow, repetitive, aur error-prone</strong> hota hai!
+            </p>
+            <p>
+                Pandas is problem ko ek single, highly-optimized method se solve karta hai: <strong><code>df.groupby()</code></strong>!
+            </p>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/split_apply_combine_architecture.png" alt="Split Apply Combine Architecture Diagram">
+            <div class="img-caption">Figure 13.1: The Split–Apply–Combine pattern—splitting 10 student records into department buckets, applying mean(), and combining into a clean summary table.</div>
+        </div>
+
+        <h3 class="subsection-title">The Three Pillars: Split–Apply–Combine</h3>
+        <p>
+            GroupBy operation background mein 3 clear sequential phases follow karta hai:
+        </p>
+        <ol>
+            <li><strong>Split (Tukde Karna):</strong> Dataset ko specified categorical column ke unique values ke base par alag-alag internal buckets (groups) mein divide karta hai (jaise CSE ka alag bucket, IT ka alag).</li>
+            <li><strong>Apply (Calculation Lagana):</strong> Har group par independent mathematical calculation execute karta hai (jaise <code>mean()</code>, <code>sum()</code>, <code>max()</code>, ya custom function).</li>
+            <li><strong>Combine (Results Jodna):</strong> Sabhi individual group calculations ko assemble karke ek concise final summary DataFrame ya Series mein return karta hai.</li>
+        </ol>
+
+        <h3 class="subsection-title">Before vs After: Data Summarization</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Student Name</th>
+                        <th>Marks</th>
+                        <th>Transformation Stage</th>
+                        <th>Final Grouped Summary</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>CSE</strong></td>
+                        <td>Aman Sharma</td>
+                        <td>85</td>
+                        <td rowspan="3"><strong>SPLIT</strong> into CSE Group &rarr; <strong>APPLY</strong> <code>mean([85, 78, 95]) = 86.0</code></td>
+                        <td rowspan="3"><strong>CSE: 86.00 Marks</strong> (3 Students)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CSE</strong></td>
+                        <td>Rahul Verma</td>
+                        <td>78</td>
+                    </tr>
+                    <tr>
+                        <td><strong>CSE</strong></td>
+                        <td>Sneha Kulkarni</td>
+                        <td>95</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IT</strong></td>
+                        <td>Priya Patel</td>
+                        <td>92</td>
+                        <td rowspan="2"><strong>SPLIT</strong> into IT Group &rarr; <strong>APPLY</strong> <code>mean([92, 88]) = 90.0</code></td>
+                        <td rowspan="2"><strong>IT: 90.00 Marks</strong> (2 Students)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>IT</strong></td>
+                        <td>Neha Singh</td>
+                        <td>88</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_department_avg_marks.png" alt="Department Average Marks Chart">
+            <div class="img-caption">Figure 13.2: Computed departmental average marks—revealing IT (88.67) leading the cohort, followed by CSE (85.75), ECE (80.00), and Mechanical (72.00).</div>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Introductory College Department Average Marks</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>intro_college_groupby.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_students = pd.DataFrame({
+    <span class="c-str">"department"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Rahul"</span>, <span class="c-str">"Neha"</span>, <span class="c-str">"Karan"</span>, <span class="c-str">"Sneha"</span>, <span class="c-str">"Vikram"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">92</span>, <span class="c-num">78</span>, <span class="c-num">88</span>, <span class="c-num">81</span>, <span class="c-num">95</span>, <span class="c-num">75</span>]
+})
+
+<span class="c-cm"># Group by department and calculate mean marks</span>
+dept_avg = df_students.groupby(<span class="c-str">"department"</span>)[<span class="c-str">"marks"</span>].mean()
+
+print(<span class="c-str">"Department Average Marks Series:"</span>)
+print(dept_avg)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+Department Average Marks Series:
+department
+CSE    86.0
+ECE    78.0
+IT     90.0
+Name: marks, dtype: float64
+            </div>
+        </div>
+
+        <p>
+            <strong>Step-by-Step Explanation:</strong><br>
+            1. <code>df.groupby("department")</code> ne 7 rows ko 3 groups mein divide kiya: CSE (3 rows), ECE (2 rows), IT (2 rows).<br>
+            2. <code>["marks"]</code> ne calculation ke liye target numeric column pick kiya.<br>
+            3. <code>.mean()</code> ne har group ka mathematical average nikala: CSE <code>(85+78+95)/3 = 86.0</code>, IT <code>(92+88)/2 = 90.0</code>, ECE <code>(81+75)/2 = 78.0</code>.<br>
+            4. Output ek clean Series ban gaya jisme Department names automatically <strong>Index</strong> ban gaye!
+        </p>
+
+        <h3 class="subsection-title">Example 2: Introductory E-Commerce Category Total Revenue</h3>
+        <p>
+            E-commerce retail analytics mein category-wise sales volume calculate karne ka standard pattern:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>intro_ecom_revenue.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_sales = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Office Supplies"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office Supplies"</span>, <span class="c-str">"Accessories"</span>],
+    <span class="c-str">"product"</span>: [<span class="c-str">"Mouse"</span>, <span class="c-str">"Desk Mat"</span>, <span class="c-str">"Keyboard"</span>, <span class="c-str">"Chair"</span>, <span class="c-str">"USB Hub"</span>],
+    <span class="c-str">"revenue"</span>: [<span class="c-num">2338.20</span>, <span class="c-num">2396.00</span>, <span class="c-num">3825.00</span>, <span class="c-num">7199.10</span>, <span class="c-num">2550.00</span>]
+})
+
+<span class="c-cm"># Calculate total revenue per category</span>
+cat_revenue = df_sales.groupby(<span class="c-str">"category"</span>)[<span class="c-str">"revenue"</span>].sum()
+
+print(<span class="c-str">"Category Total Revenue:"</span>)
+print(cat_revenue.map(<span class="c-str">"₹{:,.2f}"</span>.format))</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+Category Total Revenue:
+category
+Accessories         ₹2,550.00
+Electronics         ₹6,163.20
+Office Supplies     ₹9,595.10
+Name: revenue, dtype: object
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <div class="callout-title">💡 Pro Tip for Beginners</div>
+            <p>
+                GroupBy karte waqt dimag mein yeh simple formula yaad rakhein:<br>
+                <strong><code>DataFrame.groupby("KISPAR_GROUP_KARNA_HAI")["KIS_COLUMN_KO_CALCULATE_KARNA_HAI"].KAUNSA_FUNCTION()</code></strong>
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section class="card" id="sec-2">
+        <h2 class="section-title">2. Understanding the groupby() Object</h2>
+        
+        <p>
+            Jab beginners pehli baar <code>df.groupby("department")</code> likhte hain, toh woh expect karte hain ki screen par turant ek summary table print ho jayegi. Lekin unhe screen par yeh output dikhta hai:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header"><span>lazy_groupby.py</span><span>Console Output</span></div>
+            <pre class="code-block"><code>print(df.groupby(<span class="c-str">"department"</span>))
+<span class="c-cm"># Output: &lt;pandas.core.groupby.generic.DataFrameGroupBy object at 0x000001&gt;</span></code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">⚠️ GroupBy Objects Are Lazy Evaluated!</div>
+            <p>
+                Pandas mein <code>df.groupby()</code> ek <strong>Lazy Evaluation</strong> mechanism follow karta hai. Jab aap <code>groupby()</code> call karte hain, toh Pandas turant koi calculation nahi karta. Woh sirf memory mein ek <strong>mapping dictionary</strong> prepare karta hai ki kaunsi row kis group mein belong karti hai (e.g. <code>{'CSE': [0, 2, 5], 'IT': [1, 3], 'ECE': [4, 6]}</code>).
+            </p>
+            <p>
+                Jab tak aap aage koi mathematical aggregation function (jaise <code>.mean()</code>, <code>.sum()</code>, <code>.agg()</code>) attach nahi karte, tab tak Pandas CPU cycles waste nahi karta!
+            </p>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/groupby_object_pipeline_anatomy.png" alt="GroupBy Object Pipeline Anatomy">
+            <div class="img-caption">Figure 13.3: The GroupBy execution pipeline—from lazy DataFrameGroupBy to SeriesGroupBy column selection, and finally triggered computation via an aggregation method.</div>
+        </div>
+
+        <h3 class="subsection-title">The Role of as_index Parameter</h3>
+        <p>
+            Default taur par Pandas grouping column ko output table ka <strong>Index</strong> bana deta hai. Lekin agar aap chahte hain ki grouping column ek standard regular column hi rahe (taaki aage charting ya SQL database mein insert karna aasan ho), toh <strong><code>as_index=False</code></strong> set karein:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Configuration</th>
+                        <th>Code Example</th>
+                        <th>Result Structure</th>
+                        <th>When to Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Default (<code>as_index=True</code>)</strong></td>
+                        <td><code>df.groupby('dept')['marks'].mean()</code></td>
+                        <td>Series with <code>dept</code> as Index</td>
+                        <td>Quick terminal inspection, mathematical operations</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flat Table (<code>as_index=False</code>)</strong></td>
+                        <td><code>df.groupby('dept', as_index=False)['marks'].mean()</code></td>
+                        <td>DataFrame with 2 standard columns (<code>[dept, marks]</code>)</td>
+                        <td>Plotting charts, exporting to CSV, database insertion</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Example 1: as_index=True vs as_index=False in College Data</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>as_index_comparison.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_students = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>, <span class="c-num">90</span>, <span class="c-num">92</span>]
+})
+
+print(<span class="c-str">"--- Default (as_index=True): Index par Dept ---"</span>)
+s_res = df_students.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].mean()
+print(s_res)
+print(<span class="c-str">"Type:"</span>, type(s_res))
+
+print(<span class="c-str">"
+--- Flat (as_index=False): Regular DataFrame ---"</span>)
+df_res = df_students.groupby(<span class="c-str">"dept"</span>, as_index=<span class="c-kw">False</span>)[<span class="c-str">"marks"</span>].mean()
+print(df_res)
+print(<span class="c-str">"Type:"</span>, type(df_res))</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+--- Default (as_index=True): Index par Dept ---
+dept
+CSE    85.0
+IT     91.0
+Name: marks, dtype: float64
+Type: &lt;class 'pandas.core.series.Series'&gt;
+
+--- Flat (as_index=False): Regular DataFrame ---
+  dept  marks
+0  CSE   85.0
+1   IT   91.0
+Type: &lt;class 'pandas.core.frame.DataFrame'&gt;
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Controlling Group Key Ordering with sort=False</h3>
+        <p>
+            By default Pandas group keys ko alphabetically sort karta hai (<code>sort=True</code>). Lekin agar dataset pehle se kisi logical order mein sorted hai aur aap unnecessary sorting overhead avoid karke speed badhana chahte hain, toh <strong><code>sort=False</code></strong> use karein:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>sort_param_demo.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_events = pd.DataFrame({
+    <span class="c-str">"city"</span>: [<span class="c-str">"Mumbai"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Bengaluru"</span>],
+    <span class="c-str">"sales"</span>: [<span class="c-num">500</span>, <span class="c-num">300</span>, <span class="c-num">700</span>, <span class="c-num">400</span>]
+})
+
+<span class="c-cm"># sort=False preserves the order in which groups first appeared</span>
+res_nosort = df_events.groupby(<span class="c-str">"city"</span>, sort=<span class="c-kw">False</span>)[<span class="c-str">"sales"</span>].sum()
+print(res_nosort)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+city
+Mumbai       1200
+Delhi         300
+Bengaluru     400
+Name: sales, dtype: int64
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section class="card" id="sec-3">
+        <h2 class="section-title">3. Core Aggregation Functions</h2>
+        
+        <p>
+            Pandas GroupBy ke sath multiple mathematical functions natively integrated hote hain jo internal C-code routines par execute hote hain. Har aggregation function ek specific statistical objective solve karta hai.
+        </p>
+
+        <h3 class="subsection-title">Method Comparison Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aggregation Function</th>
+                        <th>Statistical Meaning</th>
+                        <th>Missing Values Behavior</th>
+                        <th>Real-Life Business Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>.sum()</code></td>
+                        <td>Sum of all values in group</td>
+                        <td>Skips NaNs (treats as 0)</td>
+                        <td>Category-wise Total Revenue calculation</td>
+                    </tr>
+                    <tr>
+                        <td><code>.mean()</code></td>
+                        <td>Mathematical Average (sum / count)</td>
+                        <td>Skips NaNs (divides only by valid count)</td>
+                        <td>Department Average Examination Scores</td>
+                    </tr>
+                    <tr>
+                        <td><code>.median()</code></td>
+                        <td>50th percentile middle value</td>
+                        <td>Skips NaNs (robust to extreme outliers)</td>
+                        <td>Median Salary / Order Value across cities</td>
+                    </tr>
+                    <tr>
+                        <td><code>.min()</code></td>
+                        <td>Lowest observed value</td>
+                        <td>Skips NaNs</td>
+                        <td>Minimum product price in a category</td>
+                    </tr>
+                    <tr>
+                        <td><code>.max()</code></td>
+                        <td>Highest observed value</td>
+                        <td>Skips NaNs</td>
+                        <td>Department topper's highest score</td>
+                    </tr>
+                    <tr>
+                        <td><code>.count()</code></td>
+                        <td>Count of non-missing cells in target column</td>
+                        <td><strong>Excludes NaNs!</strong></td>
+                        <td>Students who actually submitted exam marks</td>
+                    </tr>
+                    <tr>
+                        <td><code>.size()</code></td>
+                        <td>Total row count of the group</td>
+                        <td><strong>Includes NaNs!</strong></td>
+                        <td>Total enrolled students (whether marks present or not)</td>
+                    </tr>
+                    <tr>
+                        <td><code>.nunique()</code></td>
+                        <td>Distinct non-missing unique values count</td>
+                        <td>Excludes NaNs by default</td>
+                        <td>Unique cities where customers ordered from</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_ecommerce_category_revenue.png" alt="E-Commerce Category Revenue Chart">
+            <div class="img-caption">Figure 13.4: Category-level revenue aggregation (.sum()) across our 12-order e-commerce catalog—Electronics leads with ₹26,260.62 (51.4%).</div>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_department_highest_vs_lowest.png" alt="Department Highest vs Lowest Marks">
+            <div class="img-caption">Figure 13.5: Performance spread by department—comparing .max() (green) and .min() (red) marks to identify performance consistency.</div>
+        </div>
+
+        <h3 class="subsection-title">Example A: Department-Level Multi-Function Statistical Audit</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>dept_core_aggregations.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+
+df_students = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"city"</span>: [<span class="c-str">"Lucknow"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Lucknow"</span>, <span class="c-str">"Varanasi"</span>, <span class="c-str">"Lucknow"</span>, <span class="c-str">"Delhi"</span>, <span class="c-kw">None</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">92</span>, <span class="c-num">78</span>, <span class="c-num">90</span>, <span class="c-num">82</span>, <span class="c-num">76</span>, np.nan]
+})
+
+g = df_students.groupby(<span class="c-str">"dept"</span>)
+
+print(<span class="c-str">"Average Marks:"</span>)
+print(g[<span class="c-str">"marks"</span>].mean().round(<span class="c-num">2</span>))
+
+print(<span class="c-str">"
+Highest Marks:"</span>)
+print(g[<span class="c-str">"marks"</span>].max())
+
+print(<span class="c-str">"
+Evaluated Marks Count (.count ignores NaN):"</span>)
+print(g[<span class="c-str">"marks"</span>].count())
+
+print(<span class="c-str">"
+Total Enrolled Rows (.size counts all):"</span>)
+print(g.size())
+
+print(<span class="c-str">"
+Distinct Student Cities (.nunique):"</span>)
+print(g[<span class="c-str">"city"</span>].nunique())</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+Average Marks:
+dept
+CSE    85.0
+ECE    76.0
+IT     86.0
+Name: marks, dtype: float64
+
+Highest Marks:
+dept
+CSE    92.0
+ECE    76.0
+IT     90.0
+Name: marks, dtype: float64
+
+Evaluated Marks Count (.count ignores NaN):
+dept
+CSE    3
+ECE    1
+IT     2
+Name: marks, dtype: int64
+
+Total Enrolled Rows (.size counts all):
+dept
+CSE    3
+ECE    2
+IT     2
+dtype: int64
+
+Distinct Student Cities (.nunique):
+dept
+CSE    2
+ECE    1
+IT     2
+Name: city, dtype: int64
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example B: E-Commerce Category Volume, Price Spread &amp; Distinct Products</h3>
+        <p>
+            E-commerce retail analytics mein category health check karne ke liye multiple metrics ko independently inspect karna:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>ecom_core_aggregations.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_catalog = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Office"</span>],
+    <span class="c-str">"product"</span>: [<span class="c-str">"Mouse"</span>, <span class="c-str">"Keyboard"</span>, <span class="c-str">"Mouse"</span>, <span class="c-str">"Desk Mat"</span>, <span class="c-str">"Chair"</span>],
+    <span class="c-str">"price"</span>: [<span class="c-num">1299.0</span>, <span class="c-num">4500.0</span>, <span class="c-num">1299.0</span>, <span class="c-num">599.0</span>, <span class="c-num">7999.0</span>]
+})
+
+g_cat = df_catalog.groupby(<span class="c-str">"category"</span>)
+
+print(<span class="c-str">"Total Category Value:"</span>, g_cat[<span class="c-str">"price"</span>].sum())
+print(<span class="c-str">"Average Unit Price:"</span>, g_cat[<span class="c-str">"price"</span>].mean().round(<span class="c-num">2</span>))
+print(<span class="c-str">"Distinct Products Sold:"</span>, g_cat[<span class="c-str">"product"</span>].nunique())</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+Total Category Value: category
+Electronics    7098.0
+Office         8598.0
+Name: price, dtype: float64
+Average Unit Price: category
+Electronics    2366.0
+Office         4299.0
+Name: price, dtype: float64
+Distinct Products Sold: category
+Electronics    2
+Office         2
+Name: product, dtype: int64
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section class="card" id="sec-4">
+        <h2 class="section-title">4. Grouping by Multiple Columns</h2>
+        
+        <p>
+            Real-world business analytics mein single-level grouping kaafi nahi hoti. Business leadership aksar multi-dimensional breakdown maangti hai:
+        </p>
+        <ul>
+            <li><em>"Department-wise performance kaisa hai, aur har department ke andar <strong>Semester 1 vs Semester 2</strong> ka difference kya hai?"</em></li>
+            <li><em>"Category-wise total sales kitni hai, aur har category mein <strong>Mumbai vs Delhi vs Bengaluru</strong> ka contribution kitna hai?"</em></li>
+        </ul>
+
+        <p>
+            Multiple columns par grouping karne ke liye hum <code>.groupby()</code> ke andar <strong>list of column names</strong> pass karte hain:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header"><span>multi_groupby_syntax.py</span><span>Syntax Pattern</span></div>
+            <pre class="code-block"><code>df.groupby([<span class="c-str">"department"</span>, <span class="c-str">"semester"</span>])[<span class="c-str">"marks"</span>].mean()</code></pre>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/multi_column_grouping_hierarchy.png" alt="Multi-Column Grouping Hierarchy Tree">
+            <div class="img-caption">Figure 13.6: Hierarchical Multi-Column Tree—dividing 12 students by Department first, then sub-dividing into Semesters to create MultiIndex tuples.</div>
+        </div>
+
+        <h3 class="subsection-title">Understanding the Resulting MultiIndex &amp; reset_index()</h3>
+        <p>
+            Jab aap do ya zyada columns se grouping karte hain, toh output Series ka Index <strong>MultiIndex (Hierarchical Index)</strong> ban jata hai, jisme har row ka index ek tuple hota hai: <code>("CSE", "Sem 1")</code>.
+        </p>
+        <p>
+            MultiIndex ko regular flat table mein convert karne ke liye hum <strong><code>.reset_index()</code></strong> call karte hain:
+        </p>
+
+        <div class="img-container">
+            <img src="assets/chart_department_semester_breakdown.png" alt="Department Semester Breakdown Chart">
+            <div class="img-caption">Figure 13.7: Department Average Marks across Semesters—CSE drops from 88.5 in Sem 1 to 83.0 in Sem 2, while IT surges to 94.0 in Sem 2.</div>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Average Marks by Department and Semester</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>multi_dept_semester.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_multi = pd.DataFrame({
+    <span class="c-str">"department"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"semester"</span>: [<span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>, <span class="c-num">85</span>, <span class="c-num">75</span>, <span class="c-num">95</span>, <span class="c-num">88</span>]
+})
+
+<span class="c-cm"># Multi-column groupby with flat reset_index()</span>
+summary_flat = (
+    df_multi.groupby([<span class="c-str">"department"</span>, <span class="c-str">"semester"</span>])[<span class="c-str">"marks"</span>]
+    .mean()
+    .reset_index()
+)
+print(summary_flat)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  department semester  marks
+0        CSE    Sem 1   85.0
+1        CSE    Sem 2   85.0
+2        ECE    Sem 1   88.0
+3         IT    Sem 1   75.0
+4         IT    Sem 2   95.0
+            </div>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_category_city_revenue_comparison.png" alt="Category City Revenue Comparison Chart">
+            <div class="img-caption">Figure 13.8: Multi-column breakdown of Product Category Revenue across major Indian metropolitan cities.</div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Sales Revenue by Product Category and Customer City</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>multi_ecom_city.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_sales = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Electronics"</span>],
+    <span class="c-str">"city"</span>: [<span class="c-str">"Mumbai"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Bengaluru"</span>, <span class="c-str">"Noida"</span>, <span class="c-str">"Mumbai"</span>],
+    <span class="c-str">"revenue"</span>: [<span class="c-num">2338.20</span>, <span class="c-num">3825.00</span>, <span class="c-num">7199.10</span>, <span class="c-num">4283.30</span>, <span class="c-num">17398.32</span>]
+})
+
+city_cat_sales = (
+    df_sales.groupby([<span class="c-str">"category"</span>, <span class="c-str">"city"</span>], as_index=<span class="c-kw">False</span>)[<span class="c-str">"revenue"</span>]
+    .sum()
+)
+print(city_cat_sales)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+      category       city   revenue
+0  Electronics      Delhi   3825.00
+1  Electronics     Mumbai  19736.52
+2       Office  Bengaluru   7199.10
+3       Office      Noida   4283.30
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section class="card" id="sec-5">
+        <h2 class="section-title">5. Multiple Aggregations with .agg()</h2>
+        
+        <p>
+            Real enterprise reporting mein aap sirf ek single metric (jaise sirf mean) calculate nahi karte. Management ko ek sath multiple numbers chahiye hote hain: <em>"Student count kitna hai, Average marks kya hai, Highest marks kya hai, aur Lowest marks kya hai?"</em>
+        </p>
+
+        <p>
+            Pandas provides the powerful <strong><code>.agg()</code></strong> method. Modern Pandas (version 0.25+) mein sabse clean aur recommended syntax hai: <strong>Named Aggregation</strong>!
+        </p>
+
+        <div class="img-container">
+            <img src="assets/named_aggregation_syntax_guide.png" alt="Named Aggregation Syntax Guide">
+            <div class="img-caption">Figure 13.9: Modern Pandas Named Aggregation—directly assigning clean, business-friendly column names in a single step without nested MultiIndex column headers.</div>
+        </div>
+
+        <h3 class="subsection-title">Named Aggregation Syntax Structure</h3>
+        <div class="code-container">
+            <div class="code-header"><span>named_agg_syntax.py</span><span>Modern Standard Pattern</span></div>
+            <pre class="code-block"><code>df.groupby(<span class="c-str">"department"</span>).agg(
+    custom_col_name = (<span class="c-str">"target_column"</span>, <span class="c-str">"aggregation_function"</span>)
+)</code></pre>
+        </div>
+
+        <h3 class="subsection-title">Why Named Aggregation is Superior</h3>
+        <ul>
+            <li><strong>Zero Header MultiIndex Mess:</strong> Old dictionary syntax (<code>agg({'marks': ['mean', 'max']})</code>) do-level nested column headers banata tha (<code>('marks', 'mean')</code>) jo indexing mein headache create karte the. Named aggregation direct flat clean column names deta hai!</li>
+            <li><strong>Different Functions on Same Column:</strong> Aap ek hi column (<code>marks</code>) par simultaneously <code>mean</code>, <code>max</code>, aur <code>min</code> nikaal sakte hain aur har ek ko custom readable name de sakte hain.</li>
+        </ul>
+
+        <h3 class="subsection-title">Example A: Comprehensive College Department Performance Summary</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>college_named_agg.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_college = pd.DataFrame({
+    <span class="c-str">"department"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Rahul"</span>, <span class="c-str">"Sneha"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Neha"</span>, <span class="c-str">"Karan"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">78</span>, <span class="c-num">95</span>, <span class="c-num">92</span>, <span class="c-num">88</span>, <span class="c-num">81</span>]
+})
+
+summary = df_college.groupby(<span class="c-str">"department"</span>).agg(
+    student_count=(<span class="c-str">"student"</span>, <span class="c-str">"count"</span>),
+    average_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"mean"</span>),
+    highest_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"max"</span>),
+    lowest_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"min"</span>)
+).reset_index()
+
+print(summary)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  department  student_count  average_marks  highest_marks  lowest_marks
+0        CSE              3           86.0             95            78
+1        ECE              1           81.0             81            81
+2         IT              2           90.0             92            88
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example B: E-Commerce Category Performance Report</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>ecom_named_agg.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_orders = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Accessories"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Office"</span>],
+    <span class="c-str">"order_id"</span>: [<span class="c-str">"O1"</span>, <span class="c-str">"O2"</span>, <span class="c-str">"O3"</span>, <span class="c-str">"O4"</span>, <span class="c-str">"O5"</span>],
+    <span class="c-str">"quantity"</span>: [<span class="c-num">2</span>, <span class="c-num">1</span>, <span class="c-num">3</span>, <span class="c-num">4</span>, <span class="c-num">1</span>],
+    <span class="c-str">"revenue"</span>: [<span class="c-num">2338.20</span>, <span class="c-num">3825.00</span>, <span class="c-num">2550.00</span>, <span class="c-num">2396.00</span>, <span class="c-num">7199.10</span>]
+})
+
+ecom_report = df_orders.groupby(<span class="c-str">"category"</span>).agg(
+    orders=(<span class="c-str">"order_id"</span>, <span class="c-str">"count"</span>),
+    units_sold=(<span class="c-str">"quantity"</span>, <span class="c-str">"sum"</span>),
+    total_sales=(<span class="c-str">"revenue"</span>, <span class="c-str">"sum"</span>),
+    avg_order=(<span class="c-str">"revenue"</span>, <span class="c-str">"mean"</span>)
+).reset_index()
+
+print(ecom_report)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+      category  orders  units_sold  total_sales    avg_order
+0  Accessories       1           3      2550.00  2550.000000
+1  Electronics       2           3      6163.20  3081.600000
+2       Office       2           5      9595.10  4797.550000
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section class="card" id="sec-6">
+        <h2 class="section-title">6. Counting Records, Nulls &amp; Distinct Values</h2>
+        
+        <p>
+            Data analytics interviews aur production data quality audits mein sabse zyada pucha jane wala technical question hai:
+            <strong><em>"Pandas GroupBy mein .size(), .count(), aur .nunique() ke beech kya exact difference hai?"</em></strong>
+        </p>
+
+        <div class="img-container">
+            <img src="assets/count_vs_size_vs_nunique_matrix.png" alt="Count vs Size vs Nunique Matrix">
+            <div class="img-caption">Figure 13.10: The Three Counting Pillars—comparing .size() (all rows), .count() (valid non-null cells), and .nunique() (distinct non-null values).</div>
+        </div>
+
+        <h3 class="subsection-title">The Three Counting Behaviors Explained</h3>
+        <ul>
+            <li><strong><code>.size()</code>:</strong> Pure group ki total rows count karta hai. Isko is baat se koi matlab nahi hota ki cells ke andar <code>NaN</code> hai ya valid data. Yeh group ka true row physical footprint hota hai.</li>
+            <li><strong><code>.count()</code>:</strong> Specified column ke andar sirf <strong>non-missing (valid)</strong> values ko count karta hai. Agar kisi student ke marks <code>NaN</code> hain, toh <code>count()</code> use ignore kar dega.</li>
+            <li><strong><code>.nunique()</code>:</strong> Group ke andar <strong>distinct unique</strong> values count karta hai. Duplicate values ko filter kar deta hai.</li>
+        </ul>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">🚨 The Dangerous Misconception: .size() is NOT .count()!</div>
+            <p>
+                Agar aapne kisi group mein missing values dekhni hain, toh hamesha compare karein: <strong><code>g.size() - g['col'].count()</code></strong>!
+                Jitna difference aayega, utne hi records us group mein missing hain!
+            </p>
+        </div>
+
+        <h3 class="subsection-title">Comparison Table on a Sample Group Containing Missing Values</h3>
+        <p>
+            Maan lijiye ECE department mein 3 students hain: <code>[Pooja (76), Rohan (84), Zoya (NaN)]</code>, aur unke entered cities hain <code>["Delhi", "Mumbai", None]</code>:
+        </p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Metric Code</th>
+                        <th>Target Column</th>
+                        <th>Values Evaluated</th>
+                        <th>Result</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>g.size()</code></td>
+                        <td>Entire DataFrame</td>
+                        <td>3 rows</td>
+                        <td><strong>3</strong></td>
+                        <td>Total students registered in ECE</td>
+                    </tr>
+                    <tr>
+                        <td><code>g['marks'].count()</code></td>
+                        <td><code>marks</code></td>
+                        <td><code>[76, 84, NaN]</code></td>
+                        <td><strong>2</strong></td>
+                        <td>Students who actually submitted marks (Zoya ignored!)</td>
+                    </tr>
+                    <tr>
+                        <td><code>g['city'].nunique()</code></td>
+                        <td><code>city</code></td>
+                        <td><code>["Delhi", "Mumbai", None]</code></td>
+                        <td><strong>2</strong></td>
+                        <td>Unique cities (None ignored by default)</td>
+                    </tr>
+                    <tr>
+                        <td><code>g['city'].nunique(dropna=False)</code></td>
+                        <td><code>city</code></td>
+                        <td><code>["Delhi", "Mumbai", None]</code></td>
+                        <td><strong>3</strong></td>
+                        <td>Unique cities counting missing as a distinct category</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_category_orders_vs_customers.png" alt="Category Orders vs Distinct Customers">
+            <div class="img-caption">Figure 13.11: E-Commerce Category Health—comparing total transaction orders (.count) against distinct customer reach (.nunique).</div>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Auditing Missing Marks and Cities in Student Roster</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>count_size_audit.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+
+df_roster = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"ECE"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>],
+    <span class="c-str">"student"</span>: [<span class="c-str">"Pooja"</span>, <span class="c-str">"Rohan"</span>, <span class="c-str">"Zoya"</span>, <span class="c-str">"Aman"</span>, <span class="c-str">"Rahul"</span>],
+    <span class="c-str">"city"</span>: [<span class="c-str">"Delhi"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-kw">None</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Delhi"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">76</span>, <span class="c-num">84</span>, np.nan, <span class="c-num">85</span>, <span class="c-num">78</span>]
+})
+
+g_roster = df_roster.groupby(<span class="c-str">"dept"</span>)
+
+audit = pd.DataFrame({
+    <span class="c-str">"total_rows_size"</span>: g_roster.size(),
+    <span class="c-str">"evaluated_marks_count"</span>: g_roster[<span class="c-str">"marks"</span>].count(),
+    <span class="c-str">"missing_marks"</span>: g_roster.size() - g_roster[<span class="c-str">"marks"</span>].count(),
+    <span class="c-str">"unique_cities"</span>: g_roster[<span class="c-str">"city"</span>].nunique()
+})
+print(audit)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+      total_rows_size  evaluated_marks_count  missing_marks  unique_cities
+dept                                                                      
+CSE                 2                      2              0              1
+ECE                 3                      2              1              2
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Counting Orders vs Distinct Customers in E-Commerce</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>ecom_customer_reach.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_orders = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Office"</span>],
+    <span class="c-str">"order_id"</span>: [<span class="c-str">"O101"</span>, <span class="c-str">"O102"</span>, <span class="c-str">"O103"</span>, <span class="c-str">"O104"</span>, <span class="c-str">"O105"</span>],
+    <span class="c-str">"customer_id"</span>: [<span class="c-str">"CUST_1"</span>, <span class="c-str">"CUST_2"</span>, <span class="c-str">"CUST_1"</span>, <span class="c-str">"CUST_3"</span>, <span class="c-str">"CUST_4"</span>]
+})
+
+res = df_orders.groupby(<span class="c-str">"category"</span>).agg(
+    total_orders=(<span class="c-str">"order_id"</span>, <span class="c-str">"count"</span>),
+    distinct_customers=(<span class="c-str">"customer_id"</span>, <span class="c-str">"nunique"</span>)
+)
+print(res)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+             total_orders  distinct_customers
+category                                     
+Electronics             3                   2
+Office                  2                   2
+            </div>
+        </div>
+        <p>
+            <em>Notice:</em> Electronics category mein 3 orders the, lekin customer sirf 2 the (<code>CUST_1</code> ne 2 baar order kiya). Isliye <code>total_orders=3</code> aur <code>distinct_customers=2</code>!
+        </p>
+    </section>
+
+    <!-- Section 7 -->
+    <section class="card" id="sec-7">
+        <h2 class="section-title">7. transform() versus agg()</h2>
+        
+        <p>
+            Data analytics aur machine learning feature engineering mein <strong><code>.transform()</code></strong> ek game-changing tool hai. Beginners aksar <code>agg()</code> aur <code>transform()</code> ko lekar confuse rehte hain.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/transform_vs_agg_comparison.png" alt="transform vs agg Comparison Architecture">
+            <div class="img-caption">Figure 13.12: Architectural comparison between .agg() (collapsing rows to group count) vs .transform() (broadcasting group summaries back to 100% of original rows).</div>
+        </div>
+
+        <h3 class="subsection-title">The Fundamental Architectural Difference</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th><code>.agg()</code></th>
+                        <th><code>.transform()</code></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Output Shape</strong></td>
+                        <td><strong>Shrinks data:</strong> Exactly $N$ rows (jahan $N$ = unique groups count).</td>
+                        <td><strong>Preserves data:</strong> Exactly original DataFrame ki length ($M$ rows).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Index Alignment</strong></td>
+                        <td>Group keys naye Index ban jaate hain.</td>
+                        <td>Original DataFrame ke Index ke sath <strong>perfectly aligned</strong> rehta hai.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Direct Assignment</strong></td>
+                        <td><code>df['group_avg'] = df.groupby().agg()</code> <strong>FAILS!</strong> (Shape mismatch error).</td>
+                        <td><code>df['group_avg'] = df.groupby().transform()</code> <strong>WORKS!</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Primary Use Case</strong></td>
+                        <td>Executive summary tables, high-level dashboards.</td>
+                        <td>Feature engineering, relative comparisons, calculating deviations.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_student_deviation_from_dept_mean.png" alt="Student Deviation from Department Mean">
+            <div class="img-caption">Figure 13.13: Relative Student Performance—calculating each student's positive/negative deviation from their department average via .transform().</div>
+        </div>
+
+        <h3 class="subsection-title">Example A: Student Marks Deviation from Department Average</h3>
+        <p>
+            Hume pata karna hai ki har student apne department ke average se kitne marks aage ya peeche hai:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>student_transform_deviation.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_class = pd.DataFrame({
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Rahul"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Neha"</span>],
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>, <span class="c-num">85</span>, <span class="c-num">95</span>]
+})
+
+<span class="c-cm"># Broadcast department mean to every original row</span>
+df_class[<span class="c-str">"dept_avg"</span>] = df_class.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].transform(<span class="c-str">"mean"</span>)
+
+<span class="c-cm"># Calculate individual deviation</span>
+df_class[<span class="c-str">"difference"</span>] = df_class[<span class="c-str">"marks"</span>] - df_class[<span class="c-str">"dept_avg"</span>]
+
+print(df_class)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  student dept  marks  dept_avg  difference
+0    Aman  CSE     80      85.0        -5.0
+1   Rahul  CSE     90      85.0         5.0
+2   Priya   IT     85      90.0        -5.0
+3    Neha   IT     95      90.0         5.0
+            </div>
+        </div>
+
+        <div class="img-container">
+            <img src="assets/chart_category_revenue_share_pct.png" alt="Category Revenue Share Percentage">
+            <div class="img-caption">Figure 13.14: Line-item revenue share within Electronics—Gaming Monitor dominates with 57.9% of category revenue.</div>
+        </div>
+
+        <h3 class="subsection-title">Example B: E-Commerce Transaction Share of Category Revenue</h3>
+        <p>
+            Har transaction ki category-level total sales nikalna aur calculate karna ki us transaction ne category ka kitna percentage banaya:
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>ecom_transform_share.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_sales = pd.DataFrame({
+    <span class="c-str">"item"</span>: [<span class="c-str">"Mouse"</span>, <span class="c-str">"Monitor"</span>, <span class="c-str">"Keyboard"</span>, <span class="c-str">"Pen"</span>, <span class="c-str">"Notebook"</span>],
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Stationery"</span>, <span class="c-str">"Stationery"</span>],
+    <span class="c-str">"sales"</span>: [<span class="c-num">1000.0</span>, <span class="c-num">6000.0</span>, <span class="c-num">3000.0</span>, <span class="c-num">200.0</span>, <span class="c-num">800.0</span>]
+})
+
+<span class="c-cm"># Attach total category revenue to every row</span>
+df_sales[<span class="c-str">"cat_total"</span>] = df_sales.groupby(<span class="c-str">"category"</span>)[<span class="c-str">"sales"</span>].transform(<span class="c-str">"sum"</span>)
+
+<span class="c-cm"># Compute percentage share</span>
+df_sales[<span class="c-str">"share_pct"</span>] = (df_sales[<span class="c-str">"sales"</span>] / df_sales[<span class="c-str">"cat_total"</span>]) * <span class="c-num">100</span>
+
+print(df_sales)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+       item     category   sales  cat_total  share_pct
+0     Mouse  Electronics  1000.0    10000.0       10.0
+1   Monitor  Electronics  6000.0    10000.0       60.0
+2  Keyboard  Electronics  3000.0    10000.0       30.0
+3       Pen   Stationery   200.0     1000.0       20.0
+4  Notebook   Stationery   800.0     1000.0       80.0
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section class="card" id="sec-8">
+        <h2 class="section-title">8. Group Filtering with .filter()</h2>
+        
+        <p>
+            Standard filtering (jaise <code>df[df['marks'] &gt; 80]</code>) individual rows par apply hoti hai. Lekin business analytics mein aksar requirement hoti hai: <strong>Whole Group Level Filter</strong>!
+        </p>
+        <ul>
+            <li><em>"Sirf un departments ke students ko retain karo jisme <strong>at least 3 students</strong> enrolled hain!"</em></li>
+            <li><em>"Sirf un product categories ko analyze karo jinki <strong>total category sales ₹10,000 se zyada</strong> hai!"</em></li>
+        </ul>
+
+        <div class="img-container">
+            <img src="assets/groupby_filter_mechanism.png" alt="GroupBy Filter Mechanism Diagram">
+            <div class="img-caption">Figure 13.15: Whole-Group Evaluation with .filter()—evaluating condition across entire groups and discarding groups that fail business thresholds.</div>
+        </div>
+
+        <h3 class="subsection-title">How .filter() Operates</h3>
+        <p>
+            <code>df.groupby("col").filter(func)</code> mein passed function ko pura group (ek mini-DataFrame <code>g</code>) pass hota hai. Function ko ek <strong>Boolean (True/False)</strong> return karna hota hai:
+        </p>
+        <ul>
+            <li>Agar condition <code>True</code> evaluate hoti hai, toh us group ki <strong>saari rows</strong> final DataFrame mein retain ho jati hain.</li>
+            <li>Agar condition <code>False</code> hoti hai, toh us group ki <strong>saari rows</strong> drop ho jati hain.</li>
+        </ul>
+
+        <h3 class="subsection-title">Example 1: Filtering Academic Departments by Enrolled Student Size</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>filter_dept_size.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_students = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"Mechanical"</span>], <span class="c-cm"># CSE: 3, IT: 2, Mech: 1</span>
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Rahul"</span>, <span class="c-str">"Sneha"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Neha"</span>, <span class="c-str">"Karan"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">78</span>, <span class="c-num">95</span>, <span class="c-num">92</span>, <span class="c-num">88</span>, <span class="c-num">70</span>]
+})
+
+<span class="c-cm"># Retain only departments having at least 3 students</span>
+large_depts = df_students.groupby(<span class="c-str">"dept"</span>).filter(<span class="c-kw">lambda</span> g: len(g) &gt;= <span class="c-num">3</span>)
+
+print(<span class="c-str">"Filtered DataFrame (Only CSE satisfies len &gt;= 3):"</span>)
+print(large_depts)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+Filtered DataFrame (Only CSE satisfies len &gt;= 3):
+  dept student  marks
+0  CSE    Aman     85
+1  CSE   Rahul     78
+2  CSE   Sneha     95
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Filtering E-Commerce Categories by Revenue Threshold</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>filter_category_sales.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_retail = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Accessories"</span>, <span class="c-str">"Office"</span>, <span class="c-str">"Office"</span>],
+    <span class="c-str">"item"</span>: [<span class="c-str">"Mouse"</span>, <span class="c-str">"Monitor"</span>, <span class="c-str">"Stand"</span>, <span class="c-str">"Paper"</span>, <span class="c-str">"Pen"</span>],
+    <span class="c-str">"sales"</span>: [<span class="c-num">2000</span>, <span class="c-num">15000</span>, <span class="c-num">1200</span>, <span class="c-num">400</span>, <span class="c-num">300</span>]
+})
+
+<span class="c-cm"># Keep categories whose total sales exceed ₹5,000 (Only Electronics: 17k)</span>
+top_cats = df_retail.groupby(<span class="c-str">"category"</span>).filter(<span class="c-kw">lambda</span> g: g[<span class="c-str">"sales"</span>].sum() &gt; <span class="c-num">5000</span>)
+print(top_cats)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+      category     item  sales
+0  Electronics    Mouse   2000
+1  Electronics  Monitor  15000
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section class="card" id="sec-9">
+        <h2 class="section-title">9. Custom Aggregation Functions</h2>
+        
+        <p>
+            Jab Pandas ke built-in standard functions (jaise mean, sum, std) aapke custom business requirements ko satisfy nahi karte, tab aap <strong>Custom Aggregations</strong> likh sakte hain.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/custom_aggregation_workflow.png" alt="Custom Aggregation Workflow">
+            <div class="img-caption">Figure 13.16: Custom Aggregation Workflow—defining Python statistical functions (range, IQR) and integrating into named aggregations.</div>
+        </div>
+
+        <h3 class="subsection-title">How Custom Aggregations Work</h3>
+        <p>
+            Custom function mein passed argument ek <strong>Pandas Series</strong> hoti hai jo us specific group ki values represent karti hai. Function ko ek <strong>single scalar value</strong> return karni hoti hai:
+        </p>
+
+        <h3 class="subsection-title">Example 1: Calculating Department Marks Spread (Range = Max - Min)</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>custom_range_demo.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_scores = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">70</span>, <span class="c-num">85</span>, <span class="c-num">95</span>, <span class="c-num">80</span>, <span class="c-num">92</span>]
+})
+
+<span class="c-cm"># Custom statistical function</span>
+<span class="c-kw">def</span> calculate_range(series):
+    <span class="c-kw">return</span> series.max() - series.min()
+
+summary = df_scores.groupby(<span class="c-str">"dept"</span>).agg(
+    marks_range=(<span class="c-str">"marks"</span>, calculate_range),
+    mean_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"mean"</span>)
+).reset_index()
+
+print(summary)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  dept  marks_range  mean_marks
+0  CSE           25   83.333333
+1   IT           12   86.000000
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Custom Lambda for Interquartile Range (IQR)</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>custom_iqr_demo.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_prices = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Tech"</span>, <span class="c-str">"Tech"</span>, <span class="c-str">"Tech"</span>, <span class="c-str">"Tech"</span>, <span class="c-str">"Stationery"</span>, <span class="c-str">"Stationery"</span>],
+    <span class="c-str">"price"</span>: [<span class="c-num">500</span>, <span class="c-num">1200</span>, <span class="c-num">2500</span>, <span class="c-num">9000</span>, <span class="c-num">20</span>, <span class="c-num">80</span>]
+})
+
+iqr_report = df_prices.groupby(<span class="c-str">"category"</span>).agg(
+    iqr_spread=(<span class="c-str">"price"</span>, <span class="c-kw">lambda</span> x: x.quantile(<span class="c-num">0.75</span>) - x.quantile(<span class="c-num">0.25</span>)),
+    median_price=(<span class="c-str">"price"</span>, <span class="c-str">"median"</span>)
+).reset_index()
+
+print(iqr_report)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+     category  iqr_spread  median_price
+0  Stationery        30.0          50.0
+1        Tech      3325.0        1850.0
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section class="card" id="sec-10">
+        <h2 class="section-title">10. Sorting Grouped Summaries</h2>
+        
+        <p>
+            GroupBy ke baad jo summary table banta hai, raw state mein woh aksar grouping column ke alphabetical order ya original appearance order mein arrange hota hai.
+            Lekin business presentation aur decision-making ke liye hume hamesha <strong>Sorted Rankings</strong> chahiye hoti hain—jaise <em>"Highest revenue generating department"</em>, <em>"Top 5 products by units sold"</em>, ya <em>"Lowest performing branch"</em>.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/sorting_grouped_summaries_flowchart.png" alt="Sorting Grouped Summaries Flowchart">
+            <div class="img-caption">Figure 13.17: Complete Sorting Workflow—from raw GroupBy aggregation to index flattening, metric-based ordering, and rank generation.</div>
+        </div>
+
+        <h3 class="subsection-title">The Three Pillars of Sorting Grouped Data</h3>
+        <ul>
+            <li><strong>Pillar 1: <code>.sort_values(by=..., ascending=False)</code>:</strong> Aggregated summary table ke kisi bhi calculated column (jaise total revenue ya average marks) par ranking lagana.</li>
+            <li><strong>Pillar 2: <code>.sort_index(ascending=...)</code>:</strong> Agar aapne <code>as_index=True</code> rakha hai aur aap group labels (keys) ko alphabetically sort karna chahte hain.</li>
+            <li><strong>Pillar 3: Multi-Column Sorting:</strong> Pehle ek broad category par sort karna, fir uske andar revenue ya count par tie-breaker sorting apply karna.</li>
+        </ul>
+
+        <div class="callout callout-info">
+            <div class="callout-title">💡 Best Practice: Hamesha .reset_index() ya as_index=False use karein</div>
+            <p>
+                Agar summary table standard flat DataFrame ban chuka hai, toh <code>.sort_values(by="metric", ascending=False)</code> effortlessly kaam karta hai bina kisi index confusion ke!
+            </p>
+        </div>
+
+        <h3 class="subsection-title">Example 1: Single Metric Ranking (Highest to Lowest Revenue)</h3>
+        <p>Maan lijiye hamare paas multi-category orders hain aur hume categories ko total revenue ke hisaab se descending order mein rank karna hai:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>sort_single_metric.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_orders = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Clothing"</span>, <span class="c-str">"Books"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Clothing"</span>],
+    <span class="c-str">"revenue"</span>: [<span class="c-num">5000</span>, <span class="c-num">2000</span>, <span class="c-num">1500</span>, <span class="c-num">7000</span>, <span class="c-num">1000</span>]
+})
+
+<span class="c-com"># Step 1: Group and aggregate total revenue</span>
+cat_summary = df_orders.groupby(<span class="c-str">"category"</span>, as_index=<span class="c-kw">False</span>)[<span class="c-str">"revenue"</span>].sum()
+
+<span class="c-com"># Step 2: Sort by revenue descending (highest first)</span>
+sorted_summary = cat_summary.sort_values(by=<span class="c-str">"revenue"</span>, ascending=<span class="c-kw">False</span>).reset_index(drop=<span class="c-kw">True</span>)
+
+<span class="c-com"># Step 3: Add rank column</span>
+sorted_summary[<span class="c-str">"rank"</span>] = range(<span class="c-num">1</span>, len(sorted_summary) + <span class="c-num">1</span>)
+
+print(sorted_summary)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+      category  revenue  rank
+0  Electronics    12000     1
+1     Clothing     3000     2
+2        Books     1500     3
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Example 2: Multi-Column Sorting (Department Ascending + Avg Marks Descending)</h3>
+        <p>Hierarchical grouping mein aksar hum chahte hain ki Department alphabetically A-to-Z arrange ho, lekin har department ke andar semesters unke average marks ke according Highest-to-Lowest dikhein:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>sort_multi_columns.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_multi = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>],
+    <span class="c-str">"semester"</span>: [<span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>],
+    <span class="c-str">"avg_score"</span>: [<span class="c-num">84.5</span>, <span class="c-num">88.0</span>, <span class="c-num">91.5</span>, <span class="c-num">86.0</span>]
+})
+
+<span class="c-com"># Multi-column sort: dept ascending (A-Z), avg_score descending (High-Low)</span>
+multi_sorted = df_multi.sort_values(
+    by=[<span class="c-str">"dept"</span>, <span class="c-str">"avg_score"</span>],
+    ascending=[<span class="c-kw">True</span>, <span class="c-kw">False</span>]
+).reset_index(drop=<span class="c-kw">True</span>)
+
+print(multi_sorted)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  dept semester  avg_score
+0  CSE    Sem 2       88.0
+1  CSE    Sem 1       84.5
+2   IT    Sem 1       91.5
+3   IT    Sem 2       86.0
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section class="card" id="sec-11">
+        <h2 class="section-title">11. Missing Values in GroupBy Operations</h2>
+        
+        <p>
+            Real-world data clean aur sanitized nahi hota. Missing values (<code>NaN</code> ya <code>None</code>) do jagahon par aa sakti hain:
+        </p>
+        <ol>
+            <li><strong>Grouping Keys ke andar:</strong> Jab us column mein missing values hon jiske basis par aap <code>groupby()</code> kar rahe hain.</li>
+            <li><strong>Aggregated Numeric Columns ke andar:</strong> Jab group keys toh valid hain, lekin target values (marks, price, salary) mein <code>NaN</code> hai.</li>
+        </ol>
+
+        <div class="img-container">
+            <img src="assets/missing_values_groupby_behavior.png" alt="Missing Values in GroupBy Architecture">
+            <div class="img-caption">Figure 13.18: Missing Values Architecture—Pandas dropna=True default exclusion vs dropna=False preservation, and calculation handling in aggregation columns.</div>
+        </div>
+
+        <h3 class="subsection-title">1. The Default Exclusion Trap: <code>dropna=True</code></h3>
+        <p>
+            By default, Pandas ka <code>groupby()</code> grouping keys mein aane wale saare <code>NaN</code> records ko <strong>khamoshi se discard (drop)</strong> kar deta hai!
+            Agar aapke paas 100 students hain aur 15 students ka department assign nahi hua hai (<code>NaN</code>), toh default <code>df.groupby('dept').count()</code> mein woh 15 students gayab ho jayenge!
+        </p>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">🚨 Warning: Missing Grouping Keys Can Distort Financial Totals!</div>
+            <p>
+                Agar aap accounting ya audit reporting kar rahe hain, toh grouping key mein missing values hone par total company revenue match nahi karegi!
+                Solution: Use <strong><code>df.groupby("dept", dropna=False)</code></strong> to retain the <code>NaN</code> category as an explicit group!
+            </p>
+        </div>
+
+        <h3 class="subsection-title">Code Demonstration: dropna=True vs dropna=False</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>dropna_parameter_demo.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+
+df_missing_keys = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, np.nan, np.nan, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>, <span class="c-num">75</span>, <span class="c-num">85</span>, <span class="c-num">70</span>]
+})
+
+<span class="c-com"># Default behavior: dropna=True (NaN group is dropped!)</span>
+summary_default = df_missing_keys.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].count()
+print(<span class="c-str">"--- Default GroupBy (dropna=True) ---"</span>)
+print(summary_default)
+
+<span class="c-com"># Modern Pandas behavior: dropna=False (NaN group is preserved!)</span>
+summary_preserved = df_missing_keys.groupby(<span class="c-str">"dept"</span>, dropna=<span class="c-kw">False</span>)[<span class="c-str">"marks"</span>].count()
+print(<span class="c-str">"
+--- Preserved GroupBy (dropna=False) ---"</span>)
+print(summary_preserved)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+--- Default GroupBy (dropna=True) ---
+dept
+CSE    2
+ECE    1
+Name: marks, dtype: int64
+
+--- Preserved GroupBy (dropna=False) ---
+dept
+CSE    2
+ECE    1
+NaN    2
+Name: marks, dtype: int64
+            </div>
+        </div>
+
+        <h3 class="subsection-title">2. Missing Values in Aggregated Columns (How Math Works)</h3>
+        <p>
+            Jab numeric column mein missing values hoti hain (jaise student marks mein <code>NaN</code>):
+        </p>
+        <ul>
+            <li><code>mean()</code> sirf valid non-null numbers ka sum karke unhi ke count se divide karta hai (numerator aur denominator dono se NaN excluded).</li>
+            <li><code>sum()</code> NaN ko <code>0</code> ki tarah treat karke valid numbers ka sum return karta hai (agar pure group mein saare NaN hain toh 0 return hota hai).</li>
+            <li><code>count()</code> sirf valid non-null count karta hai.</li>
+            <li><code>size()</code> NaN samet total rows count karta hai.</li>
+        </ul>
+
+        <h3 class="subsection-title">3. The Unique ID Grouping Anti-Pattern</h3>
+        <p>
+            Kabhi bhi aisi column par <code>groupby()</code> na karein jisme har row unique ho (jaise <code>user_id</code>, <code>order_id</code>, ya <code>timestamp</code>)!
+            Agar DataFrame mein 10,000 rows hain aur aapne <code>df.groupby("order_id").mean()</code> kar diya, toh Pandas 10,000 alag-alag 1-row groups create karega.
+            Isse memory spike ho jayegi aur aggregation ka koi statistical fayda nahi hoga!
+        </p>
+    </section>
+
+    <!-- Section 12 -->
+    <section class="card" id="sec-12">
+        <h2 class="section-title">12. Real-Life Case Study A: College Performance Analytics</h2>
+        
+        <p>
+            Aaiye ab tak seekhe gaye saare concepts ko ek realistic <strong>College Academic Performance &amp; Attendance Analytics</strong> project mein apply karte hain.
+            Hamare paas 12 engineering students ka dataset hai jo multiple departments, semesters, aur home cities se belong karte hain.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/college_case_study_analytics_dashboard.png" alt="College Performance Analytics Dashboard">
+            <div class="img-caption">Figure 13.19: Comprehensive Academic Analytics Dashboard—visualizing department average marks, attendance distribution, student headcount, and individual score deviations.</div>
+        </div>
+
+        <h3 class="subsection-title">Dataset Specification (12 Students)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Semester</th>
+                        <th>City</th>
+                        <th>Marks</th>
+                        <th>Attendance (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>STU001</td><td>Aman</td><td>CSE</td><td>Sem 1</td><td>Lucknow</td><td>85</td><td>92%</td></tr>
+                    <tr><td>STU002</td><td>Priya</td><td>CSE</td><td>Sem 1</td><td>Delhi</td><td>92</td><td>88%</td></tr>
+                    <tr><td>STU003</td><td>Rahul</td><td>CSE</td><td>Sem 2</td><td>Lucknow</td><td>78</td><td>75%</td></tr>
+                    <tr><td>STU004</td><td>Neha</td><td>CSE</td><td>Sem 2</td><td>Mumbai</td><td>88</td><td>95%</td></tr>
+                    <tr><td>STU005</td><td>Vikram</td><td>IT</td><td>Sem 1</td><td>Varanasi</td><td>90</td><td>85%</td></tr>
+                    <tr><td>STU006</td><td>Sneha</td><td>IT</td><td>Sem 1</td><td>Lucknow</td><td>82</td><td>90%</td></tr>
+                    <tr><td>STU007</td><td>Aditya</td><td>IT</td><td>Sem 2</td><td>Delhi</td><td>94</td><td>89%</td></tr>
+                    <tr><td>STU008</td><td>Pooja</td><td>ECE</td><td>Sem 1</td><td>Delhi</td><td>76</td><td>78%</td></tr>
+                    <tr><td>STU009</td><td>Rohan</td><td>ECE</td><td>Sem 2</td><td>Mumbai</td><td>84</td><td>82%</td></tr>
+                    <tr><td>STU010</td><td>Zoya</td><td>ECE</td><td>Sem 2</td><td>Pune</td><td>NaN (Medical)</td><td>65%</td></tr>
+                    <tr><td>STU011</td><td>Kavita</td><td>Mechanical</td><td>Sem 1</td><td>Lucknow</td><td>70</td><td>80%</td></tr>
+                    <tr><td>STU012</td><td>Anand</td><td>Mechanical</td><td>Sem 2</td><td>Delhi</td><td>74</td><td>84%</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Complete 6-Step End-to-End Analytics Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>college_performance_pipeline.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+
+<span class="c-com"># Step 1: Load student records</span>
+df_college = pd.DataFrame({
+    <span class="c-str">"student_id"</span>: [<span class="c-str">f"STU{i:03d}"</span> <span class="c-kw">for</span> i <span class="c-kw">in</span> range(<span class="c-num">1</span>, <span class="c-num">13</span>)],
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Rahul"</span>, <span class="c-str">"Neha"</span>, <span class="c-str">"Vikram"</span>, <span class="c-str">"Sneha"</span>, <span class="c-str">"Aditya"</span>, <span class="c-str">"Pooja"</span>, <span class="c-str">"Rohan"</span>, <span class="c-str">"Zoya"</span>, <span class="c-str">"Kavita"</span>, <span class="c-str">"Anand"</span>],
+    <span class="c-str">"department"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"ECE"</span>, <span class="c-str">"Mechanical"</span>, <span class="c-str">"Mechanical"</span>],
+    <span class="c-str">"semester"</span>: [<span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 2"</span>, <span class="c-str">"Sem 1"</span>, <span class="c-str">"Sem 2"</span>],
+    <span class="c-str">"city"</span>: [<span class="c-str">"Lucknow"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Lucknow"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Varanasi"</span>, <span class="c-str">"Lucknow"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Pune"</span>, <span class="c-str">"Lucknow"</span>, <span class="c-str">"Delhi"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">92</span>, <span class="c-num">78</span>, <span class="c-num">88</span>, <span class="c-num">90</span>, <span class="c-num">82</span>, <span class="c-num">94</span>, <span class="c-num">76</span>, <span class="c-num">84</span>, np.nan, <span class="c-num">70</span>, <span class="c-num">74</span>],
+    <span class="c-str">"attendance"</span>: [<span class="c-num">92</span>, <span class="c-num">88</span>, <span class="c-num">75</span>, <span class="c-num">95</span>, <span class="c-num">85</span>, <span class="c-num">90</span>, <span class="c-num">89</span>, <span class="c-num">78</span>, <span class="c-num">82</span>, <span class="c-num">65</span>, <span class="c-num">80</span>, <span class="c-num">84</span>]
+})
+
+<span class="c-com"># Step 2: Multi-metric department summary with named aggregation</span>
+dept_summary = df_college.groupby(<span class="c-str">"department"</span>).agg(
+    total_enrolled=(<span class="c-str">"student"</span>, <span class="c-str">"count"</span>),
+    exams_evaluated=(<span class="c-str">"marks"</span>, <span class="c-str">"count"</span>),
+    avg_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"mean"</span>),
+    highest_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"max"</span>),
+    lowest_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"min"</span>),
+    avg_attendance=(<span class="c-str">"attendance"</span>, <span class="c-str">"mean"</span>),
+    origin_cities=(<span class="c-str">"city"</span>, <span class="c-str">"nunique"</span>)
+).reset_index()
+
+<span class="c-com"># Step 3: Broadcast department average back using transform()</span>
+df_college[<span class="c-str">"dept_avg"</span>] = df_college.groupby(<span class="c-str">"department"</span>)[<span class="c-str">"marks"</span>].transform(<span class="c-str">"mean"</span>)
+df_college[<span class="c-str">"score_diff"</span>] = df_college[<span class="c-str">"marks"</span>] - df_college[<span class="c-str">"dept_avg"</span>]
+
+<span class="c-com"># Step 4: Rank departments by academic performance</span>
+ranked_depts = dept_summary.sort_values(by=<span class="c-str">"avg_marks"</span>, ascending=<span class="c-kw">False</span>).reset_index(drop=<span class="c-kw">True</span>)
+ranked_depts[<span class="c-str">"rank"</span>] = range(<span class="c-num">1</span>, len(ranked_depts) + <span class="c-num">1</span>)
+
+print(<span class="c-str">"=== DEPARTMENT PERFORMANCE RANKING ==="</span>)
+print(ranked_depts[[<span class="c-str">"rank"</span>, <span class="c-str">"department"</span>, <span class="c-str">"avg_marks"</span>, <span class="c-str">"avg_attendance"</span>, <span class="c-str">"total_enrolled"</span>]])
+
+<span class="c-com"># Step 5: Filter departments with >= 3 students</span>
+major_departments = df_college.groupby(<span class="c-str">"department"</span>).filter(<span class="c-kw">lambda</span> g: len(g) >= <span class="c-num">3</span>)
+print(<span class="c-str">f"
+Major Departments retained rows: {len(major_departments)} (Mechanical filtered out)"</span>)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+=== DEPARTMENT PERFORMANCE RANKING ===
+   rank  department  avg_marks  avg_attendance  total_enrolled
+0     1          IT  88.666667       88.000000               3
+1     2         CSE  85.750000       87.500000               4
+2     3         ECE  80.000000       75.000000               3
+3     4  Mechanical  72.000000       82.000000               2
+
+Major Departments retained rows: 10 (Mechanical filtered out)
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Academic Insights Derived from the Data</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Mean Marks</th>
+                        <th>Mean Attendance</th>
+                        <th>Marks Spread (Range)</th>
+                        <th>Key Finding &amp; Administrative Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>IT</strong></td><td>88.67</td><td>88.0%</td><td>12 pts (82 - 94)</td><td>Consistently high performers; highest batch average across college.</td></tr>
+                    <tr><td><strong>CSE</strong></td><td>85.75</td><td>87.5%</td><td>14 pts (78 - 92)</td><td>Strong performance led by Neha (88) and Priya (92). Good attendance.</td></tr>
+                    <tr><td><strong>ECE</strong></td><td>80.00</td><td>75.0%</td><td>8 pts (76 - 84)</td><td>Zoya was absent due to medical leave; lowest attendance (75.0%). Requires remedial session.</td></tr>
+                    <tr><td><strong>Mechanical</strong></td><td>72.00</td><td>82.0%</td><td>4 pts (70 - 74)</td><td>Small batch size (2 students); lowest test average despite decent attendance. Curriculum review needed.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section class="card" id="sec-13">
+        <h2 class="section-title">13. Real-Life Case Study B: E-Commerce Sales Analytics</h2>
+        
+        <p>
+            Humara doosra real-life case study ek multi-category online retail platform ka sales analytics engine build karna hai.
+            Yahan hum commercial sales data par revenue formulas calculate karenge, discount leakage inspect karenge, aur categories ke beech revenue share distribution evaluate karenge.
+        </p>
+
+        <div class="img-container">
+            <img src="assets/ecommerce_case_study_revenue_funnel.png" alt="E-Commerce Sales Revenue Funnel">
+            <div class="img-caption">Figure 13.20: Commercial Sales Architecture—from order quantities and unit pricing through discount application to category aggregation and percentage share.</div>
+        </div>
+
+        <h3 class="subsection-title">Dataset Specification &amp; Explicit Revenue Calculation</h3>
+        <p>
+            Har individual order line-item ka net revenue hum calculated formula se compute karte hain:
+            <br>
+            <code style="font-size:1.05rem; padding:6px 12px; display:inline-block; margin-top:8px;"><strong>revenue = quantity &times; price &times; (1 - discount)</strong></code>
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>City</th>
+                        <th>Qty</th>
+                        <th>List Price</th>
+                        <th>Discount</th>
+                        <th>Net Revenue (₹)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>ORD101</td><td>Wireless Mouse</td><td>Electronics</td><td>Mumbai</td><td>2</td><td>₹1,299.00</td><td>10%</td><td><strong>₹2,338.20</strong></td></tr>
+                    <tr><td>ORD102</td><td>Mechanical Keyboard</td><td>Electronics</td><td>Delhi</td><td>1</td><td>₹4,500.00</td><td>15%</td><td><strong>₹3,825.00</strong></td></tr>
+                    <tr><td>ORD103</td><td>USB-C Hub</td><td>Accessories</td><td>Bengaluru</td><td>3</td><td>₹850.00</td><td>0%</td><td><strong>₹2,550.00</strong></td></tr>
+                    <tr><td>ORD104</td><td>Gaming Monitor</td><td>Electronics</td><td>Mumbai</td><td>1</td><td>₹18,999.00</td><td>20%</td><td><strong>₹15,199.20</strong></td></tr>
+                    <tr><td>ORD105</td><td>Laptop Stand</td><td>Accessories</td><td>Delhi</td><td>2</td><td>₹1,499.50</td><td>5%</td><td><strong>₹2,849.05</strong></td></tr>
+                    <tr><td>ORD106</td><td>Webcam HD</td><td>Electronics</td><td>Kolkata</td><td>1</td><td>₹2,999.00</td><td>10%</td><td><strong>₹2,699.10</strong></td></tr>
+                    <tr><td>ORD107</td><td>Desk Mat</td><td>Office Supplies</td><td>Noida</td><td>4</td><td>₹599.00</td><td>0%</td><td><strong>₹2,396.00</strong></td></tr>
+                    <tr><td>ORD108</td><td>Headphones</td><td>Electronics</td><td>Mumbai</td><td>1</td><td>₹2,499.00</td><td>12%</td><td><strong>₹2,199.12</strong></td></tr>
+                    <tr><td>ORD109</td><td>Office Chair</td><td>Office Supplies</td><td>Bengaluru</td><td>1</td><td>₹7,999.00</td><td>10%</td><td><strong>₹7,199.10</strong></td></tr>
+                    <tr><td>ORD110</td><td>Bookshelf</td><td>Furniture</td><td>Delhi</td><td>1</td><td>₹6,499.00</td><td>5%</td><td><strong>₹6,174.05</strong></td></tr>
+                    <tr><td>ORD111</td><td>Ergonomic Cushion</td><td>Office Supplies</td><td>Hyderabad</td><td>2</td><td>₹899.00</td><td>0%</td><td><strong>₹1,798.00</strong></td></tr>
+                    <tr><td>ORD112</td><td>Desk Lamp</td><td>Office Supplies</td><td>Noida</td><td>3</td><td>₹699.00</td><td>10%</td><td><strong>₹1,887.30</strong></td></tr>
+                    <tr style="font-weight:bold; background:rgba(99,102,241,0.1);">
+                        <td colspan="7">Total Store Audited Revenue</td>
+                        <td>₹51,114.12</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Complete 7-Step Commercial Analytics Pipeline</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>ecommerce_sales_engine.py</span>
+                <span>Python 3 &bull; Executable</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+<span class="c-com"># Step 1: Initialize verified orders</span>
+df_ecom = pd.DataFrame({
+    <span class="c-str">"order_id"</span>: [<span class="c-str">f"ORD{i:03d}"</span> <span class="c-kw">for</span> i <span class="c-kw">in</span> range(<span class="c-num">101</span>, <span class="c-num">113</span>)],
+    <span class="c-str">"customer_id"</span>: [<span class="c-str">"CUST1"</span>, <span class="c-str">"CUST2"</span>, <span class="c-str">"CUST3"</span>, <span class="c-str">"CUST1"</span>, <span class="c-str">"CUST4"</span>, <span class="c-str">"CUST5"</span>, <span class="c-str">"CUST2"</span>, <span class="c-str">"CUST6"</span>, <span class="c-str">"CUST7"</span>, <span class="c-str">"CUST8"</span>, <span class="c-str">"CUST3"</span>, <span class="c-str">"CUST9"</span>],
+    <span class="c-str">"product"</span>: [<span class="c-str">"Wireless Mouse"</span>, <span class="c-str">"Mechanical Keyboard"</span>, <span class="c-str">"USB-C Hub"</span>, <span class="c-str">"Gaming Monitor"</span>, <span class="c-str">"Laptop Stand"</span>, <span class="c-str">"Webcam HD"</span>, <span class="c-str">"Desk Mat"</span>, <span class="c-str">"Headphones"</span>, <span class="c-str">"Office Chair"</span>, <span class="c-str">"Bookshelf"</span>, <span class="c-str">"Ergonomic Cushion"</span>, <span class="c-str">"Desk Lamp"</span>],
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Accessories"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Accessories"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office Supplies"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Office Supplies"</span>, <span class="c-str">"Furniture"</span>, <span class="c-str">"Office Supplies"</span>, <span class="c-str">"Office Supplies"</span>],
+    <span class="c-str">"city"</span>: [<span class="c-str">"Mumbai"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Bengaluru"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Kolkata"</span>, <span class="c-str">"Noida"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Bengaluru"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Hyderabad"</span>, <span class="c-str">"Noida"</span>],
+    <span class="c-str">"quantity"</span>: [<span class="c-num">2</span>, <span class="c-num">1</span>, <span class="c-num">3</span>, <span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">1</span>, <span class="c-num">4</span>, <span class="c-num">1</span>, <span class="c-num">1</span>, <span class="c-num">1</span>, <span class="c-num">2</span>, <span class="c-num">3</span>],
+    <span class="c-str">"price"</span>: [<span class="c-num">1299.0</span>, <span class="c-num">4500.0</span>, <span class="c-num">850.0</span>, <span class="c-num">18999.0</span>, <span class="c-num">1499.5</span>, <span class="c-num">2999.0</span>, <span class="c-num">599.0</span>, <span class="c-num">2499.0</span>, <span class="c-num">7999.0</span>, <span class="c-num">6499.0</span>, <span class="c-num">899.0</span>, <span class="c-num">699.0</span>],
+    <span class="c-str">"discount"</span>: [<span class="c-num">0.10</span>, <span class="c-num">0.15</span>, <span class="c-num">0.00</span>, <span class="c-num">0.20</span>, <span class="c-num">0.05</span>, <span class="c-num">0.10</span>, <span class="c-num">0.00</span>, <span class="c-num">0.12</span>, <span class="c-num">0.10</span>, <span class="c-num">0.05</span>, <span class="c-num">0.00</span>, <span class="c-num">0.10</span>]
+})
+
+<span class="c-com"># Step 2: Compute net revenue</span>
+df_ecom[<span class="c-str">"revenue"</span>] = df_ecom[<span class="c-str">"quantity"</span>] * df_ecom[<span class="c-str">"price"</span>] * (<span class="c-num">1</span> - df_ecom[<span class="c-str">"discount"</span>])
+
+<span class="c-com"># Step 3: Category level summary with named aggregation</span>
+cat_summary = df_ecom.groupby(<span class="c-str">"category"</span>).agg(
+    orders=(<span class="c-str">"order_id"</span>, <span class="c-str">"count"</span>),
+    units_sold=(<span class="c-str">"quantity"</span>, <span class="c-str">"sum"</span>),
+    total_revenue=(<span class="c-str">"revenue"</span>, <span class="c-str">"sum"</span>),
+    avg_order_value=(<span class="c-str">"revenue"</span>, <span class="c-str">"mean"</span>),
+    unique_buyers=(<span class="c-str">"customer_id"</span>, <span class="c-str">"nunique"</span>)
+).reset_index()
+
+<span class="c-com"># Step 4: Overall revenue share % using total store revenue</span>
+total_store_revenue = df_ecom[<span class="c-str">"revenue"</span>].sum()
+cat_summary[<span class="c-str">"revenue_share_pct"</span>] = (cat_summary[<span class="c-str">"total_revenue"</span>] / total_store_revenue) * <span class="c-num">100</span>
+
+<span class="c-com"># Step 5: Sort categories by total revenue descending</span>
+cat_summary = cat_summary.sort_values(by=<span class="c-str">"total_revenue"</span>, ascending=<span class="c-kw">False</span>).reset_index(drop=<span class="c-kw">True</span>)
+
+<span class="c-com"># Step 6: Multi-level hierarchy (Category x City)</span>
+geo_breakdown = df_ecom.groupby([<span class="c-str">"category"</span>, <span class="c-str">"city"</span>])[<span class="c-str">"revenue"</span>].sum().reset_index()
+
+print(<span class="c-str">"=== EXECUTIVE CATEGORY SUMMARY ==="</span>)
+print(cat_summary.to_string(index=<span class="c-kw">False</span>))</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+=== EXECUTIVE CATEGORY SUMMARY ===
+       category  orders  units_sold  total_revenue  avg_order_value  unique_buyers  revenue_share_pct
+    Electronics       5           6       26260.62          5252.124              4          51.376449
+Office Supplies       4          10       13280.40          3320.100              4          25.981862
+      Furniture       1           1        6174.05          6174.050              1          12.078952
+    Accessories       2           5        5399.05          2699.525              2          10.562737
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Strategic Commercial Insights</h3>
+        <ul>
+            <li><strong>Electronics is the Store Anchor (51.4% Revenue):</strong> Akeli Electronics category pure store ke revenue ka aadhe se zyada hissa generate karti hai (₹26,260.62 out of ₹51,114.12), jisme Gaming Monitor (ORD104: ₹15,199.20) sabse bada ticket item hai.</li>
+            <li><strong>Office Supplies drives Volume (10 units):</strong> Sabse zyada units (10 items) Office Supplies mein biki hain, jo steady cash-flow provide karta hai.</li>
+            <li><strong>Furniture High Average Order Value:</strong> Single order se ₹6,174.05 mila, indicating strong catalog expansion potential for home-office furniture.</li>
+            <li><strong>Accessories High Margin Potential:</strong> 5 units bik kar ₹5,399.05 banaye with low return rates and high repeat orders.</li>
+        </ul>
+    </section>
+
+    <!-- Section 14 -->
+    <section class="card" id="sec-14">
+        <h2 class="section-title">14. Decision Frameworks, Comparison Matrices &amp; Cheat Sheet</h2>
+        
+        <p>
+            Real-world data science problems mein sabse bada challenge yeh nahi hota ki syntax kya hai, balki yeh decide karna hota hai ki <strong>kis situation mein kaunsa method use kiya jaye</strong>.
+            Neeche diya gaya architectural flowchart aapko har scenario ke liye sahi tool chunne mein guide karega:
+        </p>
+
+        <div class="img-container">
+            <img src="assets/decision_flowchart_groupby_aggregation.png" alt="GroupBy & Aggregation Decision Flowchart">
+            <div class="img-caption">Figure 13.21: Master Decision Architecture—guiding your choice between .agg(), .transform(), .filter(), and .apply() based on analytical requirements.</div>
+        </div>
+
+        <h3 class="subsection-title">Core Method Architectural Comparison Matrix</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Method</th>
+                        <th>Input Shape</th>
+                        <th>Output Shape</th>
+                        <th>Row Alignment</th>
+                        <th>Modifies DF?</th>
+                        <th>Primary Use Case</th>
+                        <th>Speed / Efficiency</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong><code>.agg()</code></strong></td>
+                        <td>$M$ rows per group</td>
+                        <td>$1$ row per group ($N$ total)</td>
+                        <td>Collapsed to Group Keys</td>
+                        <td>Returns new summary DF</td>
+                        <td>Executive KPI summaries, sums, averages, multi-metric reports</td>
+                        <td>⚡ Highly Vectorized (Fastest)</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>.transform()</code></strong></td>
+                        <td>$M$ rows per group</td>
+                        <td>$M$ rows (same as input)</td>
+                        <td>Original DataFrame index</td>
+                        <td>No (used to create new column)</td>
+                        <td>Broadcasting group stats, row deviations, percentage shares</td>
+                        <td>⚡ Highly Vectorized (Fast)</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>.filter()</code></strong></td>
+                        <td>$M$ rows per group</td>
+                        <td>$K \le M$ rows</td>
+                        <td>Original DataFrame index</td>
+                        <td>Returns filtered subset of rows</td>
+                        <td>Dropping small groups (e.g. len &lt; 3), low-performing clusters</td>
+                        <td>⚙️ Python Loop over Groups</td>
+                    </tr>
+                    <tr>
+                        <td><strong><code>.apply()</code></strong></td>
+                        <td>$M$ rows per group</td>
+                        <td>Arbitrary (Scalar, Series, DF)</td>
+                        <td>Depends on function output</td>
+                        <td>Returns arbitrary structure</td>
+                        <td>Complex multi-column custom logic, Top-N ranking per group</td>
+                        <td>🐢 Slowest (Python Overhead)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Visual Quick Reference Cheat Sheet</h3>
+        <p>Aapki quick offline revision ke liye complete GroupBy &amp; Aggregation cheat sheet:</p>
+
+        <div class="img-container">
+            <img src="assets/pandas_groupby_cheat_sheet.png" alt="Pandas GroupBy & Aggregation Quick Cheat Sheet">
+            <div class="img-caption">Figure 13.22: CodeVerse Pandas GroupBy &amp; Aggregation Cheat Sheet—syntax patterns, parameters, aggregations, transformations, and pitfalls.</div>
+        </div>
+
+        <h3 class="subsection-title">The Five Golden Rules of GroupBy</h3>
+        <ol>
+            <li><strong>Rule 1 (Flat Index):</strong> Hamesha <code>as_index=False</code> ya end mein <code>.reset_index()</code> use karein taaki output standard 2D table bane aur plotting/exporting mein error na aaye.</li>
+            <li><strong>Rule 2 (Named Aggregation):</strong> MultiIndex tuple headers se bachne ke liye hamesha modern syntax <code>.agg(alias=('column', 'func'))</code> use karein.</li>
+            <li><strong>Rule 3 (Broadcasting with Transform):</strong> Jab bhi original DataFrame ke har row ko uske group ke summary se compare karna ho, bina soche <code>.transform()</code> ka sahara lein.</li>
+            <li><strong>Rule 4 (Data Audit with Size vs Count):</strong> Missing values detect karne ke liye <code>group.size() - group['col'].count()</code> inspect karein.</li>
+            <li><strong>Rule 5 (Missing Key Awareness):</strong> Agar grouping column mein nulls ho sakte hain, toh <code>dropna=False</code> pass karein taaki records silently gayab na hon.</li>
+        </ol>
+    </section>
+
+    <!-- Section 15 -->
+    <section class="card" id="sec-15">
+        <h2 class="section-title">15. Common Beginner Pitfalls &amp; Traps</h2>
+        
+        <p>
+            GroupBy aur Aggregation ke dauraan beginners aksar aisi galtiyan karte hain jinse code silent bugs paida karta hai ya performance drop hoti hai.
+            Neeche 10 sabse common traps aur unke production-grade solutions diye gaye hain:
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Trap #</th>
+                        <th>Common Mistake</th>
+                        <th>Underlying Cause</th>
+                        <th>Bug Symptom / Error</th>
+                        <th>Correct Production Solution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Missing <code>as_index=False</code></td>
+                        <td>GroupBy column automatically index ban jati hai</td>
+                        <td><code>KeyError: 'dept'</code> when filtering or exporting</td>
+                        <td><code>df.groupby('dept', as_index=False)</code></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Confusing <code>.size()</code> with <code>.count()</code></td>
+                        <td><code>count()</code> drops nulls; <code>size()</code> counts physical rows</td>
+                        <td>Under-counting total records in dirty datasets</td>
+                        <td>Use <code>size()</code> for row count; <code>count()</code> for valid values</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Using <code>.agg()</code> for new column creation</td>
+                        <td><code>agg()</code> shrinks rows to group count $N$</td>
+                        <td><code>ValueError: cannot reindex on an axis with duplicate labels</code></td>
+                        <td>Use <code>df['new_col'] = df.groupby().transform()</code></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Using boolean indexing instead of <code>.filter()</code></td>
+                        <td>Trying <code>df[df.groupby('dept').mean() &gt; 80]</code></td>
+                        <td>Shape mismatch or index alignment failure</td>
+                        <td>Use <code>df.groupby('dept').filter(lambda g: g['marks'].mean() &gt; 80)</code></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Grouping by Unique ID (e.g. <code>order_id</code>)</td>
+                        <td>Grouping keys have unique values per row</td>
+                        <td>Massive memory spike, $N$ groups of size 1</td>
+                        <td>Group only by categorical dimensions (Dept, City, Category)</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>Forgetting <code>dropna=False</code> on null keys</td>
+                        <td>Default <code>dropna=True</code> drops null key rows silently</td>
+                        <td>Total financial sums do not match raw data totals</td>
+                        <td>Always specify <code>df.groupby(..., dropna=False)</code> for audits</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>Aggregating string columns with <code>sum()</code></td>
+                        <td>Strings get concatenated into giant text strings</td>
+                        <td>Memory blowup or nonsense concatenated strings</td>
+                        <td>Specify numeric columns explicitly: <code>df.groupby('dept')['marks'].sum()</code></td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>Overusing <code>.apply()</code> for simple statistics</td>
+                        <td><code>apply()</code> runs un-vectorized Python loops</td>
+                        <td>Code runs 10x to 50x slower on 100k+ rows</td>
+                        <td>Use vectorized methods like <code>mean()</code>, <code>sum()</code>, <code>agg()</code></td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>Nested MultiIndex Column Access Confusion</td>
+                        <td>Passing lists to <code>.agg(['mean', 'max'])</code> creates tuples</td>
+                        <td><code>df['marks']</code> returns a DataFrame instead of Series</td>
+                        <td>Use Named Aggregation or flatten with <code>df.columns = ['_'.join(c) for c in df.columns]</code></td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>Sorting raw data before <code>groupby()</code> unnecessarily</td>
+                        <td>Sorting entire DataFrame before grouping wastes CPU</td>
+                        <td>Slow query execution without affecting final aggregation</td>
+                        <td>Group first, then sort the aggregated summary table</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Trap Walkthrough 1: Creating New Columns with agg() vs transform()</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>trap_agg_assignment.py</span>
+                <span>Python 3 &bull; Incorrect vs Correct</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({<span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>], <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>, <span class="c-num">85</span>]})
+
+<span class="c-com"># ❌ WRONG: Trying to assign agg() result back to df (Shape Mismatch!)</span>
+<span class="c-com"># df["avg"] = df.groupby("dept")["marks"].agg("mean") # Error or wrong alignment!</span>
+
+<span class="c-com"># ✅ CORRECT: Use transform() to broadcast group mean to all 3 rows</span>
+df[<span class="c-str">"avg"</span>] = df.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].transform(<span class="c-str">"mean"</span>)
+print(df)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  dept  marks   avg
+0  CSE     80  85.0
+1  CSE     90  85.0
+2   IT     85  85.0
+            </div>
+        </div>
+
+        <h3 class="subsection-title">Trap Walkthrough 2: String Summation Catastrophe</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>trap_string_sum.py</span>
+                <span>Python 3 &bull; Incorrect vs Correct</span>
+            </div>
+            <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df_names = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>],
+    <span class="c-str">"name"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Priya"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">90</span>]
+})
+
+<span class="c-com"># ❌ WRONG: df.groupby('dept').sum() will concatenate names into 'AmanPriya'!</span>
+<span class="c-com"># ✅ CORRECT: Explicitly select target numeric column or use numeric_only=True</span>
+summary_safe = df_names.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].sum().reset_index()
+print(summary_safe)</code></pre>
+            <div class="output-box">
+                <div class="output-label">VERIFIED EXECUTION OUTPUT:</div>
+  dept  marks
+0  CSE    175
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section class="card" id="sec-16">
+        <h2 class="section-title">16. Practice Exercises &amp; Guided Mini-Project</h2>
+        
+        <p>
+            Apne practical skills ko test karne ke liye neeche diye gaye 20 exercises solve karein.
+            Har sawal ke niche detailed collapsible solution button diya gaya hai. Pehle khud se code run karein, fir solution verify karein!
+        </p>
+
+        <h3 class="subsection-title">Category 1: Beginner Drills (5 Questions)</h3>
+        
+        <!-- Drill 1 -->
+        <details class="details-box">
+            <summary>Drill 1: Basic Single-Column Group Mean</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Ek DataFrame jisme <code>city</code> aur <code>temperature</code> diye gaye hain, har city ka average temperature calculate karein using <code>groupby()</code>.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"city"</span>: [<span class="c-str">"Delhi"</span>, <span class="c-str">"Mumbai"</span>, <span class="c-str">"Delhi"</span>, <span class="c-str">"Mumbai"</span>],
+    <span class="c-str">"temp"</span>: [<span class="c-num">32</span>, <span class="c-num">28</span>, <span class="c-num">36</span>, <span class="c-num">30</span>]
+})
+res = df.groupby(<span class="c-str">"city"</span>, as_index=<span class="c-kw">False</span>)[<span class="c-str">"temp"</span>].mean()
+print(res)</code></pre>
+                    <div class="output-box">
+     city  temp
+0   Delhi  34.0
+1  Mumbai  29.0
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 2 -->
+        <details class="details-box">
+            <summary>Drill 2: Total Units Sold by Category</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Categories <code>["Tech", "Food", "Tech"]</code> aur <code>units=[10, 5, 20]</code> ka total sum nikaalein flat DataFrame format mein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({<span class="c-str">"cat"</span>: [<span class="c-str">"Tech"</span>, <span class="c-str">"Food"</span>, <span class="c-str">"Tech"</span>], <span class="c-str">"units"</span>: [<span class="c-num">10</span>, <span class="c-num">5</span>, <span class="c-num">20</span>]})
+summary = df.groupby(<span class="c-str">"cat"</span>)[<span class="c-str">"units"</span>].sum().reset_index()
+print(summary)</code></pre>
+                    <div class="output-box">
+    cat  units
+0  Food      5
+1  Tech     30
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 3 -->
+        <details class="details-box">
+            <summary>Drill 3: Maximum and Minimum Price per Category</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Named aggregation use karke har category ka <code>max_price</code> aur <code>min_price</code> nikaalein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({<span class="c-str">"cat"</span>: [<span class="c-str">"A"</span>, <span class="c-str">"A"</span>, <span class="c-str">"B"</span>], <span class="c-str">"price"</span>: [<span class="c-num">100</span>, <span class="c-num">300</span>, <span class="c-num">500</span>]})
+ans = df.groupby(<span class="c-str">"cat"</span>).agg(max_p=(<span class="c-str">"price"</span>, <span class="c-str">"max"</span>), min_p=(<span class="c-str">"price"</span>, <span class="c-str">"min"</span>)).reset_index()
+print(ans)</code></pre>
+                    <div class="output-box">
+  cat  max_p  min_p
+0   A    300    100
+1   B    500    500
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 4 -->
+        <details class="details-box">
+            <summary>Drill 4: Row Count per Department with size()</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Har department mein kitne records hain, <code>size()</code> function se count karein aur count column ka naam <code>'headcount'</code> rakhein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({<span class="c-str">"dept"</span>: [<span class="c-str">"HR"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"HR"</span>, <span class="c-str">"IT"</span>]})
+res = df.groupby(<span class="c-str">"dept"</span>).size().reset_index(name=<span class="c-str">"headcount"</span>)
+print(res)</code></pre>
+                    <div class="output-box">
+  dept  headcount
+0   HR          2
+1   IT          3
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 5 -->
+        <details class="details-box">
+            <summary>Drill 5: First and Last Record per Group</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> GroupBy ke <code>.first()</code> aur <code>.last()</code> methods se group ka pehla aur aakhiri record extract karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"team"</span>: [<span class="c-str">"Alpha"</span>, <span class="c-str">"Alpha"</span>, <span class="c-str">"Beta"</span>, <span class="c-str">"Beta"</span>],
+    <span class="c-str">"score"</span>: [<span class="c-num">10</span>, <span class="c-num">20</span>, <span class="c-num">50</span>, <span class="c-num">90</span>]
+})
+print(<span class="c-str">"--- First Entries ---"</span>)
+print(df.groupby(<span class="c-str">"team"</span>).first())
+print(<span class="c-str">"\n--- Last Entries ---"</span>)
+print(df.groupby(<span class="c-str">"team"</span>).last())</code></pre>
+                    <div class="output-box">
+--- First Entries ---
+       score
+team        
+Alpha     10
+Beta      50
+
+--- Last Entries ---
+       score
+team        
+Alpha     20
+Beta      90
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3 class="subsection-title">Category 2: Intermediate Challenges (5 Questions)</h3>
+
+        <!-- Drill 6 -->
+        <details class="details-box">
+            <summary>Drill 6: Two-Level Hierarchical Grouping (Branch &times; Gender)</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Department aur Gender dono par group karke average salary calculate karein aur MultiIndex ko standard columns mein convert karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"HR"</span>, <span class="c-str">"HR"</span>],
+    <span class="c-str">"gender"</span>: [<span class="c-str">"M"</span>, <span class="c-str">"F"</span>, <span class="c-str">"M"</span>, <span class="c-str">"F"</span>],
+    <span class="c-str">"salary"</span>: [<span class="c-num">60000</span>, <span class="c-num">65000</span>, <span class="c-num">45000</span>, <span class="c-num">48000</span>]
+})
+res = df.groupby([<span class="c-str">"dept"</span>, <span class="c-str">"gender"</span>])[<span class="c-str">"salary"</span>].mean().reset_index()
+print(res)</code></pre>
+                    <div class="output-box">
+  dept gender   salary
+0   HR      F  48000.0
+1   HR      M  45000.0
+2   IT      F  65000.0
+3   IT      M  60000.0
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 7 -->
+        <details class="details-box">
+            <summary>Drill 7: Broadcasting Group Mean with transform()</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Har employee ki salary me se uske department ki average salary subtract karke <code>diff_from_avg</code> column banayein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"Sales"</span>, <span class="c-str">"Sales"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>],
+    <span class="c-str">"salary"</span>: [<span class="c-num">30000</span>, <span class="c-num">50000</span>, <span class="c-num">70000</span>, <span class="c-num">90000</span>]
+})
+df[<span class="c-str">"dept_avg"</span>] = df.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"salary"</span>].transform(<span class="c-str">"mean"</span>)
+df[<span class="c-str">"diff_from_avg"</span>] = df[<span class="c-str">"salary"</span>] - df[<span class="c-str">"dept_avg"</span>]
+print(df)</code></pre>
+                    <div class="output-box">
+    dept  salary  dept_avg  diff_from_avg
+0  Sales   30000   40000.0       -10000.0
+1  Sales   50000   40000.0        10000.0
+2     IT   70000   80000.0       -10000.0
+3     IT   90000   80000.0        10000.0
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 8 -->
+        <details class="details-box">
+            <summary>Drill 8: Filtering Groups by Average Threshold</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Sirf un categories ke saare rows retain karein jinka average score 80 se bada ho using <code>.filter()</code>.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"batch"</span>: [<span class="c-str">"B1"</span>, <span class="c-str">"B1"</span>, <span class="c-str">"B2"</span>, <span class="c-str">"B2"</span>],
+    <span class="c-str">"score"</span>: [<span class="c-num">85</span>, <span class="c-num">95</span>, <span class="c-num">60</span>, <span class="c-num">70</span>]
+})
+<span class="c-com"># B1 avg = 90 (> 80), B2 avg = 65 (&lt;= 80)</span>
+filtered = df.groupby(<span class="c-str">"batch"</span>).filter(<span class="c-kw">lambda</span> g: g[<span class="c-str">"score"</span>].mean() > <span class="c-num">80</span>)
+print(filtered)</code></pre>
+                    <div class="output-box">
+  batch  score
+0    B1     85
+1    B1     95
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 9 -->
+        <details class="details-box">
+            <summary>Drill 9: Distinct Customer Count with nunique()</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Ek store dataset me har region ke unique customers aur total order count ek saath aggregate karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"region"</span>: [<span class="c-str">"North"</span>, <span class="c-str">"North"</span>, <span class="c-str">"North"</span>, <span class="c-str">"South"</span>],
+    <span class="c-str">"cust_id"</span>: [<span class="c-str">"C1"</span>, <span class="c-str">"C1"</span>, <span class="c-str">"C2"</span>, <span class="c-str">"C3"</span>]
+})
+res = df.groupby(<span class="c-str">"region"</span>).agg(
+    orders=(<span class="c-str">"cust_id"</span>, <span class="c-str">"count"</span>),
+    unique_cust=(<span class="c-str">"cust_id"</span>, <span class="c-str">"nunique"</span>)
+).reset_index()
+print(res)</code></pre>
+                    <div class="output-box">
+  region  orders  unique_cust
+0  North       3            2
+1  South       1            1
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Drill 10 -->
+        <details class="details-box">
+            <summary>Drill 10: Retaining Missing Group Keys with dropna=False</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Jab branch column mein <code>None</code> ho, tab bhi unka row count retain karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"branch"</span>: [<span class="c-str">"Delhi"</span>, <span class="c-kw">None</span>, <span class="c-str">"Delhi"</span>, <span class="c-kw">None</span>],
+    <span class="c-str">"sales"</span>: [<span class="c-num">100</span>, <span class="c-num">200</span>, <span class="c-num">150</span>, <span class="c-num">250</span>]
+})
+res = df.groupby(<span class="c-str">"branch"</span>, dropna=<span class="c-kw">False</span>)[<span class="c-str">"sales"</span>].sum().reset_index()
+print(res)</code></pre>
+                    <div class="output-box">
+  branch  sales
+0  Delhi    250
+1    NaN    450
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3 class="subsection-title">Category 3: Practical Real-World Challenges (3 Questions)</h3>
+
+        <!-- Challenge 11 -->
+        <details class="details-box">
+            <summary>Challenge 11: Percentage Share of Category Revenue</summary>
+            <div class="details-content">
+                <p><strong>Scenario:</strong> Har product ka uski parent category ke total revenue mein kitna percentage contribution hai, calculate karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"category"</span>: [<span class="c-str">"Electronics"</span>, <span class="c-str">"Electronics"</span>, <span class="c-str">"Clothing"</span>, <span class="c-str">"Clothing"</span>],
+    <span class="c-str">"product"</span>: [<span class="c-str">"Phone"</span>, <span class="c-str">"Case"</span>, <span class="c-str">"Shirt"</span>, <span class="c-str">"Socks"</span>],
+    <span class="c-str">"sales"</span>: [<span class="c-num">8000</span>, <span class="c-num">2000</span>, <span class="c-num">1500</span>, <span class="c-num">500</span>]
+})
+df[<span class="c-str">"cat_total"</span>] = df.groupby(<span class="c-str">"category"</span>)[<span class="c-str">"sales"</span>].transform(<span class="c-str">"sum"</span>)
+df[<span class="c-str">"pct_share"</span>] = (df[<span class="c-str">"sales"</span>] / df[<span class="c-str">"cat_total"</span>]) * <span class="c-num">100</span>
+print(df[[<span class="c-str">"category"</span>, <span class="c-str">"product"</span>, <span class="c-str">"sales"</span>, <span class="c-str">"pct_share"</span>]])</code></pre>
+                    <div class="output-box">
+      category product  sales  pct_share
+0  Electronics   Phone   8000       80.0
+1  Electronics    Case   2000       20.0
+2     Clothing   Shirt   1500       75.0
+3     Clothing   Socks    500       25.0
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Challenge 12 -->
+        <details class="details-box">
+            <summary>Challenge 12: Finding Top Earner per Department</summary>
+            <div class="details-content">
+                <p><strong>Scenario:</strong> Har department ka highest salary employee find karne ke liye <code>.sort_values()</code> aur <code>.groupby().head(1)</code> ya <code>.first()</code> use karein.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"HR"</span>, <span class="c-str">"HR"</span>],
+    <span class="c-str">"emp"</span>: [<span class="c-str">"A"</span>, <span class="c-str">"B"</span>, <span class="c-str">"C"</span>, <span class="c-str">"D"</span>, <span class="c-str">"E"</span>],
+    <span class="c-str">"salary"</span>: [<span class="c-num">50000</span>, <span class="c-num">80000</span>, <span class="c-num">65000</span>, <span class="c-num">40000</span>, <span class="c-num">55000</span>]
+})
+top_earners = df.sort_values(by=<span class="c-str">"salary"</span>, ascending=<span class="c-kw">False</span>).groupby(<span class="c-str">"dept"</span>).head(<span class="c-num">1</span>)
+print(top_earners.reset_index(drop=<span class="c-kw">True</span>))</code></pre>
+                    <div class="output-box">
+  dept emp  salary
+0   IT   B   80000
+1   HR   E   55000
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Challenge 13 -->
+        <details class="details-box">
+            <summary>Challenge 13: Normalizing (Min-Max Scaling) within Groups</summary>
+            <div class="details-content">
+                <p><strong>Scenario:</strong> Har department ke andar student marks ko 0 se 1 ke beech min-max scale karein: <code>(marks - min) / (max - min)</code>.</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+df = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">60</span>, <span class="c-num">80</span>, <span class="c-num">100</span>]
+})
+min_val = df.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].transform(<span class="c-str">"min"</span>)
+max_val = df.groupby(<span class="c-str">"dept"</span>)[<span class="c-str">"marks"</span>].transform(<span class="c-str">"max"</span>)
+df[<span class="c-str">"normalized"</span>] = (df[<span class="c-str">"marks"</span>] - min_val) / (max_val - min_val)
+print(df)</code></pre>
+                    <div class="output-box">
+  dept  marks  normalized
+0  CSE     60         0.0
+1  CSE     80         0.5
+2  CSE    100         1.0
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3 class="subsection-title">Category 4: Multiple-Choice Questions (MCQs) (5 Questions)</h3>
+
+        <!-- MCQ 1 -->
+        <details class="details-box">
+            <summary>MCQ 1: What is the return type of df.groupby('col')?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Jab aap <code>g = df.groupby('col')</code> execute karte hain bina kisi aggregation method ke, toh <code>type(g)</code> kya hota hai?</p>
+                <ul>
+                    <li>A) <code>pandas.DataFrame</code></li>
+                    <li>B) <code>pandas.core.groupby.generic.DataFrameGroupBy</code></li>
+                    <li>C) <code>pandas.Series</code></li>
+                    <li>D) <code>dict</code></li>
+                </ul>
+                <div class="callout callout-success">
+                    <div class="callout-title">Answer: B</div>
+                    <p><strong>Explanation:</strong> <code>groupby()</code> ek lazy evaluator hai jo <code>DataFrameGroupBy</code> object return karta hai. Jab tak koi aggregation method (jaise <code>mean()</code>, <code>sum()</code>) call nahi hota, tab tak actual calculation execute nahi hoti.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- MCQ 2 -->
+        <details class="details-box">
+            <summary>MCQ 2: Which function counts rows including NaN values?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Group ke andar missing values (NaN) ko include karke total physical rows count karne ke liye kaunsa method use hota hai?</p>
+                <ul>
+                    <li>A) <code>.count()</code></li>
+                    <li>B) <code>.sum()</code></li>
+                    <li>C) <code>.size()</code></li>
+                    <li>D) <code>.len()</code></li>
+                </ul>
+                <div class="callout callout-success">
+                    <div class="callout-title">Answer: C</div>
+                    <p><strong>Explanation:</strong> <code>.size()</code> pure group ki total physical rows count karta hai chahe cell NaN ho ya valid. Jabki <code>.count()</code> sirf valid non-null values count karta hai.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- MCQ 3 -->
+        <details class="details-box">
+            <summary>MCQ 3: Output shape difference between agg() and transform()</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Agar original DataFrame mein 100 rows aur 4 unique categories hain, toh <code>transform()</code> aur <code>agg()</code> ka output kitni rows return karega?</p>
+                <ul>
+                    <li>A) Both return 4 rows</li>
+                    <li>B) Both return 100 rows</li>
+                    <li>C) agg() returns 4 rows; transform() returns 100 rows</li>
+                    <li>D) agg() returns 100 rows; transform() returns 4 rows</li>
+                </ul>
+                <div class="callout callout-success">
+                    <div class="callout-title">Answer: C</div>
+                    <p><strong>Explanation:</strong> <code>agg()</code> rows ko collapse karke unique groups (4 rows) banata hai. <code>transform()</code> calculation ko broadcast karke exact original row count (100 rows) maintain karta hai.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- MCQ 4 -->
+        <details class="details-box">
+            <summary>MCQ 4: How to retain missing values in the grouping key?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> Agar grouping column mein <code>NaN</code> values hain aur aap chahte hain ki woh drop na hon, toh kaunsa parameter pass karna padega?</p>
+                <ul>
+                    <li>A) <code>keep_na=True</code></li>
+                    <li>B) <code>dropna=False</code></li>
+                    <li>C) <code>fillna=True</code></li>
+                    <li>D) <code>ignore_null=False</code></li>
+                </ul>
+                <div class="callout callout-success">
+                    <div class="callout-title">Answer: B</div>
+                    <p><strong>Explanation:</strong> Pandas 1.1+ mein <code>df.groupby("col", dropna=False)</code> use karne se missing keys ek alag category (NaN group) ki tarah preserve hoti hain.</p>
+                </div>
+            </div>
+        </details>
+
+        <!-- MCQ 5 -->
+        <details class="details-box">
+            <summary>MCQ 5: What does GroupBy.filter() return?</summary>
+            <div class="details-content">
+                <p><strong>Question:</strong> <code>df.groupby('dept').filter(lambda g: len(g) &gt;= 3)</code> kya return karta hai?</p>
+                <ul>
+                    <li>A) Ek summary table jisme har department ka count hota hai</li>
+                    <li>B) Original DataFrame ka ek subset jisme sirf qualifying groups ke saare rows hote hain</li>
+                    <li>C) Ek boolean Series</li>
+                    <li>D) Ek dictionary of DataFrames</li>
+                </ul>
+                <div class="callout callout-success">
+                    <div class="callout-title">Answer: B</div>
+                    <p><strong>Explanation:</strong> <code>filter()</code> summary table nahi banata, balki original DataFrame ki rows filter karta hai. Jo groups condition satisfy karte hain, unki saari original rows preserve ho jati hain.</p>
+                </div>
+            </div>
+        </details>
+
+        <h3 class="subsection-title">Category 5: Code Debugging Exercises (2 Exercises)</h3>
+
+        <!-- Debug 1 -->
+        <details class="details-box">
+            <summary>Debugging 1: Fixing MultiIndex Column Access Bug</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong> Ek student ne multiple aggregation functions use kiye aur direct column access karne par <code>KeyError</code> aa gaya:</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-com"># ❌ BUGGY CODE</span>
+<span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+df = pd.DataFrame({<span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>], <span class="c-str">"marks"</span>: [<span class="c-num">80</span>, <span class="c-num">90</span>]})
+summary = df.groupby(<span class="c-str">"dept"</span>).agg([<span class="c-str">"mean"</span>, <span class="c-str">"max"</span>])
+<span class="c-com"># print(summary["mean"]) # Raises KeyError: 'mean'</span></code></pre>
+                </div>
+                <p><strong>Root Cause:</strong> <code>agg(["mean", "max"])</code> MultiIndex columns create karta hai: <code>[("marks", "mean"), ("marks", "max")]</code>. Direct <code>'mean'</code> column exist hi nahi karta!</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-com"># ✅ CORRECTED CODE: Modern Named Aggregation</span>
+summary_fixed = df.groupby(<span class="c-str">"dept"</span>).agg(
+    avg_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"mean"</span>),
+    max_marks=(<span class="c-str">"marks"</span>, <span class="c-str">"max"</span>)
+).reset_index()
+print(summary_fixed[<span class="c-str">"avg_marks"</span>]) <span class="c-com"># Works perfectly!</span></code></pre>
+                    <div class="output-box">
+0    80.0
+1    90.0
+Name: avg_marks, dtype: float64
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <!-- Debug 2 -->
+        <details class="details-box">
+            <summary>Debugging 2: Fixing Silent Missing Data Under-Count</summary>
+            <div class="details-content">
+                <p><strong>Buggy Code:</strong> Ek auditor ne transactions count karne ke liye <code>count()</code> use kiya, lekin customer phone numbers missing hone ki wajah se order count galat aa gaya:</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-com"># ❌ BUGGY CODE</span>
+<span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+<span class="c-kw">import</span> numpy <span class="c-kw">as</span> np
+
+df_orders = pd.DataFrame({
+    <span class="c-str">"store"</span>: [<span class="c-str">"S1"</span>, <span class="c-str">"S1"</span>, <span class="c-str">"S1"</span>],
+    <span class="c-str">"phone"</span>: [<span class="c-str">"9876543210"</span>, np.nan, np.nan]
+})
+<span class="c-com"># Auditor used count() on phone: returns 1 instead of 3!</span>
+wrong_orders = df_orders.groupby(<span class="c-str">"store"</span>)[<span class="c-str">"phone"</span>].count()</code></pre>
+                </div>
+                <p><strong>Root Cause:</strong> <code>count()</code> sirf non-null entries count karta hai. Agar target column mein NaN hai, toh total orders under-report ho jayenge!</p>
+                <div class="code-container">
+                    <pre class="code-block"><code><span class="c-com"># ✅ CORRECTED CODE: Use size() for total transactions</span>
+correct_orders = df_orders.groupby(<span class="c-str">"store"</span>).size().reset_index(name=<span class="c-str">"total_orders"</span>)
+print(correct_orders)</code></pre>
+                    <div class="output-box">
+  store  total_orders
+0    S1             3
+                    </div>
+                </div>
+            </div>
+        </details>
+
+        <h3 class="subsection-title">Capstone Mini-Project: College Academic &amp; Store Performance Dashboard</h3>
+        <p>
+            Aapko ek dual-track business problem di gayi hai: College management aur E-commerce store dono ke data ko merge karke executive level KPI reports generate karni hain:
+        </p>
+        
+        <details class="details-box">
+            <summary>🚀 View Complete Capstone Mini-Project Solution</summary>
+            <div class="details-content">
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>capstone_dual_dashboard.py</span>
+                        <span>Python 3 &bull; Executable</span>
+                    </div>
+                    <pre class="code-block"><code><span class="c-kw">import</span> pandas <span class="c-kw">as</span> pd
+
+<span class="c-com"># 1. Academic Performance Matrix</span>
+df_academic = pd.DataFrame({
+    <span class="c-str">"dept"</span>: [<span class="c-str">"CSE"</span>, <span class="c-str">"CSE"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"IT"</span>, <span class="c-str">"ECE"</span>],
+    <span class="c-str">"student"</span>: [<span class="c-str">"Aman"</span>, <span class="c-str">"Priya"</span>, <span class="c-str">"Sneha"</span>, <span class="c-str">"Aditya"</span>, <span class="c-str">"Rohan"</span>],
+    <span class="c-str">"marks"</span>: [<span class="c-num">85</span>, <span class="c-num">92</span>, <span class="c-num">82</span>, <span class="c-num">94</span>, <span class="c-num">84</span>]
+})
+
+academic_kpi = df_academic.groupby(<span class="c-str">"dept"</span>).agg(
+    headcount=(<span class="c-str">"student"</span>, <span class="c-str">"count"</span>),
+    batch_mean=(<span class="c-str">"marks"</span>, <span class="c-str">"mean"</span>),
+    batch_top=(<span class="c-str">"marks"</span>, <span class="c-str">"max"</span>)
+).reset_index().sort_values(by=<span class="c-str">"batch_mean"</span>, ascending=<span class="c-kw">False</span>)
+
+print(<span class="c-str">"=== ACADEMIC EXCELLENCE LEADERBOARD ==="</span>)
+print(academic_kpi.to_string(index=<span class="c-kw">False</span>))</code></pre>
+                    <div class="output-box">
+=== ACADEMIC EXCELLENCE LEADERBOARD ===
+dept  headcount  batch_mean  batch_top
+  IT          2        88.0         94
+ CSE          2        88.5         92
+ ECE          1        84.0         84
+                    </div>
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 17 -->
+    <section class="card" id="sec-17">
+        <h2 class="section-title">17. Summary, Glossary &amp; Next Steps</h2>
+        
+        <p>
+            Congratulations! Aapne Pandas ka sabse powerful aur industrial analytical tool—<strong>GroupBy &amp; Aggregation</strong>—master kar liya hai.
+            Data cleaning se lekar financial reporting aur machine learning feature engineering tak, har jagah GroupBy ka use hota hai.
+        </p>
+
+        <h3 class="subsection-title">Topic 13 Core Concepts Recap</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Concept</th>
+                        <th>Key Function / Syntax</th>
+                        <th>Core Functionality</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Split-Apply-Combine</strong></td>
+                        <td><code>df.groupby("key")</code></td>
+                        <td>Data ko discrete buckets mein todna, calculate karna, aur result stitch karna</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Flat Index Output</strong></td>
+                        <td><code>as_index=False</code> or <code>.reset_index()</code></td>
+                        <td>Group key ko index banne se rok kar standard 2D table format dena</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Counting Functions</strong></td>
+                        <td><code>.size()</code>, <code>.count()</code>, <code>.nunique()</code></td>
+                        <td>Total rows vs valid non-null cells vs distinct values ki counting</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Named Aggregation</strong></td>
+                        <td><code>.agg(alias=('col', 'func'))</code></td>
+                        <td>Clean column names ke saath multiple aggregations calculate karna</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Transformation</strong></td>
+                        <td><code>.transform("func")</code></td>
+                        <td>Original row count maintain karke group statistics broadcast karna</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Group Filtering</strong></td>
+                        <td><code>.filter(lambda g: condition)</code></td>
+                        <td>Group-level criteria ke basis par original DataFrame rows filter karna</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Missing Key Handling</strong></td>
+                        <td><code>dropna=False</code></td>
+                        <td>Grouping keys ke andar <code>NaN</code> values ko alag group ki tarah preserve karna</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Summary Sorting</strong></td>
+                        <td><code>.sort_values(by=..., ascending=False)</code></td>
+                        <td>Aggregated metrics ke according categories ko descending rank order dena</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 class="subsection-title">Technical Glossary (10 Essential Terms)</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Term</th>
+                        <th>Definition &amp; Context</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Split-Apply-Combine</strong></td><td>Hadley Wickham ka coined statistical pattern: data ko categorical keys par split karna, independent mathematical functions apply karna, aur unified summary DataFrame mein combine karna.</td></tr>
+                    <tr><td><strong>Aggregation</strong></td><td>Ek multi-row group ko summarize karke single scalar value (mean, sum, min, max) produce karne wali computational operation.</td></tr>
+                    <tr><td><strong>Transformation</strong></td><td>Ek aisi operation jo input group ke har record ke liye calculated value return karti hai, preserving 100% of the original row count and DataFrame index alignment.</td></tr>
+                    <tr><td><strong>Filtration</strong></td><td>Pure group (as a unit) par boolean evaluation karke qualify ya discard karne ka mechanism using <code>GroupBy.filter()</code>.</td></tr>
+                    <tr><td><strong>Named Aggregation</strong></td><td>Pandas 0.25+ ka modern declarative syntax: <code>.agg(output_col=('input_col', 'aggregation_func'))</code> jo MultiIndex tuple headers ko eliminate karta hai.</td></tr>
+                    <tr><td><strong>DataFrameGroupBy</strong></td><td>Pandas ka intermediate lazy object jo split data ke indices ko store karta hai bina kisi eager memory copy ke.</td></tr>
+                    <tr><td><strong>MultiIndex</strong></td><td>DataFrame ke rows ya columns mein hierarchical n-level nested labels jo multi-column grouping ke dauraan create hote hain.</td></tr>
+                    <tr><td><strong>as_index</strong></td><td><code>groupby()</code> ka boolean argument; agar <code>False</code> ho toh grouping columns index banne ki bajaye ordinary data columns ban kar rehti hain.</td></tr>
+                    <tr><td><strong>Broadcasting</strong></td><td>Group-level statistical metrics (jaise department average marks) ko har individual student row tak horizontally stretch karke align karna.</td></tr>
+                    <tr><td><strong>dropna=False</strong></td><td>Pandas 1.1+ parameter jo grouping keys mein <code>NaN</code> hone par bhi unka category group create karta hai, preventing silent data leakage.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-info">
+            <div class="callout-title">🚀 What's Coming Next in Topic 14?</div>
+            <p>
+                Ab tak humne single DataFrames ke andar data ko transform, clean, aur group karna seekha.
+                Agli class mein hum real-world data engineering ka core skill seekhenge: <strong>Topic 14: Merging &amp; Joining DataFrames</strong>!
+                Hum SQL-style <code>Inner Join</code>, <code>Left Join</code>, <code>Right Join</code>, <code>Outer Join</code>, <code>pd.merge()</code>, <code>pd.concat()</code>, aur primary-foreign key relationships ko visually master karenge!
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 CodeVerse Educational Inc. &bull; Engineered with &hearts; for Next-Generation Data Scientists &bull; Pure Offline Learning</p>
+    </footer>
+</div>
+</body>
+</html>

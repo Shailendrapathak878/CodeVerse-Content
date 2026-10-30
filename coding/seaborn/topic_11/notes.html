@@ -1,0 +1,2376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 11: Categorical Strip &amp; Swarm Plots in Seaborn — Visualizing Individual Observations, Jitter Mechanics &amp; Overplotting</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 14px;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+
+    .toc-card h3 {
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .toc-link:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateX(4px);
+    }
+
+    .toc-number {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styles */
+    section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 26px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent-indigo);
+      margin: 22px 0 12px 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* Highlight Badges & Callout Boxes */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 4px solid;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .callout-info {
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.06);
+    }
+
+    .callout-warning {
+      border-color: var(--accent-amber);
+      background-color: rgba(251, 191, 36, 0.06);
+    }
+
+    .callout-danger {
+      border-color: var(--accent-rose);
+      background-color: rgba(244, 63, 94, 0.06);
+    }
+
+    .callout-success {
+      border-color: var(--accent-green);
+      background-color: rgba(52, 211, 153, 0.06);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info .callout-title { color: var(--accent-blue); }
+    .callout-warning .callout-title { color: var(--accent-amber); }
+    .callout-danger .callout-title { color: var(--accent-rose); }
+    .callout-success .callout-title { color: var(--accent-green); }
+
+    /* Code Blocks */
+    .code-container {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .code-badge {
+      font-weight: 600;
+      color: var(--accent-indigo);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      max-width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code, td code {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+
+    /* Output Blocks */
+    .output-block {
+      background-color: var(--bg-code);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0 18px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .output-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    /* Image Wrapper */
+    .figure-wrapper {
+      margin: 24px 0;
+      text-align: center;
+      background-color: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-caption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--accent-blue);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Accordion Details */
+    details.accordion {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      background-color: rgba(129, 140, 248, 0.04);
+    }
+
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    /* Step Badge */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      background-color: var(--accent-blue);
+      color: #0f172a;
+      font-weight: 800;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-container').querySelector('pre code');
+      if (codeBlock) {
+        navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span>&#10003; Copied!</span>';
+          btn.style.borderColor = 'var(--accent-green)';
+          btn.style.color = 'var(--accent-green)';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.borderColor = '';
+            btn.style.color = '';
+          }, 2000);
+        }).catch(err => console.error('Copy failed:', err));
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Banner -->
+    <header class="hero">
+      <span class="topic-badge">Topic 11 &bull; Categorical Visualization</span>
+      <h1>Categorical Strip &amp; Swarm Plots in Seaborn</h1>
+      <p>Data ke har individual observation ko visualize karna: Overlapping points ko jitter se reveal karne se lekar algorithmic beeswarm distribution, hybrid overlays aur outlier detection ki complete practical guide in natural Hinglish.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><strong>Functions:</strong> <code>sns.stripplot()</code> &bull; <code>sns.swarmplot()</code></div>
+        <div class="hero-meta-item"><strong>Seaborn Version:</strong> 0.13.2 Compatible</div>
+        <div class="hero-meta-item"><strong>Core Focus:</strong> Individual Observations &bull; Jitter Mechanics &bull; Non-Overlapping Swarms</div>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card">
+      <h3>&#128203; Table of Contents &bull; 20 Structured Lessons</h3>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-link"><span class="toc-number">01</span><span class="toc-text">Categorical Strip &amp; Swarm Plots Kya Hote Hain?</span></a>
+        <a href="#sec-2" class="toc-link"><span class="toc-number">02</span><span class="toc-text">Understand the Dataset Before Plotting</span></a>
+        <a href="#sec-3" class="toc-link"><span class="toc-number">03</span><span class="toc-text">Your First Strip Plot with <code>sns.stripplot()</code></span></a>
+        <a href="#sec-4" class="toc-link"><span class="toc-number">04</span><span class="toc-text">Jitter and Overplotting Explained</span></a>
+        <a href="#sec-5" class="toc-link"><span class="toc-number">05</span><span class="toc-text">Your First Swarm Plot with <code>sns.swarmplot()</code></span></a>
+        <a href="#sec-6" class="toc-link"><span class="toc-number">06</span><span class="toc-text">Strip Plot versus Swarm Plot Comparison</span></a>
+        <a href="#sec-7" class="toc-link"><span class="toc-number">07</span><span class="toc-text">Using <code>hue</code> for Group Comparisons</span></a>
+        <a href="#sec-8" class="toc-link"><span class="toc-number">08</span><span class="toc-text">Horizontal Plots, Ordering &amp; Visual Styling</span></a>
+        <a href="#sec-9" class="toc-link"><span class="toc-number">09</span><span class="toc-text">Add Summary Plots for Better Analysis</span></a>
+        <a href="#sec-10" class="toc-link"><span class="toc-number">10</span><span class="toc-text">Distribution, Clusters, Outliers &amp; Sample Size</span></a>
+        <a href="#sec-11" class="toc-link"><span class="toc-number">11</span><span class="toc-text">Case Study 1: College Exam Analytics</span></a>
+        <a href="#sec-12" class="toc-link"><span class="toc-number">12</span><span class="toc-text">Case Study 2: E-Commerce Catalog Pricing</span></a>
+        <a href="#sec-13" class="toc-link"><span class="toc-number">13</span><span class="toc-text">Case Study 3: Customer Support Ratings</span></a>
+        <a href="#sec-14" class="toc-link"><span class="toc-number">14</span><span class="toc-text">Case Study 4: Production API Tail Latency</span></a>
+        <a href="#sec-15" class="toc-link"><span class="toc-number">15</span><span class="toc-text">Swarm Plot Collision Warnings &amp; Tuning</span></a>
+        <a href="#sec-16" class="toc-link"><span class="toc-number">16</span><span class="toc-text">The Danger of Density Misinterpretation</span></a>
+        <a href="#sec-17" class="toc-link"><span class="toc-number">17</span><span class="toc-text">12+ Common Pitfalls &amp; Anti-Patterns</span></a>
+        <a href="#sec-18" class="toc-link"><span class="toc-number">18</span><span class="toc-text">Quick Reference Cheat Sheet &amp; Syntax Matrix</span></a>
+        <a href="#sec-19" class="toc-link"><span class="toc-number">19</span><span class="toc-text">21 Practice Exercises &amp; Capstone Project</span></a>
+        <a href="#sec-20" class="toc-link"><span class="toc-number">20</span><span class="toc-text">Summary, Mind Map &amp; Topic 12 Preview</span></a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Categorical Strip &amp; Swarm Plots Kya Hote Hain?</h2>
+      <p>Maan lijiye aapke college ke Principal aapse kehte hain:</p>
+      <p><em>"Section A aur Section B ke marks compare karne hain. Mujhe sirf class ka average nahi dekhna &mdash; mujhe ye dekhna hai ki har student ne kitne marks score kiye hain! Kya class me koi student fail hua hai? Kya toppers ke clusters bane hain? Aur kis section me student marks sabse zyada bikhre hue hain?"</em></p>
+
+      <p>Previous topics (Topics 9 aur 10) me humne Bar Plots aur Point Plots dekhe the. Wo dono plots <strong>Statistical Summaries (Mean ya Median)</strong> dikhate hain. Lekin summary metric kabhi-kabhi data ki asli kahani chhipa leti hai &mdash; do classes ka average marks 72 ho sakta hai, lekin ek class me sabhi 72 ke aas-paas hon jabki dusri class me aadhe fail aur aadhe 100 score kar rahe hon!</p>
+
+      <p>Jab aapko dataset ke <strong>har single observation (har student, har product price, har customer rating)</strong> ko ek dot ke roop me draw karna ho, to Seaborn ke do iconic functions aate hain: <code>sns.stripplot()</code> aur <code>sns.swarmplot()</code>.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/strip_vs_swarm_concept_anatomy.png" alt="Architectural comparison between strip plot and swarm plot in Seaborn">
+        <div class="figure-caption">Figure 11.1: Architectural Comparison &mdash; Strip Plot uses random jitter noise to disperse overlapping points, while Swarm Plot algorithmically adjusts points into a beeswarm shape where no points overlap.</div>
+      </div>
+
+      <h3>Introductory Example 1: College Exam Marks</h3>
+      <p>Dekhiye kaise Section A, Section B aur Section C ke sabhi 180 students ke individual scores strip plot me render hote hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/college_marks_strip_intro.png" alt="Introductory strip plot showing individual student exam scores across college sections">
+        <div class="figure-caption">Figure 11.2: Introductory Strip Plot &mdash; Every dot is one actual student! Notice that Section A has scores tightly clustered in the 70-90 range, while Section C has points spreading down to 48.</div>
+      </div>
+
+      <h3>Introductory Example 2: E-Commerce Product Prices</h3>
+      <p>E-commerce product catalog me har item ki price ko category-wise plot karke hum unusual prices aur luxury outliers ko 1 second me spot kar sakte hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/ecommerce_prices_strip_intro.png" alt="E-commerce product pricing across categories using stripplot">
+        <div class="figure-caption">Figure 11.3: Product Catalog Strip Plot &mdash; Notice how Books and Accessories stay below ₹1,500, while Electronics contains a luxury outlier drone at ₹12,450 that immediately catches the analyst's eye!</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Core Analytical Value of Individual Observation Plots</div>
+        <p>Summary statistics (jaise Mean) data ko <em>collapse</em> kar dete hain. Strip aur Swarm plots data ko <strong>unfurl (kholkar)</strong> samne rakh dete hain &mdash; jisse bimodality, gaps, outliers, aur clusters transparent ho jate hain.</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Understand the Dataset Before Plotting</h2>
+      <p>Strip aur swarm plots banane se pehle dataset ki internal anatomy ko samajhna bohot zaroori hota hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Dataset Component</th>
+              <th>Data Science Definition</th>
+              <th>Example in College Dataset</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Categorical Column</strong></td>
+              <td>Discrete grouping labels (X-axis)</td>
+              <td><code>section</code> ("Section A", "Section B", "Section C")</td>
+            </tr>
+            <tr>
+              <td><strong>Numerical Column</strong></td>
+              <td>Continuous ya discrete measured values (Y-axis)</td>
+              <td><code>marks</code> (integer scores from 40 to 98)</td>
+            </tr>
+            <tr>
+              <td><strong>Single Observation</strong></td>
+              <td>Dataset ki ek individual row = Exactly 1 plotted point</td>
+              <td>Ek specific student ka roll number aur uska score</td>
+            </tr>
+            <tr>
+              <td><strong>Repeated Measurements</strong></td>
+              <td>Jab do ya zyada alag students identical score achieve karein</td>
+              <td>Section A me 5 students ke exactly 78 marks aaye</td>
+            </tr>
+            <tr>
+              <td><strong>Category Ordering</strong></td>
+              <td>Categories ka logical visual sequence</td>
+              <td>Section A &rarr; Section B &rarr; Section C (<code>order=...</code>)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The Overplotting Disaster: What Happens When Data Repeats?</h3>
+      <p>Hamare Section A me 60 students hain. Lekin exam me discrete whole numbers hote hain, isliye Section A me <strong>35 repeated scores</strong> hain (sirf 25 unique marks)!</p>
+
+      <p>Agar hum bina jitter ke plot karenge (<code>jitter=False</code>), to 60 students ke points ek dusre ke theek upar overlap hokar <strong>sirf 25 dots</strong> banakar reh jayenge &mdash; 35 students ka data screen par bilkul gayab ho jayega!</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/repeated_marks_without_jitter.png" alt="Demonstration of overplotting when jitter is disabled in stripplot">
+        <div class="figure-caption">Figure 11.4: The Overplotting Trap (<code>jitter=False</code>) &mdash; 60 individual students collapse onto a single thin vertical line. You cannot tell whether a dot represents 1 student or 10 students!</div>
+      </div>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Your First Strip Plot with <code>sns.stripplot()</code> &amp; Parameters</h2>
+      <p>Seaborn 0.13+ me <code>sns.stripplot()</code> ek 1-dimensional categorical scatter plot create karta hai. Aayiye iske primary parameters ko tabular form me samjhein:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Allowed Types &amp; Values</th>
+              <th>Practical Significance in Production</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td><code>pd.DataFrame</code></td>
+              <td>Tidy format table jisme categorical aur numerical columns hon.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td>Column names (strings)</td>
+              <td>Ek categorical column aur ek numeric column. Swap karne par orientation change hoti hai.</td>
+            </tr>
+            <tr>
+              <td><code>jitter</code></td>
+              <td>Bool ya float (e.g. <code>0.25</code>)</td>
+              <td>Categorical axis par random horizontal noise add karta hai taaki overlapping points spread ho jayein.</td>
+            </tr>
+            <tr>
+              <td><code>size</code></td>
+              <td>Float (default <code>5</code>)</td>
+              <td>Markers ka diameter (radius). Dense data ke liye <code>size=3</code> ya <code>4</code> use karein.</td>
+            </tr>
+            <tr>
+              <td><code>alpha</code></td>
+              <td>Float (<code>0.0</code> to <code>1.0</code>)</td>
+              <td>Transparency level. Points overlap hone par dense regions naturally darker dikhte hain!</td>
+            </tr>
+            <tr>
+              <td><code>edgecolor</code>, <code>linewidth</code></td>
+              <td>Color &amp; Float</td>
+              <td>Har point ke charo taraf clean border line draw karta hai (e.g. <code>edgecolor='black', linewidth=0.5</code>).</td>
+            </tr>
+            <tr>
+              <td><code>dodge</code></td>
+              <td>Bool (default <code>False</code>)</td>
+              <td>Jab <code>hue</code> diya gaya ho, to sub-groups ko side-by-side separate columns me split karta hai.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Jittered Strip Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_college = pd.read_csv("scratch/seaborn_topic11_data/college_student_marks.csv")
+sec_a = df_college[df_college["section"] == "Section A"]
+
+plt.figure(figsize=(8, 5))
+sns.stripplot(
+    data=sec_a,
+    x="section",
+    y="marks",
+    jitter=0.28,      # Jitter spreads points horizontally!
+    color="#10B981",
+    size=7,
+    alpha=0.75,
+    edgecolor="black",
+    linewidth=0.5
+)
+plt.title("Revealing Hidden Data: jitter=0.28 Disperses Overlapping Points")
+plt.ylabel("Exam Marks (0 - 100)")
+plt.ylim(45, 100)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/repeated_marks_with_jitter.png" alt="Revealing hidden data points using jitter=0.28 in stripplot">
+        <div class="figure-caption">Figure 11.5: Jitter Enabled &mdash; By applying random horizontal displacement (<code>jitter=0.28</code>), all 60 individual students become visible, instantly showing the true distribution density!</div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Jitter and Overplotting Explained</h2>
+      <p>Data science me <strong>Overplotting</strong> tab hota hai jab ek hi pixel coordinate par multiple data points draw hote hain. Isse chart visually misleading ho jata hai kyunki 1 observation aur 100 observations ek jaise dikhte hain!</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Jitter Kya Karta Hai Aur Kya Nahi Karta?</div>
+        <p><strong>Jitter kya karta hai:</strong> Categorical axis (x-axis) par points ko thoda left ya right random distance par shift karta hai taaki wo ek dusre ke bagal me dikhein.</p>
+        <p><strong>Jitter kya NAHI karta:</strong> Jitter measurement axis (y-axis) ki value ko 0.0001% bhi change nahi karta! Student ke marks wahi rehte hain jo dataset me hain &mdash; ye sirf ek visual display adjustment hai.</p>
+      </div>
+
+      <h3>Customer Support Ratings Overplotting Case</h3>
+      <p>Jab data discrete ratings (1, 2, 3, 4, 5 stars) jaisa ho, to overplotting extreme level par chali jati hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/customer_ratings_overplotting_demo.png" alt="Side by side comparison of customer ratings with jitter disabled vs jitter enabled">
+        <div class="figure-caption">Figure 11.6: The Jitter Solution &mdash; In Panel A (<code>jitter=False</code>), 400 customer reviews collapse into just 20 identical dots! In Panel B (<code>jitter=0.3</code>), the true volume is revealed: Live Chat is packed with 4 and 5-star reviews, whereas Email Helpdesk is concentrated around 2 and 3 stars!</div>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Warning: Do Not Over-Jitter!</div>
+        <p>Agar aap excessive jitter de denge (e.g. <code>jitter=0.6</code> ya <code>0.8</code>), to Section A ke points Section B ke categorical zone me ghusne lagenge! Always keep jitter between <code>0.2</code> and <code>0.35</code> taaki category boundaries sharp aur respected rahein.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> Your First Swarm Plot with <code>sns.swarmplot()</code></h2>
+      <p>Strip plot me jitter random hota hai, jisse points randomly disperse hote hain. Lekin kya koi aisa plot hai jo points ko bilkul <strong>non-overlapping, neat beeswarm pattern</strong> me arrange kare jahan points ki horizontal choudai (width) direct <em>density</em> ko represent kare? Bilkul &mdash; isi ka naam hai <strong>Swarm Plot</strong>!</p>
+
+      <p>Seaborn ka <code>sns.swarmplot()</code> ek deterministic repulsion algorithm use karta hai. Jab do points ek dusre ke close aate hain, to algorithm unhe automatically side-by-side shift kar deta hai bina unki numerical y-value ko badle. Isse banta hai ek organic <em>bee swarm</em> (madhumakkhiyon ka jhund) jaisa visual pattern!</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128029; Swarm Plot Ki Khaas Baat: Width = Density</div>
+        <p>Swarm plot me jis score par sabse zyada students ya items hote hain, wahan plot sabse zyada wide (chauda) ho jata hai! Aur jahan data sparse hota hai, wahan single line of dots banti hai. Yaani aap bina kisi summary statistic (mean, median) ke bhi data ki shape ko intuitively dekh sakte hain.</p>
+      </div>
+
+      <h3>Basic Swarm Plot Code Example: Student Marks</h3>
+      <p>Aaiye hamare 180 students ke college dataset par pehla swarm plot banate hain:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; First Swarm Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load verified college student marks dataset
+df_students = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(9, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Create the first swarm plot
+sns.swarmplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    palette="Set2",
+    size=6,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 11.7: Student Exam Score Distribution by Section (Swarm Plot)", fontweight="bold", pad=12)
+plt.xlabel("College Academic Section", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.ylim(50, 100)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/first_swarm_plot_student_scores.png" alt="First swarm plot showing student exam score distribution across sections">
+        <div class="figure-caption">Figure 11.7: First Swarm Plot &mdash; Notice how the points naturally spread out horizontally without overlapping. Section A shows a dense bulge around 70-80 marks, Section B bulges around 68-75, and Section C sits lower around 62-70.</div>
+      </div>
+
+      <h3>Swarm Plot on Discrete Survey Ratings</h3>
+      <p>Swarm plot ka magic discrete feedback ratings (1 se 5 stars) me aur bhi zyada prominent ho jata hai. Jab discrete points stack hote hain, to wo horizontal rows me neatly arrange ho jate hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/customer_satisfaction_swarm_plot.png" alt="Customer satisfaction swarm plot showing ratings by support channel">
+        <div class="figure-caption">Figure 11.8: Customer Satisfaction Swarm Plot &mdash; Exactly 100 ratings per support channel. Live Chat has a massive top-tier swarm at 5 stars (34 reviews), while Email Helpdesk bulges heavily at 2 and 3 stars with only 7 five-star reviews!</div>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> Strip Plot vs Swarm Plot: The Comprehensive Face-Off</h2>
+      <p>Data science beginners aksar confuse hote hain: <em>"Sir, strip plot kab use karein aur swarm plot kab?"</em> Dono plots categorical numerical data ke individual observations dikhate hain, lekin dono ke mechanics aur scalability me zameen-aasman ka fark hai.</p>
+
+      <p>Niche di gayi side-by-side comparison image dekhiye jo identical data par strip plot (Panel A) aur swarm plot (Panel B) ko compare karti hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/strip_vs_swarm_same_data_comparison.png" alt="Direct side-by-side comparison of strip plot and swarm plot on identical student marks data">
+        <div class="figure-caption">Figure 11.9: Strip Plot vs Swarm Plot on Identical Data &mdash; Panel A (Strip Plot) uses random horizontal jitter; points can still partially overlap. Panel B (Swarm Plot) ensures zero collision, forming an informative width profile that reflects point concentration.</div>
+      </div>
+
+      <h3>Technical Comparison Matrix</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature / Dimension</th>
+              <th><code>sns.stripplot()</code> (Strip Plot)</th>
+              <th><code>sns.swarmplot()</code> (Swarm Plot)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Displacement Mechanic</strong></td>
+              <td>Random uniform jitter within fixed strip width</td>
+              <td>Deterministic non-overlapping repulsion algorithm</td>
+            </tr>
+            <tr>
+              <td><strong>Collision Guarantee</strong></td>
+              <td>No guarantee; points can still overlap if dense</td>
+              <td>Strict guarantee; algorithm prevents point overlap</td>
+            </tr>
+            <tr>
+              <td><strong>Density Visualization</strong></td>
+              <td>Requires <code>alpha</code> tuning to see overlapping clusters</td>
+              <td>Directly indicated by horizontal swarm width</td>
+            </tr>
+            <tr>
+              <td><strong>Computational Complexity</strong></td>
+              <td><i>O(N)</i> &mdash; Extremely fast, handles thousands of rows</td>
+              <td><i>O(N&sup2;)</i> &mdash; Slow for large datasets due to pairwise checks</td>
+            </tr>
+            <tr>
+              <td><strong>Recommended Sample Size</strong></td>
+              <td>Small to Large (<i>N = 20</i> to <i>N = 5,000+</i>)</td>
+              <td>Small to Moderate only (<i>N = 10</i> to <i>N &le; 300</i>)</td>
+            </tr>
+            <tr>
+              <td><strong>Dense Data Behavior</strong></td>
+              <td>Gracefully renders with <code>alpha</code> and smaller size</td>
+              <td>Throws <code>UserWarning</code>; points spill past category boundaries</td>
+            </tr>
+            <tr>
+              <td><strong>Best Used For</strong></td>
+              <td>Overlays on Box/Violin plots, large production audits</td>
+              <td>Stand-alone executive presentations, survey analysis (N &lt; 250)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>The Scalability Trap: Small vs Dense Datasets in Swarm Plot</h3>
+      <p>Swarm plot ki sabse badi weakness uski scalability limitation hai. Agar aap 300+ observations ek single category me feed karenge, to plot overflow ho jayega!</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/small_vs_dense_dataset_swarm_behavior.png" alt="Demonstration of swarm plot behavior on small sample size vs dense large dataset">
+        <div class="figure-caption">Figure 11.10: The Scalability Limit &mdash; Left: Perfect swarm with N = 35 (clean, elegant, zero warnings). Right: Overcrowded swarm with N = 350 (points spread way too wide, colliding with adjacent columns and triggering Seaborn UserWarnings).</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Rule of Thumb for Data Scientists</div>
+        <p>Agar aapke dataset me <strong>N &lt; 200</strong> per category hai, to <strong>Swarm Plot</strong> use karein &mdash; ye reader ko maximum clarity deta hai. Agar <strong>N &gt; 300</strong> hai, to turant <strong>Strip Plot</strong> (with <code>alpha=0.5</code> aur <code>jitter=0.25</code>) par switch kar jayein ya Box Plot ke sath overlay banayein.</p>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Subgroup Comparisons using <code>hue</code> and <code>dodge</code></h2>
+      <p>Real-world analytics me hume sirf ek category nahi, balki <strong>secondary subgroups</strong> ko bhi compare karna hota hai. Jaise: Academic Section ke andar <em>Subject (Maths vs Physics)</em>, ya Support Channel ke andar <em>Customer Type (Enterprise vs Standard)</em>.</p>
+
+      <p>Seaborn me hum <code>hue</code> parameter pass karke data points ko color-code karte hain. Lekin strip aur swarm plots me <code>hue</code> ke sath ek aur game-changing parameter hota hai: <code>dodge=True</code>!</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128269; What Does <code>dodge=True</code> Do?</div>
+        <p>By default, <code>dodge=False</code> hota hai, jisme dono hue categories ke points ek hi vertical strip me aapas me mix ho jate hain. Lekin jab aap <code>dodge=True</code> set karte hain, to Seaborn category ke andar distinct <strong>sub-lanes</strong> bana deta hai &mdash; Enterprise customer ka alag column, Standard customer ka alag column! Isse direct visual comparison 10 guna asaan ho jata hai.</p>
+      </div>
+
+      <h3>Grouped Strip Plot: Academic Sections &amp; Subjects</h3>
+      <p>Aaiye dekhte hain ki Section A, B, C me Maths vs Physics ka score kaisa distributed hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Grouped Strip Plot with dodge=True</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(10, 5.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Grouped strip plot with dodge=True
+sns.stripplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    hue="Subject",
+    dodge=True,        # Separate columns for Maths & Physics!
+    jitter=0.25,
+    palette={"Mathematics": "#2563EB", "Physics": "#EA580C"},
+    size=6.5,
+    alpha=0.8,
+    edgecolor="black",
+    linewidth=0.5
+)
+
+plt.title("Figure 11.11: Student Scores by Section & Subject (dodge=True)", fontweight="bold", pad=12)
+plt.xlabel("College Section", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.legend(title="Academic Subject", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/grouped_strip_plot_section_and_subject.png" alt="Grouped strip plot showing student scores across sections and subjects with dodge enabled">
+        <div class="figure-caption">Figure 11.11: Grouped Strip Plot &mdash; Notice how <code>dodge=True</code> splits each section into two distinct tracks: Blue for Mathematics and Orange for Physics. Students can immediately compare subject performance within each section.</div>
+      </div>
+
+      <h3>Grouped Swarm Plot: Customer Type Disparities</h3>
+      <p>Customer support me Enterprise VIP clients aur Standard free-tier users ka experience compare karne ke liye grouped swarm plot perfect choice hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/grouped_swarm_plot_ratings_by_customer_type.png" alt="Grouped swarm plot comparing customer ratings by support channel and customer tier">
+        <div class="figure-caption">Figure 11.12: Grouped Swarm Plot &mdash; With <code>dodge=True</code>, Enterprise clients (Purple) and Standard users (Teal) get dedicated swarm tracks. Notice that Enterprise users rate Live Chat and Phone Support almost exclusively 4 and 5 stars!</div>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Horizontal Plots, Categorical Ordering &amp; Visual Styling</h2>
+      <p>Ab tak humne vertical plots dekhe jahan categorical variable x-axis par tha aur numerical values y-axis par thin. Lekin production dashboards me aksar category names kaafi lambe hote hain (jaise: <em>"Home Decor &amp; Kitchenware"</em>, <em>"Consumer Electronics &amp; Gadgets"</em>). Agar aap inko vertical banayenge, to x-axis labels aapas me collide karenge ya unhe 90 degree tilt karna padega jo padhna bahut irritating hota hai.</p>
+
+      <h3>Going Horizontal: Simply Swap X and Y!</h3>
+      <p>Seaborn me horizontal plot banana standard Matplotlib se 100 guna asaan hai. Aapko koi <code>barh()</code> ya special function nahi dhoondhna &mdash; bas <code>y="Category"</code> aur <code>x="Price"</code> assign kar dijiye! Seaborn automatically detect kar lega ki categorical axis vertical banani hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Horizontal Strip Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_ecom = pd.read_csv("ecommerce_product_catalog.csv")
+
+plt.figure(figsize=(10, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Horizontal strip plot: y is categorical, x is numerical
+sns.stripplot(
+    data=df_ecom,
+    y="Category",
+    x="Price_USD",
+    jitter=0.28,
+    palette="Dark2",
+    size=6,
+    alpha=0.7,
+    edgecolor="black",
+    linewidth=0.4
+)
+
+plt.title("Figure 11.13: E-Commerce Product Price Ranges by Category (Horizontal)", fontweight="bold", pad=12)
+plt.xlabel("Product Retail Price ($ USD)", labelpad=10)
+plt.ylabel("Merchandise Category", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/horizontal_strip_plot_product_prices.png" alt="Horizontal strip plot showing product prices across categories">
+        <div class="figure-caption">Figure 11.13: Horizontal Strip Plot &mdash; Category names are cleanly printed on the y-axis with zero text rotation. High-price luxury outliers in Electronics ($4,000+) extend cleanly along the horizontal width.</div>
+      </div>
+
+      <h3>Controlling Order with the <code>order</code> Parameter</h3>
+      <p>By default, Seaborn categories ko dataset me unke appearance ke order me ya alphabetical order me render karta hai. Lekin analytical rigor ke liye aapko hamesha logical order define karna chahiye &mdash; jaise descending median price ya sequential academic sections.</p>
+
+      <p>Iske liye <code>order=["Category1", "Category2", ...]</code> parameter pass kiya jata hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Polished Swarm Plot with Custom Ordering</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(9, 5.5))
+sns.set_theme(style="ticks", font_scale=1.05)
+
+# Explicit ordering from highest performing section to lowest
+section_order = ["Section A", "Section B", "Section C"]
+
+sns.swarmplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    order=section_order,
+    palette=["#4F46E5", "#06B6D4", "#F59E0B"],
+    size=6.5,
+    edgecolor="#1E293B",
+    linewidth=0.6,
+    alpha=0.9
+)
+
+sns.despine(trim=True)  # Clean top and right spines
+plt.title("Figure 11.14: Polished Swarm Plot with Explicit Categorical Order", fontweight="bold", pad=14)
+plt.xlabel("Academic Section (Ranked by Mean Performance)", labelpad=10)
+plt.ylabel("Exam Score", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/polished_ordered_swarm_plot.png" alt="Polished swarm plot with explicit category ordering and custom styling">
+        <div class="figure-caption">Figure 11.14: Polished Swarm Plot &mdash; Configured with explicit ordering (<code>order=["Section A", "Section B", "Section C"]</code>), custom high-contrast hex palette, subtle edge outlines (<code>linewidth=0.6</code>), and <code>sns.despine(trim=True)</code> for a publication-ready aesthetic.</div>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Hybrid Summary Overlays: Box + Strip and Violin + Swarm</h2>
+      <p>Data visualization me ek universal rule hai: <strong>Summary statistics hide details, while raw data points lack structure</strong>. Box plot aapko median, quartiles (Q1, Q3), aur IQR whiskers to bata deta hai, lekin wo ye nahi dikha pata ki actual points kahan concentrate ho rahe hain ya koi bimodal cluster to nahi chupa hua hai.</p>
+
+      <p>Dusri taraf, strip ya swarm plot har individual data point ko dikhate hain, lekin bina median line ke audience ko central tendency judge karne me mehnat lagti hai. To sabse powerful solution kya hai? <strong>Dono ko ek dusre ke upar overlay kar dena!</strong></p>
+
+      <h3>Pattern 1: Box Plot + Strip Plot Overlay</h3>
+      <p>Ye combination enterprise data reporting me golden standard mana jata hai. Isme hum base layer par ek subtle, light-colored box plot banate hain aur uske top par jittered strip plot ke points overlay kar dete hain:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Box Plot + Strip Plot Hybrid</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(9.5, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Layer 1: Semi-transparent Box Plot for statistical summary
+sns.boxplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    palette="pastel",
+    fliersize=0,      # Disable boxplot outlier dots to prevent duplicates!
+    boxprops=dict(alpha=0.55),
+    width=0.45
+)
+
+# Layer 2: Jittered Strip Plot for individual student marks
+sns.stripplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    color="#0F172A",  # Dark, crisp high-contrast dots
+    jitter=0.22,
+    size=5.5,
+    alpha=0.75,
+    edgecolor="white",
+    linewidth=0.4
+)
+
+plt.title("Figure 11.15: Box Plot + Strip Plot Overlay (Statistical Summary & Raw Points)", fontweight="bold", pad=14)
+plt.xlabel("Academic Section", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Pro-Tip: Always Set <code>fliersize=0</code>!</div>
+        <p>Jab aap box plot ke upar strip plot overlay karte hain, to box plot ke default outlier dots (fliers) ko <code>fliersize=0</code> karke disable karna zaroori hai. Agar aap aisa nahi karenge, to har outlier point do baar draw hoga &mdash; ek baar boxplot ka flier aur ek baar stripplot ka point!</p>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/box_plot_with_strip_overlay.png" alt="Box plot with strip plot overlay showing statistical summary and raw student scores">
+        <div class="figure-caption">Figure 11.15: Box + Strip Overlay &mdash; The pastel boxes establish the formal 5-number summary (median line, Q1-Q3 box, IQR whiskers), while the dark individual dots reveal the true distribution and point count within each section!</div>
+      </div>
+
+      <h3>Pattern 2: Violin Plot + Swarm Plot Overlay</h3>
+      <p>Agar aap dataset ki smooth continuous density profile bhi dikhana chahte hain aur exact points bhi, to <strong>Violin Plot + Swarm Plot</strong> ka combination unmatched elegance provide karta hai. Isme <code>inner=None</code> use kiya jata hai taaki violin ke andar default mini-box na bane:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Violin Plot + Swarm Plot Hybrid</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_students = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(9.5, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Layer 1: Violin Plot showing Kernel Density Estimation (KDE)
+sns.violinplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    palette="Blues",
+    inner=None,       # Remove default inner miniature boxplot
+    cut=0,            # Do not extend curve beyond observed min/max
+    alpha=0.45
+)
+
+# Layer 2: Algorithmic Swarm Plot inside the violin body
+sns.swarmplot(
+    data=df_students,
+    x="Section",
+    y="Exam_Score",
+    color="#1E3A8A",  # Deep navy dots
+    size=5,
+    alpha=0.85,
+    edgecolor="white",
+    linewidth=0.5
+)
+
+plt.title("Figure 11.16: Violin Plot + Swarm Plot Hybrid Overlay", fontweight="bold", pad=14)
+plt.xlabel("Academic Section", labelpad=10)
+plt.ylabel("Exam Score (0 - 100)", labelpad=10)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/violin_plot_with_swarm_overlay.png" alt="Violin plot with swarm plot overlay combining smooth KDE curves with exact observation points">
+        <div class="figure-caption">Figure 11.16: Violin + Swarm Hybrid &mdash; The blue violin envelope shows the theoretical KDE probability density, while the swarm dots prove exactly where the empirical data points sit within that curve!</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Distribution, Clusters, Outliers &amp; Sample Size Diagnostic</h2>
+      <p>Data science me ek classic saying hai: <em>"Never trust a summary statistic until you have looked at the raw data."</em> Aaiye dekhte hain ki strip aur swarm plots kin critical data characteristics ko discover karne me help karte hain jo standard bar charts aur box plots se bilkul chhipe rehte hain.</p>
+
+      <h3>1. Detecting Bimodal Clusters &amp; Sparse Holes</h3>
+      <p>Maan lijiye do groups ka mean score exactly 70 hai. Group 1 me sabhi students 65-75 ke beech hain (unimodal bell curve). Lekin Group 2 me aadhe students 90-95 score kar rahe hain aur aadhe students fail ho kar 45-50 score kar rahe hain, jabki 60-80 ke beech ek bhi student nahi hai!</p>
+
+      <p>Ek standard bar plot dono groups ko identically <code>Height = 70</code> dikha dega! Lekin strip plot me bimodal gap turant ek <em>empty visual canyon</em> ki tarah saamne aa jata hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/distribution_clusters_and_sparse_regions.png" alt="Detection of distribution clusters and sparse regions using categorical strip plots">
+        <div class="figure-caption">Figure 11.17: Cluster Discovery &mdash; Notice the distinct dense clusters around specific score tiers and the completely empty sparse regions in between. This immediate diagnostic power is impossible with pure summary bars.</div>
+      </div>
+
+      <h3>2. The Sample Size Disparity Trap</h3>
+      <p>Jab do categories ke sample sizes me massive difference ho (e.g. <i>N = 25</i> vs <i>N = 250</i>), to bar plot dono bars ko equally solid dikhata hai. Reader ko lagta hai ki dono groups ka data equally reliable hai. Lekin strip plot reader ko turant sach dikha deta hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/unequal_sample_sizes_strip_plot.png" alt="Strip plot revealing extreme unequal sample sizes between cohorts">
+        <div class="figure-caption">Figure 11.18: Sample Size Diagnostic &mdash; Pilot Cohort (N = 25, mean 78.73) has sparse individual dots, warning the analyst about high statistical variance. In contrast, Mass Production (N = 250, mean 73.34) forms a dense, solid column proving immense sample reliability!</div>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Case Study 1: College Exam Analytics</h2>
+      <p>Hamare college exam dataset me 180 students hain (Section A: 60, Section B: 60, Section C: 60). Aaiye inke complete statistical distribution ko inspect karte hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Academic Section</th>
+              <th>Sample Count (<i>N</i>)</th>
+              <th>Mean Score</th>
+              <th>Median Score</th>
+              <th>Score Range [Min, Max]</th>
+              <th>Repeated Scores Count</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Section A</strong></td>
+              <td>60</td>
+              <td>74.58</td>
+              <td>74.5</td>
+              <td>[60, 91]</td>
+              <td>35 students share marks</td>
+            </tr>
+            <tr>
+              <td><strong>Section B</strong></td>
+              <td>60</td>
+              <td>71.47</td>
+              <td>71.0</td>
+              <td>[56, 85]</td>
+              <td>Moderate score clustering</td>
+            </tr>
+            <tr>
+              <td><strong>Section C</strong></td>
+              <td>60</td>
+              <td>66.37</td>
+              <td>67.0</td>
+              <td>[56, 83]</td>
+              <td>Heavy lower tail concentration</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Analytical Takeaway from Section 11</div>
+        <p>Section A ka mean 74.58 aur median 74.5 lagbhag identical hain, jo indicate karta hai ki data symmetric hai. Lekin max score 91 tak jata hai aur min score 60 par ruk jata hai. Section C ka median 67.0 hai aur min score 56 hai, jo clear remedial coaching requirement show karta hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Case Study 2: E-Commerce Product Catalog Pricing</h2>
+      <p>Online retail platforms par products ka pricing distribution aksar heavy positive skewness dikhata hai. Hamare e-commerce dataset me 350 products across 5 categories hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Item Count</th>
+              <th>Mean Price ($ USD)</th>
+              <th>Median Price ($ USD)</th>
+              <th>Pricing Distribution Characteristics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Electronics</strong></td>
+              <td>79</td>
+              <td>$2508.44</td>
+              <td>$2370.5</td>
+              <td>High skewness; flagship laptops extend to $4,500+</td>
+            </tr>
+            <tr>
+              <td><strong>Apparel</strong></td>
+              <td>64</td>
+              <td>$1112.84</td>
+              <td>$1073.05</td>
+              <td>Concentrated $500 - $1,500 with designer spikes</td>
+            </tr>
+            <tr>
+              <td><strong>Home Decor</strong></td>
+              <td>67</td>
+              <td>$824.88</td>
+              <td>$830.8</td>
+              <td>Uniform spread between $300 and $1,400</td>
+            </tr>
+            <tr>
+              <td><strong>Accessories</strong></td>
+              <td>76</td>
+              <td>$634.81</td>
+              <td>$636.75</td>
+              <td>Budget tier, tightly clustered around $600</td>
+            </tr>
+            <tr>
+              <td><strong>Books</strong></td>
+              <td>64</td>
+              <td>$408.41</td>
+              <td>$406.2</td>
+              <td>Lowest median ($406.20), dense lower-end volume</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Electronics me Mean ($2508.44) Median ($2370.5) se lagbhag $138 zyada hai. Strip plot me ye easily visible ho jata hai kyunki right side par high-value luxury points ($3,500 se $4,800) sparse outliers ke roop me spread hote hain.</p>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Case Study 3: Customer Support Feedback Ratings</h2>
+      <p>Customer service performance evaluation me 400 survey ratings across 4 communication channels collect kiye gaye (har channel me exact 100 ratings):</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Support Channel</th>
+              <th>Total Reviews</th>
+              <th>Mean CSAT Rating</th>
+              <th>5-Star Ratings Count</th>
+              <th>Customer Experience Verdict</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Live Chat</strong></td>
+              <td>100</td>
+              <td>3.88 / 5.0</td>
+              <td>34 (34%)</td>
+              <td>Top performing channel; fast resolution, highly rated</td>
+            </tr>
+            <tr>
+              <td><strong>Phone Support</strong></td>
+              <td>100</td>
+              <td>3.6 / 5.0</td>
+              <td>24 (24%)</td>
+              <td>Strong personal connection; high 4 and 5 star volume</td>
+            </tr>
+            <tr>
+              <td><strong>AI Chatbot</strong></td>
+              <td>100</td>
+              <td>3.12 / 5.0</td>
+              <td>11 (11%)</td>
+              <td>Mixed ratings; good for simple FAQs, poor for complex queries</td>
+            </tr>
+            <tr>
+              <td><strong>Email Helpdesk</strong></td>
+              <td>100</td>
+              <td>2.8 / 5.0</td>
+              <td>7 (7%)</td>
+              <td>Lagging channel; slow turnaround causing heavy 1-2 star ratings</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Swarm plot me discrete ratings (1 to 5) horizontal strips me arrange hokar channel satisfaction ka definitive profile draw kar dete hain bina kisi complex statistics formula ke.</p>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Case Study 4: Production API Endpoint Latency Monitoring</h2>
+      <p>DevOps aur Site Reliability Engineering (SRE) me API latencies monitor karne ke liye strip plot ek indispensable tool hai. Mean latency aksar deceptive hoti hai &mdash; maan lijiye mean 40ms hai, lekin 1% users ke liye checkout request 400ms tak hang ho rahi hai! Aise <strong>tail latency spikes</strong> ko bar charts aur averages bilkul conceal kar dete hain.</p>
+
+      <h3>Real-World Latency Inspection (600 Production Requests)</h3>
+      <p>Niche hamare 4 critical microservice endpoints ka real latency distribution diya gaya hai, jisme <strong>250ms Red SLA Breach Line</strong> mark ki gayi hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; SRE API Latency Strip Plot</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_api = pd.read_csv("api_endpoint_latencies.csv")
+
+plt.figure(figsize=(10.5, 6))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# High-contrast strip plot for latency distribution
+sns.stripplot(
+    data=df_api,
+    x="Endpoint",
+    y="Response_Time_ms",
+    palette="Dark2",
+    jitter=0.25,
+    size=5.5,
+    alpha=0.75,
+    edgecolor="black",
+    linewidth=0.4
+)
+
+# SLA Breach threshold benchmark
+plt.axhline(250, color="#EF4444", linestyle="--", linewidth=2, label="Strict SLA Breach Line (250 ms)")
+
+plt.title("Figure 11.19: Production API Latency Audit (SLA Threshold at 250ms)", fontweight="bold", pad=14)
+plt.xlabel("Production API Microservice Endpoint", labelpad=10)
+plt.ylabel("Response Latency (Milliseconds)", labelpad=10)
+plt.legend(loc="upper right", frameon=True)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/api_endpoint_latency_case_study.png" alt="Production API latency audit showing response time distribution across endpoints with SLA threshold">
+        <div class="figure-caption">Figure 11.19: SRE Latency Audit &mdash; Endpoints <code>/user/profile</code> (mean 28.25ms), <code>/catalog/search</code> (mean 34.94ms), and <code>/auth/login</code> (mean 42.63ms) perform well within safe limits. However, <code>/checkout/pay</code> exhibits extreme tail latency spikes reaching up to 375.7ms, breaching the 250ms SLA!</div>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Swarm Plot Collision Warning &amp; Tuning Guide</h2>
+      <p>Jab aap kisi dense dataset par <code>sns.swarmplot()</code> run karte hain, to terminal par aksar ye yellow warning flash hoti hai:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Seaborn Runtime Warning</span>
+        </div>
+        <pre><code>UserWarning: 14.0% of the points cannot be placed; you may want to decrease the size of the markers or use stripplot.
+  warnings.warn(msg, UserWarning)</code></pre>
+      </div>
+
+      <h3>Warning Ka Asli Matlab Kya Hai?</h3>
+      <p>Swarm plot ka algorithm points ko horizontally tab tak push karta hai jab tak wo non-overlapping na ho jayein. Lekin har category column ki ek specific pixel width limit hoti hai. Agar ek hi numerical coordinate par 100+ points aate hain aur marker size bada ho, to algorithm points ko category boundary ke bahar phenkne lagega ya plot canvas se bahar nikal jayega! Tab Seaborn un points ko place karna chhod deta hai aur warning emit karta hai.</p>
+
+      <h3>The 3-Step Tuning Checklist</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Fix Level</th>
+              <th>Action / Code Adjustment</th>
+              <th>When to Apply</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Level 1: Reduce Marker Size</strong></td>
+              <td>Set <code>size=3</code> ya <code>size=2.5</code> (default is <code>5</code>)</td>
+              <td>Points 5% se 15% drop ho rahe hon aur dots thode chhote karne se fit ho jayein.</td>
+            </tr>
+            <tr>
+              <td><strong>Level 2: Increase Figure Width</strong></td>
+              <td>Set <code>figsize=(12, 6)</code> ya <code>(14, 6)</code></td>
+              <td>Canvas horizontal width badhne se har category ko zyada pixel clearance milti hai.</td>
+            </tr>
+            <tr>
+              <td><strong>Level 3: Switch to Strip Plot</strong></td>
+              <td>Use <code>sns.stripplot(..., jitter=0.28, alpha=0.5)</code></td>
+              <td>Dataset me <i>N &gt; 300</i> observations per category hon. Large data ke liye strip plot hi right tool hai!</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> The Danger of Density Misinterpretation with Unequal Sample Sizes</h2>
+      <p>Data visualization me ek bahut bada cognitive bias hota hai: <em>"A visually wider swarm means a denser population."</em> Lekin ye conclusion tabhi valid hai jab dono categories ka total sample size (<i>N</i>) lagbhag barabar ho!</p>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; The Unequal Sample Size Fallacy</div>
+        <p>Agar Group A me <strong>N = 25</strong> students hain aur Group B me <strong>N = 250</strong> students hain, to Group B ka swarm plot Group A se 10 guna zyada chauda (wide) dikhega! Ek inexperienced manager ye sochega ki Group B me probability density 10 guna zyada hai, jabki asal me Group B me bas data points zyada the!</p>
+      </div>
+
+      <h3>Solution: Explicit Sample Size Annotation</h3>
+      <p>Jab bhi sample sizes unequal hon, to professional best practice ye hai ki category label me explicit sample size (<i>N</i>) zaroor mention karein:</p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Best Practice Labeling for Unequal N</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_unequal = pd.read_csv("unequal_sample_size_study.csv")
+
+# Create informative labels including exact N counts
+cohort_labels = [
+    "Pilot Cohort (N = 25)",
+    "Standard Cohort (N = 80)",
+    "Mass Production (N = 250)"
+]
+
+plt.figure(figsize=(10, 5.5))
+sns.stripplot(
+    data=df_unequal,
+    x="Cohort",
+    y="Quality_Score",
+    order=["Pilot Cohort", "Standard Cohort", "Mass Production"],
+    jitter=0.28,
+    palette="Blues_d",
+    size=6,
+    alpha=0.75
+)
+
+# Set custom explicit x-ticks to educate the reader
+plt.xticks(ticks=[0, 1, 2], labels=cohort_labels, fontweight="bold")
+plt.title("Transparent Reporting: Explicit N Count Prevents Misinterpretation")
+plt.ylabel("Inspection Quality Score (0 - 100)")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> 12+ Common Pitfalls, Anti-Patterns &amp; Bug Resolution</h2>
+      <p>Categorical scatter plots banate waqt beginners aksar ye 12 critical mistakes karte hain. Aaiye inke causes aur concrete solutions samajhte hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Common Pitfall / Anti-Pattern</th>
+              <th>Underlying Root Cause</th>
+              <th>Correct Professional Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Using Swarm Plot on Large Datasets</strong></td>
+              <td><i>O(N&sup2;)</i> repulsion algorithm hangs on N &gt; 1,000</td>
+              <td>Switch to <code>sns.stripplot()</code> with <code>alpha=0.4</code></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Disabling Jitter on Discrete Data</strong></td>
+              <td><code>jitter=False</code> collapses identical ratings into 1 dot</td>
+              <td>Always keep <code>jitter=0.25</code> to <code>0.3</code> for discrete values</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Excessive Jitter Overlap</strong></td>
+              <td><code>jitter=0.8</code> spills points into adjacent categories</td>
+              <td>Never exceed <code>jitter=0.35</code> to maintain clean category boundaries</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>Duplicate Outliers in Box Overlay</strong></td>
+              <td>Boxplot draws fliers, then stripplot draws raw dots on top</td>
+              <td>Pass <code>fliersize=0</code> in <code>sns.boxplot()</code></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Inner Miniature Box in Violin Overlay</strong></td>
+              <td>Violin plot draws mini-box inside, clashing with swarm dots</td>
+              <td>Pass <code>inner=None</code> in <code>sns.violinplot()</code></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Hue Points Colliding in Single Strip</strong></td>
+              <td><code>dodge=False</code> mixes all hue groups in one column</td>
+              <td>Pass <code>dodge=True</code> to separate hue sub-lanes cleanly</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Tilted, Overlapping Category Labels</strong></td>
+              <td>Vertical orientation with long string category names</td>
+              <td>Swap to horizontal layout: <code>y="Category"</code>, <code>x="Value"</code></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Arbitrary / Unsorted Categories</strong></td>
+              <td>Default appearance order makes comparison difficult</td>
+              <td>Use <code>order=[...]</code> sorted by median or business logic</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Pure Solid Opaque Dots in Dense Strips</strong></td>
+              <td><code>alpha=1.0</code> completely hides point density clusters</td>
+              <td>Set <code>alpha=0.5</code> to <code>0.7</code> so overlapping dots darken</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Thick Black Borders on Small Markers</strong></td>
+              <td><code>linewidth=1.5</code> covers the marker fill color completely</td>
+              <td>Set <code>linewidth=0.3</code> to <code>0.5</code> or <code>linewidth=0</code></td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Ignoring Swarm Collision Warnings</strong></td>
+              <td>Unplaced points mean hidden data missing from chart</td>
+              <td>Decrease <code>size</code>, widen <code>figsize</code>, or use strip plot</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Continuous Variable on Categorical Axis</strong></td>
+              <td>Passing continuous float to <code>x</code> creates thousands of strips</td>
+              <td>Bin continuous data with <code>pd.cut()</code> before plotting</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 1: Duplicate Outliers in Box + Strip Overlay</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Buggy Implementation (Duplicate Outliers)</span>
+        </div>
+        <pre><code># BUGGY: fliersize not set to 0! Outliers are drawn twice!
+sns.boxplot(data=df, x="Category", y="Value")
+sns.stripplot(data=df, x="Category", y="Value", color="black", jitter=0.2)
+# Result: Outlier dots appear with a weird shadow/double boundary!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code># CORRECTED: fliersize=0 completely disables boxplot outlier dots
+sns.boxplot(
+    data=df,
+    x="Category",
+    y="Value",
+    fliersize=0,      # Eliminates duplicate outlier rendering!
+    boxprops=dict(alpha=0.6)
+)
+sns.stripplot(
+    data=df,
+    x="Category",
+    y="Value",
+    color="#0F172A",
+    jitter=0.22,
+    size=5,
+    alpha=0.8
+)</code></pre>
+      </div>
+
+      <h3>Buggy Code vs Corrected Code 2: Hue Subgroups Colliding Without Dodge</h3>
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Buggy Implementation (Hue Points Colliding)</span>
+        </div>
+        <pre><code># BUGGY: dodge defaults to False; hue categories overlap in the exact same strip
+sns.stripplot(data=df, x="Section", y="Score", hue="Subject", jitter=0.2)
+# Result: Maths and Physics dots are scrambled together, impossible to compare!</code></pre>
+      </div>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span>Python &bull; Corrected Professional Implementation</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copy Code</button>
+        </div>
+        <pre><code># CORRECTED: dodge=True creates dedicated sub-lanes for each hue group
+sns.stripplot(
+    data=df,
+    x="Section",
+    y="Score",
+    hue="Subject",
+    dodge=True,        # Separates Maths and Physics into distinct side-by-side columns!
+    jitter=0.25,
+    size=6,
+    palette="Set1"
+)</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> Quick Reference Cheat Sheet &amp; Syntax Matrix</h2>
+      <p>Quick lookup reference for data scientists and developers when coding categorical strip and swarm plots in Seaborn:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th><code>sns.stripplot()</code></th>
+              <th><code>sns.swarmplot()</code></th>
+              <th>Description &amp; Recommended Values</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td>DataFrame</td>
+              <td>DataFrame</td>
+              <td>Tidy pandas DataFrame containing variables.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td>str column names</td>
+              <td>str column names</td>
+              <td>One categorical variable, one numerical measurement variable.</td>
+            </tr>
+            <tr>
+              <td><code>hue</code></td>
+              <td>str column name</td>
+              <td>str column name</td>
+              <td>Secondary grouping factor to color-code observations.</td>
+            </tr>
+            <tr>
+              <td><code>dodge</code></td>
+              <td>bool (default <code>False</code>)</td>
+              <td>bool (default <code>False</code>)</td>
+              <td>Set <code>True</code> to split hue groups into side-by-side sub-columns.</td>
+            </tr>
+            <tr>
+              <td><code>jitter</code></td>
+              <td>float / bool (default <code>True</code>)</td>
+              <td>Not applicable</td>
+              <td>Controls random displacement width. Optimal: <code>0.2</code> to <code>0.3</code>.</td>
+            </tr>
+            <tr>
+              <td><code>order</code></td>
+              <td>list of str</td>
+              <td>list of str</td>
+              <td>Explicit category display order on categorical axis.</td>
+            </tr>
+            <tr>
+              <td><code>hue_order</code></td>
+              <td>list of str</td>
+              <td>list of str</td>
+              <td>Explicit subgroup display order in legend and dodge columns.</td>
+            </tr>
+            <tr>
+              <td><code>orient</code></td>
+              <td><code>"v"</code> or <code>"h"</code></td>
+              <td><code>"v"</code> or <code>"h"</code></td>
+              <td>Plot orientation; auto-detected if one variable is categorical.</td>
+            </tr>
+            <tr>
+              <td><code>palette</code></td>
+              <td>palette name / dict / list</td>
+              <td>palette name / dict / list</td>
+              <td>Color mapping (e.g. <code>"Set2"</code>, <code>"Dark2"</code>, or hex dict).</td>
+            </tr>
+            <tr>
+              <td><code>size</code></td>
+              <td>float (default <code>5</code>)</td>
+              <td>float (default <code>5</code>)</td>
+              <td>Diameter of the marker dots. Use <code>size=2.5-4</code> for dense data.</td>
+            </tr>
+            <tr>
+              <td><code>alpha</code></td>
+              <td>float (0.0 to 1.0)</td>
+              <td>float (0.0 to 1.0)</td>
+              <td>Marker opacity. Essential for revealing overlap in strip plots.</td>
+            </tr>
+            <tr>
+              <td><code>edgecolor</code></td>
+              <td>color str</td>
+              <td>color str</td>
+              <td>Marker perimeter outline color (e.g. <code>"black"</code>, <code>"white"</code>).</td>
+            </tr>
+            <tr>
+              <td><code>linewidth</code></td>
+              <td>float (default <code>0</code>)</td>
+              <td>float (default <code>0</code>)</td>
+              <td>Thickness of marker border outline (e.g. <code>0.4</code> to <code>0.6</code>).</td>
+            </tr>
+            <tr>
+              <td><code>warn_thresh</code></td>
+              <td>Not applicable</td>
+              <td>float (default <code>0.05</code>)</td>
+              <td>Proportion of unplaced points that triggers a warning.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Decision Framework: Which Categorical Plot Should You Choose?</h3>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Analytical Goal</th>
+              <th>Sample Size (N per Category)</th>
+              <th>Recommended Plot Technique</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Show exact non-overlapping points + density shape</td>
+              <td>Small to Moderate (<i>N &lt; 200</i>)</td>
+              <td><strong><code>sns.swarmplot()</code></strong></td>
+            </tr>
+            <tr>
+              <td>Show individual points for large datasets</td>
+              <td>Moderate to Large (<i>N = 200 - 5,000+</i>)</td>
+              <td><strong><code>sns.stripplot(..., jitter=0.25, alpha=0.5)</code></strong></td>
+            </tr>
+            <tr>
+              <td>Show 5-number summary AND raw observation distribution</td>
+              <td>Any sample size</td>
+              <td><strong>Hybrid: <code>sns.boxplot(fliersize=0)</code> + <code>sns.stripplot()</code></strong></td>
+            </tr>
+            <tr>
+              <td>Show continuous density envelope AND exact empirical dots</td>
+              <td>Small to Moderate (<i>N &lt; 300</i>)</td>
+              <td><strong>Hybrid: <code>sns.violinplot(inner=None)</code> + <code>sns.swarmplot()</code></strong></td>
+            </tr>
+            <tr>
+              <td>Categories have very long descriptive names</td>
+              <td>Any sample size</td>
+              <td><strong>Horizontal Layout: <code>y="Category"</code>, <code>x="Value"</code></strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> 21 Comprehensive Practice Exercises &amp; Hands-On Capstone</h2>
+      <p>Test your conceptual understanding and practical mastery of strip plots, swarm plots, jitter mechanics, and hybrid visualization patterns:</p>
+
+      <h3>Part A: 10 Multiple-Choice Questions (MCQs)</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q1: Strip Plot vs Swarm Plot Fundamental Difference</div>
+        <p>Strip plot aur Swarm plot me horizontal point arrangement ka kya primary difference hai?</p>
+        <p>A) Strip plot points ko mathematically sort karta hai, jabki swarm plot unhe randomly place karta hai.<br>
+        B) Strip plot random uniform jitter use karta hai (points overlap ho sakte hain), jabki swarm plot non-overlapping deterministic repulsion algorithm use karta hai.<br>
+        C) Swarm plot sirf categorical x-axis par chal sakta hai, jabki strip plot sirf numerical x-axis par.<br>
+        D) Dono me koi difference nahi hai, sirf function name alag hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> <code>sns.stripplot()</code> points ko horizontal categorical axis par randomly displace karta hai (jitter), isliye agar points bohot zyada hon to wo overlap ho sakte hain. Dusri taraf, <code>sns.swarmplot()</code> ek algorithmic repulsion check karta hai jo ensure karta hai ki koi bhi do points ek dusre par overlap na karein.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q2: Jitter Mechanics and Value Integrity</div>
+        <p>Jab aap <code>sns.stripplot(..., jitter=0.3)</code> pass karte hain, to kya data point ki numerical measurement value change hoti hai?</p>
+        <p>A) Haan, y-value me &plusmn;0.3 ka random noise add ho jata hai.<br>
+        B) Haan, data normalize ho kar 0 aur 1 ke beech scale ho jata hai.<br>
+        C) Nahi, jitter sirf categorical axis (x-axis) par visual offset deta hai; measurement axis (y-axis) ki value 100% untouched rehti hai.<br>
+        D) Sirf tab change hoti hai jab points discrete integers hon.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: C</strong></p>
+            <p><strong>Explanation:</strong> Jitter purely ek graphical layout technique hai. Ye categorical dimension par points ko spread out karta hai taaki overplotting kam ho sake. Underlying data point ki true value (e.g. Exam score 78 ya Price $450) exactly wahi rehti hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q3: Box Plot + Strip Plot Overlay Best Practice</div>
+        <p>Jab aap <code>sns.boxplot()</code> ke upar <code>sns.stripplot()</code> overlay karte hain, to box plot ke outlier dots ko duplicate draw hone se rokne ke liye kaunsa parameter zaroori hai?</p>
+        <p>A) <code>outliers=False</code><br>
+        B) <code>fliersize=0</code><br>
+        C) <code>showmeans=False</code><br>
+        D) <code>whis=0</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Box plot by default 1.5 &times; IQR se bahar ke points ko "fliers" ke roop me draw karta hai. Agar aap <code>fliersize=0</code> nahi karenge, to strip plot ka apna point bhi draw hoga aur boxplot ka flier bhi, jisse outlier points par double-dot artifact dikhega.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q4: Swarm Plot Computational Complexity</div>
+        <p>Swarm plot ka repulsion algorithm <i>O(N&sup2;)</i> complexity use karta hai. Iska practical implication kya hai?</p>
+        <p>A) Ye large datasets (N &gt; 10,000) ke liye sabse fast chart hai.<br>
+        B) Dataset ka size badhne par computation time quadratic rate se badhta hai, isliye large datasets par rendering bohot slow ya freeze ho sakti hai.<br>
+        C) Iska CPU usage zero ho jata hai.<br>
+        D) Swarm plot sirf GPU par run ho sakta hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Har point ko place karte waqt algorithm already placed sabhi points ke sath pairwise collision check karta hai. Isliye <i>N = 100</i> points ke liye ~10,000 checks lagte hain, lekin <i>N = 5,000</i> points ke liye 25,000,000 checks lagte hain! Isliye large datasets ke liye strip plot use karna chahiye.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q5: Purpose of <code>dodge=True</code> with <code>hue</code></div>
+        <p>Strip ya swarm plot me <code>hue="Category"</code> ke sath <code>dodge=True</code> use karne ka kya faayda hai?</p>
+        <p>A) Colors ko grayscale me convert kar deta hai.<br>
+        B) Hue subgroups ko alag-alag dedicated sub-lanes (columns) me split kar deta hai jisse groups aapas me mix nahi hote.<br>
+        C) Data ko sort kar deta hai.<br>
+        D) Points ke size ko double kar deta hai.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Agar <code>dodge=False</code> (default) ho, to Male aur Female (ya Maths aur Physics) ke points ek hi strip me randomly mix ho jate hain. <code>dodge=True</code> karne se har category ke andar do neat side-by-side tracks ban jate hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q6: Swarm Plot Density Misinterpretation</div>
+        <p>Agar Group A me <i>N = 30</i> aur Group B me <i>N = 300</i> hain, to Group B ka swarm plot 10 guna chauda (wider) dikhega. Kya iska matlab Group B ki probability density 10 guna zyada hai?</p>
+        <p>A) Haan, swarm plot ki horizontal width mathematically probability density function (PDF) ke barabar hoti hai.<br>
+        B) Nahi, swarm plot har point ko place karta hai. Agar sample size zyada hai to swarm automatically wide ho jayega chahe underlying probability density identical ho.<br>
+        C) Haan, Seaborn automatically sample size normalize kar deta hai.<br>
+        D) Swarm plot unequal sample sizes ko support hi nahi karta.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Swarm plot sample size se normalize nahi karta! Wo absolute points draw karta hai. Isliye unequal sample sizes me wide swarm sirf <em>more data points</em> show karta hai, na ki higher density rate. Is confusion ko avoid karne ke liye axis labels me <code>(N = ...)</code> mention karna zaroori hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q7: Swarm Plot Collision Warning Resolution</div>
+        <p>Jab terminal par <code>UserWarning: XX% of the points cannot be placed</code> warning aati hai, to sabse pehla corrective step kya hona chahiye?</p>
+        <p>A) Python restart karna.<br>
+        B) Marker <code>size</code> parameter ko reduce karna (e.g. <code>size=3</code> ya <code>size=2.5</code>) ya figure width badhana.<br>
+        C) Numerical data ko delete kar dena.<br>
+        D) Matplotlib ko uninstall kar dena.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Warning tab aati hai jab category column me points ke diameter ke according pixel space khatam ho jata hai. Marker ka <code>size</code> kam karne se ya <code>figsize</code> wide karne se har point ko accommodate hone ke liye space mil jata hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q8: Horizontal Plot Layout Syntax</div>
+        <p>Seaborn me horizontal strip plot banane ke liye sabse clean aur pythonic syntax kya hai?</p>
+        <p>A) <code>sns.stripplot_h()</code> function call karna.<br>
+        B) <code>y="Categorical_Column"</code> aur <code>x="Numerical_Column"</code> assign karna.<br>
+        C) Matplotlib me <code>plt.rotate(90)</code> chalana.<br>
+        D) Pandas dataframe ko transpose karna.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Seaborn me <code>x</code> aur <code>y</code> ko swap karna hi horizontal plots ka standard way hai. Seaborn automatically data types inspect karke categorical axis ko vertical (y-axis) bana deta hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q9: Violin Plot + Swarm Plot Overlay Parameter</div>
+        <p>Violin plot ke upar swarm plot cleanly overlay karne ke liye violin plot me kaunsa argument pass karke inner miniature boxplot hataya jata hai?</p>
+        <p>A) <code>inner=None</code><br>
+        B) <code>no_box=True</code><br>
+        C) <code>boxplot=False</code><br>
+        D) <code>hide_inner=True</code></p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: A</strong></p>
+            <p><strong>Explanation:</strong> <code>sns.violinplot(..., inner=None)</code> inner quartile box aur whiskers ko render hone se rokta hai, jisse violin body bilkul clean hollow canvas ban jati hai jisme swarm dots perfectly visible hote hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Q10: Overplotting in Discrete Rating Data</div>
+        <p>Agar 500 customers ne 1 se 5 ke beech discrete ratings di hain, aur aap <code>sns.stripplot(..., jitter=False)</code> use karte hain, to screen par total kitne dots dikhenge?</p>
+        <p>A) Exact 500 dots.<br>
+        B) Maximum 5 dots (har rating level par ek single dot jiske piche baaki sab chhupe honge).<br>
+        C) Zero dots.<br>
+        D) 25 dots.</p>
+        <details class="accordion">
+          <summary>View Correct Answer &amp; Detailed Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Correct Answer: B</strong></p>
+            <p><strong>Explanation:</strong> Kyunki ratings sirf 1, 2, 3, 4, 5 hain aur jitter disabled hai, to saare points identical coordinates (x=0, y=1), (x=0, y=2), etc. par draw honge. 500 points collapse hokar sirf 5 visible dots ban jayenge! Isi ko severe overplotting kehte hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part B: 5 Visual Graph Interpretation Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 11: Interpreting Figure 11.6 (Ratings Overplotting)</div>
+        <p>Figure 11.6 me Panel A (<code>jitter=False</code>) aur Panel B (<code>jitter=0.3</code>) ko inspect kijiye. Panel A se hum customer satisfaction ke baare me kya galat conclusion nikal sakte hain jo Panel B me correct hota hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Interpretation:</strong> Panel A me har channel ke paas 1, 2, 3, 4, 5 stars par identical single dot dikhta hai. Dekhne wale ko lagta hai ki charo channels me satisfaction barabar distributed hai (har level par same 1 dot). Lekin Panel B me jitter enable karne par pata chalta hai ki Live Chat me 4 aur 5 star par massive volume (34 five-star reviews) hai, jabki Email Helpdesk me 1 aur 2 star par heavy clustering hai aur 5 star par sirf 7 reviews hain! Jitter ne true distribution volume reveal kiya.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 12: Interpreting Figure 11.13 (Horizontal Product Pricing)</div>
+        <p>Figure 11.13 me Electronics category me points ka horizontal spread dekhiye. Electronics ka median price $2,370 hai lekin kuch points $4,500+ tak ja rahe hain. Strip plot se is skewness aur pricing strategy ka kya insight milta hai?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Interpretation:</strong> Strip plot clear positive skewness dikhata hai. Bulk catalog items $1,500 se $3,000 ke core consumer tier me hain, jabki right side par sparse luxury outliers ($4,000+) flagship workstation laptops ya professional cameras hain. Ye prove karta hai ki catalog tiered pricing follow karta hai jahan high-margin luxury items overall mean ko median se $138 upar pull kar rahe hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 13: Interpreting Figure 11.15 (Box + Strip Overlay)</div>
+        <p>Figure 11.15 me Section A aur Section C ko compare kijiye. Strip plot overlay hone se hume Section A ke toppers aur Section C ke lower tail ke baare me kya extra information milti hai jo akele box plot me clear nahi hoti?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Interpretation:</strong> Box plot sirf Q1, median, aur Q3 batata hai. Strip overlay dikhata hai ki Section A me 85 marks ke upar ek continuous cluster of 8-10 students hai jo 91 tak ja raha hai. Section C me 60 marks ke niche dense cluster of points hai jo fail threshold ke bohot kareeb hai. Overlay se hume exact point density aur cluster boundaries directly dikhai deti hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 14: Interpreting Figure 11.18 (Unequal Sample Sizes)</div>
+        <p>Figure 11.18 me Pilot Cohort (N = 25) ka mean score 78.73 hai jo Mass Production (N = 250, mean 73.34) se zyada hai. Strip plot ko dekh kar ek Quality Auditor ko Pilot Cohort ke results par turant trust kyun nahi karna chahiye?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Interpretation:</strong> Strip plot me Pilot Cohort ke dots bohot sparse aur scattered hain (only 25 samples). Small sample size me statistical variance bohot high hota hai &mdash; sirf 2-3 exceptional products mean ko 78.73 tak inflate kar sakte hain. Mass Production me 250 points dense solid column banate hain, jo prove karta hai ki uska 73.34 mean statistically stable aur reliable baseline hai.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 15: Interpreting Figure 11.19 (SRE API Latency Spikes)</div>
+        <p>Figure 11.19 me <code>/checkout/pay</code> endpoint ka median 129.55ms hai jo 250ms SLA line se bohot niche hai. Phir bhi strip plot dekh kar SRE engineer production alert kyun trigger karega?</p>
+        <details class="accordion">
+          <summary>View Expert Interpretation &amp; Answer</summary>
+          <div class="accordion-content">
+            <p><strong>Interpretation:</strong> Strip plot dikhata hai ki median chahe 129ms ho, lekin <code>/checkout/pay</code> me continuous upper tail spikes hain jo 250ms line ko breach karke 375ms tak ja rahe hain (P99 latency). E-commerce checkout me payment gateway timeouts conversion drop karate hain. Strip plot ne tail latency risk expose kar diya jo median summary ne chupa diya tha!</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part C: 3 Practical Coding Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 16: Building an Ordered Horizontal Strip Plot</div>
+        <p><strong>Task:</strong> Ek DataFrame banaiye jisme 4 departments hon: <code>["R&amp;D", "Marketing", "Sales", "Operations"]</code> aur har department ke employees ke salary bonus percentages hon. Ek horizontal strip plot banaiye jisme departments median bonus ke descending order me sorted hon, <code>jitter=0.25</code> ho, aur points dark outline ke sath stylish hon.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(42)
+departments = ["R&D", "Marketing", "Sales", "Operations"]
+data = []
+for dept in departments:
+    base = {"R&D": 22, "Sales": 28, "Marketing": 18, "Operations": 14}[dept]
+    bonuses = np.random.normal(loc=base, scale=4, size=50)
+    for b in bonuses:
+        data.append({"Department": dept, "Bonus_Pct": round(float(b), 1)})
+
+df_bonus = pd.DataFrame(data)
+
+# Calculate median order descending
+order = df_bonus.groupby("Department")["Bonus_Pct"].median().sort_values(ascending=False).index.tolist()
+
+plt.figure(figsize=(9, 5))
+sns.set_theme(style="whitegrid")
+sns.stripplot(
+    data=df_bonus,
+    y="Department",
+    x="Bonus_Pct",
+    order=order,
+    jitter=0.25,
+    palette="viridis",
+    size=6.5,
+    alpha=0.8,
+    edgecolor="black",
+    linewidth=0.5
+)
+plt.title("Employee Bonus Distribution by Department (Ordered Descending)", fontweight="bold")
+plt.xlabel("Bonus Percentage (%)")
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 17: Grouped Swarm Plot with Dodge</div>
+        <p><strong>Task:</strong> 2 hospital clinics (<code>"Clinic A"</code>, <code>"Clinic B"</code>) ke patient waiting times ka dataset banaiye, jisme <code>"Patient_Type"</code> either <code>"Emergency"</code> ya <code>"Regular"</code> ho. Ek grouped swarm plot banaiye jisme <code>dodge=True</code> use karke Emergency aur Regular ke waiting times ko side-by-side compare kiya gaya ho.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+np.random.seed(101)
+clinics = ["Clinic A", "Clinic B"]
+types = ["Emergency", "Regular"]
+records = []
+for c in clinics:
+    for t in types:
+        mean_wait = 12 if t == "Emergency" else 45
+        waits = np.random.normal(loc=mean_wait, scale=6, size=40)
+        for w in waits:
+            records.append({"Clinic": c, "Patient_Type": t, "Wait_Time": max(2, round(float(w), 1))})
+
+df_hospital = pd.DataFrame(records)
+
+plt.figure(figsize=(9, 5.5))
+sns.set_theme(style="whitegrid")
+sns.swarmplot(
+    data=df_hospital,
+    x="Clinic",
+    y="Wait_Time",
+    hue="Patient_Type",
+    dodge=True,
+    palette={"Emergency": "#EF4444", "Regular": "#3B82F6"},
+    size=5,
+    edgecolor="black",
+    linewidth=0.4
+)
+plt.title("Patient Waiting Times by Clinic and Patient Type (dodge=True)", fontweight="bold")
+plt.ylabel("Wait Time (Minutes)")
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 18: Box + Strip Overlay with Zero Duplicate Outliers</div>
+        <p><strong>Task:</strong> Ek production-grade Box Plot + Strip Plot overlay banaiye jisme box plot pastel color ka ho, <code>fliersize=0</code> set ho taaki outliers duplicate na hon, aur strip plot ke points dark navy color ke subtle dots hon.</p>
+        <details class="accordion">
+          <summary>View Complete Python Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("college_student_marks.csv")
+
+plt.figure(figsize=(9, 5.5))
+sns.set_theme(style="ticks")
+
+# Step 1: Base Box Plot with fliersize=0
+sns.boxplot(
+    data=df,
+    x="Section",
+    y="Exam_Score",
+    palette="pastel",
+    fliersize=0,      # Prevents double outlier artifact!
+    boxprops=dict(alpha=0.6),
+    width=0.5
+)
+
+# Step 2: Strip Plot Overlay with jitter
+sns.stripplot(
+    data=df,
+    x="Section",
+    y="Exam_Score",
+    color="#0F172A",
+    jitter=0.22,
+    size=5.5,
+    alpha=0.75,
+    edgecolor="white",
+    linewidth=0.4
+)
+
+sns.despine(trim=True)
+plt.title("Production Clean Box + Strip Plot Overlay", fontweight="bold")
+plt.ylabel("Exam Score")
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part D: 2 Output Prediction Exercises</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 19: Predict the Output &mdash; Disabling Jitter</div>
+        <p>Niche diye gaye code snippet ka output kya hoga? Screen par total kitne points draw honge aur graph kaisa dikhega?</p>
+        <div class="code-block">
+          <pre><code>df_test = pd.DataFrame({"Rating": [5]*50 + [4]*50, "Store": ["Downtown"]*100})
+sns.stripplot(data=df_test, x="Store", y="Rating", jitter=False)</code></pre>
+        </div>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> Screen par sirf aur sirf <strong>2 single dots</strong> dikhenge &mdash; ek y=5 par aur ek y=4 par! 100 observations collapse hokar 2 points ban jayenge.</p>
+            <p><strong>Explanation:</strong> Kyunki <code>jitter=False</code> set hai, isliye x-offset zero hai. Har row ka coordinate exactly <code>(0, 5)</code> ya <code>(0, 4)</code> hai. Matplotlib pehle dot par baaki 49 dots ko draw karta hai, jisse 98 points invisible ho jate hain.</p>
+          </div>
+        </details>
+      </div>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 20: Predict the Output &mdash; Swarm Plot Collision Warning</div>
+        <p>Agar hum ek dataset jisme 1,000 identical float values hon (e.g. <code>np.ones(1000) * 50.0</code>) par <code>sns.swarmplot(y=..., size=10)</code> run karein, to kya hoga?</p>
+        <details class="accordion">
+          <summary>View Output Prediction &amp; Technical Explanation</summary>
+          <div class="accordion-content">
+            <p><strong>Predicted Output:</strong> Python console par <code>UserWarning: XX% of the points cannot be placed...</code> flash hogi aur program execute hone me noticeable time (kuch seconds) lega.</p>
+            <p><strong>Explanation:</strong> Swarm plot algorithm 1,000 points ko horizontal line par arrange karne ki koshish karega. Lekin marker size 10 bohot bada hai, jisse kuch hi points ke baad available canvas width khatam ho jayegi. Algorithm baaki bache huye hundreds of points ko drop kar dega aur warning emit karega.</p>
+          </div>
+        </details>
+      </div>
+
+      <h3>Part E: FinTech Capstone Mini-Project</h3>
+
+      <div class="exercise-card">
+        <div class="exercise-title">Exercise 21: FinTech Credit Card Transaction Fraud Screening</div>
+        <p><strong>Real-World Scenario:</strong> Aap ek leading digital payments bank me Senior Risk Analytics Engineer hain. Bank ke transaction monitoring engine ne 4 merchant categories (<code>"Retail"</code>, <code>"Travel"</code>, <code>"Electronics"</code>, <code>"Jewelry"</code>) me 500 transactions flag kiye hain. Har transaction me amount ($ USD) aur fraud status (<code>"Legitimate"</code> vs <code>"Fraudulent"</code>) recorded hai.</p>
+        <p><strong>Your Deliverables:</strong></p>
+        <ol>
+          <li>Ek realistic synthetic dataset generate kijiye (seed 42) jisme fraud transactions high-value luxury amounts ($2,500 - $6,000) par concentrate hon.</li>
+          <li>Ek publication-quality <strong>Grouped Strip Plot</strong> banaiye with <code>hue="Fraud_Status"</code> aur <code>dodge=True</code>.</li>
+          <li>Fraud points ko sharp Crimson Red (<code>#DC2626</code>) aur legitimate points ko Slate Blue (<code>#2563EB</code>) color dijiye.</li>
+          <li>Ek horizontal dashed warning line $3,000 par draw kijiye representing the <em>Automated High-Risk Review Threshold</em>.</li>
+          <li>Semi-transparent Box Plot overlay kijiye taaki interquartile ranges clearly visible hon.</li>
+        </ol>
+
+        <details class="accordion">
+          <summary>View Complete Capstone Mini-Project Solution Code</summary>
+          <div class="accordion-content">
+            <div class="code-block">
+              <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Step 1: Generate reproducible FinTech fraud transaction data
+np.random.seed(42)
+categories = ["Retail", "Travel", "Electronics", "Jewelry"]
+records = []
+
+for cat in categories:
+    # Generate 100 legitimate transactions
+    base_price = {"Retail": 120, "Travel": 650, "Electronics": 800, "Jewelry": 1100}[cat]
+    legit_amounts = np.random.exponential(scale=base_price, size=100)
+    for amt in legit_amounts:
+        records.append({"Category": cat, "Amount": round(float(amt) + 20, 2), "Status": "Legitimate"})
+        
+    # Generate 25 fraudulent transactions with severe spikes
+    fraud_base = {"Retail": 850, "Travel": 2800, "Electronics": 3400, "Jewelry": 4500}[cat]
+    fraud_amounts = np.random.normal(loc=fraud_base, scale=600, size=25)
+    for amt in fraud_amounts:
+        records.append({"Category": cat, "Amount": max(150, round(float(amt), 2)), "Status": "Fraudulent"})
+
+df_fintech = pd.DataFrame(records)
+
+# Step 2: Visualization Setup
+plt.figure(figsize=(11, 6.5))
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+# Step 3: Layer 1 - Box Plot Summary with fliersize=0
+sns.boxplot(
+    data=df_fintech,
+    x="Category",
+    y="Amount",
+    hue="Status",
+    dodge=True,
+    fliersize=0,
+    boxprops=dict(alpha=0.35),
+    palette={"Legitimate": "#93C5FD", "Fraudulent": "#FCA5A5"},
+    width=0.6
+)
+
+# Step 4: Layer 2 - Grouped Strip Plot Overlay with dodge=True
+sns.stripplot(
+    data=df_fintech,
+    x="Category",
+    y="Amount",
+    hue="Status",
+    dodge=True,
+    jitter=0.22,
+    size=5.5,
+    alpha=0.85,
+    palette={"Legitimate": "#1D4ED8", "Fraudulent": "#DC2626"},
+    edgecolor="black",
+    linewidth=0.4
+)
+
+# Step 5: Risk Threshold Line & Formatting
+plt.axhline(3000, color="#B91C1C", linestyle="--", linewidth=1.8, label="High-Risk Review Limit ($3,000)")
+plt.title("FinTech Transaction Fraud Screening: Amount Distribution by Category", fontweight="bold", pad=14)
+plt.xlabel("Merchant Category", labelpad=10)
+plt.ylabel("Transaction Amount ($ USD)", labelpad=10)
+
+# Clean duplicate legend entries
+handles, labels = plt.gca().get_legend_handles_labels()
+plt.legend(handles[2:], labels[2:], title="Fraud Status & Threshold", loc="upper left", frameon=True)
+
+plt.tight_layout()
+plt.show()</code></pre>
+            </div>
+            <p><strong>Capstone Analytical Takeaway:</strong> Strip plot overlay se clearly establish hota hai ki Jewelry aur Electronics me fraudulent transactions $3,000 threshold ke upar dense clusters banate hain, jabki Retail me fraud attempts $800 - $1,500 ke beech cluster hote hain. Risk operations team is visual evidence ke basis par category-specific fraud filters implement kar sakti hai!</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> Summary, Concept Mind Map &amp; Topic 12 Preview</h2>
+      <p>Congratulations! Aapne Seaborn ke sabse granular aur observation-level visualization tools &mdash; <strong>Strip Plots</strong> aur <strong>Swarm Plots</strong> &mdash; par complete mastery hasil kar li hai. Aaiye is pure topic ke core takeaways ko ek comprehensive visual mind map me summarize karte hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_concept_revision_diagram.png" alt="Topic 11 Final Concept Revision Diagram and Architecture Mind Map">
+        <div class="figure-caption">Figure 11.20: Topic 11 Mind Map &mdash; Comprehensive architecture of strip plots, swarm plots, jitter mechanics, dodge grouping, hybrid overlays, and sample size considerations.</div>
+      </div>
+
+      <h3>Key Takeaways Summary</h3>
+      <ul>
+        <li><strong>Observation-Level Philosophy:</strong> Bar plots aur standard summaries individual observations ko hide kar dete hain. Strip aur Swarm plots har single row/data point ko canvas par display karte hain.</li>
+        <li><strong>Strip Plot (<code>sns.stripplot</code>):</strong> Uses random uniform jitter along the categorical axis. Highly scalable (<i>N = 1,000+</i>), lightning fast (<i>O(N)</i>), and the ideal companion for box plot overlays.</li>
+        <li><strong>Swarm Plot (<code>sns.swarmplot</code>):</strong> Uses a deterministic non-overlapping repulsion algorithm. Swarm width equals point density. Best suited for small-to-moderate sample sizes (<i>N &lt; 250</i>). Dense datasets trigger <code>UserWarning</code>.</li>
+        <li><strong>Jitter Mechanics:</strong> Jitter only displaces points along the categorical axis; it never alters the true numerical measurement value.</li>
+        <li><strong>Dodge Parameter:</strong> Always use <code>dodge=True</code> when using <code>hue</code> to separate subgroup points into side-by-side sub-columns rather than scrambling them in a single lane.</li>
+        <li><strong>Hybrid Overlays:</strong> Combine Box Plot (<code>fliersize=0</code>) + Strip Plot, or Violin Plot (<code>inner=None</code>) + Swarm Plot for the ultimate balance of formal statistical summaries and raw observation transparency.</li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128640; What's Next in Topic 12?</div>
+        <p>Agla topic hai <strong>Seaborn Topic 12: Categorical Distribution Plots &amp; <code>catplot()</code></strong>! Wahan hum seekhenge ki kaise figure-level <code>sns.catplot()</code> function ke through hum strip, swarm, box, violin, bar, aur point plots ko ek single unified interface se call kar sakte hain aur multi-column facet grids create kar sakte hain!</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

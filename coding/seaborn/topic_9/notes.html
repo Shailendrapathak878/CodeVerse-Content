@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 9: Bar Plots &amp; Count Plots in Seaborn — Categorical Aggregation, Frequency Counting, Estimators &amp; Error Bars</title>
+  <style>
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-card: #1e293b;
+      --bg-code: #0b1120;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-green: #34d399;
+      --accent-rose: #f43f5e;
+      --accent-amber: #fbbf24;
+      --accent-purple: #c084fc;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f8fafc;
+        --bg-secondary: #ffffff;
+        --bg-card: #ffffff;
+        --bg-code: #f1f5f9;
+        --text-primary: #0f172a;
+        --text-secondary: #475569;
+        --text-muted: #94a3b8;
+        --accent-blue: #0284c7;
+        --accent-indigo: #4f46e5;
+        --accent-green: #059669;
+        --accent-rose: #e11d48;
+        --accent-amber: #d97706;
+        --accent-purple: #9333ea;
+        --border-color: #e2e8f0;
+        --border-focus: #0284c7;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.68;
+      padding: 16px;
+      overflow-x: hidden;
+      width: 100%;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    /* Hero Banner */
+    .hero {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.12) 0%, rgba(129, 140, 248, 0.12) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .topic-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background-color: rgba(56, 189, 248, 0.15);
+      color: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      border-radius: 9999px;
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 2.4rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+      line-height: 1.25;
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.15rem);
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 14px;
+    }
+
+    .hero-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Table of Contents */
+    .toc-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 36px;
+    }
+
+    .toc-card h3 {
+      font-size: 1.25rem;
+      color: var(--accent-blue);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+
+    .toc-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+    }
+
+    .toc-text {
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .toc-link:hover {
+      background-color: rgba(56, 189, 248, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+      transform: translateX(4px);
+    }
+
+    .toc-number {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      background: rgba(129, 140, 248, 0.15);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    /* Section Styles */
+    section {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 26px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.8rem);
+      color: var(--accent-blue);
+      margin-bottom: 18px;
+      border-bottom: 2px solid rgba(56, 189, 248, 0.2);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      color: var(--accent-indigo);
+      margin: 22px 0 12px 0;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-primary);
+      margin: 16px 0 8px 0;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    p strong {
+      color: var(--text-primary);
+    }
+
+    ul, ol {
+      margin-left: 24px;
+      margin-bottom: 16px;
+      color: var(--text-secondary);
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    li strong {
+      color: var(--text-primary);
+    }
+
+    /* Highlight Badges & Callout Boxes */
+    .callout {
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 4px solid;
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .callout-info {
+      border-color: var(--accent-blue);
+      background-color: rgba(56, 189, 248, 0.06);
+    }
+
+    .callout-warning {
+      border-color: var(--accent-amber);
+      background-color: rgba(251, 191, 36, 0.06);
+    }
+
+    .callout-danger {
+      border-color: var(--accent-rose);
+      background-color: rgba(244, 63, 94, 0.06);
+    }
+
+    .callout-success {
+      border-color: var(--accent-green);
+      background-color: rgba(52, 211, 153, 0.06);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout-info .callout-title { color: var(--accent-blue); }
+    .callout-warning .callout-title { color: var(--accent-amber); }
+    .callout-danger .callout-title { color: var(--accent-rose); }
+    .callout-success .callout-title { color: var(--accent-green); }
+
+    /* Code Blocks */
+    .code-container {
+      background-color: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 16px 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 14px;
+      background-color: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    .code-badge {
+      font-weight: 600;
+      color: var(--accent-indigo);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .copy-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      border-color: var(--accent-blue);
+    }
+
+    pre {
+      padding: 14px;
+      overflow-x: auto;
+      max-width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text-primary);
+    }
+
+    code {
+      font-family: var(--font-mono);
+    }
+
+    p code, li code, td code {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-blue);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88rem;
+    }
+
+    /* Output Blocks */
+    .output-block {
+      background-color: var(--bg-code);
+      border: 1px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 12px 0 18px 0;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+
+    .output-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--accent-amber);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    /* Image Wrapper */
+    .figure-wrapper {
+      margin: 24px 0;
+      text-align: center;
+      background-color: #090d16;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px;
+      overflow: hidden;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .figure-wrapper img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .figure-caption {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin: 20px 0;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+      text-align: left;
+    }
+
+    th {
+      background-color: rgba(255, 255, 255, 0.04);
+      color: var(--accent-blue);
+      font-weight: 700;
+      padding: 12px 14px;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    td {
+      padding: 11px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-secondary);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Accordion Details */
+    details.accordion {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin: 14px 0;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    details.accordion[open] {
+      border-color: var(--accent-indigo);
+      background-color: rgba(129, 140, 248, 0.04);
+    }
+
+    summary {
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    summary::after {
+      content: "+";
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-indigo);
+      transition: transform 0.2s ease;
+    }
+
+    details[open] summary::after {
+      content: "-";
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      padding: 16px 18px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      overflow-x: auto;
+    }
+
+    /* Step Badge */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      background-color: var(--accent-blue);
+      color: #0f172a;
+      font-weight: 800;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      margin-right: 8px;
+      flex-shrink: 0;
+      margin-top: 4px;
+    }
+  </style>
+  <script>
+    function copyCode(btn) {
+      const codeBlock = btn.closest('.code-container').querySelector('pre code');
+      if (codeBlock) {
+        navigator.clipboard.writeText(codeBlock.innerText).then(() => {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = '<span>&#10003; Copied!</span>';
+          btn.style.borderColor = 'var(--accent-green)';
+          btn.style.color = 'var(--accent-green)';
+          setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.style.borderColor = '';
+            btn.style.color = '';
+          }, 2000);
+        }).catch(err => console.error('Copy failed:', err));
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <!-- Hero Banner -->
+    <header class="hero">
+      <span class="topic-badge">Topic 9 &bull; Categorical Visualization</span>
+      <h1>Bar Plots &amp; Count Plots in Seaborn</h1>
+      <p>Categorical data ko visual aur actionable insights me badalna: Rows ki frequency ginne se lekar multi-category aggregated metrics, statistical estimators, aur error bars ki complete practical guide in natural Hinglish.</p>
+      <div class="hero-meta">
+        <div class="hero-meta-item"><strong>Functions:</strong> <code>sns.barplot()</code> &bull; <code>sns.countplot()</code></div>
+        <div class="hero-meta-item"><strong>Seaborn Version:</strong> 0.13.2 Compatible</div>
+        <div class="hero-meta-item"><strong>Focus:</strong> Aggregation vs Frequency Counting</div>
+      </div>
+    </header>
+
+    <!-- Table of Contents -->
+    <nav class="toc-card">
+      <h3>&#128203; Table of Contents &bull; 20 Structured Lessons</h3>
+      <div class="toc-grid">
+        <a href="#sec-1" class="toc-link"><span class="toc-number">01</span><span class="toc-text">Introduction: Visualizing Categorical Data</span></a>
+        <a href="#sec-2" class="toc-link"><span class="toc-number">02</span><span class="toc-text">Bar Plot (<code>sns.barplot()</code>) Deep Dive</span></a>
+        <a href="#sec-3" class="toc-link"><span class="toc-number">03</span><span class="toc-text">Count Plot (<code>sns.countplot()</code>) Deep Dive</span></a>
+        <a href="#sec-4" class="toc-link"><span class="toc-number">04</span><span class="toc-text">Bar Plot vs Count Plot Differences</span></a>
+        <a href="#sec-5" class="toc-link"><span class="toc-number">05</span><span class="toc-text"><code>sns.barplot()</code> Parameters &amp; Customization</span></a>
+        <a href="#sec-6" class="toc-link"><span class="toc-number">06</span><span class="toc-text"><code>sns.countplot()</code> &amp; Horizontal Bars</span></a>
+        <a href="#sec-7" class="toc-link"><span class="toc-number">07</span><span class="toc-text">Multi-Dimensional Grouping with <code>hue</code></span></a>
+        <a href="#sec-8" class="toc-link"><span class="toc-number">08</span><span class="toc-text">Estimators: Mean vs Median &amp; Outliers</span></a>
+        <a href="#sec-9" class="toc-link"><span class="toc-number">09</span><span class="toc-text">Error Bars &amp; Statistical Uncertainty</span></a>
+        <a href="#sec-10" class="toc-link"><span class="toc-number">10</span><span class="toc-text">Controlling Category Ordering (<code>order</code>)</span></a>
+        <a href="#sec-11" class="toc-link"><span class="toc-number">11</span><span class="toc-text">Normalized Counts &amp; Percentages (<code>stat</code>)</span></a>
+        <a href="#sec-12" class="toc-link"><span class="toc-number">12</span><span class="toc-text">Direct Data Labels &amp; Bar Value Annotations</span></a>
+        <a href="#sec-13" class="toc-link"><span class="toc-number">13</span><span class="toc-text">Styling, Color Palettes &amp; Production Polish</span></a>
+        <a href="#sec-14" class="toc-link"><span class="toc-number">14</span><span class="toc-text">Case Study 1: University Course Analytics</span></a>
+        <a href="#sec-15" class="toc-link"><span class="toc-number">15</span><span class="toc-text">Case Study 2: E-Commerce Multi-Device Revenue</span></a>
+        <a href="#sec-16" class="toc-link"><span class="toc-number">16</span><span class="toc-text">Case Studies 3 &amp; 4: Tickets &amp; API Health</span></a>
+        <a href="#sec-17" class="toc-link"><span class="toc-number">17</span><span class="toc-text">12+ Common Pitfalls &amp; Anti-Patterns</span></a>
+        <a href="#sec-18" class="toc-link"><span class="toc-number">18</span><span class="toc-text">Quick Reference Cheat Sheet &amp; Syntax Matrix</span></a>
+        <a href="#sec-19" class="toc-link"><span class="toc-number">19</span><span class="toc-text">21 Practice Exercises &amp; Capstone Project</span></a>
+        <a href="#sec-20" class="toc-link"><span class="toc-number">20</span><span class="toc-text">Summary, Mind Map &amp; Topic 10 Preview</span></a>
+      </div>
+    </nav>
+
+    <!-- Section 1 -->
+    <section id="sec-1">
+      <h2><span class="step-badge">1</span> Introduction: Visualizing Categorical Data in Data Science</h2>
+      <p>Data Science aur Machine Learning me hamara samna do mukhya tarah ke data se hota hai: <strong>Continuous Numerical Variables</strong> (jaise student marks, salary, latency, price) aur <strong>Categorical Variables</strong> (jaise course names, shipping partners, user devices, departments, ticket types).</p>
+      
+      <p>Previous topics (Topics 5 se 8) me humne numerical variables ke distribution ko samajhne ke liye Histograms, KDE plots, Box plots, aur Violin plots dekhe the. Lekin jab business stakeholders aapse puchte hain:</p>
+      <ul>
+        <li><em>"Hamare platform par kis course me sabse zyada students enroll hue hain?"</em> (<strong>Frequency Question</strong>)</li>
+        <li><em>"Kis department ke students ka average exam marks sabse high hai?"</em> (<strong>Aggregated Metric Question</strong>)</li>
+      </ul>
+      <p>Ye do alag sawal hain, aur in dono sawalon ke jawab ke liye Seaborn ne do dedicated aur powerful visual functions banaye hain: <code>sns.countplot()</code> aur <code>sns.barplot()</code>.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/barplot_vs_countplot_concept.png" alt="Conceptual architecture: sns.countplot vs sns.barplot in Seaborn">
+        <div class="figure-caption">Figure 9.1: Architectural Comparison &mdash; Row frequency counting (countplot) vs Group-level metric aggregation (barplot).</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Intuitive Rule of Thumb</div>
+        <p>Agar aapko dataset ki <strong>rows ko ginna (Count karna)</strong> hai ki kis category me kitne observations hain, to <code>sns.countplot()</code> use kijiye. Agar aapko kisi numerical column ka <strong>Average, Median ya Sum</strong> compare karna hai across categories, to <code>sns.barplot()</code> use kijiye.</p>
+      </div>
+    </section>
+
+    <!-- Section 2 -->
+    <section id="sec-2">
+      <h2><span class="step-badge">2</span> Bar Plot (<code>sns.barplot()</code>) Deep Dive &amp; Core Mechanism</h2>
+      <p>Seaborn me <code>sns.barplot()</code> ek <strong>bivariate (ya multi-variate) categorical plot</strong> hai. Iska kaam sirf bar khadi karna nahi hota, balki ye background me teen vital computational steps perform karta hai:</p>
+      
+      <ol>
+        <li><strong>Group By:</strong> Dataset ko aapke diye gaye categorical variable (<code>x</code>) ke basis par groups me split karta hai.</li>
+        <li><strong>Estimate Metric:</strong> Har group ke numerical variable (<code>y</code>) par ek statistical summary function (default <code>np.mean</code>) run karta hai. Bar ki height ye calculated metric represent karti hai.</li>
+        <li><strong>Calculate Uncertainty:</strong> Seaborn statistical error bar compute karta hai (default 95% Confidence Interval via bootstrapping), jisse pata chalta hai ki sample mean kitna reliable hai.</li>
+      </ol>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Seaborn 0.13+</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Load College Enrollment &amp; Exam Performance Dataset
+df = pd.read_csv("scratch/seaborn_topic9_data/college_enrollment_marks.csv")
+
+# Create Bar Plot: Average marks across courses
+plt.figure(figsize=(8, 5))
+sns.barplot(
+    data=df,
+    x="course",
+    y="exam_marks",
+    palette="crest",
+    errorbar=("ci", 95),
+    capsize=0.1
+)
+plt.title("Average Exam Marks by Course (sns.barplot)")
+plt.xlabel("Course Domain")
+plt.ylabel("Mean Exam Marks (±95% CI)")
+plt.ylim(0, 100)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="output-block">
+        <div class="output-label">Pre-Executed Output Summary</div>
+        Mean Exam Marks: Python Data Science = 82.32 | Machine Learning = 78.37 | Cloud DevOps = 76.99 | Web Fullstack = 73.01
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/simple_exam_marks_barplot.png" alt="Average exam marks by course using sns.barplot">
+        <div class="figure-caption">Figure 9.3: Course-wise Average Exam Marks with 95% Confidence Interval error bars. Python Data Science leads at 82.3.</div>
+      </div>
+
+      <p>Is figure me har bar ka top point us course ka <strong>mean exam score</strong> darshata hai, aur upar lagi hui black vertical line <strong>95% Confidence Interval</strong> represent karti hai. Ye confirm karta hai ki random sampling variation ke bawajood Python Data Science ke students ka average score sabse high hai.</p>
+    </section>
+
+    <!-- Section 3 -->
+    <section id="sec-3">
+      <h2><span class="step-badge">3</span> Count Plot (<code>sns.countplot()</code>) Deep Dive &amp; Frequency Counting</h2>
+      <p><code>sns.countplot()</code> ko aap ek <em>"Categorical Histogram"</em> samajh sakte hain. Jaise histogram continuous numbers ke bins me frequencies count karta hai, waise hi countplot discrete categories ke total occurrences (rows) ko count karta hai.</p>
+
+      <p>Isme aapko sirf <strong>ek hi categorical variable</strong> provide karna hota hai (<code>x="course"</code> ya horizontal ke liye <code>y="course"</code>). Seaborn background me <code>len()</code> count execute karta hai aur har category ke liye bar ki height draw karta hai.</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Seaborn 0.13+</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic9_data/college_enrollment_marks.csv")
+
+# Create Count Plot: Number of enrolled students per course
+plt.figure(figsize=(8, 5))
+order_courses = ["Web Fullstack", "Python Data Science", "Machine Learning", "Cloud DevOps"]
+palette_courses = ["#3B82F6", "#60A5FA", "#93C5FD", "#BFDBFE"]
+
+sns.countplot(
+    data=df,
+    x="course",
+    order=order_courses,
+    palette=palette_courses
+)
+plt.title("Student Enrollment Count by Course (sns.countplot)")
+plt.xlabel("Course Domain")
+plt.ylabel("Number of Students (Row Count)")
+plt.ylim(0, 62)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="output-block">
+        <div class="output-label">Pre-Executed Output Summary</div>
+        Enrollment Counts: Web Fullstack = 52 | Python Data Science = 45 | Machine Learning = 38 | Cloud DevOps = 35 | Total = 170
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/simple_college_enrollment_countplot.png" alt="Student enrollment count per course using sns.countplot">
+        <div class="figure-caption">Figure 9.2: Student Enrollment Count per Course &mdash; Web Fullstack leads in student interest with 52 enrollments.</div>
+      </div>
+
+      <p>Count plot me <strong>kabhi koi error bar nahi hota</strong> kyunki rows ko count karna ek deterministic process hai &mdash; isme sample mean ki tarah statistical uncertainty nahi hoti.</p>
+
+      <h3>E-Commerce Order Frequency Example</h3>
+      <p>Hamare 600 orders ke e-commerce dataset me product categories ki order frequency dekhte hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/ecommerce_product_category_counts.png" alt="E-commerce orders frequency by product category">
+        <div class="figure-caption">Figure 9.5: E-Commerce Order Volume across Product Categories &mdash; Clothing (205 orders, 34.2%) and Electronics (187 orders, 31.2%) dominate customer purchases.</div>
+      </div>
+    </section>
+
+    <!-- Section 4 -->
+    <section id="sec-4">
+      <h2><span class="step-badge">4</span> Fundamental Architectural Differences: Count Plot vs Bar Plot</h2>
+      <p>Data Science beginners aksar ek bohot badi galti karte hain: wo sochte hain ki "Dono me bar hi to banti hai, to koi bhi function use kar lo!" Lekin in dono ke core purpose aur computational logic me zameen-aasman ka antar hota hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/side_by_side_count_vs_average_comparison.png" alt="Side-by-side comparison: Enrollment count vs Average score on the same courses">
+        <div class="figure-caption">Figure 9.4: Side-by-Side Comparison on the Same College Data &mdash; Panel A (Count Plot) shows Web Fullstack has the maximum students (52). But Panel B (Bar Plot) proves Python Data Science has the highest average marks (82.3). High enrollment does NOT guarantee top performance!</div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature / Parameter</th>
+              <th><code>sns.countplot()</code></th>
+              <th><code>sns.barplot()</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Primary Purpose</strong></td>
+              <td>Category frequency / observation count ginna</td>
+              <td>Group-level summary metric (Mean/Median/Sum) compare karna</td>
+            </tr>
+            <tr>
+              <td><strong>Required Inputs</strong></td>
+              <td>Sirf 1 variable (ya to <code>x</code> ya to <code>y</code>)</td>
+              <td>2 variables (1 Categorical + 1 Numerical)</td>
+            </tr>
+            <tr>
+              <td><strong>Measurement Axis</strong></td>
+              <td>Hamesha <em>Count</em> (Automatic row frequency)</td>
+              <td>Continuous value (e.g. Marks, Price, Latency, Salary)</td>
+            </tr>
+            <tr>
+              <td><strong>Statistical Estimator</strong></td>
+              <td>Koi estimator nahi (Sirf simple row tallying)</td>
+              <td>Estimator function (Default: <code>np.mean</code>, ya <code>np.median</code>)</td>
+            </tr>
+            <tr>
+              <td><strong>Statistical Error Bars</strong></td>
+              <td>Kabhi nahi (Count exact hoti hai)</td>
+              <td>Hoti hai (Default 95% Confidence Interval)</td>
+            </tr>
+            <tr>
+              <td><strong>Underlying Question</strong></td>
+              <td><em>"Ye cheez kitni baar hui?"</em></td>
+              <td><em>"Inka average / total kitna hai?"</em></td>
+            </tr>
+            <tr>
+              <td><strong>Common Bug</strong></td>
+              <td><code>y="marks"</code> pass karna &rarr; Crash/Error!</td>
+              <td>Numeric column na dena &rarr; Incorrect output</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Common Beginner Mistake: Passing both x and y to countplot</div>
+        <p>Agar aap likhenge <code>sns.countplot(data=df, x="course", y="exam_marks")</code>, to Seaborn ek immediate <code>ValueError: Cannot pass values for both `x` and `y` to `countplot`</code> throw karega. Count plot me measurement axis Seaborn khud generate karta hai.</p>
+      </div>
+    </section>
+
+    <!-- Section 5 -->
+    <section id="sec-5">
+      <h2><span class="step-badge">5</span> <code>sns.barplot()</code> Essential Parameters &amp; Core Customization</h2>
+      <p>Seaborn 0.13+ me <code>sns.barplot()</code> developers ko bar aesthetics aur statistical computation par granular control deta hai. Aayiye iske sabse mahatvapurna parameters ko deeply samjhein:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Allowed Types &amp; Values</th>
+              <th>Practical Significance in Production</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>data</code></td>
+              <td><code>pd.DataFrame</code></td>
+              <td>Tidy format dataset jisme categorical aur numerical columns maujood hon.</td>
+            </tr>
+            <tr>
+              <td><code>x</code>, <code>y</code></td>
+              <td>Column names (strings)</td>
+              <td>Ek categorical variable aur ek numerical variable. Swap karne par orientation change hoti hai.</td>
+            </tr>
+            <tr>
+              <td><code>order</code></td>
+              <td>List of category strings</td>
+              <td>Bars ka display sequence decide karta hai (e.g. high-to-low ranking).</td>
+            </tr>
+            <tr>
+              <td><code>estimator</code></td>
+              <td>Callable (<code>np.mean</code>, <code>np.median</code>, <code>np.sum</code>)</td>
+              <td>Har category group ke numerical values ko aggregate karne ka statistical function.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar</code></td>
+              <td><code>('ci', 95)</code>, <code>'sd'</code>, <code>'se'</code>, <code>None</code></td>
+              <td>Seaborn 0.13+ syntax: Bar ke upar uncertainty whiskers ki calculation method.</td>
+            </tr>
+            <tr>
+              <td><code>capsize</code></td>
+              <td>Float (e.g. <code>0.1</code> to <code>0.2</code>)</td>
+              <td>Error bar whiskers ke end par horizontal caps ki width set karta hai.</td>
+            </tr>
+            <tr>
+              <td><code>width</code></td>
+              <td>Float (e.g. <code>0.6</code> to <code>0.8</code>)</td>
+              <td>Bars ki visual thickness adjust karta hai taaki bars ke beech balanced spacing rahe.</td>
+            </tr>
+            <tr>
+              <td><code>palette</code> / <code>color</code></td>
+              <td>Colormap name ya Hex color</td>
+              <td>Bars ke colors control karta hai. Single category ke liye uniform <code>color</code> best practice hai.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Example: Delivery Logistics Average Latency Analysis</h3>
+      <p>Logistics operations me har delivery partner ki average delivery latency (in minutes) evaluate karna ek real-life dashboard use case hai:</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Seaborn 0.13+</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_deliv = pd.read_csv("scratch/seaborn_topic9_data/delivery_latency_outliers.csv")
+
+plt.figure(figsize=(8, 5))
+partner_order = ["UrbanExpress", "FastTrack", "HyperLogistics", "SpeedyDrop"]
+
+sns.barplot(
+    data=df_deliv,
+    x="partner",
+    y="latency_minutes",
+    order=partner_order,
+    palette="rocket",
+    errorbar=("ci", 95),
+    capsize=0.12,
+    edgecolor="#4A0E4E",
+    linewidth=1.2
+)
+plt.title("Delivery Partners: Mean Latency with 95% Confidence Intervals")
+plt.xlabel("Delivery Logistics Partner")
+plt.ylabel("Mean Latency (Minutes)")
+plt.ylim(0, 50)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/delivery_partner_average_time_barplot.png" alt="Delivery partner average latency with confidence interval caps using sns.barplot">
+        <div class="figure-caption">Figure 9.6: Delivery Logistics Latency Analysis &mdash; UrbanExpress (30.9 min) and FastTrack (33.8 min) demonstrate lower average delivery times compared to SpeedyDrop (38.7 min).</div>
+      </div>
+
+      <h3>Polished Custom Vertical Bar Plot</h3>
+      <p>Enterprise reports me bars ki width aur color palette ko brand identity ke anusar customize kiya jata hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/customized_vertical_barplot.png" alt="Customized vertical bar plot with custom hex colors and standard deviation errorbars">
+        <div class="figure-caption">Figure 9.7: Polished Vertical Bar Plot &mdash; Clean <code>width=0.65</code> with curated enterprise hex palette and standard deviation (<code>errorbar='sd'</code>) error bars.</div>
+      </div>
+    </section>
+
+    <!-- Section 6 -->
+    <section id="sec-6">
+      <h2><span class="step-badge">6</span> <code>sns.countplot()</code> Essential Parameters &amp; Horizontal Bar Orientation</h2>
+      <p>Jab aapke categorical labels lambe hote hain (jaise <em>"Payment Gateway Transaction Failure"</em>, <em>"Technical Account Recovery Bug"</em>), to vertical bars me x-axis labels aapas me takrane lagte hain ya unhe 90-degree rotate karna padta hai, jisse readability bilkul kharab ho jati hai.</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; The Horizontal Layout Rule</div>
+        <p>Agar aapke category names 8 characters se lambe hain ya 5 se zyada categories hain, to <strong>hamesha Horizontal Bar / Count Plot banayein</strong>. Seaborn me horizontal plot banana bohot aasan hai: sirf <code>x</code> ki jagah <code>y="issue_type"</code> pass kar dijiye!</p>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Seaborn 0.13+</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df_tickets = pd.read_csv("scratch/seaborn_topic9_data/customer_support_tickets.csv")
+
+plt.figure(figsize=(8.5, 5))
+ticket_order = ["Delivery Delay", "Payment Failure", "Refund Request", "Account Access", "Technical Bug"]
+
+# Horizontal countplot: y-axis takes the category column
+sns.countplot(
+    data=df_tickets,
+    y="issue_type",
+    order=ticket_order,
+    palette="Blues_r",
+    edgecolor="#1E3A8A"
+)
+plt.title("Customer Support Tickets by Issue Type (Horizontal Layout)")
+plt.xlabel("Ticket Volume (Row Count)")
+plt.ylabel("Customer Support Category")
+plt.xlim(0, 175)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/horizontal_countplot_long_labels.png" alt="Horizontal count plot for customer support tickets with long labels">
+        <div class="figure-caption">Figure 9.8: Horizontal Count Plot &mdash; Delivery Delay (145 tickets) and Payment Failure (112 tickets) lead in ticket volume. Notice how effortlessly all labels read from left to right without rotation!</div>
+      </div>
+    </section>
+
+    <!-- Section 7 -->
+    <section id="sec-7">
+      <h2><span class="step-badge">7</span> Multi-Dimensional Grouping with <code>hue</code></h2>
+      <p>Data visualization tab sabse zyada insightful banti hai jab hum ek sath do categorical variables ka interaction dekhte hain. Seaborn me iske liye <code>hue</code> parameter use hota hai.</p>
+
+      <p>Jab aap <code>hue</code> provide karte hain, to Seaborn primary categories ke andar sub-groups banata hai aur bars ko side-by-side (dodged) arrange karta hai. Seaborn 0.13+ me naya <code>gap</code> parameter introduce hua hai jo adjacent dodged bars ke beech thoda elegant breathing space create karta hai.</p>
+
+      <h3>Grouped Bar Plot: Exam Marks Across Sections</h3>
+      <p>Dekhte hain ki College ke charo courses me <strong>Section A</strong> aur <strong>Section B</strong> ke students ka average score kaisa perform kar raha hai:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/grouped_marks_by_subject_hue.png" alt="Grouped bar plot comparing exam marks across courses and sections with hue">
+        <div class="figure-caption">Figure 9.9: Grouped Bar Plot with <code>hue='section'</code> &mdash; In every course domain, Section A achieves slightly higher average scores (e.g., Python Data Science Section A: 83.18 vs Section B: 81.49).</div>
+      </div>
+
+      <h3>Grouped Count Plot: E-Commerce Orders by Category and Device</h3>
+      <p>Ab dekhte hain ki kis product category me orders <strong>Mobile</strong>, <strong>Desktop</strong> ya <strong>Tablet</strong> se aa rahe hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/product_orders_by_device_hue.png" alt="Grouped count plot showing product category orders broken down by customer device">
+        <div class="figure-caption">Figure 9.10: Grouped Count Plot with <code>hue='device'</code> &mdash; Mobile dominates transactions across all product types (e.g. Clothing Mobile: 130 orders vs Desktop: 58).</div>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-title">&#10004; Seaborn 0.13+ Modern Feature: The `gap` Parameter</div>
+        <p>Pehele Seaborn me dodged bars aapas me bilkul chipki hui aati thin. Seaborn 0.13+ me aap <code>gap=0.08</code> pass kar sakte hain, jisse grouped bars ke beech premium modern UI padding ban jati hai!</p>
+      </div>
+    </section>
+
+    <!-- Section 8 -->
+    <section id="sec-8">
+      <h2><span class="step-badge">8</span> Estimator Functions: Mean vs Median and Outlier Distortion</h2>
+      <p>By default, <code>sns.barplot()</code> arithmetic mean (average) calculate karta hai. Lekin real-world data science me data aksar <strong>heavily skewed</strong> hota hai ya usme extreme <strong>outliers</strong> hote hain.</p>
+
+      <p>Jab aapke data me extreme high values hoti hain (jaise VIP spenders ya extreme logistics delivery delays), to <strong>Mean bohot tezi se upar pull ho jata hai</strong>, jabki aam consumer ka experience bilkul normal hota hai. Aise cases me <code>estimator=np.median</code> use karna statistical best practice hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/mean_vs_median_estimator_comparison.png" alt="Side by side comparison of mean vs median estimators on skewed delivery partner data">
+        <div class="figure-caption">Figure 9.11: Estimator Comparison on Skewed Logistics Data &mdash; Panel A (Mean) shows SpeedyDrop as the worst partner at 38.7 mins due to 6% severe rain breakdowns. But Panel B (Median) reveals that for a typical order, SpeedyDrop delivers in just 29.6 mins &mdash; matching the fastest partner!</div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Switching Estimators</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
+
+# A. Using Mean (Default - Vulnerable to Outliers)
+sns.barplot(data=df_deliv, x="partner", y="latency_minutes", estimator=np.mean)
+
+# B. Using Median (Robust to Outliers)
+sns.barplot(data=df_deliv, x="partner", y="latency_minutes", estimator=np.median)
+
+# C. Using Sum (For Total Revenue or Total Tickets)
+sns.barplot(data=df_ecom, x="category", y="order_amount", estimator=np.sum)</code></pre>
+      </div>
+
+      <h3>Visualizing the Outlier Pull Effect</h3>
+      <p>Neeche dekhiye kaise sirf 6% extreme delay orders ne SpeedyDrop ke calculated average ko seedha 10.2 minutes artificially inflate kar diya:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/outlier_effect_on_mean_barplot.png" alt="Demonstration of outlier pull effect inflating mean bar height">
+        <div class="figure-caption">Figure 9.12: The Outlier Pull Effect &mdash; Standard orders average 28.5 minutes. Adding just a handful of 180+ min breakdown delays artificially shoots the mean up to 38.7 minutes!</div>
+      </div>
+    </section>
+
+    <!-- Section 9 -->
+    <section id="sec-9">
+      <h2><span class="step-badge">9</span> Error Bars &amp; Statistical Uncertainty (CI, SD, SE, and None)</h2>
+      <p>Data Science me sirf ek average number dikhana kafi nahi hota &mdash; ye batana bhi zaroori hota hai ki wo average kitna trustworthy hai. Seaborn 0.13+ me error bars ko control karne ke liye modern <code>errorbar</code> parameter use hota hai (purana <code>ci</code> parameter ab deprecated hai).</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/errorbar_anatomy_visualization.png" alt="Anatomical diagram of a Seaborn bar plot element showing baseline, point estimate, whisker and CI cap">
+        <div class="figure-caption">Figure 9.13: Anatomical Breakdown of a Seaborn Bar Element &mdash; The baseline starts strictly at 0, the bar height represents the point estimate (mean = 78.4), and the whisker cap represents statistical uncertainty (95% CI: 75.2 to 81.6).</div>
+      </div>
+
+      <h3>Comparison of 4 Core Error Bar Modes</h3>
+      <p>Seaborn 0.13+ chaar primary error bar modes offer karta hai:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Syntax (Seaborn 0.13+)</th>
+              <th>Statistical Meaning</th>
+              <th>Best Used When...</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>errorbar=('ci', 95)</code></td>
+              <td><strong>95% Confidence Interval:</strong> 95% certainty ke sath true population mean is range me hoga.</td>
+              <td>Sample data se general population conclusions nikalte waqt (Scientific &amp; A/B testing).</td>
+            </tr>
+            <tr>
+              <td><code>errorbar='sd'</code></td>
+              <td><strong>Standard Deviation:</strong> Actual data points mean ke aas-paas kitne bikhre hue (spread) hain.</td>
+              <td>Individual users ya observations ki variability dikhane ke liye.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar='se'</code></td>
+              <td><strong>Standard Error:</strong> Sample mean ki precision (Standard Deviation / &radic;N).</td>
+              <td>Sample size bada ho aur mean estimation error compare karni ho.</td>
+            </tr>
+            <tr>
+              <td><code>errorbar=None</code></td>
+              <td><strong>No Error Bar:</strong> Koi whisker draw nahi hoti, sirf solid bar height dikhti hai.</td>
+              <td>Jab data pehle se aggregated ho (e.g. Total Revenue, Exact Census counts).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/errorbar_modes_comparison.png" alt="Four panel comparison of errorbar modes: 95% CI, SD, SE, and None">
+        <div class="figure-caption">Figure 9.14: Four-Panel Comparison of Seaborn 0.13+ <code>errorbar</code> Modes &mdash; Notice how Standard Deviation (<code>'sd'</code>) shows the widest whiskers reflecting individual student variations, while Standard Error (<code>'se'</code>) is tightest.</div>
+      </div>
+    </section>
+
+    <!-- Section 10 -->
+    <section id="sec-10">
+      <h2><span class="step-badge">10</span> Controlling Category Ordering &amp; Visual Hierarchy (<code>order</code> &amp; <code>hue_order</code>)</h2>
+      <p>Agar aap categories ko unke natural order me chod denge, to wo dataset me pehli baar jis order me aayi thin ya alphabetically sort hokar draw hongi. Isse visual hierarchy me clutter create hota hai &mdash; viewer ko highest aur lowest dhoondhne ke liye har bar ko dhyan se dekhna padta hai.</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128161; Executive Sorting Rule</div>
+        <p>Hamesha categories ko <strong>metric ke value ke basis par sort karke</strong> present karein (High to Low ya Low to High). Isse viewer ka dimag 1 second ke andar ranking grasp kar leta hai!</p>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Dynamic Value-Based Sorting</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("scratch/seaborn_topic9_data/college_enrollment_marks.csv")
+
+# Compute descending order dynamically using Pandas
+sorted_courses = (
+    df.groupby("course")["exam_marks"]
+    .mean()
+    .sort_values(ascending=False)
+    .index
+    .tolist()
+)
+
+plt.figure(figsize=(8, 5))
+sns.barplot(
+    data=df,
+    x="course",
+    y="exam_marks",
+    order=sorted_courses,  # Passed sorted order!
+    palette="Blues_r"
+)
+plt.title("Course Performance Ranked High to Low")
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/categories_ordered_by_value.png" alt="Comparison between unordered arbitrary categories and ranked sorted categories">
+        <div class="figure-caption">Figure 9.15: Unordered vs Ranked Order &mdash; Panel B instantly delivers actionable hierarchy: Python Data Science (82.32) &rarr; ML (78.37) &rarr; Cloud (76.99) &rarr; Web (73.01).</div>
+      </div>
+    </section>
+
+    <!-- Section 11 -->
+    <section id="sec-11">
+      <h2><span class="step-badge">11</span> Normalized Counts, Proportions &amp; Percentages (<code>stat</code> in Seaborn 0.13+)</h2>
+      <p>Business meetings me CEO ya Product Managers aksar puchte hain: <em>"Clothing ka market share kitna percent hai?"</em> Wo raw row count (205 orders) se zyada percentage (34.2%) me interested hote hain.</p>
+
+      <p>Seaborn 0.13+ se pehle percentages nikalne ke liye Pandas me custom calculation karni padti thi. Lekin ab Seaborn 0.13+ ne <code>sns.countplot()</code> ke andar powerful <code>stat</code> parameter introduce kar diya hai!</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th><code>stat</code> Value</th>
+              <th>Display Metric</th>
+              <th>Formula / Calculation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>stat="count"</code> (Default)</td>
+              <td>Raw absolute frequency</td>
+              <td>Har category ki total rows (e.g. 205 orders)</td>
+            </tr>
+            <tr>
+              <td><code>stat="percent"</code></td>
+              <td>Normalized percentage (0% to 100%)</td>
+              <td><code>(Category Count / Total Rows) &times; 100</code></td>
+            </tr>
+            <tr>
+              <td><code>stat="proportion"</code></td>
+              <td>Normalized share (0.0 to 1.0)</td>
+              <td><code>Category Count / Total Rows</code></td>
+            </tr>
+            <tr>
+              <td><code>stat="probability"</code></td>
+              <td>Empirical probability density</td>
+              <td>Discrete probability distribution sum = 1.0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="figure-wrapper">
+        <img src="assets/raw_counts_vs_normalized_proportions.png" alt="Raw order counts vs normalized proportions using stat parameter in countplot">
+        <div class="figure-caption">Figure 9.16: Seaborn 0.13+ <code>stat</code> Parameter in Action &mdash; Panel A displays raw order counts (205, 187, 127, 81), whereas Panel B renders normalized proportions (34.2%, 31.2%, 21.2%, 13.5%).</div>
+      </div>
+
+      <h3>Within-Group Percentages with Multi-Device Breakdown</h3>
+      <p>Jab hum <code>stat="percent"</code> ke sath <code>hue="device"</code> use karte hain, to multi-channel customer habits bilkul crystal clear ho jati hain:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/percentage_device_usage_chart.png" alt="Normalized percentage breakdown of device usage across product categories">
+        <div class="figure-caption">Figure 9.17: Percentage Breakdown across Devices &mdash; Over 21% of total orders come from Mobile Clothing purchases alone, confirming that mobile-first shopping UX is critical for our fashion vertical.</div>
+      </div>
+    </section>
+
+    <!-- Section 12 -->
+    <section id="sec-12">
+      <h2><span class="step-badge">12</span> Direct Data Labels &amp; Bar Value Annotations (<code>ax.patches</code> &amp; <code>ax.bar_label</code>)</h2>
+      <p>Jab kisi bar plot par data labels nahi hote, to reader ko bar ki height dekhkar y-axis par aankein dharani padti hain ki value 78 hai ya 80. Enterprise dashboards me <strong>Direct Data Labeling</strong> chart readability ko 10x improve kar deta hai.</p>
+
+      <p>Modern Matplotlib (3.4+) aur Seaborn me data labels lagane ke do approaches hain:</p>
+
+      <h3>Approach A: Modern Native <code>ax.bar_label()</code> (Fastest &amp; Cleanest)</h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Matplotlib 3.4+ Native</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(8, 5))
+sns.barplot(data=df, x="course", y="exam_marks", ax=ax, palette="crest")
+
+# Automatically labels all bar containers with 1 decimal formatting!
+for container in ax.containers:
+    ax.bar_label(container, fmt="%.1f", padding=4, weight="bold")
+
+plt.ylim(0, 100)
+plt.show()</code></pre>
+      </div>
+
+      <h3>Approach B: Granular Custom Annotations using <code>ax.patches</code></h3>
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Deep Custom Placement</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code># Inside custom patch iteration:
+for p in ax.patches:
+    height = p.get_height()
+    if height > 0:
+        ax.annotate(
+            f"Mean: {height:.1f}",
+            xy=(p.get_x() + p.get_width() / 2, height),
+            xytext=(0, 6),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=10,
+            weight="bold",
+            color="#1E3A8A"
+        )</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 13 -->
+    <section id="sec-13">
+      <h2><span class="step-badge">13</span> Styling, Color Palettes &amp; Aesthetic Polish for Production</h2>
+      <p>Ek professional visualization aur ek amateur visualization me sabse bada farq aesthetic restraint ka hota hai. Beginners aksar har bar ko alag bright neon color de dete hain (jise <em>"Rainbow Clutter"</em> kehte hain), jisse viewer distract hota hai.</p>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">&#9888; Anti-Pattern: Rainbow Chart Syndrome</div>
+        <p>Agar aapke pass sirf 1 categorical variable hai (e.g., 4 courses), to 4 alag colors use karne ki zaroorat nahi hai jab tak ki color koi extra metric encode na kar raha ho. Ek single professional corporate blue (<code>color="#2563EB"</code>) ya monochromatic palette (<code>palette="Blues_r"</code>) use karna best practice hai.</p>
+      </div>
+
+      <p>Production-grade styling ke 3 golden rules:</p>
+      <ul>
+        <li><strong>Despine Heavy Borders:</strong> Top aur right spines ko remove karein: <code>sns.despine(top=True, right=True)</code>.</li>
+        <li><strong>Subtle Gridlines:</strong> Gridlines sirf measurement axis par rakhein, aur unka opacity halka (alpha=0.3) rakhein.</li>
+        <li><strong>Crisp Edge Borders:</strong> Bars me soft edge line dene ke liye <code>edgecolor="#1E293B", linewidth=1.2</code> specify karein.</li>
+      </ul>
+    </section>
+
+    <!-- Section 14 -->
+    <section id="sec-14">
+      <h2><span class="step-badge">14</span> Real-World Case Study 1: University Course Enrollment &amp; Student Performance</h2>
+      <p>Ek premier edtech university ke Academic Dean ne aapko data science student database analyze karne ko diya hai. Unka core objective hai: <em>"Courses ki popularity aur unme student performance ke beech relation ko uncover karna."</em></p>
+
+      <h3>Dataset Schema &amp; Verified Observations (N = 170 Students)</h3>
+      <p>Data me 4 engineering domains hain: <code>Web Fullstack</code>, <code>Python Data Science</code>, <code>Machine Learning</code>, aur <code>Cloud DevOps</code>.</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Course Domain</th>
+              <th>Total Students Enrolled</th>
+              <th>Mean Exam Marks</th>
+              <th>Median Exam Marks</th>
+              <th>Section A Mean</th>
+              <th>Section B Mean</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Python Data Science</strong></td>
+              <td>45</td>
+              <td>82.32</td>
+              <td>82.2</td>
+              <td>83.18</td>
+              <td>81.49</td>
+            </tr>
+            <tr>
+              <td><strong>Machine Learning</strong></td>
+              <td>38</td>
+              <td>78.37</td>
+              <td>78.9</td>
+              <td>79.41</td>
+              <td>77.33</td>
+            </tr>
+            <tr>
+              <td><strong>Cloud DevOps</strong></td>
+              <td>35</td>
+              <td>76.99</td>
+              <td>76.0</td>
+              <td>78.84</td>
+              <td>75.25</td>
+            </tr>
+            <tr>
+              <td><strong>Web Fullstack</strong></td>
+              <td>52</td>
+              <td>73.01</td>
+              <td>74.5</td>
+              <td>74.42</td>
+              <td>71.60</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128202; Cross-Visual Synthesis (Ref: Figures 9.2, 9.3 &amp; 9.9)</div>
+        <p>Jab hum <code>sns.countplot</code> (Figure 9.2) aur <code>sns.barplot</code> (Figure 9.3) ko combine karte hain, to ek critical institutional insight samne aati hai:</p>
+        <ul>
+          <li><strong>High Volume Trap:</strong> Web Fullstack me sabse zyada students (52) enroll hue hain, lekin unka average score sabse lowest (73.01) hai. Iska matlab course material ya to generic hai ya students ko individual tutoring ki kami hai.</li>
+          <li><strong>High Mastery Domain:</strong> Python Data Science me enrollment thodi kam (45) hai, lekin average score highest (82.32) hai, jo strong academic retention show karta hai.</li>
+          <li><strong>Section Consistency:</strong> Figure 9.9 me Section A har domain me Section B se 2 se 3 marks aage hai, jisse Section B ke teaching schedule ko re-evaluate karne ki zaroorat highlight hoti hai.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Section 15 -->
+    <section id="sec-15">
+      <h2><span class="step-badge">15</span> Real-World Case Study 2: E-Commerce Category Demand &amp; Multi-Device Revenue</h2>
+      <p>Ek leading online retail marketplace me 600 orders analyze kiye gaye taaki marketing budget allocation optimize kiya ja sake across 4 categories (<code>Clothing</code>, <code>Electronics</code>, <code>Home &amp; Kitchen</code>, <code>Books</code>) aur 3 devices (<code>Mobile</code>, <code>Desktop</code>, <code>Tablet</code>).</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Category</th>
+              <th>Order Count (N)</th>
+              <th>Volume Share (%)</th>
+              <th>Mean Order Value (INR)</th>
+              <th>Primary Ordering Channel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Clothing</strong></td>
+              <td>205</td>
+              <td>34.2%</td>
+              <td>₹896.52</td>
+              <td>Mobile (130 orders)</td>
+            </tr>
+            <tr>
+              <td><strong>Electronics</strong></td>
+              <td>187</td>
+              <td>31.2%</td>
+              <td>₹2602.27</td>
+              <td>Mobile (117) &amp; Desktop (53)</td>
+            </tr>
+            <tr>
+              <td><strong>Home &amp; Kitchen</strong></td>
+              <td>127</td>
+              <td>21.2%</td>
+              <td>₹755.19</td>
+              <td>Mobile (69 orders)</td>
+            </tr>
+            <tr>
+              <td><strong>Books</strong></td>
+              <td>81</td>
+              <td>13.5%</td>
+              <td>₹331.17</td>
+              <td>Mobile (44 orders)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-success">
+        <div class="callout-title">&#128188; Strategic E-Commerce Takeaways (Ref: Figures 9.5, 9.7 &amp; 9.10)</div>
+        <p>Volume vs Revenue ka classic trade-off:</p>
+        <ol>
+          <li><strong>Volume Driver:</strong> Clothing sabse zyada orders generate karta hai (205 orders, 34.2% share), jisme 63.4% purchase direct mobile app se hoti hai.</li>
+          <li><strong>Revenue Anchor:</strong> Electronics me orders Clothing se thode kam hain (187 orders), lekin average order value lagbhag 3x high (₹2602.27) hai!</li>
+          <li><strong>Desktop Basket Advantage:</strong> High-ticket Electronics ke liye desktop users ka average order amount mobile se 25% zyada hai, jisse desktop web experience par fast checkout flows maintain karna high priority ban jata hai.</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Section 16 -->
+    <section id="sec-16">
+      <h2><span class="step-badge">16</span> Real-World Case Studies 3 &amp; 4: Support Ticket Latency &amp; API Health Monitoring</h2>
+      <p>Operations engineering me count plots aur bar plots infrastructure bottlenecks identify karne ke primary monitoring tools hain.</p>
+
+      <h3>Case Study 3: Customer Support Operations</h3>
+      <p>Support team me 450 customer complaints ko categorize kiya gaya. Management ka traditional dhyan sirf ticket volume par rehta tha, lekin jab humne count plot aur resolution time bar plot ko side-by-side rakha, to sachai samne aayi:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/case_study_customer_support_tickets.png" alt="Case study: Customer support tickets volume vs resolution time">
+        <div class="figure-caption">Figure 9.18: Customer Support Operations &mdash; Panel 1 shows Delivery Delays account for highest ticket inflow (145), but resolve in 3.58 hours. In stark contrast, Technical Bugs have the lowest volume (41) but choke engineering with 8.39 hours mean resolution latency!</div>
+      </div>
+
+      <h3>Case Study 4: Production API Infrastructure Monitoring</h3>
+      <p>1,740 microservice API requests monitor kiye gaye across Peak Hours (rush traffic) aur Off-Peak Hours:</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/case_study_website_api_monitoring.png" alt="Production API infrastructure monitoring comparing request volume vs server latency">
+        <div class="figure-caption">Figure 9.19: API Infrastructure Monitoring &mdash; Panel 1 proves <code>/api/v1/search</code> handles the lion's share of throughput (550 requests). But Panel 2 reveals that <code>/api/v1/recommendations</code> exhibits severe latency spikes during Peak Hours (266.8 ms vs 174.3 ms off-peak), demanding immediate Redis caching!</div>
+      </div>
+    </section>
+
+    <!-- Section 17 -->
+    <section id="sec-17">
+      <h2><span class="step-badge">17</span> 12+ Common Pitfalls, Anti-Patterns &amp; Visual Deceptions</h2>
+      <p>Bar plots aur count plots intuitive lagte hain, lekin unke galat istemal se data science reports me misleading aur deceptive graphs ban sakte hain. Neeche 12 critical pitfalls aur unke verified fixes diye gaye hain:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pitfall / Mistake</th>
+              <th>Dangerous Consequence</th>
+              <th>Professional Correction</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td><strong>Truncating the Bar Baseline (Non-zero axis)</strong></td>
+              <td>Bars area-based visual perception par depend karti hain. Agar y-axis 70 se start karenge to 75 marks 72 marks se 3 guna bada lagega!</td>
+              <td>Bar plots ka measurement axis <strong>hamesha 0 se start hona chahiye</strong> (<code>plt.ylim(0, ...)</code>). Agar micro-differences dekhne hain to Point Plot use karein.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><strong>Passing Both x and y to <code>sns.countplot</code></strong></td>
+              <td>Throws <code>ValueError: Cannot pass values for both x and y</code>.</td>
+              <td>Count plot me sirf 1 variable pass karein. Frequency Seaborn internally compute karta hai.</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><strong>Passing Continuous Floats to <code>countplot</code></strong></td>
+              <td>Har float number (jaise 78.432, 78.435) apni alag bar bana leta hai &mdash; 500 ultra-thin bars ban jayengi!</td>
+              <td>Continuous numbers ke distribution ke liye <code>sns.histplot()</code> ya <code>sns.kdeplot()</code> use karein.</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><strong>Ignoring Outliers with Default Mean</strong></td>
+              <td>Extreme values bar height ko artificially kheench leti hain (jaise SpeedyDrop ka 38.7 min average).</td>
+              <td>Skewed distributions me robust summary ke liye <code>estimator=np.median</code> use karein.</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><strong>Misinterpreting Error Bars as Data Range</strong></td>
+              <td>Log sochte hain ki whiskers minimum aur maximum values hain.</td>
+              <td>Error bars 95% Confidence Interval (population mean range) ya Standard Deviation hoti hain. Caption me hamesha explain karein.</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><strong>Vertical Bars with 15+ Categories</strong></td>
+              <td>X-axis text aapas me overlap ho jata hai aur labels illegible ho jate hain.</td>
+              <td>Categories ko <code>y</code>-axis par pass karke <strong>Horizontal Layout</strong> banayein.</td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><strong>Rainbow Palette Clutter</strong></td>
+              <td>Har category ko alag flashy color dena bina kisi logical meaning ke dimag ko strain karta hai.</td>
+              <td>Single category ke liye uniform brand color (<code>color="#2563EB"</code>) ya gradient palette (<code>palette="Blues_r"</code>) use karein.</td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><strong>Using Deprecated <code>ci</code> Parameter</strong></td>
+              <td>Seaborn 0.13+ me <code>ci=95</code> deprecation warnings throw karta hai.</td>
+              <td>Naye formal syntax use karein: <code>errorbar=('ci', 95)</code> ya <code>errorbar='sd'</code>.</td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><strong>Dodging Hue Bars without Gap</strong></td>
+              <td>Sub-bars aapas me chipki rehti hain, jisse groups distinguish karna difficult hota hai.</td>
+              <td>Modern Seaborn feature use karein: <code>gap=0.08</code>.</td>
+            </tr>
+            <tr>
+              <td>10</td>
+              <td><strong>Confusing Standard Error (SE) with Standard Deviation (SD)</strong></td>
+              <td>SD individual points ka spread batata hai; SE sample mean ki statistical uncertainty batata hai.</td>
+              <td>Stakeholders ko clearly batayein ki error bar kis metric ko represent kar raha hai.</td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><strong>Showing Percentages without Sample Size (N)</strong></td>
+              <td><em>"100% patients recovered"</em> misleading hota hai agar total sample sirf 1 patient tha!</td>
+              <td>Chart title ya subtitle me hamesha sample size mention karein: <code>(N = 600 orders)</code>.</td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><strong>Overplotting 3D / Shadowed Bar Effects</strong></td>
+              <td>3D bars viewing angle distortion introduce karti hain jisse bar ki true height read karna impossible ho jata hai.</td>
+              <td>Clean 2D flat visual design maintain karein with crisp borders (<code>linewidth=1.2</code>).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 18 -->
+    <section id="sec-18">
+      <h2><span class="step-badge">18</span> Comprehensive Quick Reference Cheat Sheet &amp; Syntax Matrix</h2>
+      <p>Interview preparation aur day-to-day data science projects ke liye instant reference matrix:</p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Task / Requirement</th>
+              <th>Seaborn 0.13+ One-Liner Recipe</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Basic Frequency Count</td>
+              <td><code>sns.countplot(data=df, x="category")</code></td>
+            </tr>
+            <tr>
+              <td>Horizontal Count (Long Labels)</td>
+              <td><code>sns.countplot(data=df, y="category", order=df["category"].value_counts().index)</code></td>
+            </tr>
+            <tr>
+              <td>Percentage / Share Count</td>
+              <td><code>sns.countplot(data=df, x="category", stat="percent")</code></td>
+            </tr>
+            <tr>
+              <td>Average Metric by Category</td>
+              <td><code>sns.barplot(data=df, x="category", y="numeric_col", estimator=np.mean)</code></td>
+            </tr>
+            <tr>
+              <td>Robust Median for Outliers</td>
+              <td><code>sns.barplot(data=df, x="category", y="numeric_col", estimator=np.median)</code></td>
+            </tr>
+            <tr>
+              <td>Total Sum Aggregation</td>
+              <td><code>sns.barplot(data=df, x="category", y="revenue", estimator=np.sum)</code></td>
+            </tr>
+            <tr>
+              <td>95% Confidence Interval with Caps</td>
+              <td><code>sns.barplot(data=df, x="cat", y="num", errorbar=("ci", 95), capsize=0.15)</code></td>
+            </tr>
+            <tr>
+              <td>Standard Deviation Error Bar</td>
+              <td><code>sns.barplot(data=df, x="cat", y="num", errorbar="sd")</code></td>
+            </tr>
+            <tr>
+              <td>Remove Error Bar (Solid Bar)</td>
+              <td><code>sns.barplot(data=df, x="cat", y="num", errorbar=None)</code></td>
+            </tr>
+            <tr>
+              <td>Grouped Bars with Modern Gap</td>
+              <td><code>sns.barplot(data=df, x="cat", y="num", hue="group", gap=0.08)</code></td>
+            </tr>
+            <tr>
+              <td>Ranked Sort by Value</td>
+              <td><code>order = df.groupby("cat")["num"].mean().sort_values(ascending=False).index</code></td>
+            </tr>
+            <tr>
+              <td>Direct Bar Labels (Matplotlib 3.4+)</td>
+              <td><code>for c in ax.containers: ax.bar_label(c, fmt="%.1f", padding=3)</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Section 19 -->
+    <section id="sec-19">
+      <h2><span class="step-badge">19</span> 21 Practice Exercises &amp; Capstone Mini-Project (Beginner to Advanced)</h2>
+      <p>Apne concepts ko test karne ke liye in 21 practical interview-level exercises ko solve karein. Har question ke neeche interactive solution accordion diya gaya hai.</p>
+
+      <h3>Level 1: Beginner Questions (1 &ndash; 7)</h3>
+
+      <details class="accordion">
+        <summary>Q1: Count plot aur Bar plot me kya difference hai? Kaun sa function 1 variable leta hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>sns.countplot()</code> sirf 1 categorical variable leta hai aur dataset me us category ke total rows (occurrences/frequency) ko count karta hai. Isme error bars nahi hote.</p>
+          <p>Dusri taraf, <code>sns.barplot()</code> 2 variables leta hai (1 categorical + 1 numerical) aur har group ke liye numerical metric (jaise Mean ya Median) compute karke uncertainty error bar ke sath draw karta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q2: Agar kisi bar plot me error bars ko completely hide karna ho to kaun sa parameter use karenge?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Seaborn 0.13+ me <code>errorbar=None</code> specify kiya jata hai. Isse koi bhi vertical whisker line draw nahi hoti aur clean solid bar display hoti hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q3: Vertical bar plot ko horizontal bar plot me kaise convert kiya jata hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Categorical variable ko <code>x</code> ki jagah <code>y</code> parameter me pass karein: e.g. <code>sns.countplot(data=df, y="category")</code> ya <code>sns.barplot(data=df, y="category", x="salary")</code>.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q4: Default roop se `sns.barplot()` bar ki height calculate karne ke liye kaun sa statistical metric use karta hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Arithmetic Mean (Average), jo <code>estimator=np.mean</code> ke barabar hota hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q5: Kya `sns.countplot(data=df, x="category", y="price")` likhna valid syntax hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Bilkul nahi! Ye code <code>ValueError: Cannot pass values for both x and y to countplot</code> throw karega kyunki count plot row count khud measure karta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q6: Bar plot ka measurement baseline hamesha 0 par kyun hona chahiye?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Human visual perception bars ke total length aur area ke ratio ko evaluate karta hai. Agar baseline ko 0 ke bajaye 70 par truncate kar diya jaye, to 75 ki bar 72 ki bar se 300% badi dikhegi, jo severe visual distortion hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q7: Error bar whiskers ke upar horizontal caps add karne ke liye kaun sa parameter use hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>capsize</code> parameter (e.g. <code>capsize=0.15</code>).</p>
+        </div>
+      </details>
+
+      <h3>Level 2: Intermediate Questions (8 &ndash; 14)</h3>
+
+      <details class="accordion">
+        <summary>Q8: Jab data me extreme positive outliers hon, to `estimator` me kya badlav karna chahiye aur kyun?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>estimator=np.median</code> use karna chahiye. Mean outliers se heavily sensitive hota hai aur artificially inflate ho jata hai, jabki Median 50th percentile represent karta hai aur outliers se robust rehta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q9: Seaborn 0.13+ me `countplot` me raw counts ke bajaye normalized percentages (0-100%) dikhane ke liye kaun sa argument pass karte hain?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>stat="percent"</code> pass kiya jata hai. Agar 0.0 se 1.0 ke scale par share dekhna ho to <code>stat="proportion"</code> pass karte hain.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q10: `errorbar=('ci', 95)` aur `errorbar='sd'` ke beech fundamental statistical difference kya hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>('ci', 95)</code> sample mean ki statistical uncertainty batata hai (95% confidence ki population mean is range me hai). Jabki <code>'sd'</code> (Standard Deviation) actual individual observations ki data spread/variability ko darshata hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q11: Seaborn 0.13+ me dodged `hue` bars ke beech clean spacing/gap create karne ke liye kaun sa naya parameter use hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>gap</code> parameter (e.g. <code>gap=0.08</code>).</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q12: Matplotlib 3.4+ ke native helper function se sabhi bars par direct value labels kaise add karte hain?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>for container in ax.containers: ax.bar_label(container, fmt="%.1f", padding=3)</code></p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q13: Categories ko unke aggregated mean value ke descending order me kaise sort karke pass karte hain?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Pandas se order nikalte hain: <code>custom_order = df.groupby("category")["metric"].mean().sort_values(ascending=False).index.tolist()</code> aur phir <code>order=custom_order</code> pass karte hain.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q14: Rainbow Chart Syndrome kya hai aur isse bachne ka professional tarika kya hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Har category ko bina kisi reason ke flashy multi-color neon palette dena Rainbow Syndrome kehlata hai. Single categorical variable ke liye uniform color (<code>color="#2563EB"</code>) ya single-hue gradient (<code>palette="Blues_r"</code>) use karna chahiye.</p>
+        </div>
+      </details>
+
+      <h3>Level 3: Advanced Questions (15 &ndash; 21)</h3>
+
+      <details class="accordion">
+        <summary>Q15: Seaborn `barplot()` me default 95% Confidence Interval bootstrapping method se kaise calculate hoti hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Seaborn original sample data se replacement ke sath 1,000 bootstrap sub-samples generate karta hai (<code>n_boot=1000</code>). Har bootstrap sample ka mean nikalta hai, aur empirical distribution ke 2.5th aur 97.5th percentiles ko whiskers ke roop me draw karta hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q16: Agar aapke dataset me categories pehle se pre-aggregated hain (e.g. Department aur Total Expense), to bar plot kaise banayein?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> <code>sns.barplot(data=summary_df, x="Dept", y="Total_Expense", estimator=lambda x: x, errorbar=None)</code> ya <code>estimator=np.sum</code> with <code>errorbar=None</code> use karein taaki redundant recalculation na ho.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q17: `sns.barplot` me `dodge=False` set karne par bars ka visual behavior kya hota hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Different `hue` levels side-by-side aane ke bajaye ek dusre ke upar overlay/stack ho jati hain. Isse transparent styling ke bina piche ki bars chup jati hain.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q18: 50 se zyada distinct categories wale dataset me bar plot banana anti-pattern kyun mana jata hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> 50 bars chart par extreme cognitive load create karti hain. Aise case me Top 10 categories filter karke <em>"Top 10 vs Others"</em> dikhana chahiye, ya interactive table use karna chahiye.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q19: Agar do categories ke error bars overlap kar rahe hon, to kya iska matlab ye hai ki unke means me statistically significant difference nahi hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Visual overlap ek strong indicator hai ki difference chance ke karan ho sakta hai, lekin formal confirmation ke liye hamesha Independent Two-Sample t-test ya Mann-Whitney U test (p-value &lt; 0.05) calculate karna zaroori hota hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q20: `sns.countplot` me `stat="percent"` use karte waqt jab `hue` diya jata hai, to percentage kis reference base par normalize hoti hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Default roop se percentage pure table ke Grand Total observations (N) par normalize hoti hai, jisse har sub-bar pure dataset ka share represent karti hai.</p>
+        </div>
+      </details>
+
+      <details class="accordion">
+        <summary>Q21: Point Plot aur Bar Plot ke use-case me kya decision boundary hoti hai?</summary>
+        <div class="accordion-content">
+          <p><strong>Answer:</strong> Bar plot tab use karein jab absolute magnitude aur area visual weight convey karna ho with zero baseline. Point plot tab use karein jab multiple categories ke across subtle slopes, trends, ya interaction effects (lines connecting dots) dekhne hon bina heavy solid blocks ke.</p>
+        </div>
+      </details>
+
+      <h3>Capstone Mini-Project: FinTech Fraud &amp; Transaction Health Monitor</h3>
+      <p><strong>Project Scenario:</strong> Ek digital payment wallet company me 10,000 daily transactions monitor ho rahi hain across 5 payment channels (<code>UPI</code>, <code>Credit Card</code>, <code>Debit Card</code>, <code>Net Banking</code>, <code>Wallet Balance</code>). Data Science team ko ek single dashboard render karna hai jo do primary questions answer kare:</p>
+      <ul>
+        <li>Channel Throughput (Count of transactions by channel).</li>
+        <li>Financial Risk (Average fraud loss amount per channel with 95% CI).</li>
+      </ul>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-badge">Python 3 &bull; Runnable Capstone Solution</span>
+          <button class="copy-btn" onclick="copyCode(this)">&#128203; Copy Code</button>
+        </div>
+        <pre><code>import seaborn as sns
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Set seed for reproducible synthetic dataset
+np.random.seed(101)
+
+channels = ["UPI", "Credit Card", "Debit Card", "Net Banking", "Wallet Balance"]
+n_samples = 2500
+
+df_fintech = pd.DataFrame({
+    "Channel": np.random.choice(channels, size=n_samples, p=[0.45, 0.22, 0.18, 0.08, 0.07]),
+    "Amount_INR": np.random.exponential(scale=1200, size=n_samples) + 50,
+    "Status": np.random.choice(["Legit", "Flagged_Fraud"], size=n_samples, p=[0.96, 0.04])
+})
+
+# Filter only fraud incidents for risk severity analysis
+df_fraud = df_fintech[df_fintech["Status"] == "Flagged_Fraud"]
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5), dpi=160)
+
+# Panel 1: Throughput Volume (countplot)
+sns.countplot(
+    data=df_fintech,
+    x="Channel",
+    order=channels,
+    palette="Blues_r",
+    ax=ax1,
+    edgecolor="#1E3A8A"
+)
+ax1.set_title("1. Transaction Inflow Volume by Channel", weight="bold")
+ax1.set_ylabel("Total Transactions (N)")
+for c in ax1.containers:
+    ax1.bar_label(c, weight="bold", padding=3)
+
+# Panel 2: Financial Severity (barplot with 95% CI)
+sns.barplot(
+    data=df_fraud,
+    x="Channel",
+    y="Amount_INR",
+    order=channels,
+    palette="Reds_r",
+    errorbar=("ci", 95),
+    capsize=0.15,
+    ax=ax2,
+    edgecolor="#7F1D1D"
+)
+ax2.set_title("2. Mean Fraud Exposure per Incident (INR ±95% CI)", weight="bold")
+ax2.set_ylabel("Mean Fraud Loss (₹)")
+
+fig.suptitle("FinTech Payment Infrastructure & Fraud Risk Dashboard", fontsize=15, weight="bold", y=1.02)
+plt.tight_layout()
+plt.show()</code></pre>
+      </div>
+    </section>
+
+    <!-- Section 20 -->
+    <section id="sec-20">
+      <h2><span class="step-badge">20</span> Summary, Mind Map &amp; Preview of Topic 10 (Point Plots)</h2>
+      <p>Topic 9 me humne Seaborn ke do core workhorses &mdash; <code>sns.countplot()</code> aur <code>sns.barplot()</code> &mdash; ko complete statistical depth aur practical engineering rigor ke sath master kiya hai.</p>
+
+      <div class="figure-wrapper">
+        <img src="assets/final_concept_revision_diagram.png" alt="Topic 9 Summary: Architectural Rules for Bar Plots & Count Plots">
+        <div class="figure-caption">Figure 9.20: Master Decision Matrix &amp; 7 Golden Rules &mdash; Systematic decision tree for categorical visualization in enterprise workflows.</div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-title">&#128640; Up Next &mdash; Topic 10: Point Plots in Seaborn</div>
+        <p>Agle topic me hum seekhenge <strong>Point Plots (<code>sns.pointplot()</code>)</strong>: Jab aapko multiple categories ke across interactions aur changes compare karne hon bina solid heavy bars ke, to kaise dots aur connecting lines statistical comparison ko lightweight aur powerful banati hain!</p>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>
