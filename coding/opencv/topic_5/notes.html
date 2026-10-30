@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 5: Color Spaces &amp; Channel Operations | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hero-time {
+            font-size: 13px;
+            opacity: 0.88;
+            font-weight: 500;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 15px;
+            opacity: 0.94;
+            max-width: 760px;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14.5px;
+        }
+
+        .callout-concept {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        .callout-amber {
+            background: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-purple {
+            background: var(--accent-purple-bg);
+            border-color: var(--accent-purple);
+            color: #5b21b6;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Code Cards */
+        .code-card {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .code-header {
+            background: #1e293b;
+            padding: 8px 16px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .inline-code {
+            background: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13.5px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-weight: 600;
+        }
+
+        /* Output Box */
+        .output-box {
+            background: #1e293b;
+            border-left: 4px solid var(--accent-green);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin: 12px 0 18px 0;
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 13px;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .output-header {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        /* Visual Media Cards */
+        .media-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .media-caption {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .info-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Quiz Accordion */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        details[open] {
+            background: #ffffff;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        summary {
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+
+        .quiz-answer {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Bullet lists */
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 14px;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        li strong {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Hero Header -->
+    <div class="hero">
+        <div class="hero-badge-row">
+            <span class="hero-badge">COMPUTER VISION &bull; OPENCV</span>
+            <span class="hero-badge" style="background: rgba(56, 189, 248, 0.25);">TOPIC 5 OF 25</span>
+            <span class="hero-time">&#9201; ~6-8 MIN READ</span>
+        </div>
+        <h1>Color Spaces &amp; Channel Operations</h1>
+        <p>Master how digital images represent colors, convert effortlessly between BGR, RGB, Grayscale, and HSV, avoid the classic blue-face display gotcha, and extract or recombine color channels for real-world computer vision tasks.</p>
+    </div>
+
+    <!-- Section 1: What is a Color Space? -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">01</span>
+            <h2 class="section-title">What Is a Color Space?</h2>
+        </div>
+        
+        <p>Jab aap apne smartphone se photo lete hain ya Instagram par filter apply karte hain, to computer screen par har color hazaron chote-chote pixels se banta hai. Lekin computer colors ko "red" ya "blue" ke naam se nahi jaanta — computer ke liye har color ek <strong>mathematical number</strong> hota hai.</p>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#128161; Definition: Color Space</div>
+            <strong>Color Space</strong> ek mathematical model hota hai jo batata hai ki colors ko numbers ke roop mein kaise organize aur represent kiya jaye (jaise multiple numerical channels ya single intensity value).
+        </div>
+
+        <p>Computer Vision mein alag-alag tasks ke liye alag-alag color spaces use hote hain:</p>
+
+        <div class="grid-2">
+            <div class="info-card">
+                <div class="info-card-title">&#127912; RGB &amp; BGR</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Addictive color models jahan Red, Green aur Blue channels milkar 16.7 million colors banate hain. OpenCV by default <strong>BGR</strong> order use karta hai.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#9898; Grayscale (Intensity)</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Single-channel representation jahan har pixel sirf <em>brightness</em> (0 = Black se 255 = White) represent karta hai. Zero color information.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#127752; HSV (Hue, Saturation, Value)</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Color tint (Hue) ko lighting aur brightness (Value) se alag karta hai. Color-based object detection ke liye industry standard.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#128225; Real-Life Usage</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Face detection grayscale mein fast hoti hai, traffic light tracking HSV mein hoti hai, aur photo display RGB mein hota hai.</p>
+            </div>
+        </div>
+
+        <!-- Asset 1: Visual comparison of color spaces -->
+        <div class="media-card">
+            <img src="assets/topic5_color_spaces_comparison.png" alt="Comparison of OpenCV Color Spaces BGR vs RGB vs Grayscale vs HSV" loading="lazy">
+            <div class="media-caption">Figure 5.1: Same synthetic image represented in RGB-corrected view, raw BGR gotcha, Grayscale luminance, and HSV Hue plane.</div>
+        </div>
+    </div>
+
+    <!-- Section 2: RGB vs BGR: The OpenCV Convention -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">02</span>
+            <h2 class="section-title">RGB vs BGR: The "Alien Face" Gotcha</h2>
+        </div>
+
+        <p>Standard web technologies, HTML/CSS, Matplotlib, aur smartphone screens colors ko <strong>RGB (Red, Green, Blue)</strong> order mein render karti hain. Lekin jab aap <span class="inline-code">cv2.imread()</span> se image load karte hain, to OpenCV use <strong>BGR (Blue, Green, Red)</strong> order mein load karta hai!</p>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; The "Blue Face / Avatar" Gotcha!</div>
+            Agar aap OpenCV ki BGR image ko direct Matplotlib ke <span class="inline-code">plt.imshow()</span> mein pass kar denge, to Red aur Blue channels swap ho jayenge! Human skin tone reddish hoti hai, jo swap hone par alien-like blue color ki dikhne lagegi!
+        </div>
+
+        <p><strong>Dono mein farak kya hai?</strong> Dono mein wahi 3 components hote hain, bas memory array mein unka sequence alag hota hai:</p>
+        <ul>
+            <li><strong>RGB:</strong> Channel 0 = Red, Channel 1 = Green, Channel 2 = Blue</li>
+            <li><strong>BGR:</strong> Channel 0 = Blue, Channel 1 = Green, Channel 2 = Red</li>
+        </ul>
+
+        <p>Ise theek karne ke liye hum <span class="inline-code">cv2.cvtColor()</span> use karte hain:</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; bgr_to_rgb_conversion.py</span>
+                <span>Run in Python 3</span>
+            </div>
+            <pre><code>import cv2
+import matplotlib.pyplot as plt
+
+# 1. OpenCV loads image in BGR format
+img_bgr = cv2.imread("photo.jpg")
+
+# 2. Convert BGR to RGB for correct display in Matplotlib
+img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+
+# 3. Display side by side
+plt.subplot(1, 2, 1)
+plt.title("Wrong (Raw BGR in Matplotlib)")
+plt.imshow(img_bgr)  # Blue face gotcha!
+
+plt.subplot(1, 2, 2)
+plt.title("Correct (Converted to RGB)")
+plt.imshow(img_rgb)  # Natural human skin tones
+plt.show()</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Why did OpenCV choose BGR?</div>
+            Historically (1990s mein), early camera manufacturers aur Windows bitmap graphics memory buffers BGR format use karte the. OpenCV ne compatibility ke liye BGR adopt kiya aur backward compatibility maintain karne ke liye aaj bhi standard color images BGR mein load hoti hain.
+        </div>
+    </div>
+
+    <!-- Section 3: Grayscale Color Space -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">03</span>
+            <h2 class="section-title">Grayscale: The Workhorse of Computer Vision</h2>
+        </div>
+
+        <p>Aapne notice kiya hoga ki Face Detection, License Plate Recognition, aur Edge Detection algorithms humesha images ko pehle <strong>Grayscale</strong> mein convert karte hain. Aisa kyun?</p>
+
+        <div class="grid-2">
+            <div class="info-card">
+                <div class="info-card-title">&#128640; 66% Data Reduction</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Color image mein 3 channels hote hain <span class="inline-code">(H, W, 3)</span>. Grayscale mein sirf 1 channel hota hai <span class="inline-code">(H, W)</span>. Memory aur computation time seedha 3x kam ho jata hai!</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#128269; Illumination Invariance</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Edges, corners, aur shapes detect karne ke liye color ki nahi balki pixel intensity (light vs dark contrast) ki zaroorat hoti hai.</p>
+            </div>
+        </div>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; grayscale_conversion.py</span>
+                <span>Shape &amp; Dimension Inspection</span>
+            </div>
+            <pre><code>import cv2
+
+# Load image in BGR
+img = cv2.imread("sample.jpg")
+
+# Convert to single-channel Grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+print(f"Color Image Shape:     {img.shape}  -> 3D Array (H, W, 3)")
+print(f"Grayscale Image Shape: {gray.shape}    -> 2D Array (H, W)")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Observed Output</div>
+            Color Image Shape:     (480, 640, 3)  -&gt; 3D Array (H, W, 3)<br>
+            Grayscale Image Shape: (480, 640)    -&gt; 2D Array (H, W)
+        </div>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#129518; Grayscale Formula Insight</div>
+            OpenCV simple average nahi leta, balki human eye ki perception ke hisaab se weighted formula use karta hai:<br>
+            <span class="inline-code">Grayscale = 0.299 &times; R + 0.587 &times; G + 0.114 &times; B</span><br>
+            Human eyes Green color ke liye sabse zyada sensitive hoti hain, isliye Green channel ko sabse zyada weight (58.7%) milta hai!
+        </div>
+    </div>
+
+    <!-- Section 4: HSV Color Space -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">04</span>
+            <h2 class="section-title">HSV Color Space: The Secret to Color Detection</h2>
+        </div>
+
+        <p>Agar aapko camera feed mein kisi red ball ya green apple ko detect karna ho, to RGB space mein kaam karna bohot mushkil hota hai. Kyun? Kyunki agar room ki light dim ho jaye ya shadow pad jaye, to R, G, aur B <em>teeno</em> values drastically change ho jaati hain!</p>
+
+        <p>Is problem ko solve karta hai <strong>HSV (Hue, Saturation, Value)</strong>:</p>
+
+        <ul>
+            <li><strong>Hue (H) — Color Type / Tint:</strong> Asli color ka angle (Red, Orange, Yellow, Green, Cyan, Blue, Violet).</li>
+            <li><strong>Saturation (S) — Color Purity:</strong> Color kitna pure ya vivid hai (0 = faded/dull grey, 255 = ultra bright vibrant color).</li>
+            <li><strong>Value (V) — Brightness:</strong> Light level kitna hai (0 = pitch black darkness, 255 = full light).</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; CRITICAL OPENCV RULE: Hue Range is [0, 179]!</div>
+            Mathematics mein Hue ek circular angle hota hai jo <strong>0&deg; se 360&deg;</strong> tak jata hai.<br>
+            Lekin OpenCV mein standard image 8-bit unsigned integer (<span class="inline-code">uint8</span>) hoti hai, jiski maximum limit 255 hoti hai. 360 ko 255 ke andar fit karne ke liye <strong>OpenCV Hue angle ko 2 se divide kar deta hai!</strong><br>
+            Isliye OpenCV mein:
+            <ul>
+                <li><strong>Hue (H):</strong> <span class="inline-code">0 se 179</span> (NOT 0–360!)</li>
+                <li><strong>Saturation (S):</strong> <span class="inline-code">0 se 255</span></li>
+                <li><strong>Value (V):</strong> <span class="inline-code">0 se 255</span></li>
+            </ul>
+        </div>
+
+        <!-- Asset 3: HSV Color Anatomy -->
+        <div class="media-card">
+            <img src="assets/topic5_hsv_color_space_anatomy.png" alt="OpenCV HSV Color Space Anatomy showing Hue 0-179, Saturation 0-255, and Value 0-255" loading="lazy">
+            <div class="media-caption">Figure 5.2: HSV Anatomy in OpenCV. Notice Hue is scaled to [0, 179] to fit inside uint8 format.</div>
+        </div>
+
+        <p><strong>Why is HSV king for Color Segmentation?</strong><br>
+        Jab shadow ya lighting badalti hai, to sirf <strong>Value (V)</strong> aur thoda Saturation badalta hai, jabki <strong>Hue (H) lagbhag constant rehta hai!</strong> Isliye HSV color tracking shadows aur lighting changes ke khilaaf robust rehti hai.</p>
+    </div>
+
+    <!-- Section 5: Channel Operations -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">05</span>
+            <h2 class="section-title">Channel Operations: Split, Visualize &amp; Merge</h2>
+        </div>
+
+        <p>Har color image 3 alag-alag 2D grids (matrices) ka combination hoti hai. OpenCV mein aap in channels ko individually alag (split) kar sakte hain aur modify karke wapas jod (merge) sakte hain.</p>
+
+        <div class="grid-2">
+            <div class="info-card">
+                <div class="info-card-title">&#9986; cv2.split(image)</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">3-channel BGR image ko 3 individual single-channel arrays (<span class="inline-code">b, g, r</span>) mein divide karta hai.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#128279; cv2.merge([b, g, r])</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">3 alag-alag single-channel matrices ko stack karke wapas single 3-channel color image banata hai.</p>
+            </div>
+        </div>
+
+        <!-- Asset 2: Channel Separation Grid -->
+        <div class="media-card">
+            <img src="assets/topic5_channel_separation_grid.png" alt="OpenCV Channel Separation: Splitting into Blue, Green, and Red intensity maps" loading="lazy">
+            <div class="media-caption">Figure 5.3: Splitting an image into its B, G, R components. Notice the intensity maps (bright = high presence of that color).</div>
+        </div>
+
+        <div class="callout callout-amber">
+            <div class="callout-title">&#9888; Important Intuition: What does a single channel display?</div>
+            Jab aap individual Blue channel (<span class="inline-code">b</span>) ko screen par display karte hain, to wo <strong>Grayscale</strong> mein dikhta hai! Kyun? Kyunki wo sirf ek 2D numerical array hai. Jahan Blue color bohot strong hota hai wahan pixels <strong>bright white (255)</strong> hote hain, aur jahan Blue absent hota hai wahan <strong>dark black (0)</strong> hote hain.
+        </div>
+
+        <p><strong>Channel Separation vs Grayscale Conversion mein farak:</strong></p>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Function</th>
+                        <th>Output Formula</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Channel Split</strong></td>
+                        <td><span class="inline-code">b, g, r = cv2.split(img)</span></td>
+                        <td>Exact raw channel values (e.g. only Green)</td>
+                        <td>Specific color component analysis / filtering</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Grayscale Conversion</strong></td>
+                        <td><span class="inline-code">cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)</span></td>
+                        <td><span class="inline-code">0.299R + 0.587G + 0.114B</span></td>
+                        <td>Overall perceived human lightness/contrast</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Asset 5: Channel Reconstruction Workflow -->
+        <div class="media-card">
+            <img src="assets/topic5_channel_reconstruction_workflow.png" alt="Lossless Channel Reconstruction using cv2.split and cv2.merge" loading="lazy">
+            <div class="media-caption">Figure 5.4: Splitting channels and reconstructing them with cv2.merge() guarantees 100% bitwise numerical fidelity.</div>
+        </div>
+    </div>
+
+    <!-- Section 6: Useful Color Conversion Codes Reference -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">06</span>
+            <h2 class="section-title">Color Conversion Cheat Sheet</h2>
+        </div>
+
+        <p>OpenCV mein 150+ color conversion flags hain, lekin practically 95% projects mein sirf yeh 6 conversion codes use hote hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source &rarr; Target</th>
+                        <th>OpenCV Conversion Code</th>
+                        <th>Typical Practical Use-Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>BGR &rarr; RGB</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_BGR2RGB</span></td>
+                        <td>Matplotlib, PIL, ya Web browser mein display karne ke liye</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BGR &rarr; Grayscale</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_BGR2GRAY</span></td>
+                        <td>Face detection, Edge detection (Canny), Optical character recognition (OCR)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Grayscale &rarr; BGR</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_GRAY2BGR</span></td>
+                        <td>Grayscale image par colored bounding boxes ya text draw karne ke liye</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BGR &rarr; HSV</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_BGR2HSV</span></td>
+                        <td>Color-based object tracking, Ball tracking, Green screen removal (Chroma key)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>HSV &rarr; BGR</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_HSV2BGR</span></td>
+                        <td>HSV manipulations ke baad image ko wapas save ya display karne ke liye</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RGB &rarr; BGR</strong></td>
+                        <td><span class="inline-code">cv2.COLOR_RGB2BGR</span></td>
+                        <td>PIL ya web se load ki gayi image ko OpenCV format mein convert karne ke liye</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 7: Practical Hands-On Code Examples -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">07</span>
+            <h2 class="section-title">Practical Code Examples</h2>
+        </div>
+
+        <!-- Example 1 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 1: Color Space Explorer (Shapes &amp; Values)</h3>
+        <p>Yeh script ek image ko load karke multiple color spaces mein convert karti hai aur unke array shapes aur channel values inspect karti hai.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example1_color_space_explorer.py</span>
+                <span>Fully Runnable</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create a synthetic image with Blue, Green, Red vertical stripes
+img_bgr = np.zeros((150, 150, 3), dtype=np.uint8)
+img_bgr[:, :50] = (255, 0, 0)      # Pure Blue in BGR
+img_bgr[:, 50:100] = (0, 255, 0)   # Pure Green in BGR
+img_bgr[:, 100:] = (0, 0, 255)     # Pure Red in BGR
+
+# 2. Perform conversions
+img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+img_gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+img_hsv = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2HSV)
+
+# 3. Print shapes and channel counts
+print("=== IMAGE SHAPES & CHANNELS ===")
+print(f"BGR Shape:  {img_bgr.shape}  | Channels: {img_bgr.shape[2]}")
+print(f"RGB Shape:  {img_rgb.shape}  | Channels: {img_rgb.shape[2]}")
+print(f"Gray Shape: {img_gray.shape}    | Channels: 1 (2D Array)")
+print(f"HSV Shape:  {img_hsv.shape}  | Channels: {img_hsv.shape[2]}")
+
+# 4. Inspect Hue values (OpenCV range: 0-179)
+print("\n=== HSV HUE READINGS ===")
+print("Blue Stripe  -> Hue:", img_hsv[75, 25, 0],  "(Expected ~120)")
+print("Green Stripe -> Hue:", img_hsv[75, 75, 0],  "(Expected ~60)")
+print("Red Stripe   -> Hue:", img_hsv[75, 125, 0], "(Expected 0)")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            === IMAGE SHAPES &amp; CHANNELS ===<br>
+            BGR Shape:  (150, 150, 3)  | Channels: 3<br>
+            RGB Shape:  (150, 150, 3)  | Channels: 3<br>
+            Gray Shape: (150, 150)    | Channels: 1 (2D Array)<br>
+            HSV Shape:  (150, 150, 3)  | Channels: 3<br>
+            <br>
+            === HSV HUE READINGS ===<br>
+            Blue Stripe  -&gt; Hue: 120 (Expected ~120)<br>
+            Green Stripe -&gt; Hue: 60 (Expected ~60)<br>
+            Red Stripe   -&gt; Hue: 0 (Expected 0)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Medical Imaging Preprocessing:</strong> MRI aur X-Ray images naturally single-channel intensity maps hoti hain. Doctor reports analyze karne se pehle algorithms confirm karte hain ki input 2D grayscale hai ya 3-channel RGB.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 2 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 2: Splitting, Modifying &amp; Merging Channels</h3>
+        <p>Is program mein hum image ke B, G, R channels ko split karte hain, verify karte hain ki NumPy slicing identical hai, aur lossless reconstruct karte hain.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example2_split_merge.py</span>
+                <span>Lossless Bitwise Verification</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# Load or create synthetic image
+img = np.zeros((100, 100, 3), dtype=np.uint8)
+img[:, :] = (200, 150, 50)  # B=200, G=150, R=50
+
+# Method A: Using cv2.split()
+b, g, r = cv2.split(img)
+
+# Method B: Using fast NumPy indexing (More efficient in Python!)
+b_fast = img[:, :, 0]
+g_fast = img[:, :, 1]
+r_fast = img[:, :, 2]
+
+# Verify both methods yield identical numbers
+assert np.array_equal(b, b_fast), "NumPy slicing mismatch!"
+
+# Reconstruct back with cv2.merge()
+reconstructed = cv2.merge([b, g, r])
+
+# Bitwise verification
+is_lossless = np.array_equal(img, reconstructed)
+print("Channels split successfully!")
+print(f"Blue channel shape:  {b.shape} (Intensity: {b[0, 0]})")
+print(f"Green channel shape: {g.shape} (Intensity: {g[0, 0]})")
+print(f"Red channel shape:   {r.shape} (Intensity: {r[0, 0]})")
+print(f"Is reconstructed image bit-for-bit identical? {is_lossless}")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Channels split successfully!<br>
+            Blue channel shape:  (100, 100) (Intensity: 200)<br>
+            Green channel shape: (100, 100) (Intensity: 150)<br>
+            Red channel shape:   (100, 100) (Intensity: 50)<br>
+            Is reconstructed image bit-for-bit identical? True
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Thermal &amp; Night-Vision Enhancement:</strong> Infrared cameras mein thermal heat information sirf ek specific channel mein aati hai. Engineer us channel ko split karke amplify karta hai aur baki channels ke saath wapas merge kar deta hai.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 3 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 3: Basic Color Detection Pipeline with HSV</h3>
+        <p>Yeh computer vision ka classic hello-world application hai: HSV thresholding use karke specific color (Green) ke objects ko isolate karna.</p>
+
+        <!-- Asset 4: Detection Pipeline -->
+        <div class="media-card">
+            <img src="assets/topic5_color_detection_pipeline.png" alt="OpenCV Color Detection Pipeline: Input -> HSV -> Mask -> Extracted Target" loading="lazy">
+            <div class="media-caption">Figure 5.5: 4-Step Color Detection: Input &rarr; HSV &rarr; Binary Mask via cv2.inRange &rarr; Segmented Object via cv2.bitwise_and.</div>
+        </div>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example3_hsv_color_detector.py</span>
+                <span>Color Segmentation</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create a 150x150 test image with Blue, Green, and Red stripes
+img = np.zeros((150, 150, 3), dtype=np.uint8)
+img[:, :50] = (255, 0, 0)      # Blue stripe
+img[:, 50:100] = (0, 255, 0)   # Target Green stripe
+img[:, 100:] = (0, 0, 255)     # Red stripe
+
+# 2. Step 1: Convert BGR to HSV
+hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+# 3. Step 2: Define Green HSV bounds [H: 0-179, S: 0-255, V: 0-255]
+# Green Hue is centered around 60. We take a tolerance of +/- 25
+lower_green = np.array([35, 80, 80], dtype=np.uint8)
+upper_green = np.array([85, 255, 255], dtype=np.uint8)
+
+# 4. Step 3: Create binary mask (White=255 where green matches, Black=0 elsewhere)
+mask = cv2.inRange(hsv, lower_green, upper_green)
+
+# 5. Step 4: Extract target color using bitwise AND
+extracted = cv2.bitwise_and(img, img, mask=mask)
+
+# 6. Audit results
+detected_count = cv2.countNonZero(mask)
+total_pixels = mask.size
+
+print(f"Total Pixels:    {total_pixels}")
+print(f"Green Detected:  {detected_count} pixels (Exact 33.3% stripe)")
+print(f"Extracted Shape: {extracted.shape}")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Total Pixels:    22500<br>
+            Green Detected:  7500 pixels (Exact 33.3% stripe)<br>
+            Extracted Shape: (150, 150, 3)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Autonomous Robotics &amp; Self-Driving Cars:</strong> Road par yellow lane markings ya traffic light ke Green/Red signal ko detect karne ke liye autonomous cars HSV segmentation ka use karti hain taaki cloudy ya sunny weather mein bhi detection stable rahe.
+        </div>
+    </div>
+
+    <!-- Section 8: Common Beginner Pitfalls & Troubleshooting -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">08</span>
+            <h2 class="section-title">Common Beginner Traps &amp; Troubleshooting</h2>
+        </div>
+
+        <div class="grid-2">
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; The 0-360 Hue Trap</div>
+                <p style="font-size: 13.5px;">Photoshop ya online color picker mein Hue 0&deg;&ndash;360&deg; hota hai. Agar aap OpenCV mein <span class="inline-code">Hue = 240</span> (Blue) pass karenge to overflow ho jayega! OpenCV ke liye humesha <strong>Hue ko 2 se divide karein</strong> (<span class="inline-code">240 / 2 = 120</span>).</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; Grayscale Shape Assumption</div>
+                <p style="font-size: 13.5px;">Beginners aksar likhte hain <span class="inline-code">h, w, c = gray.shape</span> aur code crash ho jata hai (<span class="inline-code">ValueError: not enough values to unpack</span>). Humesha yaad rakhein Grayscale 2D array hai (<span class="inline-code">h, w</span>).</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-amber);">
+                <div class="info-card-title" style="color: var(--accent-amber);">&#9888; Red Color Wraparound in HSV</div>
+                <p style="font-size: 13.5px;">Red color Hue wheel ke dono ends par hota hai: <span class="inline-code">[0, 10]</span> aur <span class="inline-code">[170, 179]</span>. Pure red detect karne ke liye dono masks banakar <span class="inline-code">cv2.bitwise_or(mask1, mask2)</span> karna padta hai.</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-green);">
+                <div class="info-card-title" style="color: var(--accent-green);">&#10004; Fast NumPy Indexing</div>
+                <p style="font-size: 13.5px;"><span class="inline-code">cv2.split()</span> internally 3 copies create karta hai jo large video frames mein slow ho sakta hai. Production mein faster access ke liye direct slicing use karein: <span class="inline-code">b = img[:, :, 0]</span>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 9: Quick Revision Quiz -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">09</span>
+            <h2 class="section-title">Quick Revision &amp; Self-Assessment Quiz</h2>
+        </div>
+
+        <details>
+            <summary>Q1: OpenCV mein standard 8-bit image ke liye Hue (H) channel ki maximum value kya hoti hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: 179</strong><br>
+                Mathematics mein 360&deg; hota hai, lekin standard 8-bit <span class="inline-code">uint8</span> range [0, 255] mein fit karne ke liye OpenCV Hue ko 2 se divide kar deta hai (360 / 2 = 180, range 0 to 179).
+            </div>
+        </details>
+
+        <details>
+            <summary>Q2: Agar ek BGR image ko seedha Matplotlib ke <span class="inline-code">plt.imshow()</span> mein pass kiya jaye to kya hoga?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: Red aur Blue swap ho jayenge (Blue skin gotcha).</strong><br>
+                OpenCV Channel 0 par Blue store karta hai jabki Matplotlib Channel 0 ko Red expect karta hai. Isliye image ke red hisse blue dikhenge aur blue hisse orange/red dikhenge. Fix: <span class="inline-code">cv2.cvtColor(img, cv2.COLOR_BGR2RGB)</span>.
+            </div>
+        </details>
+
+        <details>
+            <summary>Q3: Channel Split aur Grayscale Conversion mein kya basic farak hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: Formula aur purpose ka farak hai.</strong><br>
+                <span class="inline-code">cv2.split()</span> ek specific channel ki raw intensity uthata hai (jaise sirf Blue values). Jabki Grayscale teeno channels ka human eye weighted average calculate karta hai (<span class="inline-code">0.299R + 0.587G + 0.114B</span>).
+            </div>
+        </details>
+    </div>
+
+    <!-- Section 10: Topic Summary & Next Steps -->
+    <div class="section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd;">
+        <div class="section-header" style="border-bottom-color: #7dd3fc;">
+            <span class="section-tag" style="background: #0284c7; color: #ffffff;">RECAP</span>
+            <h2 class="section-title" style="color: #0369a1;">What You Mastered Today</h2>
+        </div>
+
+        <ul style="color: #0f172a;">
+            <li><strong>BGR Convention:</strong> OpenCV uses BGR by default; use <span class="inline-code">cv2.COLOR_BGR2RGB</span> before passing images to Matplotlib or web viewers.</li>
+            <li><strong>Grayscale Power:</strong> Reduces data by 66% into a 2D matrix <span class="inline-code">(H, W)</span>, enabling lightning-fast edge and feature detection.</li>
+            <li><strong>HSV Robustness:</strong> Separates color (Hue 0-179) from lighting (Value 0-255), making it the gold standard for object tracking and color detection.</li>
+            <li><strong>Channel Operations:</strong> Split images using <span class="inline-code">cv2.split()</span> or slicing, and reconstruct them losslessly with <span class="inline-code">cv2.merge()</span>.</li>
+        </ul>
+
+        <div style="margin-top: 18px; padding: 12px 16px; background: #ffffff; border-radius: var(--radius-sm); border-left: 4px solid #0284c7;">
+            <strong>Next Topic:</strong> In <strong>Topic 6: Drawing &amp; Annotations on Images</strong>, hum sikhenge image par lines, rectangles, circles, polygons aur custom text annotate karna for bounding boxes and visual analytics!
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

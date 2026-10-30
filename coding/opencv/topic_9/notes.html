@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 9: Morphological Operations | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 14.5px;
+            color: #f0f9ff;
+            opacity: 0.95;
+            max-width: 680px;
+            line-height: 1.55;
+            margin-bottom: 0;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        .section-num {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid var(--primary);
+            background: var(--primary-light);
+            font-size: 14px;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .callout-tip {
+            border-left-color: var(--accent-green);
+            background: var(--accent-green-bg);
+        }
+        .callout-tip .callout-title { color: var(--accent-green); }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background: var(--accent-amber-bg);
+        }
+        .callout-warning .callout-title { color: var(--accent-amber); }
+
+        .callout-danger {
+            border-left-color: var(--accent-red);
+            background: var(--accent-red-bg);
+        }
+        .callout-danger .callout-title { color: var(--accent-red); }
+
+        /* Media Card & Images */
+        .media-card {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: 18px 0;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .media-caption {
+            padding: 10px 14px;
+            color: #94a3b8;
+            font-size: 12.5px;
+            text-align: center;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 8px 14px;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-family: monospace;
+            border-bottom: 1px solid #334155;
+        }
+
+        pre {
+            padding: 14px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            font-size: 13px;
+            color: var(--code-text);
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: Consolas, Monaco, "Courier New", monospace;
+        }
+
+        p code, li code {
+            background: #e2e8f0;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 10px;
+            }
+            .hero {
+                padding: 22px 16px;
+            }
+            .section {
+                padding: 16px;
+            }
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Interactive Quiz & Collapsible */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            background: #ffffff;
+            display: block;
+            user-select: none;
+            line-height: 1.45;
+        }
+
+        summary:hover {
+            background: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            color: #334155;
+        }
+
+        .quiz-options {
+            margin: 10px 0;
+            list-style: none;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-green-bg);
+            color: #065f46;
+            font-weight: 600;
+            border-left: 3px solid var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="hero-tags">
+            <span class="tag">Computer Vision • OpenCV</span>
+            <span class="tag">Topic 9 of 25</span>
+            <span class="tag">&#9201; ~6-8 min read</span>
+        </div>
+        <h1>Morphological Operations</h1>
+        <p>Master shape and structure transformations on binary masks: Structuring elements (RECT, ELLIPSE, CROSS), boundary shrinking via Erosion, gap bridging via Dilation, compound noise removal with Opening &amp; Closing, and outline extraction via Morphological Gradient.</p>
+    </header>
+
+    <!-- Section 1: What Are Morphological Operations -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What Are Morphological Operations?</h2>
+        </div>
+        <p>Topic 8 mein humne image ko binarize (0 aur 255) karna seekha. Lekin thresholding ke baad binary mask mein aksar do tarah ki problems aati hain:</p>
+        <ol style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li>Background mein chote-chote white noise dots (salt noise) reh jaate hain.</li>
+            <li>Main object ke andar chote-chote black holes, gaps ya toote hue text strokes reh jaate hain.</li>
+        </ol>
+
+        <p>In problems ko theek karne ke liye hum <strong>Morphological Operations</strong> use karte hain. Yeh geometric operations hote hain jo binary image ke <strong>Foreground (White Shapes)</strong> ke size aur structure ko modify karte hain.</p>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Fundamental Assumption: White is Foreground!</div>
+            OpenCV ke sabhi morphological algorithms assume karte hain ki <strong>White (255)</strong> aapka target foreground object hai aur <strong>Black (0)</strong> background hai! Agar aap white paper par black text process kar rahe hain, to pehle use invert (<code>THRESH_BINARY_INV</code>) karna padega.
+        </div>
+    </section>
+
+    <!-- Section 2: Kernel / Structuring Element -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Structuring Element (The Morphological Kernel)</h2>
+        </div>
+        <p>Morphological operations ek choti binary matrix (jise <strong>Structuring Element</strong> ya Kernel kehte hain) ke zariye perform hote hain. Yeh kernel sliding window ki tarah poori image par traverse karta hai.</p>
+
+        <p>OpenCV kernel generate karne ke liye <code>cv2.getStructuringElement()</code> provide karta hai:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • KERNELS.PY</span>
+                <span>STRUCTURING ELEMENTS</span>
+            </div>
+            <pre><code>import cv2
+
+# 1. Rectangular Kernel (standard box)
+kernel_rect = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+
+# 2. Elliptical / Circular Kernel (smooth organic boundaries)
+kernel_ellipse = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+
+# 3. Cross-shaped Kernel (+ symbol, strict 4-connectivity)
+kernel_cross = cv2.getStructuringElement(cv2.MORPH_CROSS, (5, 5))</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic9_structuring_elements.png" alt="OpenCV Structuring Elements Visualized: RECT, ELLIPSE, CROSS in 9x9 grid">
+            <div class="media-caption">Figure 9.1: Microscopic view of OpenCV structuring elements (9x9 grid): RECT (all 1s), ELLIPSE (rounded circular footprint), and CROSS (+ sign 4-connectivity).</div>
+        </div>
+    </section>
+
+    <!-- Section 3: Erosion -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">1. Erosion: <code>cv2.erode()</code> (Shrinking Foreground)</h2>
+        </div>
+        <p><strong>Erosion</strong> ka kaam foreground (white regions) ke boundaries ko strip (erode) karna hai. Jaise samundar ki lehren pathar ko ghis deti hain, waise hi erosion white pixels ki kinariyon ko chota kar deta hai.</p>
+
+        <p><strong>Rule:</strong> Output pixel sirf tab <code>255</code> banta hai jab kernel window ke niche aane wale <em>sabhi</em> pixels <code>255</code> hon. Agar ek bhi neighbor black <code>0</code> hai, to center pixel ko <code>0</code> bana diya jata hai!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • EROSION.PY</span>
+                <span>SHRINKING FOREGROUND</span>
+            </div>
+            <pre><code>import cv2
+
+# Apply Erosion
+# iterations: Number of times erosion is applied sequentially (default=1)
+eroded_img = cv2.erode(binary_img, kernel=kernel_rect, iterations=1)</code></pre>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">&#10004; Best Uses of Erosion</div>
+                <ul style="padding-left: 18px; font-size: 13.5px; color: #334155; margin: 0;">
+                    <li>Background ke chote-mote isolated white noise dots ko delete karna.</li>
+                    <li>Do aapas mein jude hue (touching) objects ko alag-alag karna.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-title">&#9888; Caution</div>
+                <p style="font-size: 13.5px; margin: 0; color: #334155;">Agar kernel bohot bada ho ya iterations zyada hon, to patli lines aur delicate text letters poori tarah dissolve ho sakte hain!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 4: Dilation -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">2. Dilation: <code>cv2.dilate()</code> (Expanding Foreground)</h2>
+        </div>
+        <p><strong>Dilation</strong> erosion ka theek ulta hota hai. Yeh foreground (white regions) ke boundaries ko chaaron taraf expand (mota) kar deta hai.</p>
+
+        <p><strong>Rule:</strong> Output pixel <code>255</code> ban jata hai agar kernel window ke niche <em>kam se kam ek pixel</em> bhi <code>255</code> ho!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • DILATION.PY</span>
+                <span>EXPANDING FOREGROUND</span>
+            </div>
+            <pre><code>import cv2
+
+# Apply Dilation
+dilated_img = cv2.dilate(binary_img, kernel=kernel_rect, iterations=1)</code></pre>
+        </div>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">&#10004; Best Uses of Dilation</div>
+                <ul style="padding-left: 18px; font-size: 13.5px; color: #334155; margin: 0;">
+                    <li>Toote hue text strokes aur hairline cracks ko jodna.</li>
+                    <li>Weak/faint object silhouettes ko solid aur thik banana.</li>
+                </ul>
+            </div>
+            <div class="card">
+                <div class="card-title">&#9888; Caution</div>
+                <p style="font-size: 13.5px; margin: 0; color: #334155;">Zyada dilation pass-pass baithe alag-alag objects ko aapas mein chipka kar ek single blob bana deti hai!</p>
+            </div>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic9_erosion_vs_dilation.png" alt="Erosion vs Dilation compared against original benchmark shape">
+            <div class="media-caption">Figure 9.2: Erosion vs Dilation on benchmark shape: Notice how erosion shrinks the perimeter and enlarges internal holes, while dilation expands the perimeter and fills the holes.</div>
+        </div>
+    </section>
+
+    <!-- Section 5: Opening -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">3. Opening: <code>cv2.MORPH_OPEN</code> (Noise Removal)</h2>
+        </div>
+        <p>Agar aap sirf Erosion karte hain, to noise to chali jaati hai lekin main object bhi chota ho jata hai. Iska perfect solution hai <strong>Opening</strong>:</p>
+        
+        <div class="callout callout-tip" style="font-size: 15px; font-weight: 700; text-align: center;">
+            Opening = Erosion Followed by Dilation &nbsp; ( Erode &rarr; Dilate )
+        </div>
+
+        <p><strong>Yeh kaise kaam karta hai?</strong></p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><strong>Step 1 (Erode):</strong> Chote-chote isolated white specks poori tarah dissolve ho kar khatam ho jaate hain. Bada main object thoda shrink hota hai.</li>
+            <li><strong>Step 2 (Dilate):</strong> Bada main object wapas expand hokar apne original size par aa jata hai! Lekin jo chote specks Step 1 mein mar chuke the, wo wapas nahi aate!</li>
+        </ul>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • OPENING.PY</span>
+                <span>SALT NOISE REMOVAL</span>
+            </div>
+            <pre><code>import cv2
+
+# MorphologyEx syntax for Opening
+k = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+cleaned_mask = cv2.morphologyEx(noisy_mask, cv2.MORPH_OPEN, kernel=k)</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 6: Closing -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">4. Closing: <code>cv2.MORPH_CLOSE</code> (Gap &amp; Hole Filling)</h2>
+        </div>
+        <p>Opening ka theek opposite <strong>Closing</strong> hota hai:</p>
+
+        <div class="callout callout-tip" style="font-size: 15px; font-weight: 700; text-align: center;">
+            Closing = Dilation Followed by Erosion &nbsp; ( Dilate &rarr; Erode )
+        </div>
+
+        <p><strong>Yeh kaise kaam karta hai?</strong></p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><strong>Step 1 (Dilate):</strong> Foreground expand hota hai, jisse object ke andar ke chote black holes aur gaps aapas mein judkar fill ho jaate hain.</li>
+            <li><strong>Step 2 (Erode):</strong> Foreground wapas shrink hokar apne original size par aa jata hai, lekin jo holes Step 1 mein seal ho chuke the wo band hi rehte hain!</li>
+        </ul>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • CLOSING.PY</span>
+                <span>GAP & HOLE FILLING</span>
+            </div>
+            <pre><code>import cv2
+
+# MorphologyEx syntax for Closing
+k = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+healed_mask = cv2.morphologyEx(defective_mask, cv2.MORPH_CLOSE, kernel=k)</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic9_opening_vs_closing.png" alt="Opening eliminating white noise dots vs Closing filling interior black holes">
+            <div class="media-caption">Figure 9.3: Opening vs Closing: Opening eliminates external white noise specks without distorting the circle, while Closing seals internal holes and bridges cracks.</div>
+        </div>
+    </section>
+
+    <!-- Section 7: Morphological Gradient -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">5. Morphological Gradient: <code>cv2.MORPH_GRADIENT</code></h2>
+        </div>
+        <p>Morphological Gradient ek solid binary shape me se uski <strong>Perimeter Boundary (Outline)</strong> nikaalne ka sabse aasan tareeka hai:</p>
+
+        <div class="callout callout-tip" style="font-size: 15px; font-weight: 700; text-align: center;">
+            Gradient = Dilation &minus; Erosion
+        </div>
+
+        <p>Kyunki Dilation object ki outer kinari ko expand karta hai aur Erosion inner core ko shrink karta hai, dono ka difference nikaalne par beech ka hollow border outline ban jata hai!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • GRADIENT.PY</span>
+                <span>OUTLINE BOUNDARY EXTRACTION</span>
+            </div>
+            <pre><code>import cv2
+
+# Morphological Gradient
+k = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+outline = cv2.morphologyEx(solid_shape, cv2.MORPH_GRADIENT, kernel=k)</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic9_morphological_gradient.png" alt="Morphological Gradient demonstrating Dilation minus Erosion outline extraction">
+            <div class="media-caption">Figure 9.4: Morphological Gradient: Subtracting the eroded core from the dilated shell leaves a clean perimeter outline.</div>
+        </div>
+    </section>
+
+    <!-- Section 8: Quick Comparison Table & Master Summary -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Morphology Operations Decision Matrix</h2>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Operation</th>
+                        <th>Sequence</th>
+                        <th>Primary Effect on White Foreground</th>
+                        <th>Standard Use-Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Erosion</strong></td>
+                        <td>Single step</td>
+                        <td>Shrinks boundaries, removes tiny noise</td>
+                        <td>Separating touching blood cells / coins.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Dilation</strong></td>
+                        <td>Single step</td>
+                        <td>Expands boundaries, bridges cracks</td>
+                        <td>Repairing faint handwritten text strokes.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Opening</strong></td>
+                        <td>Erode &rarr; Dilate</td>
+                        <td>Removes isolated white noise dots</td>
+                        <td>Cleaning thresholded background noise.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Closing</strong></td>
+                        <td>Dilate &rarr; Erode</td>
+                        <td>Fills internal black holes &amp; bridges gaps</td>
+                        <td>Closing holes inside segmented object masks.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gradient</strong></td>
+                        <td>Dilate &minus; Erode</td>
+                        <td>Extracts hollow perimeter outline</td>
+                        <td>Fast boundary detection without heavy Sobel math.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic9_morphology_summary_matrix.png" alt="OpenCV Morphology Master Summary on Standard J Benchmark">
+            <div class="media-caption">Figure 9.5: Master summary comparing all 5 operations on the standard OpenCV 'J' letter benchmark.</div>
+        </div>
+    </section>
+
+    <!-- Section 9: 4 Practical Code Recipes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">09</span>
+            <h2 class="section-title">4 Practical Code Recipes (Copy &amp; Run)</h2>
+        </div>
+
+        <!-- Recipe 1 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 14px 0 6px; color: var(--primary-dark);">&#128203; Recipe 1: Erosion &amp; Dilation Explorer</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_1_EROSION_DILATION.PY</span>
+                <span>BASIC OPERATIONS</span>
+            </div>
+            <pre><code>import cv2
+
+# Load binary mask
+mask = cv2.imread("binary_mask.png", cv2.IMREAD_GRAYSCALE)
+
+# Create 5x5 rectangular structuring element
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+
+# Apply operations
+eroded = cv2.erode(mask, kernel, iterations=1)
+dilated = cv2.dilate(mask, kernel, iterations=1)
+
+cv2.imwrite("eroded.png", eroded)
+cv2.imwrite("dilated.png", dilated)</code></pre>
+        </div>
+
+        <!-- Recipe 2 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 2: Cleaning White Noise with Opening</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_2_OPENING.PY</span>
+                <span>NOISE REMOVAL</span>
+            </div>
+            <pre><code>import cv2
+
+# Load binary image with background salt noise
+noisy_img = cv2.imread("noisy_barcode.png", cv2.IMREAD_GRAYSCALE)
+
+# 3x3 or 5x5 kernel depending on noise dot size
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 5))
+
+# Opening wipes out small specks while keeping barcode intact
+cleaned_img = cv2.morphologyEx(noisy_img, cv2.MORPH_OPEN, kernel)
+
+cv2.imwrite("cleaned_barcode.png", cleaned_img)</code></pre>
+        </div>
+
+        <!-- Recipe 3 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 3: Sealing Cracks &amp; Holes with Closing</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_3_CLOSING.PY</span>
+                <span>GAP REPAIR</span>
+            </div>
+            <pre><code>import cv2
+
+# Load binary mask with internal holes
+broken_letters = cv2.imread("broken_ocr.png", cv2.IMREAD_GRAYSCALE)
+
+# 7x7 kernel bridges hairline gaps
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+
+# Closing fills internal cracks seamlessly
+repaired_img = cv2.morphologyEx(broken_letters, cv2.MORPH_CLOSE, kernel)
+
+cv2.imwrite("repaired_ocr.png", repaired_img)</code></pre>
+        </div>
+
+        <!-- Recipe 4 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 4: Extracting Boundary Outlines</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_4_GRADIENT.PY</span>
+                <span>OBJECT OUTLINE</span>
+            </div>
+            <pre><code>import cv2
+
+# Load solid binary silhouette
+silhouette = cv2.imread("person_mask.png", cv2.IMREAD_GRAYSCALE)
+
+# 3x3 kernel produces a sharp 2-pixel wide perimeter
+kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+
+# Morphological gradient extracts object outline
+outline = cv2.morphologyEx(silhouette, cv2.MORPH_GRADIENT, kernel)
+
+cv2.imwrite("outline_boundary.png", outline)</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 10: Common Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">10</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 1: Processing Black Foreground on White Paper</div>
+            <strong>Problem:</strong> Scanned text black hota hai aur paper white hota hai. Agar aap direct erosion laga denge, to text mota (dilate) ho jayega aur paper shrink ho jayega!<br>
+            <strong>Fix:</strong> Morphology lagane se pehle image polarity invert karein taaki text White <code>255</code> ban sake: <code>binary = cv2.bitwise_not(gray_thresh)</code>.
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 2: Using Kernel Bigger than Feature Thickness</div>
+            <strong>Problem:</strong> Agar text letter ka stroke 3 pixels ka hai aur aapne <code>(9, 9)</code> kernel se Opening laga di, to poora letter hi gayab ho jayega!<br>
+            <strong>Fix:</strong> Kernel size hamesha us noise ya gap ke size se match hona chahiye jise aap target kar rahe hain.
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 3: Confusing Opening vs Closing Sequence</div>
+            <strong>Memory Trick:</strong><br>
+            &bull; <strong>OPEN</strong>ing = <strong>E</strong>rosion pehle (Noise <em>Bahut Door</em> bhaga do)<br>
+            &bull; <strong>CLOSE</strong>ing = <strong>D</strong>ilation pehle (Holes ko <em>Band</em> kar do).
+        </div>
+    </section>
+
+    <!-- Section 11: Summary & Cheat Sheet -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">11</span>
+            <h2 class="section-title">Quick Summary &amp; Cheat Sheet</h2>
+        </div>
+        <ul style="padding-left: 20px; line-height: 1.8; color: #334155;">
+            <li><strong>Morphological Operations</strong> binary images (White Foreground = 255) ki shapes aur structures ko manipulate karte hain.</li>
+            <li><strong>Structuring Element:</strong> Kernel matrix jo <code>cv2.getStructuringElement()</code> se RECT, ELLIPSE, ya CROSS footprint mein generate hoti hai.</li>
+            <li><strong>cv2.erode():</strong> White regions ko shrink karta hai; noise dots hatata hai aur touching objects separate karta hai.</li>
+            <li><strong>cv2.dilate():</strong> White regions ko expand karta hai; toote hue strokes jodta hai.</li>
+            <li><strong>cv2.MORPH_OPEN:</strong> Erode &rarr; Dilate; external white noise specks hatata hai bina main object ka size badle.</li>
+            <li><strong>cv2.MORPH_CLOSE:</strong> Dilate &rarr; Erode; internal black holes aur cracks seal karta hai.</li>
+            <li><strong>cv2.MORPH_GRADIENT:</strong> Dilate &minus; Erode; object ki crisp perimeter outline banata hai.</li>
+        </ul>
+    </section>
+
+    <!-- Section 12: Interactive Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">12</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: Ek binary mask mein main object ke chaaron taraf chote-chote white noise specks hain. Main object ka size badle bina noise hatane ke liye kya use karenge?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) cv2.dilate()</li>
+                    <li>B) cv2.morphologyEx() with cv2.MORPH_OPEN</li>
+                    <li>C) cv2.morphologyEx() with cv2.MORPH_CLOSE</li>
+                    <li>D) cv2.resize()</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) cv2.MORPH_OPEN<br>
+                    <strong>Explanation:</strong> Opening pehle erode karke chote specks ko eliminate karta hai aur fir dilate karke main object ko uske original size par restore kar deta hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Microscope image mein do touching cells aapas mein jude hue hain. Unhe separate karne ke liye kaunsa operation suitable hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Erosion (cv2.erode)</li>
+                    <li>B) Dilation (cv2.dilate)</li>
+                    <li>C) Closing (cv2.MORPH_CLOSE)</li>
+                    <li>D) Gaussian Blur</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A) Erosion (cv2.erode)<br>
+                    <strong>Explanation:</strong> Erosion white foreground boundaries ko shrink karta hai, jisse unke beech ka patla joining bridge toot jata hai aur dono cells alag ho jate hain.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: Morphological Gradient mathematically kya calculate karta hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Erosion + Dilation</li>
+                    <li>B) Dilation &minus; Erosion</li>
+                    <li>C) Opening &minus; Closing</li>
+                    <li>D) Mean &times; Standard Deviation</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) Dilation &minus; Erosion<br>
+                    <strong>Explanation:</strong> Dilation object ko thoda bada karta hai aur erosion thoda chota karta hai. Dono ka difference nikaalne par sirf object ka hollow boundary perimeter bachta hai!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 13: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 10 — Contours &amp; Shape Detection in OpenCV</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne clean, noise-free binary masks banana seekh liya hai, agle topic mein hum seekhenge ki kaise <code>cv2.findContours()</code> se objects ke borders trace kiye jaate hain, bounding boxes draw kiye jaate hain, aur geometric shapes (circles, squares, polygons) detect kiye jaate hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

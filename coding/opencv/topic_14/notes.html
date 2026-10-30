@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 14: Template Matching | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #f0f9ff;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Section Cards */
+        .section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-num {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: var(--primary);
+            color: #0369a1;
+        }
+
+        .callout-success {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        /* Image Containers */
+        .diagram-container {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-caption {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Syntax and Code Boxes */
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+        }
+
+        .code-output {
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12.5px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        .code-block code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Responsive Comparison Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #475569;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fcfdfe;
+        }
+
+        /* Formula & Math Display Box */
+        .formula-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 13.5px;
+            color: #0f172a;
+            margin: 12px 0;
+            display: inline-block;
+        }
+
+        /* Interactive Collapsible Quizzes */
+        details {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            background-color: #ffffff;
+            border-bottom: 1px solid transparent;
+            display: block;
+            line-height: 1.45;
+        }
+
+        details[open] summary {
+            border-bottom-color: var(--border);
+            background-color: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .quiz-options {
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            background-color: var(--accent-green-bg);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            color: #065f46;
+            font-size: 13.5px;
+        }
+
+        /* Grid cards for properties */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card h4 {
+            color: var(--primary-dark);
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Syntax Highlight Helpers */
+        .hl-k { color: #f472b6; } /* keyword */
+        .hl-f { color: #60a5fa; } /* function */
+        .hl-s { color: #34d399; } /* string */
+        .hl-c { color: #94a3b8; font-style: italic; } /* comment */
+        .hl-n { color: #fbbf24; } /* number */
+        .hl-v { color: #e2e8f0; } /* variable */
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .hero { padding: 20px 16px; }
+            .hero h1 { font-size: 21px; }
+            .section { padding: 18px 14px; }
+            .section-title { font-size: 17px; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <span class="hero-badge">&#128736; OpenCV Core Series &bull; Topic 14</span>
+        <h1>Template Matching</h1>
+        <p>Badi source image mein se kisi choti template image (jaise logo, icon, symbol ya component) ko dhoondhne ki classical technique! Seekhein sliding window correlation, 6 standard matching methods, <code>minMaxLoc()</code> peak extraction, aur Non-Maximum Suppression (NMS) se multiple occurrences detect karna!</p>
+        <div class="meta-tags">
+            <span class="meta-pill">&#9201; ~5-8 min read</span>
+            <span class="meta-pill">&#127919; Target: OpenCV 4.x + Python</span>
+            <span class="meta-pill">&#128202; Difficulty: Beginner to Intermediate</span>
+            <span class="meta-pill">&#128279; Requires: Topics 4 &amp; 6</span>
+        </div>
+    </header>
+
+    <!-- Section 1: What is Template Matching? -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What is Template Matching? (The Sliding Window Analogy)</h2>
+        </div>
+        <p>Imagine kijiye aapke desktop screenshot mein aapko ek specific "Play" button ya company logo dhoondhna hai. Aapke paas us button ki ek choti reference photo hai jise hum <strong>Template Image (w &times; h)</strong> kehte hain, aur poore screenshot ko <strong>Source Image (W &times; H)</strong> kehte hain.</p>
+
+        <p>OpenCV ka <strong><code>cv2.matchTemplate()</code></strong> is template ko source image par ek sliding window ki tarah 1-by-1 pixel aage sarkaata hai aur har position par similarity score calculate karta hai:</p>
+
+        <!-- Visual Diagram 1 -->
+        <div class="diagram-container">
+            <img src="assets/topic14_template_workflow_diagram.png" alt="Template Matching 5-Stage Workflow Diagram">
+            <div class="diagram-caption">Figure 14.1: The 5-stage Template Matching workflow: Source &amp; Template &rarr; Sliding Window &rarr; Score Map &rarr; Min/Max Location &rarr; Bounding Box.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128207; Why Score Map Dimensions are Smaller:</strong><br>
+            Agar source image ka size <code>(W, H)</code> hai aur template ka size <code>(w, h)</code> hai, to resulting score map ka dimension <strong><code>(W - w + 1, H - h + 1)</code></strong> hota hai. Kyunki jab template right aur bottom edge tak pahunchta hai, to wo image boundary se bahar nahi ja sakta!
+        </div>
+    </section>
+
+    <!-- Section 2: The 6 Matching Methods -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">The 6 Standard OpenCV Matching Methods</h2>
+        </div>
+        <p>OpenCV matching compare karne ke liye 6 alag-alag mathematical formulas provide karta hai. Beginners ke liye sabse zaroori rule ye samajhna hai ki <strong>best match kahan milta hai (Minimum vs Maximum)</strong>:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>OpenCV Method Flag</th>
+                        <th>Core Intuition</th>
+                        <th>Best Match Value</th>
+                        <th>Normalized?</th>
+                        <th>Practical Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>cv2.TM_SQDIFF</code></td>
+                        <td>Sum of Squared Differences &sum;(T - I)<sup>2</sup></td>
+                        <td><strong>MINIMUM</strong></td>
+                        <td>No (raw pixel values)</td>
+                        <td>0 par perfect match, bada number = poor match.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.TM_SQDIFF_NORMED</code></td>
+                        <td>Normalized Squared Difference</td>
+                        <td><strong>MINIMUM</strong></td>
+                        <td><strong>Yes [0.0 to 1.0]</strong></td>
+                        <td><strong>0.0 = Perfect match</strong>, 1.0 = Worst match.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.TM_CCORR</code></td>
+                        <td>Cross Correlation &sum;(T &middot; I)</td>
+                        <td><strong>MAXIMUM</strong></td>
+                        <td>No (depends on brightness)</td>
+                        <td>Template aur patch ko multiply karta hai. False high on bright white regions!</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.TM_CCORR_NORMED</code></td>
+                        <td>Normalized Cross Correlation</td>
+                        <td><strong>MAXIMUM</strong></td>
+                        <td><strong>Yes [0.0 to 1.0]</strong></td>
+                        <td>1.0 = Perfect match, scale normalized.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.TM_CCOEFF</code></td>
+                        <td>Correlation Coefficient (Mean Subtracted)</td>
+                        <td><strong>MAXIMUM</strong></td>
+                        <td>No (relative contrast)</td>
+                        <td>Dono ke mean brightness subtract karta hai (lighting invariant).</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.TM_CCOEFF_NORMED</code> &#9733;</td>
+                        <td>Normalized Correlation Coefficient</td>
+                        <td><strong>MAXIMUM</strong></td>
+                        <td><strong>Yes [-1.0 to 1.0]</strong></td>
+                        <td><strong>1.0 = Perfect match</strong>, 0.0 = No correlation, -1.0 = Inverted. <em>Industry Standard!</em></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; The Golden Min vs Max Rule:</strong><br>
+            &bull; Sirf <code>cv2.TM_SQDIFF</code> aur <code>cv2.TM_SQDIFF_NORMED</code> mein best match <strong>MINIMUM value (min_loc)</strong> par milta hai!<br>
+            &bull; Baaki sabhi 4 methods (<code>CCORR</code> aur <code>CCOEFF</code>) mein best match <strong>MAXIMUM value (max_loc)</strong> par milta hai!
+        </div>
+
+        <!-- Visual Diagram 3 -->
+        <div class="diagram-container">
+            <img src="assets/topic14_six_methods_comparison.png" alt="Six Methods Template Matching Comparison">
+            <div class="diagram-caption">Figure 14.2: Side-by-side comparison of all 6 methods. Cyan crosshairs mark the peak match location (Min for SQDIFF, Max for CCORR/CCOEFF).</div>
+        </div>
+    </section>
+
+    <!-- Section 3: Matching Score Map & Location Extraction -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">Score Map &amp; Best Match Extraction (cv2.minMaxLoc)</h2>
+        </div>
+        <p>Jab <code>cv2.matchTemplate()</code> run hota hai, to wo direct bounding box coordinates nahi deta, balki ek 2D grayscale response matrix deta hai. Is matrix se peak nikaalne ke liye OpenCV ka <strong><code>cv2.minMaxLoc()</code></strong> use hota hai:</p>
+
+        <div class="code-block"><code><span class="hl-v">min_val</span>, <span class="hl-v">max_val</span>, <span class="hl-v">min_loc</span>, <span class="hl-v">max_loc</span> = <span class="hl-f">cv2.minMaxLoc</span>(<span class="hl-v">res</span>)</code></div>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128396; Bounding Rectangle Banana:</h3>
+        <p>Agar hum <code>cv2.TM_CCOEFF_NORMED</code> use kar rahe hain, to best match <code>max_loc</code> hota hai jo target patch ka top-left corner <code>(x, y)</code> hota hai:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+            <li>Top-Left: <code>top_left = max_loc</code></li>
+            <li>Bottom-Right: <code>bottom_right = (top_left[0] + template_w, top_left[1] + template_h)</code></li>
+            <li>Drawing Box: <code>cv2.rectangle(img, top_left, bottom_right, (0, 255, 0), 2)</code></li>
+        </ul>
+
+        <!-- Visual Diagram 2 -->
+        <div class="diagram-container">
+            <img src="assets/topic14_basic_matching_pipeline.png" alt="Basic Template Matching Pipeline">
+            <div class="diagram-caption">Figure 14.3: Complete detection flow: (1) Source with target, (2) 50x50 Template crop, (3) Response heatmap showing single bright peak, (4) Highlighted match rectangle.</div>
+        </div>
+
+        <!-- Code Example 1 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Basic Template Matching</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-v">source</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'screenshot.png'</span>)
+<span class="hl-v">template</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'button_icon.png'</span>)
+<span class="hl-v">h</span>, <span class="hl-v">w</span> = <span class="hl-v">template</span>.<span class="hl-v">shape</span>[:<span class="hl-n">2</span>]
+
+<span class="hl-c"># 1. Grayscale mein convert karein</span>
+<span class="hl-v">gray_src</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">source</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+<span class="hl-v">gray_tpl</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">template</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># 2. Match template run karein (Industry standard: TM_CCOEFF_NORMED)</span>
+<span class="hl-v">res</span> = <span class="hl-f">cv2.matchTemplate</span>(<span class="hl-v">gray_src</span>, <span class="hl-v">gray_tpl</span>, <span class="hl-v">cv2.TM_CCOEFF_NORMED</span>)
+
+<span class="hl-c"># 3. Peak match find karein</span>
+<span class="hl-v">_</span>, <span class="hl-v">max_val</span>, <span class="hl-v">_</span>, <span class="hl-v">max_loc</span> = <span class="hl-f">cv2.minMaxLoc</span>(<span class="hl-v">res</span>)
+
+<span class="hl-c"># 4. Bounding box draw karein</span>
+<span class="hl-v">top_left</span> = <span class="hl-v">max_loc</span>
+<span class="hl-v">bottom_right</span> = (<span class="hl-v">top_left</span>[<span class="hl-n">0</span>] + <span class="hl-v">w</span>, <span class="hl-v">top_left</span>[<span class="hl-n">1</span>] + <span class="hl-v">h</span>)
+<span class="hl-f">cv2.rectangle</span>(<span class="hl-v">source</span>, <span class="hl-v">top_left</span>, <span class="hl-v">bottom_right</span>, (<span class="hl-n">0</span>, <span class="hl-n">230</span>, <span class="hl-n">118</span>), <span class="hl-n">3</span>)
+
+<span class="hl-f">print</span>(<span class="hl-s">f"Best match found at {top_left} with confidence score {max_val:.4f}"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console: Best match found at (180, 110) with confidence score 1.0000</div>
+    </section>
+
+    <!-- Section 4: Multiple Object Matches & NMS -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">Detecting Multiple Objects &amp; Non-Maximum Suppression (NMS)</h2>
+        </div>
+        <p>Agar image mein ek hi icon ya coin 4–5 baar repeat ho raha hai, to <code>minMaxLoc()</code> kaam nahi aayega kyunki wo sirf <strong>single global highest peak</strong> deta hai!</p>
+
+        <p>Multiple occurrences ke liye hum <strong>Thresholding</strong> use karte hain:</p>
+        <div class="code-block"><code><span class="hl-v">threshold</span> = <span class="hl-n">0.80</span>
+<span class="hl-v">locs</span> = np.<span class="hl-f">where</span>(<span class="hl-v">res</span> &gt;= <span class="hl-v">threshold</span>)</code></div>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--accent-red);">&#9888; The Clustering Problem:</h3>
+        <p>Jab koi template match hota hai, to uske theek bagal wale 1-2 pixels (jaise <code>(x+1, y)</code> ya <code>(x, y+1)</code>) par bhi score 0.84 ya 0.82 aata hai. Is wajah se ek hi icon ke upar 20–30 overlapping boxes draw ho jaate hain!</p>
+
+        <p>Is clustering ko hatane ke liye hum <strong>Non-Maximum Suppression (NMS)</strong> use karte hain jo overlapping boxes ke cluster ko merge karke single clean bounding box banata hai:</p>
+
+        <!-- Visual Diagram 4 -->
+        <div class="diagram-container">
+            <img src="assets/topic14_multiple_objects_detection.png" alt="Multiple Objects Detection and NMS Filtering">
+            <div class="diagram-caption">Figure 14.4: Multiple object detection: (A) Naive thresholding creates 20 clustered overlapping boxes. (B) NMS filtering cleanly isolates exactly 4 targets!</div>
+        </div>
+
+        <!-- Code Example 3 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Multiple Matches with NMS</h4>
+        <div class="code-block"><code><span class="hl-k">def</span> <span class="hl-f">non_max_suppression</span>(<span class="hl-v">boxes</span>, <span class="hl-v">overlapThresh</span>=<span class="hl-n">0.3</span>):
+    <span class="hl-k">if</span> <span class="hl-f">len</span>(<span class="hl-v">boxes</span>) == <span class="hl-n">0</span>: <span class="hl-k">return</span> []
+    <span class="hl-v">boxes</span> = np.<span class="hl-f">array</span>(<span class="hl-v">boxes</span>, <span class="hl-v">dtype</span>=np.float32)
+    <span class="hl-v">pick</span> = []
+    <span class="hl-v">x1</span>, <span class="hl-v">y1</span> = <span class="hl-v">boxes</span>[:, <span class="hl-n">0</span>], <span class="hl-v">boxes</span>[:, <span class="hl-n">1</span>]
+    <span class="hl-v">x2</span>, <span class="hl-v">y2</span> = <span class="hl-v">x1</span> + <span class="hl-v">boxes</span>[:, <span class="hl-n">2</span>], <span class="hl-v">y1</span> + <span class="hl-v">boxes</span>[:, <span class="hl-n">3</span>]
+    <span class="hl-v">area</span> = (<span class="hl-v">x2</span> - <span class="hl-v">x1</span> + <span class="hl-n">1</span>) * (<span class="hl-v">y2</span> - <span class="hl-v">y1</span> + <span class="hl-n">1</span>)
+    <span class="hl-v">idxs</span> = np.<span class="hl-f">argsort</span>(<span class="hl-v">y2</span>)
+    
+    <span class="hl-k">while</span> <span class="hl-f">len</span>(<span class="hl-v">idxs</span>) &gt; <span class="hl-n">0</span>:
+        <span class="hl-v">last</span> = <span class="hl-f">len</span>(<span class="hl-v">idxs</span>) - <span class="hl-n">1</span>
+        <span class="hl-v">i</span> = <span class="hl-v">idxs</span>[<span class="hl-v">last</span>]
+        <span class="hl-v">pick</span>.<span class="hl-f">append</span>(<span class="hl-v">i</span>)
+        <span class="hl-v">xx1</span> = np.<span class="hl-f">maximum</span>(<span class="hl-v">x1</span>[<span class="hl-v">i</span>], <span class="hl-v">x1</span>[<span class="hl-v">idxs</span>[:<span class="hl-v">last</span>]])
+        <span class="hl-v">yy1</span> = np.<span class="hl-f">maximum</span>(<span class="hl-v">y1</span>[<span class="hl-v">i</span>], <span class="hl-v">y1</span>[<span class="hl-v">idxs</span>[:<span class="hl-v">last</span>]])
+        <span class="hl-v">xx2</span> = np.<span class="hl-f">minimum</span>(<span class="hl-v">x2</span>[<span class="hl-v">i</span>], <span class="hl-v">x2</span>[<span class="hl-v">idxs</span>[:<span class="hl-v">last</span>]])
+        <span class="hl-v">yy2</span> = np.<span class="hl-f">minimum</span>(<span class="hl-v">y2</span>[<span class="hl-v">i</span>], <span class="hl-v">y2</span>[<span class="hl-v">idxs</span>[:<span class="hl-v">last</span>]])
+        <span class="hl-v">w</span> = np.<span class="hl-f">maximum</span>(<span class="hl-n">0</span>, <span class="hl-v">xx2</span> - <span class="hl-v">xx1</span> + <span class="hl-n">1</span>)
+        <span class="hl-v">h</span> = np.<span class="hl-f">maximum</span>(<span class="hl-n">0</span>, <span class="hl-v">yy2</span> - <span class="hl-v">yy1</span> + <span class="hl-n">1</span>)
+        <span class="hl-v">overlap</span> = (<span class="hl-v">w</span> * <span class="hl-v">h</span>) / <span class="hl-v">area</span>[<span class="hl-v">idxs</span>[:<span class="hl-v">last</span>]]
+        <span class="hl-v">idxs</span> = np.<span class="hl-f">delete</span>(<span class="hl-v">idxs</span>, np.<span class="hl-f">concatenate</span>(([<span class="hl-v">last</span>], np.<span class="hl-f">where</span>(<span class="hl-v">overlap</span> &gt; <span class="hl-v">overlapThresh</span>)[<span class="hl-n">0</span>])))
+    <span class="hl-k">return</span> <span class="hl-v">boxes</span>[<span class="hl-v">pick</span>].<span class="hl-f">astype</span>(<span class="hl-f">int</span>)
+
+<span class="hl-c"># Candidate boxes generate karein aur NMS filter chalayein</span>
+<span class="hl-v">locs</span> = np.<span class="hl-f">where</span>(<span class="hl-v">res</span> &gt;= <span class="hl-n">0.80</span>)
+<span class="hl-v">raw_boxes</span> = [[<span class="hl-f">int</span>(<span class="hl-v">pt</span>[<span class="hl-n">0</span>]), <span class="hl-f">int</span>(<span class="hl-v">pt</span>[<span class="hl-n">1</span>]), <span class="hl-v">w</span>, <span class="hl-v">h</span>] <span class="hl-k">for</span> <span class="hl-v">pt</span> <span class="hl-k">in</span> <span class="hl-f">zip</span>(*<span class="hl-v">locs</span>[::-<span class="hl-n">1</span>])]
+<span class="hl-v">clean_boxes</span> = <span class="hl-f">non_max_suppression</span>(<span class="hl-v">raw_boxes</span>, <span class="hl-v">overlapThresh</span>=<span class="hl-n">0.3</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Raw candidate boxes: {len(raw_boxes)} &rarr; Clean NMS targets: {len(clean_boxes)}"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console: Raw candidate boxes: 4 &rarr; Clean NMS targets: 4 (Isolated perfectly!)</div>
+    </section>
+
+    <!-- Section 5: Limitations of Template Matching -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">Limitations of Template Matching: When Does It Fail?</h2>
+        </div>
+        <p>Template matching ek <strong>rigid pixel correlation</strong> technique hai. Ye tabhi kaam karti hai jab target ka size aur orientation exactly template jaisa ho:</p>
+
+        <!-- Visual Diagram 5 -->
+        <div class="diagram-container">
+            <img src="assets/topic14_transform_limitations.png" alt="Template Matching Limitations under Scale, Rotation, and Lighting">
+            <div class="diagram-caption">Figure 14.5: Robustness test: (1) Exact match (1.00), (2) Scale change causes score collapse (0.26), (3) Rotation causes score collapse (0.36), (4) Brightness shift handled well by TM_CCOEFF_NORMED (0.997).</div>
+        </div>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#10060; 1. Scale Variation</h4>
+                <p>Agar target camera ke paas aane se 20% bada ho jaye, to fixed template window match nahi karegi (Score collapses!).</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#10060; 2. Rotation &amp; Tilt</h4>
+                <p>Target ko agar 20&deg;–30&deg; rotate kar diya jaye, to template matching fail ho jati hai (Rotation invariant nahi hai!).</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#10060; 3. Partial Occlusion</h4>
+                <p>Agar target ke upar koi ungli ya sticker aa jaye, to pixel difference badh jata hai aur match drop ho jata hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#9989; 4. Brightness (Normed OK)</h4>
+                <p><code>TM_CCOEFF_NORMED</code> uniform lighting shifts (photo andheri ya bright hona) ko mathematically handle kar leta hai!</p>
+            </div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Template Matching vs SIFT/ORB (Topic 13):</strong><br>
+            Jab objects rotate ya scale change hote hain, to <strong>Template Matching ke bajaye SIFT / ORB feature matching</strong> use karni chahiye! Template matching sirf fixed screenshots, UI automation, aur rigid industrial parts ke liye best hai.
+        </div>
+    </section>
+
+    <!-- Section 6: Real-World Industry Applications -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Real-World Industry Applications</h2>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Use Case Category</th>
+                        <th>Real-Life Industry Workflow</th>
+                        <th>Why Template Matching is Ideal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>RPA &amp; Desktop Automation</strong></td>
+                        <td>Software bots automatically clicking UI buttons, checkboxes, or close icons (e.g. PyAutoGUI bots).</td>
+                        <td>Pixel icons on computer monitors exact scale aur zero rotation ke saath render hote hain!</td>
+                    </tr>
+                    <tr>
+                        <td><strong>PCB Quality Inspection</strong></td>
+                        <td>Assembly line cameras verifying if microchips, resistors, and capacitors are mounted in correct slots.</td>
+                        <td>Fixed camera angle, fixed distance, uniform industrial LED lighting.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Watermark &amp; Logo Tracking</strong></td>
+                        <td>Broadcast video monitoring verifying TV channel logos in broadcast streams.</td>
+                        <td>Channel logos have static size and top/bottom corner positions.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Game Bot Automation</strong></td>
+                        <td>Detecting health bars, minimap markers, or inventory items in real-time gaming streams.</td>
+                        <td>Static HUD elements maintain exact pixel resolution.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Section 7: Common Beginner Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>&#10060; Mistake 1: <code>cv2.TM_SQDIFF</code> ke saath <code>max_loc</code> use karna</strong><br>
+            <em>Problem:</em> SQDIFF squared error measure karta hai. <code>max_loc</code> select karne par sabse ganda (worst) possible match select ho jayega!<br>
+            <em>Solution:</em> SQDIFF ke liye hamesha <strong><code>min_loc</code></strong> use karein!
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Mistake 2: Template ka size Source image se bada hona</strong><br>
+            <em>Problem:</em> <code>cv2.error: (-215:Assertion failed) corrsize.height &gt; 0 &amp;&amp; corrsize.width &gt; 0</code>.<br>
+            <em>Solution:</em> Template hamesha source image se chota hona chahiye (<code>w &lt; W</code> aur <code>h &lt; H</code>)!
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Mistake 3: Color BGR image ko Grayscale template se match karna</strong><br>
+            <em>Problem:</em> Number of channels match hone chahiye (ya to dono Grayscale hon ya dono 3-channel BGR hon).<br>
+            <em>Solution:</em> Hamesha dono images ko <code>cv2.cvtColor(..., cv2.COLOR_BGR2GRAY)</code> karein!
+        </div>
+    </section>
+
+    <!-- Section 8: Mini Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: <code>cv2.TM_CCOEFF_NORMED</code> method mein perfect identical match ka score kya hota hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) 0.0</li>
+                    <li>B) 1.0</li>
+                    <li>C) -1.0</li>
+                    <li>D) 255.0</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) 1.0<br>
+                    <strong>Explanation:</strong> <code>TM_CCOEFF_NORMED</code> score -1.0 se 1.0 ke beech normalize hota hai. +1.0 ka matlab hai mathematically exact identical correlation!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Agar source image 500&times;400 hai aur template 50&times;40 hai, to resulting score map ka dimension kya hoga?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) 500 &times; 400</li>
+                    <li>B) 451 &times; 361</li>
+                    <li>C) 550 &times; 440</li>
+                    <li>D) 50 &times; 40</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) 451 &times; 361<br>
+                    <strong>Explanation:</strong> Output dimensions ka formula hota hai <code>(W - w + 1, H - h + 1)</code>: Width = 500 - 50 + 1 = 451, Height = 400 - 40 + 1 = 361.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: Multiple object matches detect karte waqt Non-Maximum Suppression (NMS) kyun zaroori hota hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Kyunki thresholding se ek hi object ke aas-paas multiple overlapping boxes ban jaate hain, jinhe NMS merge karke 1 clean box banata hai.</li>
+                    <li>B) Kyunki NMS image ko compress karta hai.</li>
+                    <li>C) Kyunki OpenCV NMS ke bina crash ho jata hai.</li>
+                    <li>D) Kyunki NMS image colors change karta hai.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> True match ke adjacent neighboring pixels par bhi high similarity score hota hai. NMS spatial overlap check karke duplicate overlapping boxes ko suppress karta hai!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 9: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 15 — Image Histograms &amp; Equalization (CLAHE)</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne visual objects ko template matching se locate karna seekh liya hai, agle topic mein hum image lighting aur exposure ko diagnose karna seekhenge: kaise <strong>Pixel Histograms</strong> se andheri ya overexposed photos ko pehchante hain aur <strong>CLAHE (Contrast Limited Adaptive Histogram Equalization)</strong> se crystal-clear contrast restore karte hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

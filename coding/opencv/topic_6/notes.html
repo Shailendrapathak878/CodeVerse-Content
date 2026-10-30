@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 6: Image Resizing, Cropping &amp; Rotation | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hero-time {
+            font-size: 13px;
+            opacity: 0.88;
+            font-weight: 500;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 15px;
+            opacity: 0.94;
+            max-width: 760px;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14.5px;
+        }
+
+        .callout-concept {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        .callout-amber {
+            background: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-purple {
+            background: var(--accent-purple-bg);
+            border-color: var(--accent-purple);
+            color: #5b21b6;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Code Cards */
+        .code-card {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .code-header {
+            background: #1e293b;
+            padding: 8px 16px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .inline-code {
+            background: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13.5px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-weight: 600;
+        }
+
+        /* Output Box */
+        .output-box {
+            background: #1e293b;
+            border-left: 4px solid var(--accent-green);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin: 12px 0 18px 0;
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 13px;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .output-header {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        /* Visual Media Cards */
+        .media-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .media-caption {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .info-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Quiz Accordion */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        details[open] {
+            background: #ffffff;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        summary {
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+
+        .quiz-answer {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Bullet lists */
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 14px;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        li strong {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Hero Header -->
+    <div class="hero">
+        <div class="hero-badge-row">
+            <span class="hero-badge">COMPUTER VISION &bull; OPENCV</span>
+            <span class="hero-badge" style="background: rgba(56, 189, 248, 0.25);">TOPIC 6 OF 25</span>
+            <span class="hero-time">&#9201; ~6-8 MIN READ</span>
+        </div>
+        <h1>Image Resizing, Cropping &amp; Rotation</h1>
+        <p>Master the three essential geometric transformations in OpenCV: resize images safely without squashing, preserve aspect ratios, crop Regions of Interest (ROI) with clean NumPy slicing, and perform right-angle and arbitrary-angle rotations.</p>
+    </div>
+
+    <!-- Section 1: Introduction to Geometric Transformations -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">01</span>
+            <h2 class="section-title">Introduction to Geometric Transformations</h2>
+        </div>
+        
+        <p>Real-world photos alag-alag resolutions aur orientations mein aati hain &mdash; smartphone cameras 12 to 50 Megapixel ki heavy photos click karte hain, document scans aksar sideways (terhe) hote hain, aur profile pictures ke liye square crop chahiye hota hai.</p>
+
+        <p>Computer Vision pipelines (jaise Face Recognition ya Deep Learning classification) mein input image ko model ke anuroop prepare karne ke liye <strong>Geometric Transformations</strong> ka use kiya jata hai:</p>
+
+        <div class="grid-2">
+            <div class="info-card">
+                <div class="info-card-title">&#128260; Resizing &amp; Normalization</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Heavy 4K images ko chota karna taaki processing speed fast ho sake, aur neural networks (jaise 224x224) ke liye uniform input size set karna.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#9986; Cropping (ROI Selection)</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Unwanted background ko hatakar sirf main subject (jaise insaan ka chehra ya number plate) par focus karna.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#8635; Orientation &amp; Rotation</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Sideways ya upside-down photographs ko seedha karna, aur Machine Learning training ke liye Data Augmentation create karna.</p>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#127919; Golden Rule</div>
+                <p style="font-size: 13.5px; margin-bottom: 0;">Humesha Aspect Ratio ka dhyan rakhein taaki image squashed (pichki hui) ya stretched (khinchi hui) na dikhe.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Image Resizing & The (Width, Height) Gotcha -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">02</span>
+            <h2 class="section-title">Image Resizing: The (Width, Height) Gotcha</h2>
+        </div>
+
+        <p>OpenCV mein image resize karne ke liye <span class="inline-code">cv2.resize()</span> function use hota hai. Lekin yahan OpenCV ka ek bohot bada gotcha hai jo har beginner ko confuse karta hai:</p>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; CRITICAL OPENCV GOTCHA: (W, H) vs (H, W)!</div>
+            <ul>
+                <li><strong>NumPy array shape:</strong> <span class="inline-code">h, w, c = img.shape</span> &rarr; <strong>Height-First!</strong></li>
+                <li><strong>cv2.resize() target size:</strong> <span class="inline-code">cv2.resize(img, dsize=(width, height))</span> &rarr; <strong>Width-First!</strong></li>
+            </ul>
+            Agar aapki image ka shape <span class="inline-code">(200, 300)</span> hai aur aap use aadha karna chahte hain, to aapko <span class="inline-code">dsize=(150, 100)</span> pass karna hoga, na ki (100, 150)!
+        </div>
+
+        <p><strong>Resizing karne ke 2 methods:</strong></p>
+        <ol>
+            <li><strong>Explicit Output Dimensions:</strong> Direct pixel size batana &mdash; <span class="inline-code">cv2.resize(img, (width, height))</span>.</li>
+            <li><strong>Scale Factors (fx, fy):</strong> Proportional scaling &mdash; <span class="inline-code">cv2.resize(img, None, fx=0.5, fy=0.5)</span> (50% chota karna).</li>
+        </ol>
+
+        <!-- Asset 1: Resizing Dimensions Gotcha -->
+        <div class="media-card">
+            <img src="assets/topic6_resizing_dimensions_gotcha.png" alt="OpenCV Image Resizing Dimensions Gotcha: Explicit Width, Height vs NumPy Height, Width" loading="lazy">
+            <div class="media-caption">Figure 6.1: Resizing anatomy: NumPy shape expects (Height, Width) while cv2.resize() dsize expects (Width, Height).</div>
+        </div>
+    </div>
+
+    <!-- Section 3: Interpolation Methods Explained -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">03</span>
+            <h2 class="section-title">Interpolation Methods: How Pixels are Calculated</h2>
+        </div>
+
+        <p>Jab aap image ko chota ya bada karte hain, to grid ke naye pixels kaise calculate hote hain? Is mathematical estimate ko <strong>Interpolation</strong> kehte hain.</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Interpolation Flag</th>
+                        <th>Speed</th>
+                        <th>Visual Quality</th>
+                        <th>Best Recommended Use-Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="inline-code">cv2.INTER_LINEAR</span></td>
+                        <td>Fast (Default)</td>
+                        <td>Smooth Bilinear</td>
+                        <td>General purpose resizing (standard default).</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">cv2.INTER_AREA</span></td>
+                        <td>Fast</td>
+                        <td>Moire-Free Anti-Aliasing</td>
+                        <td><strong>Shrinking (Downsampling)</strong> ke liye gold standard.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">cv2.INTER_CUBIC</span></td>
+                        <td>Moderate</td>
+                        <td>Sharp Bicubic</td>
+                        <td><strong>Enlarging (Upsampling)</strong> ke liye highest quality.</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">cv2.INTER_NEAREST</span></td>
+                        <td>Super Fast</td>
+                        <td>Blocky / Pixelated</td>
+                        <td>Segmentation masks aur pixel-art jahan naye color blend nahi chahiye.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Asset 5: Interpolation Methods Comparison -->
+        <div class="media-card">
+            <img src="assets/topic6_interpolation_methods_comparison.png" alt="Comparison of OpenCV Interpolation methods: INTER_NEAREST vs INTER_LINEAR vs INTER_CUBIC vs INTER_AREA" loading="lazy">
+            <div class="media-caption">Figure 6.2: Comparing interpolation methods when enlarging an image: Notice sharp square pixels in NEAREST vs smooth CUBIC.</div>
+        </div>
+    </div>
+
+    <!-- Section 4: Aspect Ratio -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">04</span>
+            <h2 class="section-title">Aspect Ratio: Preventing Stretched &amp; Squashed Photos</h2>
+        </div>
+
+        <p>Aapne kai bar websites par aisi photos dekhi hongi jahan insaan ka chehra ajeeb sa pichka (squashed) ya lamba khincha (stretched) hua lagta hai. Yeh tab hota hai jab <strong>Aspect Ratio</strong> ignore kar diya jaye.</p>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#128161; Definition: Aspect Ratio</div>
+            <strong>Aspect Ratio</strong> image ki <strong>Width aur Height ka proportional ratio</strong> hota hai:<br>
+            <span class="inline-code">Aspect Ratio = Width / Height</span> (e.g., 16:9, 4:3, ya 1:1 square).
+        </div>
+
+        <p><strong>Proportional Resizing ka Simple Formula:</strong><br>
+        Agar aapko nayi Width (<span class="inline-code">target_w</span>) pata hai, to nayi Height aise calculate karein:</p>
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; aspect_ratio_formula.py</span>
+                <span>Proportional Calculation</span>
+            </div>
+            <pre><code># Calculate new height while preserving original aspect ratio
+h, w = img.shape[:2]
+target_w = 150
+ratio = target_w / float(w)
+target_h = int(h * ratio)
+
+# Resize proportionally
+resized_clean = cv2.resize(img, (target_w, target_h), interpolation=cv2.INTER_AREA)</code></pre>
+        </div>
+
+        <!-- Asset 2: Aspect Ratio Comparison -->
+        <div class="media-card">
+            <img src="assets/topic6_aspect_ratio_comparison.png" alt="Comparison between proportional aspect ratio resizing and distorted squashed resizing" loading="lazy">
+            <div class="media-caption">Figure 6.3: Aspect ratio preservation: Distorted forced resizing (middle) vs clean proportional resizing (right).</div>
+        </div>
+    </div>
+
+    <!-- Section 5: Image Cropping & Region of Interest (ROI) -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">05</span>
+            <h2 class="section-title">Image Cropping: Selecting Region of Interest (ROI)</h2>
+        </div>
+
+        <p>OpenCV mein image crop karne ke liye koi alag <span class="inline-code">cv2.crop()</span> function nahi hota. Kyunki OpenCV image ek NumPy array hai, hum direct <strong>Array Slicing</strong> use karte hain:</p>
+
+        <div class="callout callout-amber">
+            <div class="callout-title">&#128290; Cropping Syntax: img[y1:y2, x1:x2].copy()</div>
+            <ul>
+                <li><strong>y1 : y2</strong> &mdash; Rows range (Vertical Height)</li>
+                <li><strong>x1 : x2</strong> &mdash; Columns range (Horizontal Width)</li>
+                <li><strong>Rule:</strong> Ending indices (<span class="inline-code">y2</span>, <span class="inline-code">x2</span>) hamesha <strong>excluded</strong> hote hain!</li>
+                <li><strong>Memory Safety:</strong> Hamesha <span class="inline-code">.copy()</span> lagayein taaki original image accidental mutation se surakshit rahe!</li>
+            </ul>
+        </div>
+
+        <!-- Asset 3: Cropping ROI Workflow -->
+        <div class="media-card">
+            <img src="assets/topic6_cropping_roi_workflow.png" alt="Image Cropping workflow showing bounding box selection and cropped ROI result" loading="lazy">
+            <div class="media-caption">Figure 6.4: Image cropping workflow: Target bounding box on full scene and cleanly extracted sub-image.</div>
+        </div>
+    </div>
+
+    <!-- Section 6: Image Rotation -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">06</span>
+            <h2 class="section-title">Image Rotation: 90&deg; Flips &amp; Arbitrary Angles</h2>
+        </div>
+
+        <p>OpenCV mein rotation do tarike se ki ja sakti hai: built-in fast 90&deg;/180&deg; rotations ya custom angle affine warping.</p>
+
+        <h3 style="color: var(--primary-dark); margin: 16px 0 8px 0;">Method 1: Built-in 90&deg; &amp; 180&deg; Rotations (cv2.rotate)</h3>
+        <p>Yeh functions direct matrix transpose aur flip use karte hain, isliye yeh ultra-fast aur lossless hote hain:</p>
+
+        <ul>
+            <li><span class="inline-code">cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)</span> &mdash; 90&deg; right turn (Width aur Height swap ho jaate hain!).</li>
+            <li><span class="inline-code">cv2.rotate(img, cv2.ROTATE_180)</span> &mdash; Poori image upside-down ulati ho jaati hai.</li>
+            <li><span class="inline-code">cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)</span> &mdash; 90&deg; left turn.</li>
+        </ul>
+
+        <h3 style="color: var(--primary-dark); margin: 16px 0 8px 0;">Method 2: Arbitrary Angle Rotation (cv2.warpAffine)</h3>
+        <p>Agar aapko image ko kisi custom angle (jaise 30&deg;, 45&deg;, ya 60&deg;) par ghumana ho, to hum <strong>Rotation Matrix</strong> banate hain:</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; arbitrary_rotation.py</span>
+                <span>Affine Transformation</span>
+            </div>
+            <pre><code># 1. Find center of the image
+h, w = img.shape[:2]
+center = (w // 2, h // 2)
+
+# 2. Build 2D rotation matrix (center, angle_degrees, scale)
+M = cv2.getRotationMatrix2D(center, 45, 1.0)
+
+# 3. Apply affine warping
+rotated_45 = cv2.warpAffine(img, M, (w, h), borderValue=(255, 255, 255))</code></pre>
+        </div>
+
+        <!-- Asset 4: Rotation Comparison -->
+        <div class="media-card">
+            <img src="assets/topic6_rotation_cardinal_and_arbitrary.png" alt="OpenCV image rotation comparison: 90 degrees clockwise, 180 degrees, and arbitrary 45 degrees" loading="lazy">
+            <div class="media-caption">Figure 6.5: Rotation operations: 90° clockwise, 180° inversion, and 45° affine warping around the center.</div>
+        </div>
+    </div>
+
+    <!-- Section 7: Practical Hands-On Code Examples -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">07</span>
+            <h2 class="section-title">Practical Code Examples</h2>
+        </div>
+
+        <!-- Example 1 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 1: Resize Explorer (Explicit Dimensions vs Scale Factors)</h3>
+        <p>Yeh script image ko smaller aur larger dimensions mein resize karti hai aur unke shapes verify karti hai.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example1_resize_explorer.py</span>
+                <span>Fully Runnable</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create a 200x300 synthetic test image
+img = np.full((200, 300, 3), 200, dtype=np.uint8)
+cv2.circle(img, (150, 100), 50, (0, 0, 255), -1)
+
+# 2. Method A: Explicit output size dsize=(width, height)
+shrunk = cv2.resize(img, (150, 100), interpolation=cv2.INTER_AREA)
+enlarged = cv2.resize(img, (450, 300), interpolation=cv2.INTER_CUBIC)
+
+# 3. Method B: Using scale factors fx, fy
+shrunk_scale = cv2.resize(img, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+
+print("Original Shape:      ", img.shape)
+print("Shrunk (150x100):    ", shrunk.shape)
+print("Enlarged (450x300):  ", enlarged.shape)
+print("Shrunk (fx=0.5):     ", shrunk_scale.shape)</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original Shape:       (200, 300, 3)<br>
+            Shrunk (150x100):     (100, 150, 3)<br>
+            Enlarged (450x300):   (300, 450, 3)<br>
+            Shrunk (fx=0.5):      (100, 150, 3)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Deep Learning Preprocessing:</strong> YOLO aur ResNet models input images ko fix size (jaise 640x640 ya 224x224) par resize karne ke liye isi pipeline ka use karte hain.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 2 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 2: Aspect Ratio Preserving Resizer Function</h3>
+        <p>A reusable professional helper function jo image ko resize karte waqt aspect ratio hamesha preserve rakhti hai.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example2_aspect_ratio_resizer.py</span>
+                <span>Production Helper</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+def resize_proportional(image, target_width=None, target_height=None, inter=cv2.INTER_AREA):
+    h, w = image.shape[:2]
+    if target_width is None and target_height is None:
+        return image
+    if target_width is None:
+        r = target_height / float(h)
+        dim = (int(w * r), target_height)
+    else:
+        r = target_width / float(w)
+        dim = (target_width, int(h * r))
+    return cv2.resize(image, dim, interpolation=inter)
+
+# Test with 200x300 image (Aspect Ratio = 1.5)
+test_img = np.zeros((200, 300, 3), dtype=np.uint8)
+
+# Target width 150 -> Height should automatically become 100
+clean_resize = resize_proportional(test_img, target_width=150)
+print(f"Original: {test_img.shape} -> Proportional: {clean_resize.shape}")
+print(f"Aspect Ratio Preserved: {clean_resize.shape[1] / clean_resize.shape[0]:.2f}")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original: (200, 300, 3) -&gt; Proportional: (100, 150, 3)<br>
+            Aspect Ratio Preserved: 1.50
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>E-Commerce Thumbnail Generation:</strong> Amazon aur Flipkart par hazaron sellers ki product photos ko responsive thumbnails mein convert karte waqt yahi logic use hota hai taaki product stretch na ho.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 3 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 3: Cropping a Region of Interest (ROI) with .copy()</h3>
+        <p>Target rectangular region ko crop karna aur uspar independent operations perform karna.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example3_crop_roi.py</span>
+                <span>Independent Crop</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+img = np.full((200, 300, 3), 100, dtype=np.uint8)
+
+# Define crop boundaries
+y1, y2 = 50, 150
+x1, x2 = 100, 200
+
+# Crop with .copy()
+roi = img[y1:y2, x1:x2].copy()
+
+print(f"Original Image Shape: {img.shape}")
+print(f"Cropped ROI Shape:    {roi.shape} (Height={y2-y1}, Width={x2-x1})")
+
+# Save cropped result
+cv2.imwrite("cropped_face.png", roi)</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original Image Shape: (200, 300, 3)<br>
+            Cropped ROI Shape:    (100, 100, 3) (Height=100, Width=100)
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 4 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 4: Rotation Explorer (90&deg;, 180&deg; &amp; 45&deg; Affine)</h3>
+        <p>Image orientation fix karna aur arbitrary rotation matrix apply karna.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example4_rotation_explorer.py</span>
+                <span>Cardinal &amp; Arbitrary Rotation</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+img = np.zeros((200, 300, 3), dtype=np.uint8)
+h, w = img.shape[:2]
+
+# 1. 90 Degrees Clockwise
+rot_90 = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
+
+# 2. 180 Degrees Flip
+rot_180 = cv2.rotate(img, cv2.ROTATE_180)
+
+# 3. Arbitrary 45 Degrees around center
+center = (w // 2, h // 2)
+M = cv2.getRotationMatrix2D(center, 45, 1.0)
+rot_45 = cv2.warpAffine(img, M, (w, h))
+
+print(f"Original Shape: (H={h}, W={w})")
+print(f"90° CW Shape:   {rot_90.shape} (Width & Height Swapped!)")
+print(f"180° Shape:     {rot_180.shape}")
+print(f"45° Affine:     {rot_45.shape}")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original Shape: (H=200, W=300)<br>
+            90&deg; CW Shape:   (300, 200, 3) (Width &amp; Height Swapped!)<br>
+            180&deg; Shape:     (200, 300, 3)<br>
+            45&deg; Affine:     (200, 300, 3)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Document Scanner Deskewing:</strong> Mobile se scan kiye gaye documents aksar 5&deg; to 10&deg; tilted hote hain. OCR accuracy badhane ke liye <span class="inline-code">getRotationMatrix2D</span> se document ko seedha (deskew) kiya jata hai.
+        </div>
+    </div>
+
+    <!-- Section 8: Common Beginner Traps & Troubleshooting -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">08</span>
+            <h2 class="section-title">Common Beginner Traps &amp; Troubleshooting</h2>
+        </div>
+
+        <div class="grid-2">
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; The (W, H) in resize() Trap</div>
+                <p style="font-size: 13.5px;"><span class="inline-code">cv2.resize()</span> mein pehla argument Width aur doosra Height hota hai. Agar aap <span class="inline-code">img.shape</span> ke hisaab se <span class="inline-code">(h, w)</span> pass kar denge to image ulati stretch ho jayegi!</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; Inverted Crop Coordinates</div>
+                <p style="font-size: 13.5px;">Agar aap likhenge <span class="inline-code">img[150:50, 200:100]</span> jahan start index end index se bada hai, to NumPy empty array <span class="inline-code">(0, 0, 3)</span> return karega bina error diye!</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-amber);">
+                <div class="info-card-title" style="color: var(--accent-amber);">&#9888; Arbitrary Rotation Corner Clipping</div>
+                <p style="font-size: 13.5px;"><span class="inline-code">cv2.warpAffine()</span> usi canvas size <span class="inline-code">(w, h)</span> par rotate karta hai. Isliye 45&deg; rotation par image ke chaaron kone cut (clip) ho jaate hain.</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-green);">
+                <div class="info-card-title" style="color: var(--accent-green);">&#10004; Right Interpolation for Downsampling</div>
+                <p style="font-size: 13.5px;">Image shrink karte waqt hamesha <span class="inline-code">cv2.INTER_AREA</span> use karein. Yeh moire patterns aur aliasing artifacts ko eliminate karta hai.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 9: Quick Revision Quiz -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">09</span>
+            <h2 class="section-title">Quick Revision &amp; Self-Assessment Quiz</h2>
+        </div>
+
+        <details>
+            <summary>Q1: Ek image ka shape (400, 600, 3) hai. cv2.resize() mein use 50% chota karne ke liye dsize kya hona chahiye?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: dsize=(300, 200)</strong><br>
+                Shape <span class="inline-code">(400, 600)</span> ka matlab hai Height=400, Width=600. Kyunki <span class="inline-code">cv2.resize()</span> Width-first <span class="inline-code">(W, H)</span> format leta hai, isliye aadha karne par <span class="inline-code">(300, 200)</span> hoga.
+            </div>
+        </details>
+
+        <details>
+            <summary>Q2: Image ko chota (downsample) karte waqt kaun sa interpolation method best maana jata hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: cv2.INTER_AREA</strong><br>
+                INTER_AREA pixel area relation use karta hai jo image shrink hone par moire artifacts aur jagged lines ko rokk kar smooth result deta hai.
+            </div>
+        </details>
+
+        <details>
+            <summary>Q3: Jab hum kisi rectangular image ko cv2.ROTATE_90_CLOCKWISE rotate karte hain, to uske dimensions par kya asar padta hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: Width aur Height aapas mein swap ho jaate hain.</strong><br>
+                For example, agar image <span class="inline-code">(200, 300)</span> thi, to 90&deg; rotate hone ke baad wo <span class="inline-code">(300, 200)</span> ban jayegi.
+            </div>
+        </details>
+    </div>
+
+    <!-- Section 10: Topic Summary & Next Steps -->
+    <div class="section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd;">
+        <div class="section-header" style="border-bottom-color: #7dd3fc;">
+            <span class="section-tag" style="background: #0284c7; color: #ffffff;">RECAP</span>
+            <h2 class="section-title" style="color: #0369a1;">What You Mastered Today</h2>
+        </div>
+
+        <ul style="color: #0f172a;">
+            <li><strong>Resizing:</strong> <span class="inline-code">cv2.resize(img, (width, height))</span> uses width-first ordering, unlike NumPy's height-first shape.</li>
+            <li><strong>Aspect Ratio:</strong> Always calculate proportional dimensions ($W/H$) to prevent stretched or squashed distortion.</li>
+            <li><strong>Cropping:</strong> Slice sub-images cleanly via <span class="inline-code">img[y1:y2, x1:x2].copy()</span>.</li>
+            <li><strong>Rotation:</strong> Fast 90&deg;/180&deg; rotation via <span class="inline-code">cv2.rotate()</span> and custom angles via <span class="inline-code">getRotationMatrix2D</span> + <span class="inline-code">warpAffine</span>.</li>
+        </ul>
+
+        <div style="margin-top: 18px; padding: 12px 16px; background: #ffffff; border-radius: var(--radius-sm); border-left: 4px solid #0284c7;">
+            <strong>Next Topic:</strong> In <strong>Topic 7: Drawing Functions &amp; Shapes in OpenCV</strong>, hum sikhenge image par lines, rectangles, circles, polylines draw karna aur custom text add karna for bounding boxes and annotations!
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

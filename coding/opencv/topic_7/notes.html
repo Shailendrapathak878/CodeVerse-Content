@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 7: Image Filtering &amp; Blurring | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 14.5px;
+            color: #f0f9ff;
+            opacity: 0.95;
+            max-width: 680px;
+            line-height: 1.55;
+            margin-bottom: 0;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        .section-num {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid var(--primary);
+            background: var(--primary-light);
+            font-size: 14px;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .callout-tip {
+            border-left-color: var(--accent-green);
+            background: var(--accent-green-bg);
+        }
+        .callout-tip .callout-title { color: var(--accent-green); }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background: var(--accent-amber-bg);
+        }
+        .callout-warning .callout-title { color: var(--accent-amber); }
+
+        .callout-danger {
+            border-left-color: var(--accent-red);
+            background: var(--accent-red-bg);
+        }
+        .callout-danger .callout-title { color: var(--accent-red); }
+
+        /* Media Card & Images */
+        .media-card {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: 18px 0;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .media-caption {
+            padding: 10px 14px;
+            color: #94a3b8;
+            font-size: 12.5px;
+            text-align: center;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 8px 14px;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-family: monospace;
+            border-bottom: 1px solid #334155;
+        }
+
+        pre {
+            padding: 14px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            font-size: 13px;
+            color: var(--code-text);
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: Consolas, Monaco, "Courier New", monospace;
+        }
+
+        p code, li code {
+            background: #e2e8f0;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 10px;
+            }
+            .hero {
+                padding: 22px 16px;
+            }
+            .section {
+                padding: 16px;
+            }
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Interactive Quiz & Collapsible */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            background: #ffffff;
+            display: block;
+            user-select: none;
+            line-height: 1.45;
+        }
+
+        summary:hover {
+            background: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            color: #334155;
+        }
+
+        .quiz-options {
+            margin: 10px 0;
+            list-style: none;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-green-bg);
+            color: #065f46;
+            font-weight: 600;
+            border-left: 3px solid var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="hero-tags">
+            <span class="tag">Computer Vision • OpenCV</span>
+            <span class="tag">Topic 7 of 25</span>
+            <span class="tag">&#9201; ~6-8 min read</span>
+        </div>
+        <h1>Image Filtering &amp; Blurring</h1>
+        <p>Master fundamental image smoothing and noise reduction techniques in OpenCV: Averaging blur, Gaussian weighted blur, Salt-and-Pepper noise removal using Median blur, and Edge-preserving Bilateral filtering.</p>
+    </header>
+
+    <!-- Section 1: What is Image Filtering -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What Is Image Filtering?</h2>
+        </div>
+        <p>Real-world images kabhi bhi 100% perfect nahi aate. Smartphone se low-light mein click ki hui photos mein graininess (noise) hoti hai, CCTV cameras mein sensor static hota hai, aur scanned documents mein chote spots hote hain. Is noise ko hatakar image ko clean karne ki process ko <strong>Image Filtering</strong> kehte hain.</p>
+        
+        <p>Technical bhasha mein: Image filtering ek mathematical operation hai jisme ek choti sliding window (jise <strong>Kernel</strong> ya <strong>Mask</strong> kehte hain) image ke har pixel aur uske aas-paas ke neighbors ke upar ghoomti hai aur naye pixel values calculate karti hai.</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">&#128681; Noise Reduction &amp; Smoothing</div>
+                <p style="font-size: 13.5px; margin: 0;">Camera sensor static, high-ISO graininess, aur random pixel variations ko smooth karke clean image produce karna.</p>
+            </div>
+            <div class="card">
+                <div class="card-title">&#9881; Preprocessing for Vision Tasks</div>
+                <p style="font-size: 13.5px; margin: 0;">Edge detection (Canny), contour finding, ya object detection chalane se pehle image ko halka blur kiya jata hai taaki false edges detect na hon.</p>
+            </div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Real-Life Analogy</div>
+            Jaise hum Instagram ya smartphone portrait mode mein chehre ki choti blemishes aur wrinkles ko smooth karne ke liye "Beauty Filter" lagate hain, wahi kaam Computer Vision mein smoothing filters karte hain!
+        </div>
+    </section>
+
+    <!-- Section 2: What is Blurring -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">What Is Blurring &amp; The Kernel Concept</h2>
+        </div>
+        <p><strong>Blurring</strong> ek low-pass filtering operation hai jo image ki sharp transitions aur high-frequency details (jaise sharp edges aur rapid pixel changes) ko soften kar deta hai.</p>
+
+        <p>OpenCV mein blurring hamesha ek <strong>Kernel</strong> (ek choti matrix jaise <code>3&times;3</code>, <code>5&times;5</code>, ya <code>7&times;7</code>) ke dwara apply ki jaati hai:</p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><strong>Kernel Size:</strong> Hamesha odd positive integers hone chahiye (jaise 3, 5, 7, 9) taaki kernel ka ek exact center pixel ho sake.</li>
+            <li><strong>Effect of Kernel Size:</strong> Kernel jitna bada hoga (e.g., <code>15&times;15</code> vs <code>3&times;3</code>), blurring utni hi zyada intense hogi.</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Critical Rule: Over-Blurring Nuqsaan Pahunchata Hai!</div>
+            Blurring image ko improve karne ka universal button nahi hai! Agar aap bohot bada kernel use kar lenge to zaroori edges, details aur text poori tarah destroy ho jayenge. Edge detection ke liye halka blur (e.g. <code>3&times;3</code> ya <code>5&times;5</code>) standard hota hai.
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic7_kernel_size_comparison.png" alt="Kernel Size Progression from 1x1 to 27x27 on Gaussian Blur">
+            <div class="media-caption">Figure 7.1: Kernel size progression on Gaussian blur: notice how text and sharp boundaries soften from k=3 to k=15, and vanish completely at k=27.</div>
+        </div>
+    </section>
+
+    <!-- Section 3: Mean / Averaging Blur -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">1. Averaging / Mean Blur: <code>cv2.blur()</code></h2>
+        </div>
+        <p>Averaging blur sabse basic smoothing filter hai. Yeh kernel window ke andar maujood sabhi pixels ka simple arithmetic average (mean) nikaalta hai aur center pixel ko us average se replace kar deta hai.</p>
+
+        <p>For example, ek <code>3&times;3</code> kernel mein 9 pixels hote hain. Sabhi 9 pixels ke values ko jodkar 9 se divide kar diya jata hai:</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • MEAN_BLUR.PY</span>
+                <span>AVERAGING BLUR</span>
+            </div>
+            <pre><code>import cv2
+
+# Load image
+img = cv2.imread("scene.jpg")
+
+# Apply Averaging Blur with a (5, 5) kernel
+blurred_avg = cv2.blur(img, ksize=(5, 5))
+
+# Bigger kernel = stronger blur
+blurred_heavy = cv2.blur(img, ksize=(11, 11))</code></pre>
+        </div>
+
+        <p><strong>Parameters:</strong></p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><code>ksize=(width, height)</code>: Kernel ke dimensions. Dono odd numbers hone chahiye.</li>
+        </ul>
+    </section>
+
+    <!-- Section 4: Gaussian Blur -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">2. Gaussian Blur: <code>cv2.GaussianBlur()</code></h2>
+        </div>
+        <p>Simple averaging mein sabhi neighbor pixels ko barabar (equal) importance milti hai. Lekin <strong>Gaussian Blur</strong> mein center ke nazdeek wale pixels ko zyada weight milta hai aur door wale pixels ko kam weight milta hai (Bell-curve Gaussian distribution ke mutabiq).</p>
+        
+        <p>Is wajah se Gaussian blur natural-looking smoothing produce karta hai bina kisi unnatural square artifacts ke. Yeh computer vision ka sabse popular smoothing filter hai!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • GAUSSIAN_BLUR.PY</span>
+                <span>WEIGHTED SMOOTHING</span>
+            </div>
+            <pre><code>import cv2
+
+# Apply Gaussian Blur
+# ksize must have odd dimensions: (5, 5), (7, 7), etc.
+# sigmaX=0 means OpenCV automatically computes sigma from kernel size
+gaussian_img = cv2.GaussianBlur(img, ksize=(5, 5), sigmaX=0)</code></pre>
+        </div>
+
+        <p><strong>Parameters:</strong></p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><code>ksize=(w, h)</code>: Odd positive integers (e.g., <code>(5, 5)</code>, <code>(7, 7)</code>).</li>
+            <li><code>sigmaX</code>: Gaussian kernel standard deviation along X-axis. Jab aap <code>0</code> pass karte hain, to OpenCV formula ke hisaab se optimum sigma khud calculate kar leta hai: <code>sigma = 0.3 * ((ksize - 1) * 0.5 - 1) + 0.8</code>.</li>
+        </ul>
+    </section>
+
+    <!-- Section 5: Median Blur -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">3. Median Blur: <code>cv2.medianBlur()</code> &amp; Salt-and-Pepper Noise</h2>
+        </div>
+        <p>Averaging aur Gaussian blur tab fail ho jate hain jab image mein <strong>Salt-and-Pepper Noise</strong> (achanak aane wale random pure black ya pure white dots) hota hai. Averaging un dots ko aas-paas failakar ek dirty gray smudge bana deta hai!</p>
+
+        <p><strong>Median Blur</strong> iska jadui ilaaj hai: Yeh window ke sabhi pixels ko sort karta hai aur beech ka (median) value uthata hai. Kyunki 0 (black) aur 255 (white) extreme corners mein aate hain, sorting ke dauraan wo automatically eliminate ho jaate hain!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • MEDIAN_BLUR.PY</span>
+                <span>SALT-AND-PEPPER NOISE REMOVAL</span>
+            </div>
+            <pre><code>import cv2
+
+# Median blur takes a single odd integer for kernel size (not a tuple!)
+clean_img = cv2.medianBlur(noisy_img, ksize=5)</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic7_salt_and_pepper_noise_removal.png" alt="Salt and Pepper Noise Removal: Mean Blur vs Gaussian Blur vs Median Blur">
+            <div class="media-caption">Figure 7.2: Salt &amp; Pepper noise removal: Mean and Gaussian blur create muddy blotches, whereas Median blur discards impulse spikes 100% cleanly.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Gotcha Alert: Single Integer vs Tuple!</div>
+            <code>cv2.blur()</code> aur <code>cv2.GaussianBlur()</code> mein kernel tuple <code>(5, 5)</code> hota hai, lekin <code>cv2.medianBlur()</code> mein kernel size ek <strong>single odd integer</strong> (e.g. <code>5</code> ya <code>7</code>) hota hai! Agar aap <code>(5, 5)</code> pass karenge to <code>TypeError</code> aayega.
+        </div>
+    </section>
+
+    <!-- Section 6: Bilateral Filtering -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">4. Bilateral Filter: <code>cv2.bilateralFilter()</code> (Edge Preservation)</h2>
+        </div>
+        <p>Standard Gaussian blur pixels ki physical distance dekhta hai, par unke color differences ko nahi dekhta. Is wajah se wo object ke sharp edges ko bhi blur kar deta hai.</p>
+
+        <p><strong>Bilateral Filtering</strong> do Gaussian functions use karta hai:</p>
+        <ol style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><strong>Spatial Closeness:</strong> Nazdeek wale pixels ko zyada weight milta hai.</li>
+            <li><strong>Pixel Intensity Similarity:</strong> Sirf wahi pixels blur mein shamil hote hain jinka color current pixel jaisa ho! Agar koi sharp color boundary (edge) aati hai, to wo use blur nahi karta!</li>
+        </ol>
+
+        <p>Iska sabse bada real-world use <strong>Skin Smoothing (Beauty Filters)</strong> mein hota hai: Chehre ka skin texture smooth ho jata hai, par aankhein, lips, aur baalon ke sharp edges bilkul crisp rehte hain!</p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • BILATERAL_FILTER.PY</span>
+                <span>EDGE-PRESERVING FILTERING</span>
+            </div>
+            <pre><code>import cv2
+
+# Apply Bilateral Filter
+# d: Diameter of pixel neighborhood
+# sigmaColor: Filter sigma in color space (larger = wider color blending)
+# sigmaSpace: Filter sigma in coordinate space (larger = farther pixels influence)
+smooth_edges_sharp = cv2.bilateralFilter(img, d=9, sigmaColor=75, sigmaSpace=75)</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic7_edge_preservation_bilateral_vs_gaussian.png" alt="Edge Preservation Comparison: Gaussian Blur vs Bilateral Filter">
+            <div class="media-caption">Figure 7.3: Edge Preservation: Gaussian blur smears the sharp boundary, while Bilateral filter flattens texture noise but preserves step-edge sharpness.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Performance Trade-off</div>
+            Bilateral filter do alag-alag Gaussian kernels evaluate karta hai, isliye yeh simple Gaussian blur se <strong>bohot zyada computationally heavy aur slow</strong> hota hai. Real-time 60 FPS live video streams par large <code>d</code> parameter avoid karein.
+        </div>
+    </section>
+
+    <!-- Section 7: Quick Comparison Table -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Quick Comparison &amp; Decision Matrix</h2>
+        </div>
+        <p>Kaunsa filter kab choose karein? Yeh compact cheat sheet aapko instantly decide karne mein help karegi:</p>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Filter Function</th>
+                        <th>Speed</th>
+                        <th>Key Mechanism</th>
+                        <th>Best Use-Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>cv2.blur()</code></td>
+                        <td>Super Fast</td>
+                        <td>Simple Arithmetic Average</td>
+                        <td>Quick general smoothing jab accuracy zaroori na ho.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.GaussianBlur()</code></td>
+                        <td>Fast</td>
+                        <td>Distance-weighted Bell Curve</td>
+                        <td>General noise reduction before edge detection (Canny) &amp; ML models.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.medianBlur()</code></td>
+                        <td>Moderate</td>
+                        <td>Neighborhood Median Value</td>
+                        <td>Salt-and-Pepper noise removal, digital scanners, OCR preprocessing.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.bilateralFilter()</code></td>
+                        <td>Slow</td>
+                        <td>Spatial + Intensity Dual Gaussian</td>
+                        <td>Portrait retouching, skin smoothing, cartooning, edge-aware noise reduction.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic7_filter_types_comparison.png" alt="Side by side comparison of all 4 filters on a noisy image">
+            <div class="media-caption">Figure 7.4: Direct visual comparison of all 4 core OpenCV filters on the same noisy benchmark image.</div>
+        </div>
+    </section>
+
+    <!-- Section 8: 4 Practical Code Recipes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">4 Practical Code Recipes (Copy &amp; Run)</h2>
+        </div>
+
+        <!-- Recipe 1 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 14px 0 6px; color: var(--primary-dark);">&#128203; Recipe 1: Compare All 4 Blurring Methods</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_1_COMPARE_FILTERS.PY</span>
+                <span>COMPLETE DEMO</span>
+            </div>
+            <pre><code>import cv2
+
+# Load image
+img = cv2.imread("input.jpg")
+
+# 1. Averaging Blur
+blur_avg = cv2.blur(img, (7, 7))
+
+# 2. Gaussian Blur
+blur_gauss = cv2.GaussianBlur(img, (7, 7), sigmaX=0)
+
+# 3. Median Blur (single odd integer)
+blur_med = cv2.medianBlur(img, 7)
+
+# 4. Bilateral Filter
+blur_bilat = cv2.bilateralFilter(img, d=9, sigmaColor=75, sigmaSpace=75)
+
+# Save or display outputs
+cv2.imwrite("blur_average.jpg", blur_avg)
+cv2.imwrite("blur_gaussian.jpg", blur_gauss)
+cv2.imwrite("blur_median.jpg", blur_med)
+cv2.imwrite("blur_bilateral.jpg", blur_bilat)</code></pre>
+        </div>
+
+        <!-- Recipe 2 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 2: Testing Kernel Size Progression</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_2_KERNEL_SIZES.PY</span>
+                <span>PROGRESSIVE BLUR</span>
+            </div>
+            <pre><code>import cv2
+
+img = cv2.imread("input.jpg")
+
+# Loop over different odd kernel sizes
+for k in [3, 7, 15, 25]:
+    blurred = cv2.GaussianBlur(img, (k, k), sigmaX=0)
+    print(f"Processed kernel: ({k}, {k}) - output shape: {blurred.shape}")
+    cv2.imwrite(f"gaussian_k{k}.jpg", blurred)</code></pre>
+        </div>
+
+        <!-- Recipe 3 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 3: Synthetic Salt-and-Pepper Noise &amp; Recovery</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_3_SALT_PEPPER.PY</span>
+                <span>CLEANING IMPULSE NOISE</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+img = cv2.imread("input.jpg")
+h, w, c = img.shape
+
+# Add 4% salt-and-pepper noise
+noisy = img.copy()
+num_noise = int(0.04 * h * w)
+
+for _ in range(num_noise // 2):
+    y, x = np.random.randint(0, h), np.random.randint(0, w)
+    noisy[y, x] = [255, 255, 255] # Salt
+
+for _ in range(num_noise // 2):
+    y, x = np.random.randint(0, h), np.random.randint(0, w)
+    noisy[y, x] = [0, 0, 0]       # Pepper
+
+# Clean with Median Blur
+clean_result = cv2.medianBlur(noisy, 5)
+cv2.imwrite("noisy_sp.jpg", noisy)
+cv2.imwrite("cleaned_median.jpg", clean_result)</code></pre>
+        </div>
+
+        <!-- Recipe 4 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 4: Skin Smoothing with Bilateral Filter</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_4_SKIN_SMOOTHING.PY</span>
+                <span>BEAUTY RETOUCH PIPELINE</span>
+            </div>
+            <pre><code>import cv2
+
+# Load portrait image
+portrait = cv2.imread("portrait.jpg")
+
+# Apply bilateral filter to smooth skin while keeping facial contours crisp
+smoothed_portrait = cv2.bilateralFilter(portrait, d=15, sigmaColor=80, sigmaSpace=80)
+
+# Save result
+cv2.imwrite("portrait_retouched.jpg", smoothed_portrait)</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 9: Common Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">09</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Bug 1: Even Kernel Size Passing</div>
+            <code>cv2.GaussianBlur(img, (4, 4), 0)</code><br>
+            <strong>Error:</strong> <code>cv2.error: ksize.width > 0 &amp;&amp; ksize.width % 2 == 1</code>.<br>
+            <strong>Fix:</strong> Gaussian blur aur Median blur mein kernel dimensions hamesha <strong>odd integers</strong> (3, 5, 7, 9...) hone chahiye taaki filter ka center pixel clearly defined ho.
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Bug 2: Passing Tuple to medianBlur</div>
+            <code>cv2.medianBlur(img, (5, 5))</code><br>
+            <strong>Error:</strong> <code>TypeError: an integer is required (got type tuple)</code>.<br>
+            <strong>Fix:</strong> <code>cv2.medianBlur</code> square window assume karta hai, isliye sirf single integer <code>cv2.medianBlur(img, 5)</code> pass karein!
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Bug 3: Using Gaussian Blur on Salt-and-Pepper Noise</div>
+            <strong>Problem:</strong> Gaussian blur extreme 0 aur 255 spikes ko smooth karke muddy dark/white smudge bana deta hai.<br>
+            <strong>Fix:</strong> Salt-and-Pepper noise ke liye hamesha <code>cv2.medianBlur()</code> use karein!
+        </div>
+    </section>
+
+    <!-- Section 10: Summary & Cheat Sheet -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">10</span>
+            <h2 class="section-title">Quick Summary &amp; Cheat Sheet</h2>
+        </div>
+        <ul style="padding-left: 20px; line-height: 1.8; color: #334155;">
+            <li><strong>Filtering</strong> ek local neighborhood operation hai jo image se noise hatata hai aur computer vision models ke liye image prepare karta hai.</li>
+            <li><strong>Blurring</strong> high-frequency details (sharp edges, noise) ko reduce karne ka low-pass filter hai.</li>
+            <li><strong>cv2.blur(img, (k, k)):</strong> Simple arithmetic mean — super fast, equal weights.</li>
+            <li><strong>cv2.GaussianBlur(img, (k, k), sigmaX):</strong> Distance-weighted Gaussian bell curve — natural smoothing, go-to filter before Canny edge detection.</li>
+            <li><strong>cv2.medianBlur(img, k):</strong> Neighborhood median value — 100% best for salt-and-pepper noise. Takes single odd integer.</li>
+            <li><strong>cv2.bilateralFilter(img, d, sigmaColor, sigmaSpace):</strong> Dual Gaussian filter (spatial + color intensity) jo noise hatata hai lekin sharp edges retain karta hai. Slow but edge-preserving.</li>
+        </ul>
+    </section>
+
+    <!-- Section 11: Interactive Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">11</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: Agar aapke paas camera sensor se corrupted "Salt &amp; Pepper" noise wali photo hai, to kaunsa filter sabse best result dega?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) cv2.blur()</li>
+                    <li>B) cv2.GaussianBlur()</li>
+                    <li>C) cv2.medianBlur()</li>
+                    <li>D) cv2.resize()</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: C) cv2.medianBlur()<br>
+                    <strong>Explanation:</strong> Median blur pixels ko sort karta hai, jisse extreme black (0) aur white (255) noise values naturally discard ho jati hain.
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Bilateral filter standard Gaussian blur se alag aur behtar kyun hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Yeh Gaussian blur se 100x fast chalta hai.</li>
+                    <li>B) Yeh spatial distance ke saath color similarity bhi check karta hai, jisse sharp edges blur hone se bach jaate hain.</li>
+                    <li>C) Yeh image ko resize karta hai.</li>
+                    <li>D) Yeh sirf grayscale images par kaam karta hai.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B<br>
+                    <strong>Explanation:</strong> Bilateral filter do Gaussian kernels use karta hai — ek physical proximity ke liye aur dusra color similarity ke liye. Sharp boundaries par color change zyada hota hai, isliye wo boundary ko blur nahi karta!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: <code>cv2.GaussianBlur(img, (6, 6), 0)</code> run karne par kya hoga?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Image perfectly blur ho jayegi.</li>
+                    <li>B) Image invert ho jayegi.</li>
+                    <li>C) OpenCV assertion error aayega kyunki kernel size odd hona chahiye (e.g. 5 ya 7).</li>
+                    <li>D) Image grayscale mein convert ho jayegi.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: C<br>
+                    <strong>Explanation:</strong> OpenCV Gaussian blur require karta hai ki kernel dimensions positive odd numbers hon (e.g. 3, 5, 7) taaki kernel window ka exact center pixel exist kare.
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 12: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 8 — Edge Detection &amp; Image Gradients</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Agli class mein hum seekhenge ki kaise Gaussian blurring ko Canny Edge Detector, Sobel Gradients, aur Laplacian filters ke saath combine karke image mein se sharp boundaries, object outlines aur contours detect kiye jaate hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

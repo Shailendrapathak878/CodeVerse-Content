@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 11: Contours & Shape Detection | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #f0f9ff;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Section Cards */
+        .section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-num {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: var(--primary);
+            color: #0369a1;
+        }
+
+        .callout-success {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        /* Image Containers */
+        .diagram-container {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-caption {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Syntax and Code Boxes */
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+        }
+
+        .code-output {
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12.5px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        .code-block code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Responsive Comparison Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #475569;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fcfdfe;
+        }
+
+        /* Formula & Math Display Box */
+        .formula-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 13.5px;
+            color: #0f172a;
+            margin: 12px 0;
+            display: inline-block;
+        }
+
+        /* Interactive Collapsible Quizzes */
+        details {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            background-color: #ffffff;
+            border-bottom: 1px solid transparent;
+            display: block;
+            line-height: 1.45;
+        }
+
+        details[open] summary {
+            border-bottom-color: var(--border);
+            background-color: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .quiz-options {
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            background-color: var(--accent-green-bg);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            color: #065f46;
+            font-size: 13.5px;
+        }
+
+        /* Grid cards for properties */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card h4 {
+            color: var(--primary-dark);
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Syntax Highlight Helpers */
+        .hl-k { color: #f472b6; } /* keyword */
+        .hl-f { color: #60a5fa; } /* function */
+        .hl-s { color: #34d399; } /* string */
+        .hl-c { color: #94a3b8; font-style: italic; } /* comment */
+        .hl-n { color: #fbbf24; } /* number */
+        .hl-v { color: #e2e8f0; } /* variable */
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .hero { padding: 20px 16px; }
+            .hero h1 { font-size: 21px; }
+            .section { padding: 18px 14px; }
+            .section-title { font-size: 17px; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <span class="hero-badge">&#128736; OpenCV Core Series &bull; Topic 11</span>
+        <h1>Contours &amp; Shape Detection</h1>
+        <p>Image processing mein edges sirf scattered boundary pixels hote hain, jabki <strong>Contours</strong> unhi pixels ko jodkar ek continuous closed vector curve banate hain. Seekhein kaise objects ko count karein, area calculate karein, bounding box banayein aur geometric shapes detect karein!</p>
+        <div class="meta-tags">
+            <span class="meta-pill">&#9201; ~6-8 min read</span>
+            <span class="meta-pill">&#127919; Target: OpenCV 4.x + Python</span>
+            <span class="meta-pill">&#128202; Difficulty: Beginner to Intermediate</span>
+            <span class="meta-pill">&#128279; Requires: Topics 8 &amp; 10</span>
+        </div>
+    </header>
+
+    <!-- Section 1: What is a Contour? -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What is a Contour? (Edges vs Contours)</h2>
+        </div>
+        <p>Bahut se beginners <strong>Edges</strong> aur <strong>Contours</strong> mein confuse hote hain:</p>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Edge (Kinaara)</th>
+                        <th>Contour (Ghera / Vector Curve)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Definition</strong></td>
+                        <td>Pixels jahan color ya intensity mein sudden jump hota hai (Gradient peaks).</td>
+                        <td>Ek hi intensity ya color ke boundary points ko jodti hui continuous boundary curve.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output Format</strong></td>
+                        <td>Raster binary image (0 aur 255 pixels ki grid).</td>
+                        <td>Python <code>List</code> of NumPy point arrays <code>[(x1, y1), (x2, y2), ...]</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Object Awareness</strong></td>
+                        <td>Nahi hoti. Edges tooti-phooti ya disconnected ho sakti hain.</td>
+                        <td>Hoti hai! Har distinct object ka apna alag discrete contour curve hota hai.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Calculations</strong></td>
+                        <td>Direct Area ya Perimeter nikaalna mushkil hai.</td>
+                        <td>Direct <code>contourArea()</code>, <code>arcLength()</code>, centroid aur shape match possible hai.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; The Golden Rule of OpenCV Contours:</strong><br>
+            OpenCV mein <code>cv2.findContours()</code> hamesha <strong>Black Background (0)</strong> par <strong>White Object (255)</strong> dhoondhta hai. Agar aapki image mein object black hai aur background white, to pehle use <code>cv2.bitwise_not()</code> ya binary inverted thresholding se invert karna zaroori hai!
+        </div>
+
+        <!-- Visual Diagram 1 -->
+        <div class="diagram-container">
+            <img src="assets/topic11_contour_basics_drawing.png" alt="Contour Basics: Input Shapes, Vector Outlines, and Point Compression">
+            <div class="diagram-caption">Figure 11.1: (Left) Binary foreground shapes. (Center) Connected vector boundary lines drawn by cv2.drawContours. (Right) Individual corner points saved when using CHAIN_APPROX_SIMPLE.</div>
+        </div>
+    </section>
+
+    <!-- Section 2: Finding and Drawing Contours -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Finding &amp; Drawing Contours: The Core APIs</h2>
+        </div>
+        <p>OpenCV mein contours extract karne ke liye do primary functions use hote hain:</p>
+
+        <h3 style="margin: 14px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128269; 1. <code>cv2.findContours(image, mode, method)</code></h3>
+        <p>Ye function binary image ko scan karke discrete point arrays nikaalta hai:</p>
+        <div class="code-block"><code><span class="hl-v">contours</span>, <span class="hl-v">hierarchy</span> = <span class="hl-f">cv2.findContours</span>(<span class="hl-v">binary_img</span>, <span class="hl-v">cv2.RETR_EXTERNAL</span>, <span class="hl-v">cv2.CHAIN_APPROX_SIMPLE</span>)</code></div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; OpenCV 3 vs OpenCV 4+ Notice:</strong><br>
+            OpenCV 3.x mein <code>cv2.findContours()</code> 3 values return karta tha <code>(image, contours, hierarchy)</code>. Par modern <strong>OpenCV 4.x</strong> mein ye sirf <strong>2 values</strong> return karta hai: <code>(contours, hierarchy)</code>. 3 values unpack karne par <code>ValueError: too many values to unpack</code> exception aayegi!
+        </div>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128396; 2. <code>cv2.drawContours(image, contours, contourIdx, color, thickness)</code></h3>
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+            <li><code>image</code>: Destination image jispar boundary draw karni hai (usually original 3-channel color image).</li>
+            <li><code>contours</code>: <code>findContours</code> se aayi hui contour points ki Python list.</li>
+            <li><code>contourIdx</code>: Kaunsa contour draw karna hai? <strong><code>-1</code> pass karne par sabhi contours ek saath draw ho jate hain</strong>. Specific shape ke liye index pass karein (jaise <code>0</code> ya <code>1</code>).</li>
+            <li><code>color</code>: BGR tuple (jaise green ke liye <code>(0, 255, 0)</code>).</li>
+            <li><code>thickness</code>: Line ki motai in pixels. Agar <code>-1</code> ya <code>cv2.FILLED</code> pass karenge to poora shape solid fill ho jayega!</li>
+        </ul>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#9879; Memory Optimization: <code>CHAIN_APPROX_NONE</code> vs <code>CHAIN_APPROX_SIMPLE</code></h3>
+        <p>Contour nikaalte waqt points store karne ke do main methods hain:</p>
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4><code>cv2.CHAIN_APPROX_NONE</code></h4>
+                <p>Boundary ke <strong>har ek pixel coordinate</strong> ko list mein save karta hai. Agar ek rectangle 200&times;200 pixels ka hai, to ye approx 800 discrete points store karega. High memory consumption!</p>
+            </div>
+            <div class="feature-card">
+                <h4><code>cv2.CHAIN_APPROX_SIMPLE</code> &#9733;</h4>
+                <p>Horizontal, vertical aur diagonal segments ko compress kar deta hai aur <strong>sirf corners / endpoints</strong> store karta hai. 200&times;200 rectangle ke liye sirf <strong>4 points</strong> store hote hain! Highly optimized!</p>
+            </div>
+        </div>
+
+        <!-- Code Block 1 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Detect and Draw Shapes</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-c"># 1. Grayscale image load karein</span>
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'shapes.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># 2. Binary thresholding (foreground white 255, background black 0)</span>
+<span class="hl-v">_</span>, <span class="hl-v">binary</span> = <span class="hl-f">cv2.threshold</span>(<span class="hl-v">gray</span>, <span class="hl-n">127</span>, <span class="hl-n">255</span>, <span class="hl-v">cv2.THRESH_BINARY</span>)
+
+<span class="hl-c"># 3. Contours extract karein (OpenCV 4+ style)</span>
+<span class="hl-v">contours</span>, <span class="hl-v">hierarchy</span> = <span class="hl-f">cv2.findContours</span>(<span class="hl-v">binary</span>, <span class="hl-v">cv2.RETR_EXTERNAL</span>, <span class="hl-v">cv2.CHAIN_APPROX_SIMPLE</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Kul mile {len(contours)} alag-alag objects!"</span>)
+
+<span class="hl-c"># 4. Saare contours ko Green color (0, 255, 0) mein draw karein</span>
+<span class="hl-v">output</span> = <span class="hl-v">img</span>.<span class="hl-f">copy</span>()
+<span class="hl-f">cv2.drawContours</span>(<span class="hl-v">output</span>, <span class="hl-v">contours</span>, -<span class="hl-n">1</span>, (<span class="hl-n">0</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), <span class="hl-n">2</span>)
+
+<span class="hl-f">cv2.imshow</span>(<span class="hl-s">'Contours Detected'</span>, <span class="hl-v">output</span>)
+<span class="hl-f">cv2.waitKey</span>(<span class="hl-n">0</span>)
+<span class="hl-f">cv2.destroyAllWindows</span>()</code></div>
+        <div class="code-output">&#10004; Output Console: Kul mile 2 alag-alag objects!</div>
+    </section>
+
+    <!-- Section 3: Contour Properties & Geometric Measurements -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">Contour Properties &amp; Geometric Measurements</h2>
+        </div>
+        <p>Ek baar contour array mil jane ke baad hum uski physical properties calculate kar sakte hain:</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#128207; 1. Contour Area</h4>
+                <p><code>cv2.contourArea(cnt)</code>: Shape ke andar kitne square pixels hain. Tiny noise specks ko filter out karne ke liye useful hai (e.g. <code>if area &gt; 100: ...</code>).</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#9878; 2. Perimeter (Arc Length)</h4>
+                <p><code>cv2.arcLength(cnt, closed=True)</code>: Boundary ki total linear length. Closed curve ke liye <code>closed=True</code> pass karein.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#127919; 3. Centroid (Center of Mass)</h4>
+                <p><code>M = cv2.moments(cnt)</code> se spatial moments milte hain:<br>
+                <code>cx = int(M['m10'] / M['m00'])</code><br>
+                <code>cy = int(M['m01'] / M['m00'])</code></p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128230; 4. Bounding Box</h4>
+                <p><code>x, y, w, h = cv2.boundingRect(cnt)</code>: Object ke around upright straight bounding box ka top-left corner aur width-height nikaalta hai.</p>
+            </div>
+        </div>
+
+        <!-- Visual Diagram 2 -->
+        <div class="diagram-container">
+            <img src="assets/topic11_contour_measurements_bbox.png" alt="Contour Measurements: Area, Perimeter, Centroid and Bounding Box">
+            <div class="diagram-caption">Figure 11.2: OpenCV geometric measurements: Cyan bounding boxes, Red centroid dots, and calculated Area &amp; Perimeter values.</div>
+        </div>
+
+        <!-- Code Block 2 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Calculate Properties &amp; Annotate</h4>
+        <div class="code-block"><code><span class="hl-k">for</span> <span class="hl-v">i</span>, <span class="hl-v">cnt</span> <span class="hl-k">in</span> <span class="hl-f">enumerate</span>(<span class="hl-v">contours</span>):
+    <span class="hl-c"># Area aur Perimeter calculate karein</span>
+    <span class="hl-v">area</span> = <span class="hl-f">cv2.contourArea</span>(<span class="hl-v">cnt</span>)
+    <span class="hl-v">perimeter</span> = <span class="hl-f">cv2.arcLength</span>(<span class="hl-v">cnt</span>, <span class="hl-v">True</span>)
+    
+    <span class="hl-c"># Spatial moments se centroid nikaalein</span>
+    <span class="hl-v">M</span> = <span class="hl-f">cv2.moments</span>(<span class="hl-v">cnt</span>)
+    <span class="hl-k">if</span> <span class="hl-v">M</span>[<span class="hl-s">'m00'</span>] != <span class="hl-n">0</span>:
+        <span class="hl-v">cx</span> = <span class="hl-f">int</span>(<span class="hl-v">M</span>[<span class="hl-s">'m10'</span>] / <span class="hl-v">M</span>[<span class="hl-s">'m00'</span>])
+        <span class="hl-v">cy</span> = <span class="hl-f">int</span>(<span class="hl-v">M</span>[<span class="hl-s">'m01'</span>] / <span class="hl-v">M</span>[<span class="hl-s">'m00'</span>])
+        <span class="hl-c"># Centroid par red dot banayein</span>
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">output</span>, (<span class="hl-v">cx</span>, <span class="hl-v">cy</span>), <span class="hl-n">4</span>, (<span class="hl-n">0</span>, <span class="hl-n">0</span>, <span class="hl-n">255</span>), -<span class="hl-n">1</span>)
+        
+    <span class="hl-c"># Straight bounding rectangle nikaalein</span>
+    <span class="hl-v">x</span>, <span class="hl-v">y</span>, <span class="hl-v">w</span>, <span class="hl-v">h</span> = <span class="hl-f">cv2.boundingRect</span>(<span class="hl-v">cnt</span>)
+    <span class="hl-f">cv2.rectangle</span>(<span class="hl-v">output</span>, (<span class="hl-v">x</span>, <span class="hl-v">y</span>), (<span class="hl-v">x</span> + <span class="hl-v">w</span>, <span class="hl-v">y</span> + <span class="hl-v">h</span>), (<span class="hl-n">255</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), <span class="hl-n">2</span>)
+    <span class="hl-f">print</span>(<span class="hl-s">f"Shape #{i}: Area={area:.1f}, Peri={perimeter:.1f}, Center=({cx}, {cy})"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>Shape #0: Area=5000.0, Peri=300.0, Center=(100, 100)<br>Shape #1: Area=11310.0, Peri=376.8, Center=(280, 150)</div>
+    </section>
+
+    <!-- Section 4: Retrieval Modes & Hierarchy -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">Contour Retrieval Modes &amp; Hierarchy (Nested Holes)</h2>
+        </div>
+        <p>Real-world images mein objects ke andar holes ho sakte hain (jaise coin ke beech ka hole, donut, washer, ya alphabets 'O', 'B', 'P'). OpenCV mein parent-child relations ko handle karne ke liye <strong>Retrieval Modes</strong> hote hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mode Flag</th>
+                        <th>Hierarchy Behavior</th>
+                        <th>Best Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>cv2.RETR_EXTERNAL</code></td>
+                        <td>Sirf sabse bahar ke extreme outer contours dhoondhta hai. <strong>Holes ko ignore karta hai!</strong></td>
+                        <td>Object counting, boundary outline, document border detection.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.RETR_TREE</code></td>
+                        <td>Poora complete hierarchical tree reconstruct karta hai (parents, children, grandchildren).</td>
+                        <td>Complex shapes with inner cutouts, nested text OCR, washer hole inspection.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.RETR_LIST</code></td>
+                        <td>Saare contours extract karta hai bina kisi parent-child relationship ke (flat list).</td>
+                        <td>Jab nested hierarchy ka structure matter nahi karta par har boundary chahiye.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.RETR_CCOMP</code></td>
+                        <td>2-level hierarchy banata hai: Outer boundaries (level 1) aur Holes (level 2).</td>
+                        <td>Simple hole-vs-outer separation bina deeply nested levels ke.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Diagram 4 -->
+        <div class="diagram-container">
+            <img src="assets/topic11_retrieval_modes_hierarchy.png" alt="Contour Retrieval Modes: RETR_EXTERNAL vs RETR_TREE">
+            <div class="diagram-caption">Figure 11.3: cv2.RETR_EXTERNAL ignores interior cutouts (2 outer shapes), whereas cv2.RETR_TREE detects all 3 boundaries including the inner hole.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128065; Understanding the Hierarchy Array:</strong><br>
+            Hierarchy array ka shape <code>(1, N, 4)</code> hota hai, jisme har contour ke liye 4 values hoti hain:<br>
+            <code>[Next, Previous, First_Child, Parent]</code><br>
+            Agar koi child ya parent nahi hai, to wahan value <strong><code>-1</code></strong> hoti hai!
+        </div>
+    </section>
+
+    <!-- Section 5: Polygon Approximation & Epsilon Tuning -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">Polygon Approximation (Douglas-Peucker Algorithm)</h2>
+        </div>
+        <p>Jab camera se koi shape capture hota hai, to pixels ki rough edges ki wajah se contour curve mein hazaron points ho sakte hain. <strong><code>cv2.approxPolyDP()</code></strong> <em>Douglas-Peucker algorithm</em> use karke is curve ko smooth straight lines wale simple polygon mein convert karta hai!</p>
+
+        <div class="formula-box">
+            approx = cv2.approxPolyDP(curve=cnt, epsilon=0.035 * peri, closed=True)
+        </div>
+
+        <h3 style="margin: 14px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128308; Epsilon (&epsilon;) Parameter Tuning:</h3>
+        <p>Epsilon maximum distance threshold define karta hai. Curve ka jo point approximated segment se &epsilon; se zyada door hoga, use naye vertex ke roop mein add kiya jayega:</p>
+        <ul style="margin-left: 20px; margin-bottom: 14px; color: var(--text-muted);">
+            <li><strong>Too Small (&epsilon; &lt; 0.01 * Perimeter):</strong> Curve lagbhag simplify nahi hoga, noise points bache rahenge.</li>
+            <li><strong>Optimal (&epsilon; &asymp; 0.02 to 0.04 * Perimeter):</strong> Clean geometric vertices milenge (Triangles = 3, Rectangles = 4, Pentagons = 5).</li>
+            <li><strong>Too Large (&epsilon; &gt; 0.10 * Perimeter):</strong> Over-simplification ho jayega! Ek 10-point star shape bhi katkar sirf 3-point triangle ban jayega!</li>
+        </ul>
+
+        <!-- Visual Diagram 5 -->
+        <div class="diagram-container">
+            <img src="assets/topic11_polygon_approximation_epsilon.png" alt="Douglas-Peucker Approximation: Star Shape at different epsilon levels">
+            <div class="diagram-caption">Figure 11.4: Star contour simplified with increasing epsilon. Notice how 1.5% preserves all 10 vertices, 5.0% drops inner tips, and 12.0% distorts into a 3-point triangle!</div>
+        </div>
+    </section>
+
+    <!-- Section 6: Shape Classification -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Automatic Shape Classification in OpenCV</h2>
+        </div>
+        <p>Contour approximation ke baad hum <code>len(approx)</code> (number of vertices) se shapes detect aur classify kar sakte hain:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vertices Count</th>
+                        <th>Identified Shape</th>
+                        <th>Classification Logic &amp; Checks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>3 Vertices</strong></td>
+                        <td>Triangle (Tribhuj)</td>
+                        <td><code>len(approx) == 3</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>4 Vertices</strong></td>
+                        <td>Square ya Rectangle</td>
+                        <td>
+                            <code>aspect_ratio = float(w) / h</code><br>
+                            Agar <code>0.95 &lt;= aspect_ratio &lt;= 1.05</code> to <strong>Square</strong>, warna <strong>Rectangle</strong>.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>5 Vertices</strong></td>
+                        <td>Pentagon (Panchbhuj)</td>
+                        <td><code>len(approx) == 5</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>&gt; 6 Vertices</strong></td>
+                        <td>Circle / Oval</td>
+                        <td>
+                            Circularity Formula: <code>4 * &pi; * Area / (Perimeter<sup>2</sup>)</code><br>
+                            Agar Circularity <strong>&gt; 0.75</strong> hai, to shape <strong>Circle</strong> hai!
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Diagram 3 -->
+        <div class="diagram-container">
+            <img src="assets/topic11_shape_classification.png" alt="Shape Classification: Triangle, Square, Pentagon, and Circle">
+            <div class="diagram-caption">Figure 11.5: Automatic shape detection in action! Shapes classified accurately by counting Douglas-Peucker approximated vertices.</div>
+        </div>
+
+        <!-- Code Block 3 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Production Shape Classifier</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-k">def</span> <span class="hl-f">classify_shapes</span>(<span class="hl-v">image_path</span>):
+    <span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-v">image_path</span>)
+    <span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+    <span class="hl-v">_</span>, <span class="hl-v">thresh</span> = <span class="hl-f">cv2.threshold</span>(<span class="hl-v">gray</span>, <span class="hl-n">127</span>, <span class="hl-n">255</span>, <span class="hl-v">cv2.THRESH_BINARY</span>)
+
+    <span class="hl-v">contours</span>, <span class="hl-v">_</span> = <span class="hl-f">cv2.findContours</span>(<span class="hl-v">thresh</span>, <span class="hl-v">cv2.RETR_EXTERNAL</span>, <span class="hl-v">cv2.CHAIN_APPROX_SIMPLE</span>)
+
+    <span class="hl-k">for</span> <span class="hl-v">cnt</span> <span class="hl-k">in</span> <span class="hl-v">contours</span>:
+        <span class="hl-c"># Ignore noise</span>
+        <span class="hl-k">if</span> <span class="hl-f">cv2.contourArea</span>(<span class="hl-v">cnt</span>) &lt; <span class="hl-n">100</span>:
+            <span class="hl-k">continue</span>
+
+        <span class="hl-v">peri</span> = <span class="hl-f">cv2.arcLength</span>(<span class="hl-v">cnt</span>, <span class="hl-v">True</span>)
+        <span class="hl-v">approx</span> = <span class="hl-f">cv2.approxPolyDP</span>(<span class="hl-v">cnt</span>, <span class="hl-n">0.035</span> * <span class="hl-v">peri</span>, <span class="hl-v">True</span>)
+        <span class="hl-v">num_vertices</span> = <span class="hl-f">len</span>(<span class="hl-v">approx</span>)
+        
+        <span class="hl-v">x</span>, <span class="hl-v">y</span>, <span class="hl-v">w</span>, <span class="hl-v">h</span> = <span class="hl-f">cv2.boundingRect</span>(<span class="hl-v">cnt</span>)
+        <span class="hl-v">shape_name</span> = <span class="hl-s">"Unknown"</span>
+
+        <span class="hl-k">if</span> <span class="hl-v">num_vertices</span> == <span class="hl-n">3</span>:
+            <span class="hl-v">shape_name</span> = <span class="hl-s">"Triangle"</span>
+        <span class="hl-k">elif</span> <span class="hl-v">num_vertices</span> == <span class="hl-n">4</span>:
+            <span class="hl-v">aspect_ratio</span> = <span class="hl-f">float</span>(<span class="hl-v">w</span>) / <span class="hl-v">h</span>
+            <span class="hl-v">shape_name</span> = <span class="hl-s">"Square"</span> <span class="hl-k">if</span> <span class="hl-n">0.95</span> &lt;= <span class="hl-v">aspect_ratio</span> &lt;= <span class="hl-n">1.05</span> <span class="hl-k">else</span> <span class="hl-s">"Rectangle"</span>
+        <span class="hl-k">elif</span> <span class="hl-v">num_vertices</span> == <span class="hl-n">5</span>:
+            <span class="hl-v">shape_name</span> = <span class="hl-s">"Pentagon"</span>
+        <span class="hl-k">else</span>:
+            <span class="hl-v">shape_name</span> = <span class="hl-s">"Circle"</span>
+
+        <span class="hl-c"># Draw outline and label</span>
+        <span class="hl-f">cv2.drawContours</span>(<span class="hl-v">img</span>, [<span class="hl-v">cnt</span>], -<span class="hl-n">1</span>, (<span class="hl-n">0</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), <span class="hl-n">2</span>)
+        <span class="hl-f">cv2.putText</span>(<span class="hl-v">img</span>, <span class="hl-v">shape_name</span>, (<span class="hl-v">x</span>, <span class="hl-v">y</span> - <span class="hl-n">10</span>), <span class="hl-v">cv2.FONT_HERSHEY_SIMPLEX</span>, <span class="hl-n">0.6</span>, (<span class="hl-n">255</span>, <span class="hl-n">0</span>, <span class="hl-n">0</span>), <span class="hl-n">2</span>)
+
+    <span class="hl-k">return</span> <span class="hl-v">img</span></code></div>
+    </section>
+
+    <!-- Section 7: Real-World Industry Applications -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Real-World Industry Applications</h2>
+        </div>
+        <p>Contours computer vision pipelines ka backbone hain. Ye practical applications dekhein:</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#128196; 1. Document Scanner Apps</h4>
+                <p>CamScanner jaise apps table par rakhe document ke 4 corners detect karne ke liye <code>findContours</code> + <code>approxPolyDP (vertices == 4)</code> use karte hain, aur fir perspective transform se seedha scan generate karte hain!</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#129689; 2. Coin &amp; Currency Counter</h4>
+                <p>Bank sorting machines har coin ka area (<code>contourArea</code>) measure karke instant pata laga leti hain ki coin ₹1, ₹2, ₹5 ya ₹10 ka hai aur total cash count karti hain!</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128038; 3. Industrial Defect Detection</h4>
+                <p>Manufacturing lines par bottles ke caps ya metal washers ke holes ka area aur circularity check ki jaati hai. Agar circularity &lt; 0.70 hai to defective part reject ho jata hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#9995; 4. Hand Gesture Recognition</h4>
+                <p>Hand contours nikaalkar <strong>Convex Hull</strong> aur <strong>Convexity Defects</strong> calculate kiye jaate hain, jisse uthi hui ungliyon ki ginti hoti hai (Thumbs up, Victory sign, Fist)!</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 8: Common Mistakes & Debugging -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>&#10060; Mistake 1: Original BGR/Color image ko <code>findContours</code> mein pass karna</strong><br>
+            <em>Problem:</em> <code>cv2.error: (-210:Unsupported format or combination of formats)</code> crash aayega.<br>
+            <em>Solution:</em> Pehle image ko <code>cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)</code> karein aur fir <code>cv2.threshold()</code> ya <code>cv2.Canny()</code> se 8-bit single-channel binary image banayein!
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Mistake 2: Black object on white background ko bina invert kiye pass karna</strong><br>
+            <em>Problem:</em> OpenCV border par background ka ek bada sa single contour pakad lega aur actual objects gayab ho jayenge.<br>
+            <em>Solution:</em> Agar document white hai aur text/shapes black hain, to <code>cv2.bitwise_not()</code> ya <code>cv2.THRESH_BINARY_INV</code> se black foreground ko white banayein!
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Mistake 3: Zero area contours se division by zero crash</strong><br>
+            <em>Problem:</em> Spatial moments calculate karte waqt <code>cx = int(M['m10'] / M['m00'])</code> mein jab <code>M['m00'] == 0</code> ho to <code>ZeroDivisionError</code> aayega.<br>
+            <em>Solution:</em> Hamesha check karein: <code>if M['m00'] != 0: ...</code>
+        </div>
+    </section>
+
+    <!-- Section 9: Mini Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">09</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: OpenCV 4.x mein <code>cv2.findContours()</code> kitni values return karta hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) 1 value (sirf contours)</li>
+                    <li>B) 2 values (contours, hierarchy)</li>
+                    <li>C) 3 values (image, contours, hierarchy)</li>
+                    <li>D) 4 values (x, y, w, h)</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) 2 values (contours, hierarchy)<br>
+                    <strong>Explanation:</strong> OpenCV 3 mein 3 values aati thi, lekin modern OpenCV 4+ mein source image ko modify kiye bina seedhe <code>(contours, hierarchy)</code> return kiya jata hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Agar hamein kisi shape ke andar ke holes ignore karke sirf bahar ki boundary chahiye, to kaunsa retrieval mode use karenge?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) <code>cv2.RETR_TREE</code></li>
+                    <li>B) <code>cv2.RETR_LIST</code></li>
+                    <li>C) <code>cv2.RETR_EXTERNAL</code></li>
+                    <li>D) <code>cv2.RETR_CCOMP</code></li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: C) cv2.RETR_EXTERNAL<br>
+                    <strong>Explanation:</strong> <code>RETR_EXTERNAL</code> sirf outermost parent boundaries return karta hai aur internal child cutouts/holes ko discard kar deta hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: <code>cv2.drawContours(img, contours, -1, (0, 255, 0), 2)</code> mein <code>-1</code> ka kya matlab hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Sirf aakhiri contour draw karo</li>
+                    <li>B) Sabhi (all) detected contours ko ek saath draw karo</li>
+                    <li>C) Inverse colors mein draw karo</li>
+                    <li>D) Error raise karo</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) Sabhi (all) detected contours ko ek saath draw karo<br>
+                    <strong>Explanation:</strong> <code>contourIdx = -1</code> OpenCV ka special flag hai jo list ke sabhi contours ko ek loop ke bina canvas par draw kar deta hai!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 10: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 12 — Image Histograms &amp; Equalization</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne shapes aur geometric objects ko isolate aur classify karna seekh liya hai, agle topic mein hum seekhenge ki kaise <strong>Image Histograms</strong> ki madad se lighting distribution analyse karte hain aur <strong>Histogram Equalization (CLAHE)</strong> se low-contrast, andheri images ko crystal clear banate hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

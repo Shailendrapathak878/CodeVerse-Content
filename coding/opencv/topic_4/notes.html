@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 4: Image Properties &amp; Pixel Access | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .hero-time {
+            font-size: 13px;
+            opacity: 0.88;
+            font-weight: 500;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            font-size: 15px;
+            opacity: 0.94;
+            max-width: 760px;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+
+        .section-tag {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14.5px;
+        }
+
+        .callout-concept {
+            background: #f0f9ff;
+            border-color: #0284c7;
+            color: #0369a1;
+        }
+
+        .callout-tip {
+            background: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        .callout-amber {
+            background: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-purple {
+            background: var(--accent-purple-bg);
+            border-color: var(--accent-purple);
+            color: #5b21b6;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Code Cards */
+        .code-card {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 18px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .code-header {
+            background: #1e293b;
+            padding: 8px 16px;
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        pre {
+            padding: 16px;
+            overflow-x: auto;
+            color: var(--code-text);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.6;
+        }
+
+        code {
+            font-family: inherit;
+        }
+
+        .inline-code {
+            background: #f1f5f9;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13.5px;
+            font-family: ui-monospace, Menlo, Consolas, monospace;
+            font-weight: 600;
+        }
+
+        /* Output Box */
+        .output-box {
+            background: #1e293b;
+            border-left: 4px solid var(--accent-green);
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
+            margin: 12px 0 18px 0;
+            font-family: ui-monospace, Consolas, monospace;
+            font-size: 13px;
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        .output-header {
+            color: var(--accent-green);
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        /* Visual Media Cards */
+        .media-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .media-caption {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Responsive Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 12px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .info-card-title {
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Quiz Accordion */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+
+        details[open] {
+            background: #ffffff;
+            border-color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
+        summary {
+            font-weight: 600;
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+
+        .quiz-answer {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Bullet lists */
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 14px;
+            color: var(--text-muted);
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        li strong {
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Hero Header -->
+    <div class="hero">
+        <div class="hero-badge-row">
+            <span class="hero-badge">COMPUTER VISION &bull; OPENCV</span>
+            <span class="hero-badge" style="background: rgba(56, 189, 248, 0.25);">TOPIC 4 OF 25</span>
+            <span class="hero-time">&#9201; ~6-8 MIN READ</span>
+        </div>
+        <h1>Image Properties &amp; Pixel Access</h1>
+        <p>Master how OpenCV represents digital images as NumPy matrices, inspect dimensions and data types, read and modify individual pixels, and crop Regions of Interest (ROI) with safe array slicing.</p>
+    </div>
+
+    <!-- Section 1: What Are Image Properties? -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">01</span>
+            <h2 class="section-title">What Are Image Properties?</h2>
+        </div>
+        
+        <p>Jab aap OpenCV mein koi image <span class="inline-code">cv2.imread()</span> se load karte hain, to OpenCV use kisi black-box file ke roop mein nahi, balki ek standard <strong>NumPy ndarray (N-dimensional array)</strong> ke roop mein RAM mein store karta hai.</p>
+
+        <p>Computer Vision pipeline mein koi bhi algorithm (jaise Face Detection, Object Tracking, ya Deep Learning) chalane se pehle image ki properties check karna sabse pehla defensive step hota hai:</p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>NumPy Property</th>
+                        <th>Meaning / Kya Batata Hai</th>
+                        <th>Example Value</th>
+                        <th>Practical Significance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="inline-code">img.shape</span></td>
+                        <td>Image dimensions ka tuple: <span class="inline-code">(Height, Width, Channels)</span></td>
+                        <td><span class="inline-code">(480, 640, 3)</span></td>
+                        <td>Resolution aur channel format confirm karne ke liye</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">img.size</span></td>
+                        <td>Array mein maujood total individual elements count</td>
+                        <td><span class="inline-code">921,600</span> elements</td>
+                        <td>Total pixel values: <span class="inline-code">480 &times; 640 &times; 3</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">img.ndim</span></td>
+                        <td>Total dimensions ki sankhya (Array axes count)</td>
+                        <td><span class="inline-code">3</span> (Color) ya <span class="inline-code">2</span> (Gray)</td>
+                        <td>Color vs Grayscale structure check karne ke liye</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">img.dtype</span></td>
+                        <td>Har pixel value ka data type</td>
+                        <td><span class="inline-code">uint8</span></td>
+                        <td>Pixel range [0, 255] confirm karta hai</td>
+                    </tr>
+                    <tr>
+                        <td><span class="inline-code">img.nbytes</span></td>
+                        <td>Image dwara RAM mein li gayi memory (Bytes)</td>
+                        <td><span class="inline-code">921,600 Bytes</span> (~900 KB)</td>
+                        <td>Memory budget aur buffer allocation ke liye</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; CRITICAL GOTCHA: img.size &ne; File Size on Disk!</div>
+            Beginners aksar sochte hain ki <span class="inline-code">img.size</span> unki hard drive par file ka size hai (jaise 50 KB JPG). <strong>Aisa bilkul nahi hai!</strong><br>
+            <span class="inline-code">img.size</span> array ke total elements batata hai (<span class="inline-code">H &times; W &times; C</span>). Hard drive par JPG/PNG compressed file hoti hai, jabki memory mein array uncompressed raw pixels hoti hai!
+        </div>
+
+        <!-- Asset 1: Image Properties Infographic -->
+        <div class="media-card">
+            <img src="assets/topic4_image_properties_infographic.png" alt="OpenCV NumPy Image Properties Infographic showing Shape, Size, Ndim, Dtype, Height, Width, and Channels" loading="lazy">
+            <div class="media-caption">Figure 4.1: Anatomy of an image in memory: 3D NumPy array with Height (Rows), Width (Columns), and Channels (Depth).</div>
+        </div>
+    </div>
+
+    <!-- Section 2: Color vs Grayscale Properties -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">02</span>
+            <h2 class="section-title">Color vs Grayscale: Array Differences</h2>
+        </div>
+
+        <p>OpenCV mein Color image aur Grayscale image ki internal memory structure mein bohot bada farak hota hai:</p>
+
+        <div class="grid-2">
+            <div class="info-card">
+                <div class="info-card-title">&#127912; Color Image (3D Array)</div>
+                <ul style="margin-left: 16px; margin-bottom: 0; font-size: 13.5px;">
+                    <li><strong>Shape:</strong> <span class="inline-code">(Height, Width, 3)</span></li>
+                    <li><strong>Dimensions (ndim):</strong> 3 (Height, Width, Depth)</li>
+                    <li><strong>Channels:</strong> Blue (0), Green (1), Red (2)</li>
+                    <li><strong>RAM Usage:</strong> Full 3 bytes per pixel coordinate</li>
+                </ul>
+            </div>
+            <div class="info-card">
+                <div class="info-card-title">&#9898; Grayscale Image (2D Array)</div>
+                <ul style="margin-left: 16px; margin-bottom: 0; font-size: 13.5px;">
+                    <li><strong>Shape:</strong> <span class="inline-code">(Height, Width)</span> &mdash; <em>No 3rd index!</em></li>
+                    <li><strong>Dimensions (ndim):</strong> 2 (Height, Width only)</li>
+                    <li><strong>Channels:</strong> Single brightness intensity value</li>
+                    <li><strong>RAM Usage:</strong> <strong>66% less memory</strong> (1 byte per pixel)</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Asset 5: Color vs Grayscale Comparison -->
+        <div class="media-card">
+            <img src="assets/topic4_color_vs_grayscale_properties.png" alt="Comparison between Color Image 3D tensor and Grayscale Image 2D matrix properties" loading="lazy">
+            <div class="media-caption">Figure 4.2: Direct comparison between Color (3D Tensor) and Grayscale (2D Matrix). Notice Grayscale has no 3rd channel dimension.</div>
+        </div>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#128161; Safe Channel Extraction Pattern</div>
+            Agar aap Grayscale image par <span class="inline-code">channels = img.shape[2]</span> call karenge, to Python crash ho jayega (<span class="inline-code">IndexError: tuple index out of range</span>)!<br>
+            Humesha yeh defensive pattern use karein:<br>
+            <span class="inline-code">channels = img.shape[2] if img.ndim == 3 else 1</span>
+        </div>
+    </div>
+
+    <!-- Section 3: What Is a Pixel? -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">03</span>
+            <h2 class="section-title">What Is a Pixel? (Grid of Tiles Analogy)</h2>
+        </div>
+
+        <p>Imagine kijiye aapke bathroom ki floor ya ek bada mosaic painting jo hazaron choti-choti colored square tiles se milkar bana hai. Door se dekhne par ek smooth tasveer dikhti hai, lekin bohot paas jakar (zoom in karke) dekhne par har tile ek individual color dikhati hai.</p>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#128161; Definition: Pixel</div>
+            <strong>Pixel (Picture Element)</strong> kisi bhi digital image ka sabse chota controllable building block hota hai. Har pixel ke paas ek specific <strong>coordinate address (y, x)</strong> aur ek <strong>color intensity value</strong> hoti hai.
+        </div>
+
+        <ul>
+            <li><strong>Pixel Coordinates:</strong> Image ke top-left corner se origin <span class="inline-code">(y=0, x=0)</span> shuru hota hai.</li>
+            <li><strong>Pixel Intensity:</strong> 8-bit image mein intensity hamesha <strong>0 se 255</strong> ke beech hoti hai (0 = pure dark/black, 255 = maximum brightness).</li>
+            <li><strong>Color Storage:</strong> Color image mein har pixel 3 numbers ka pack hota hai: <span class="inline-code">[Blue, Green, Red]</span>.</li>
+        </ul>
+
+        <!-- Asset 2: Magnified Pixel Grid -->
+        <div class="media-card">
+            <img src="assets/topic4_magnified_pixel_grid.png" alt="Magnified Pixel Grid showing row and column coordinates with BGR values" loading="lazy">
+            <div class="media-caption">Figure 4.3: Magnified pixel grid. Notice that each square is indexed as [y, x] where y is Row (downwards) and x is Column (rightwards).</div>
+        </div>
+    </div>
+
+    <!-- Section 4: Accessing Pixel Values -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">04</span>
+            <h2 class="section-title">Accessing Pixel Values: The [y, x] Rule</h2>
+        </div>
+
+        <p>Maths aur school geometry mein hum hamesha <span class="inline-code">(x, y)</span> likhte hain jahan <i>x</i> horizontal aur <i>y</i> vertical hota hai. Lekin <strong>NumPy array indexing mein yeh ulta ho jata hai:</strong></p>
+
+        <div class="callout callout-amber">
+            <div class="callout-title">&#9888; THE GOLDEN RULE: img[y, x] (Row First, Column Second)</div>
+            NumPy array hamesha <strong>Matrix notation</strong> follow karti hai:<br>
+            <span class="inline-code">pixel = img[row, column] &rarr; img[y, x]</span><br>
+            <ul>
+                <li><strong>y (Row):</strong> Vertical axis &mdash; Top se neeche (0 se Height - 1)</li>
+                <li><strong>x (Column):</strong> Horizontal axis &mdash; Left se right (0 se Width - 1)</li>
+            </ul>
+        </div>
+
+        <p>Pixels access karne ke alag-alag tarike:</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; pixel_access_syntax.py</span>
+                <span>NumPy Indexing</span>
+            </div>
+            <pre><code>import cv2
+
+img = cv2.imread("sample.jpg")
+
+# 1. Access full BGR pixel at row y=100, column x=50
+bgr_pixel = img[100, 50]  # Returns NumPy array [B, G, R]
+print("BGR Tuple:", bgr_pixel)
+
+# 2. Access individual channels directly
+blue_val  = img[100, 50, 0]  # Channel 0 = Blue
+green_val = img[100, 50, 1]  # Channel 1 = Green
+red_val   = img[100, 50, 2]  # Channel 2 = Red
+
+# 3. Access pixel in a Grayscale image
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+intensity = gray[100, 50]    # Returns single integer (0-255)</code></pre>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128737; Defensive Bounds Checking</div>
+            Agar aap aisa coordinate access karenge jo image ke bahar ho (jaise <span class="inline-code">img[1000, 2000]</span> jab image 480x640 ho), to Python <span class="inline-code">IndexError</span> throw karega. Production code mein hamesha check karein:<br>
+            <span class="inline-code">if 0 &lt;= y &lt; height and 0 &lt;= x &lt; width: ...</span>
+        </div>
+    </div>
+
+    <!-- Section 5: Modifying Pixel Values -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">05</span>
+            <h2 class="section-title">Modifying Pixel Values</h2>
+        </div>
+
+        <p>Kyunki OpenCV images standard NumPy arrays hoti hain, aap kisi bhi pixel ki value ko direct assignment se mutate (change) kar sakte hain:</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; modify_pixels.py</span>
+                <span>Direct Array Mutation</span>
+            </div>
+            <pre><code># Change a single pixel at y=100, x=50 to pure bright Red [B=0, G=0, R=255]
+img[100, 50] = [0, 0, 255]
+
+# Change only the Blue channel of that pixel to 128
+img[100, 50, 0] = 128
+
+# Draw a small 10x10 white square patch at top-left
+img[0:10, 0:10] = [255, 255, 255]</code></pre>
+        </div>
+
+        <!-- Asset 3: Pixel Modification Comparison -->
+        <div class="media-card">
+            <img src="assets/topic4_pixel_modification_comparison.png" alt="Original vs Modified Pixel comparison showing mutated red pixel and green cross" loading="lazy">
+            <div class="media-caption">Figure 4.4: Modifying pixels in memory. Left: Original image. Middle: Assignment logic. Right: Mutated pixel at [3,3] and green cross pattern.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Warning: uint8 Range Overflow!</div>
+            Standard OpenCV images <span class="inline-code">uint8</span> (Unsigned 8-bit Integer) hoti hain, jisme sirf <strong>0 se 255</strong> tak ke numbers valid hote hain.<br>
+            Agar aap galti se <span class="inline-code">img[y, x] = [300, -50, 500]</span> assign karenge, to values wrap-around (overflow) ho jayengi aur unexpected bizarre colors paida ho jayenge! Humesha safe valid values assign karein.
+        </div>
+    </div>
+
+    <!-- Section 6: Image Cropping & Region of Interest (ROI) -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">06</span>
+            <h2 class="section-title">Image Cropping &amp; Region of Interest (ROI)</h2>
+        </div>
+
+        <p>Computer Vision mein aksar humein poori 4K image process nahi karni hoti. For example, ek Security Camera frame mein humein sirf wahan dhyan dena hota hai jahan <strong>Insaan ka Chehra (Face)</strong> ya <strong>Gaadi ki Number Plate</strong> hai. Is specific rectangular zone ko <strong>Region of Interest (ROI)</strong> kehte hain.</p>
+
+        <div class="callout callout-concept">
+            <div class="callout-title">&#128161; Definition: Region of Interest (ROI)</div>
+            <strong>ROI</strong> image ka wo targeted rectangular sub-portion hota hai jahan hamara actual detection, measurement ya processing task perform hona hai.
+        </div>
+
+        <p>OpenCV mein cropping ke liye koi alag se "crop()" function nahi hota &mdash; hum standard <strong>NumPy Array Slicing</strong> use karte hain:</p>
+
+        <div class="callout callout-amber">
+            <div class="callout-title">&#128290; The Cropping Formula: img[y1:y2, x1:x2]</div>
+            <ul>
+                <li><strong>y1 : y2</strong> &mdash; Vertical row range (Top boundary se Bottom boundary)</li>
+                <li><strong>x1 : x2</strong> &mdash; Horizontal column range (Left boundary se Right boundary)</li>
+                <li><strong>Rule:</strong> Ending index (<span class="inline-code">y2</span> aur <span class="inline-code">x2</span>) hamesha <strong>excluded</strong> hota hai!</li>
+            </ul>
+        </div>
+
+        <!-- Asset 4: ROI Cropping Workflow -->
+        <div class="media-card">
+            <img src="assets/topic4_roi_cropping_workflow.png" alt="ROI Cropping workflow showing bounding box on full scene and cropped result" loading="lazy">
+            <div class="media-caption">Figure 4.5: Cropping an ROI using NumPy slicing: scene[y1:y2, x1:x2].copy(). Notice that rows (Y) come first!</div>
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Crucial Concept: Why you MUST use .copy()</div>
+            NumPy slicing by default naya array nahi banata &mdash; wo original image ka ek <strong>memory view (reference)</strong> return karta hai!<br>
+            Agar aap likhenge: <span class="inline-code">roi = img[y1:y2, x1:x2]</span> aur baad mein <span class="inline-code">roi</span> ko modify karenge, to <strong>original image bhi modify ho jayegi!</strong><br>
+            Agar aapko independent cropped image chahiye, to hamesha <span class="inline-code">.copy()</span> lagayein:<br>
+            <span class="inline-code">roi = img[y1:y2, x1:x2].copy()</span>
+        </div>
+    </div>
+
+    <!-- Section 7: Practical Hands-On Code Examples -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">07</span>
+            <h2 class="section-title">Practical Code Examples</h2>
+        </div>
+
+        <!-- Example 1 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 1: Inspecting Image Properties (Color vs Grayscale)</h3>
+        <p>Yeh script programmatically image create karti hai, uski saari NumPy properties audit karti hai, aur Grayscale ke saath comparison print karti hai.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example1_inspect_properties.py</span>
+                <span>Fully Runnable</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create a synthetic color image (Height=120, Width=160, Channels=3)
+img_color = np.zeros((120, 160, 3), dtype=np.uint8)
+img_color[:, :50] = (255, 0, 0)     # Blue section
+img_color[:, 50:110] = (0, 255, 0)  # Green section
+img_color[:, 110:] = (0, 0, 255)    # Red section
+
+# 2. Extract properties
+h, w, c = img_color.shape
+print("=== COLOR IMAGE PROPERTIES ===")
+print(f"Shape:         {img_color.shape} -> (Height={h}, Width={w}, Channels={c})")
+print(f"Total Size:    {img_color.size} elements ({h} * {w} * {c})")
+print(f"Dimensions:    {img_color.ndim} (3D Tensor)")
+print(f"Data Type:     {img_color.dtype}")
+print(f"RAM Memory:    {img_color.nbytes} bytes (~{img_color.nbytes / 1024:.2f} KB)")
+
+# 3. Convert to Grayscale & compare
+img_gray = cv2.cvtColor(img_color, cv2.COLOR_BGR2GRAY)
+print("\n=== GRAYSCALE PROPERTIES ===")
+print(f"Shape:         {img_gray.shape} -> (Height={img_gray.shape[0]}, Width={img_gray.shape[1]})")
+print(f"Total Size:    {img_gray.size} elements (Exactly 1/3 of color image!)")
+print(f"Dimensions:    {img_gray.ndim} (2D Matrix)")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            === COLOR IMAGE PROPERTIES ===<br>
+            Shape:         (120, 160, 3) -&gt; (Height=120, Width=160, Channels=3)<br>
+            Total Size:    57600 elements (120 * 160 * 3)<br>
+            Dimensions:    3 (3D Tensor)<br>
+            Data Type:     uint8<br>
+            RAM Memory:    57600 bytes (~56.25 KB)<br>
+            <br>
+            === GRAYSCALE PROPERTIES ===<br>
+            Shape:         (120, 160) -&gt; (Height=120, Width=160)<br>
+            Total Size:    19200 elements (Exactly 1/3 of color image!)<br>
+            Dimensions:    2 (2D Matrix)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>AI Model Input Validation:</strong> Computer Vision neural networks (jaise YOLO ya MobileNet) expect karte hain specific input dimensions (e.g. $224 	imes 224 	imes 3$). Model feed karne se pehle <span class="inline-code">img.shape</span> check karna fatal crashes rokta hai.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 2 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 2: Reading, Mutating Pixels &amp; Bounds Safety</h3>
+        <p>Is program mein hum specific pixels read karte hain, unhe modify karke custom pattern draw karte hain, aur safe coordinate bounds checker function test karte hain.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example2_pixel_mutation.py</span>
+                <span>Bounds-Safe Modification</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create an 8x8 canvas initialized to dark gray (50, 50, 50)
+canvas = np.full((8, 8, 3), 50, dtype=np.uint8)
+
+# 2. Read pixel at y=3, x=4
+orig_pixel = canvas[3, 4]
+print(f"Original pixel at (y=3, x=4): {orig_pixel.tolist()}")
+
+# 3. Mutate pixel to pure bright Red [B=0, G=0, R=255]
+canvas[3, 4] = [0, 0, 255]
+print(f"Modified pixel at (y=3, x=4): {canvas[3, 4].tolist()} (Turned Red)")
+
+# 4. Draw a green cross pattern
+canvas[4, 2:6] = [0, 255, 0]  # Horizontal bar
+canvas[2:6, 4] = [0, 255, 0]  # Vertical bar
+
+# 5. Safe Pixel Getter Function (Prevents IndexError)
+def get_pixel_safe(image, y, x):
+    h, w = image.shape[:2]
+    if 0 &lt;= y &lt; h and 0 &lt;= x &lt; w:
+        return image[y, x]
+    return None
+
+print(f"Safe inside bounds (y=4, x=4):   {get_pixel_safe(canvas, 4, 4).tolist()}")
+print(f"Safe outside bounds (y=10, x=20): {get_pixel_safe(canvas, 10, 20)}")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original pixel at (y=3, x=4): [50, 50, 50]<br>
+            Modified pixel at (y=3, x=4): [0, 0, 255] (Turned Red)<br>
+            Safe inside bounds (y=4, x=4):   [0, 255, 0]<br>
+            Safe outside bounds (y=10, x=20): None
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Watermarking &amp; Dead Pixel Detection:</strong> Digital camera sensor calibration mein factory software pure white/black image capture karke har pixel ko read karta hai; agar koi pixel permanently zero ya 255 rahe to use dead pixel log kiya jata hai.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0;">
+
+        <!-- Example 3 -->
+        <h3 style="color: var(--primary-dark); margin-bottom: 8px;">Example 3: Cropping an ROI with .copy() Protection</h3>
+        <p>Is program mein hum image se target region crop karte hain aur verify karte hain ki <span class="inline-code">.copy()</span> original image ko accidental mutation se kaise bachata hai.</p>
+
+        <div class="code-card">
+            <div class="code-header">
+                <span>python &bull; example3_roi_crop.py</span>
+                <span>Sub-Image Slicing</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+# 1. Create a 100x100 neutral gray image
+base_img = np.full((100, 100, 3), 100, dtype=np.uint8)
+
+# 2. Define crop coordinates: Rows y=20..80, Cols x=30..70
+y1, y2 = 20, 80
+x1, x2 = 30, 70
+
+# 3. Safe Crop using .copy()
+roi_crop = base_img[y1:y2, x1:x2].copy()
+
+print(f"Original Image Shape: {base_img.shape}")
+print(f"Cropped ROI Shape:    {roi_crop.shape} (Height={y2-y1}, Width={x2-x1})")
+
+# 4. Mutate the cropped ROI to bright Yellow [B=0, G=255, R=255]
+roi_crop[:, :] = [0, 255, 255]
+
+# 5. Verify that original image is still untouched gray
+print(f"ROI pixel [0, 0]:           {roi_crop[0, 0].tolist()} (Mutated to Yellow)")
+print(f"Original image at (30, 40): {base_img[30, 40].tolist()} (Still untouched Gray!)")</code></pre>
+        </div>
+
+        <div class="output-box">
+            <div class="output-header">Actual Executed Output</div>
+            Original Image Shape: (100, 100, 3)<br>
+            Cropped ROI Shape:    (60, 40, 3) (Height=60, Width=40)<br>
+            ROI pixel [0, 0]:           [0, 255, 255] (Mutated to Yellow)<br>
+            Original image at (30, 40): [100, 100, 100] (Still untouched Gray!)
+        </div>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128188; Real-World Application</div>
+            <strong>Automatic Number Plate Recognition (ANPR):</strong> Highway toll cameras pehle car detect karti hain, phir number plate ke bounding box ko ROI crop karke OCR text-recognition model ko bhejti hain taaki processing fast ho sake.
+        </div>
+    </div>
+
+    <!-- Section 8: Common Beginner Traps & Troubleshooting -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">08</span>
+            <h2 class="section-title">Common Beginner Traps &amp; Troubleshooting</h2>
+        </div>
+
+        <div class="grid-2">
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; The (x, y) vs [y, x] Trap</div>
+                <p style="font-size: 13.5px;">Coordinates bolte waqt hum <i>(x, y)</i> sochte hain, lekin NumPy indexing mein <strong>hamesha [y, x] (Row, Col)</strong> hota hai! Slicing mein hamesha <span class="inline-code">img[y1:y2, x1:x2]</span> likhein.</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-red);">
+                <div class="info-card-title" style="color: var(--accent-red);">&#10060; Grayscale Shape Unpack Crash</div>
+                <p style="font-size: 13.5px;"><span class="inline-code">h, w, c = gray.shape</span> likhne par crash ho jayega kyunki grayscale 2D array hai aur uske paas sirf 2 values hoti hain (<span class="inline-code">h, w</span>). Hamesha <span class="inline-code">h, w = gray.shape[:2]</span> use karein.</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-amber);">
+                <div class="info-card-title" style="color: var(--accent-amber);">&#9888; Forgetting .copy() on Slices</div>
+                <p style="font-size: 13.5px;">Bina <span class="inline-code">.copy()</span> ke crop karne par NumPy reference share karta hai. Agar aap crop par filter ya text lagayenge to original image par bhi lag jayega!</p>
+            </div>
+            <div class="info-card" style="border-left: 4px solid var(--accent-green);">
+                <div class="info-card-title" style="color: var(--accent-green);">&#10004; Array Size vs File Size</div>
+                <p style="font-size: 13.5px;"><span class="inline-code">img.size</span> total pixel elements batata hai, hard drive file size nahi. Disk par actual file size dekhne ke liye Python ka <span class="inline-code">os.path.getsize("file.jpg")</span> use karein.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 9: Quick Revision Quiz -->
+    <div class="section">
+        <div class="section-header">
+            <span class="section-tag">09</span>
+            <h2 class="section-title">Quick Revision &amp; Self-Assessment Quiz</h2>
+        </div>
+
+        <details>
+            <summary>Q1: Ek color image ka shape (720, 1280, 3) hai. Iska Height aur Width kitna hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: Height = 720 pixels, Width = 1280 pixels.</strong><br>
+                NumPy tuple mein pehla element Rows (Height) hota hai, doosra Columns (Width) hota hai, aur teesra Channels (3) hota hai.
+            </div>
+        </details>
+
+        <details>
+            <summary>Q2: Agar hum image ke row 50 se 150 aur column 100 se 200 tak crop karna chahte hain, to sahi slicing syntax kya hoga?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: img[50:150, 100:200]</strong><br>
+                Formula hai <span class="inline-code">img[y1:y2, x1:x2]</span>. Y-axis (rows) pehle aate hain aur X-axis (columns) baad mein. Independent crop ke liye <span class="inline-code">.copy()</span> add karein.
+            </div>
+        </details>
+
+        <details>
+            <summary>Q3: Kya ek 2D grayscale image mein img.shape[2] call kiya ja sakta hai?</summary>
+            <div class="quiz-answer">
+                <strong>Sahi Jawab: Nahi! IndexError throw hoga.</strong><br>
+                Grayscale image sirf 2D array hoti hai jiska shape <span class="inline-code">(H, W)</span> hota hai. Index 2 exist hi nahi karta. Safe extraction ke liye <span class="inline-code">img.shape[2] if img.ndim == 3 else 1</span> use karein.
+            </div>
+        </details>
+    </div>
+
+    <!-- Section 10: Topic Summary & Next Steps -->
+    <div class="section" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd;">
+        <div class="section-header" style="border-bottom-color: #7dd3fc;">
+            <span class="section-tag" style="background: #0284c7; color: #ffffff;">RECAP</span>
+            <h2 class="section-title" style="color: #0369a1;">What You Mastered Today</h2>
+        </div>
+
+        <ul style="color: #0f172a;">
+            <li><strong>NumPy Anatomy:</strong> Images are standard NumPy ndarrays with <span class="inline-code">shape</span>, <span class="inline-code">size</span>, <span class="inline-code">ndim</span>, and <span class="inline-code">dtype</span> properties.</li>
+            <li><strong>[y, x] Coordinate Rule:</strong> Pixel coordinates are accessed as <span class="inline-code">img[row, col]</span> where $y$ is vertical and $x$ is horizontal.</li>
+            <li><strong>Direct Mutation:</strong> Change pixels by direct assignment <span class="inline-code">img[y, x] = [B, G, R]</span> within valid <span class="inline-code">uint8</span> bounds (0–255).</li>
+            <li><strong>ROI Cropping:</strong> Slice sub-images with <span class="inline-code">img[y1:y2, x1:x2].copy()</span> to prevent unwanted memory mutations on original images.</li>
+        </ul>
+
+        <div style="margin-top: 18px; padding: 12px 16px; background: #ffffff; border-radius: var(--radius-sm); border-left: 4px solid #0284c7;">
+            <strong>Next Topic:</strong> In <strong>Topic 5: Color Spaces &amp; Channel Operations</strong>, hum explore karenge BGR vs RGB conversions, Grayscale conversions, HSV color tracking, aur channel splitting &amp; merging!
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

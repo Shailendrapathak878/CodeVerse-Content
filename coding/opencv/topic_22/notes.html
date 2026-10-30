@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 22: Perspective Transformation & Homography - CodeVerse OpenCV</title>
+<style>
+  :root {
+    --bg-main: #0b0f19;
+    --card-bg: #131b2e;
+    --border-color: #23324d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-green: #22c55e;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --code-bg: #090d16;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+    padding: 24px 16px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .topic-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .header-card {
+    background: linear-gradient(145deg, #131b2e, #1a2642);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .meta-pill {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent-blue);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 18px 0 10px 0;
+  }
+  p {
+    margin-bottom: 12px;
+    color: #cbd5e1;
+    font-size: 15px;
+  }
+  .hinglish-box {
+    background: rgba(168, 85, 247, 0.08);
+    border-left: 4px solid var(--accent-purple);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .info-box {
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 4px solid var(--accent-blue);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .warning-box {
+    background: rgba(244, 63, 94, 0.08);
+    border-left: 4px solid var(--accent-rose);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #fecdd3;
+  }
+  .tip-box {
+    background: rgba(34, 197, 94, 0.08);
+    border-left: 4px solid var(--accent-green);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .flow-diagram {
+    background: #090d16;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 14px;
+    color: var(--accent-blue);
+    margin: 16px 0;
+    line-height: 1.8;
+  }
+  .flow-arrow {
+    color: #f59e0b;
+    font-weight: bold;
+    padding: 0 6px;
+  }
+  .image-card {
+    background-color: #0c1220;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 18px 0;
+    text-align: center;
+  }
+  .image-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+  }
+  .image-caption {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    font-style: italic;
+  }
+  pre {
+    background-color: var(--code-bg);
+    border: 1px solid #1c273d;
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin: 14px 0;
+    color: #e2e8f0;
+  }
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13.5px;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+  }
+  .code-title {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  th {
+    background-color: rgba(56, 189, 248, 0.08);
+    color: var(--accent-blue);
+    font-weight: 600;
+  }
+  tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-item {
+    background: #0d1527;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .grid-item h4 {
+    font-size: 15px;
+    color: #38bdf8;
+    margin-bottom: 8px;
+  }
+  ul, ol {
+    margin-left: 20px;
+    margin-bottom: 14px;
+    color: #cbd5e1;
+  }
+  li {
+    margin-bottom: 6px;
+  }
+  details {
+    background: #0d1527;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    margin: 12px 0;
+    padding: 14px 16px;
+    cursor: pointer;
+  }
+  summary {
+    font-weight: 600;
+    color: #38bdf8;
+    outline: none;
+    user-select: none;
+  }
+  details[open] summary {
+    margin-bottom: 12px;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 8px;
+  }
+  .answer-content {
+    color: #cbd5e1;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header Card -->
+  <div class="header-card">
+    <div class="topic-badge">OpenCV Topic 22</div>
+    <h1>Perspective Transformation & Homography</h1>
+    <div class="subtitle">Projective Geometry, Planar Warping, 3&times;3 Homography Matrix & Bird's-Eye View (IPM) in OpenCV</div>
+    <div class="meta-pills">
+      <span class="meta-pill">&#9201; 6-8 mins read</span>
+      <span class="meta-pill">&#128640; Intermediate Level</span>
+      <span class="meta-pill">&#127919; Core: cv2.getPerspectiveTransform, cv2.warpPerspective, cv2.findHomography</span>
+    </div>
+  </div>
+
+  <!-- Section 1: Introduction -->
+  <div class="card">
+    <h2>1. Introduction: What is Perspective Transformation?</h2>
+    <p>
+      Real world 3D hota hai, lekin camera uski 2D picture capture karta hai. Jab aap kisi document, road, ya billboard ko angle par khade hokar photograph karte hain, to jo hissa camera ke paas hota hai wo bada dikhta hai aur jo door hota hai wo chhota ho jata hai. Is optical phenomenon ko <strong>Perspective Distortion</strong> kehte hain.
+    </p>
+
+    <div class="hinglish-box">
+      <strong>Simple Hinglish Analogy:</strong><br>
+      Agar aap table par rakhe ek paper ki tilted photo lenge, to paper rectangular hone ke bajaye trapezoid (tirchha) dikhega. <strong>Perspective Transformation</strong> us angled photo ko mathematically stretch aur warp karke aisa bana deta hai jaise camera theek paper ke upar (90&deg; perpendicular bird's-eye view) tha!
+    </div>
+
+    <div class="image-card">
+      <img src="assets/topic22_perspective_pipeline.png" alt="Perspective Transformation Pipeline">
+      <div class="image-caption">Figure 22.1: End-to-End Perspective Pipeline — From Tilted Camera View &rarr; 4 Corner Detection &rarr; 3&times;3 Matrix Calculation &rarr; Warped Rectified Flat Output.</div>
+    </div>
+
+    <div class="grid-2">
+      <div class="grid-item">
+        <h4>Affine vs. Perspective</h4>
+        <p><strong>Affine Transform (Topic 4):</strong> Parallel lines parallel hi rehti hain (shear, rotate, scale). 3 point pairs require karta hai (2&times;3 matrix).<br>
+        <strong>Perspective Transform:</strong> Parallel lines vanishing point par converge hoti hain. Straight lines straight rehti hain par parallelism lose ho jati hai. 4 point pairs require karta hai (3&times;3 matrix).</p>
+      </div>
+      <div class="grid-item">
+        <h4>Crucial Physical Rule</h4>
+        <p>Perspective transformation image points ki <em>geometric mapping</em> badalta hai. Yeh koi magic nahi hai: agar image ka koi hissa blurred ya out-of-focus tha, to warp hone ke baad bhi wo blurry hi rahega!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Essential Definitions Table -->
+  <div class="card">
+    <h2>2. Essential Definitions & Glossary</h2>
+    <p>
+      Perspective transformation aur homography ko samajhne ke liye in terms ko jaan na zaroori hai:
+    </p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Term</th>
+          <th>Definition (Hinglish)</th>
+          <th>Practical Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Perspective Distortion</strong></td>
+          <td>Angle se photo lene par objects ka foreshortening (paas bada, door chhota) ho jana.</td>
+          <td>Isi distortion ko correct karne ke liye hum warping use karte hain.</td>
+        </tr>
+        <tr>
+          <td><strong>Source Points (src)</strong></td>
+          <td>Original distorted image par select kiye gaye 4 corner coordinates <code>(x, y)</code>.</td>
+          <td>Tilted document ya surface ke 4 kono ki exact location.</td>
+        </tr>
+        <tr>
+          <td><strong>Destination Points (dst)</strong></td>
+          <td>Output image par jahan un 4 kono ko map karna hai <code>(u, v)</code>.</td>
+          <td>Target flat rectangle ke 4 corners: <code>(0,0)</code> se <code>(W,H)</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Homography (H)</strong></td>
+          <td>Ek hi planar surface ke 2 alag-alag camera views ke beech ka 3&times;3 projective mapping matrix.</td>
+          <td>8 independent degrees of freedom hote hain (scale normalized).</td>
+        </tr>
+        <tr>
+          <td><strong>Bird's-Eye View (IPM)</strong></td>
+          <td>Forward camera view ko top-down orthogonal (aerial) view mein transform karna.</td>
+          <td>Self-driving cars mein lane lines parallel measure karne ke liye used.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.getPerspectiveTransform()</code></td>
+          <td>Exactly 4 source aur 4 destination points se 3&times;3 transformation matrix calculate karta hai.</td>
+          <td>Clean corner coordinates available hone par directly matrix banata hai.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.warpPerspective()</code></td>
+          <td>Calculated 3&times;3 matrix ko input image par apply karke warped image generate karta hai.</td>
+          <td>Pixel interpolation aur output dimension <code>(width, height)</code> handle karta hai.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.findHomography()</code></td>
+          <td>Multiple matching point pairs (4 ya 400+) se robust matrix estimate karta hai using RANSAC.</td>
+          <td>Feature matching aur noisy correspondences ke liye gold standard.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.perspectiveTransform()</code></td>
+          <td>Image pixels warp karne ke bajaye numerical coordinates array <code>(N, 1, 2)</code> ko matrix se map karta hai.</td>
+          <td>Object detection bounding boxes ya trajectory points ko transform karne ke liye used.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 3: How Perspective Transformation Works -->
+  <div class="card">
+    <h2>3. How Perspective Transformation Works Step-by-Step</h2>
+    <p>
+      Kisi bhi image ko rectify karne ke liye yeh 6 standard steps follow kiye jaate hain:
+    </p>
+
+    <div class="flow-diagram">
+      [1. Load Image] <span class="flow-arrow">&rarr;</span> [2. Pick 4 Corners (src)] <span class="flow-arrow">&rarr;</span> [3. Define Target Size (dst)] <span class="flow-arrow">&rarr;</span> [4. Compute 3x3 Matrix H] <span class="flow-arrow">&rarr;</span> [5. cv2.warpPerspective()] <span class="flow-arrow">&rarr;</span> [6. Flat Output Scan]
+    </div>
+
+    <div class="image-card">
+      <img src="assets/topic22_document_perspective_correction.png" alt="Document Perspective Correction Before and After">
+      <div class="image-caption">Figure 22.2: Angled Document Photograph (Left) transformed into an upright 400&times;520 flat scanned document (Right).</div>
+    </div>
+
+    <h3>The Mathematical Relationship</h3>
+    <p>
+      Homogeneous coordinates mein projective transformation matrix <strong>H</strong> is equation se relate hota hai:
+    </p>
+
+    <pre><code>[ x' ]       [ h11   h12   h13 ]   [ x ]
+[ y' ]   =   [ h21   h22   h23 ] * [ y ]
+[ w' ]       [ h31   h32   h33 ]   [ 1 ]
+
+Cartesian Coordinates:
+x_final = x' / w'
+y_final = y' / w'</code></pre>
+
+    <p>
+      Teesra coordinate <code>w'</code> perspective depth scaling factor hota hai. Jab hum <code>x'</code> aur <code>y'</code> ko <code>w'</code> se divide karte hain, to final 2D pixel coordinates prapt hote hain.
+    </p>
+  </div>
+
+  <!-- Section 4: Point Ordering Rule -->
+  <div class="card">
+    <h2>4. Critical Rule: Point Ordering & The Twisted Warp Pitfall</h2>
+    <p>
+      Beginners ki sabse common mistake hoti hai point ordering mismatch! <code>src_pts</code> aur <code>dst_pts</code> ka order <strong>strictly identical</strong> hona chahiye:
+    </p>
+
+    <ul>
+      <li><strong>Point 0:</strong> Top-Left (TL) &rarr; Destination <code>(0, 0)</code></li>
+      <li><strong>Point 1:</strong> Top-Right (TR) &rarr; Destination <code>(width - 1, 0)</code></li>
+      <li><strong>Point 2:</strong> Bottom-Right (BR) &rarr; Destination <code>(width - 1, height - 1)</code></li>
+      <li><strong>Point 3:</strong> Bottom-Left (BL) &rarr; Destination <code>(0, height - 1)</code></li>
+    </ul>
+
+    <div class="image-card">
+      <img src="assets/topic22_point_ordering_mapping.png" alt="Point Ordering Consistency and Twisted Warp Pitfall">
+      <div class="image-caption">Figure 22.3: Point Ordering Consistency — Swapping Top-Right and Bottom-Right creates a twisted hourglass distortion. Always follow clockwise TL &rarr; TR &rarr; BR &rarr; BL order.</div>
+    </div>
+
+    <div class="warning-box">
+      <strong>Warning:</strong> Agar aap Top-Right aur Bottom-Right points ko galti se swap kar denge, to matrix image ko diagonally fold kar dega aur black/twisted output aayega!
+    </div>
+  </div>
+
+  <!-- Section 5: Homography Explained Simply -->
+  <div class="card">
+    <h2>5. Homography Explained Simply: Planar 3&times;3 Mapping</h2>
+    <p>
+      Jab koi planar surface (jaise paper sheet, football ground, ya wall poster) do alag camera viewpoints se dekhi jaati hai, to dono views ke pixels ek 3&times;3 <strong>Homography Matrix (H)</strong> ke through directly related hote hain bina 3D camera depth jaane!
+    </p>
+
+    <div class="image-card">
+      <img src="assets/topic22_homography_planar_mapping.png" alt="Planar Homography 3x3 Model">
+      <div class="image-caption">Figure 22.4: Planar Homography Model — 8 Degrees of freedom mapping View 1 into View 2. Minimum 4 point pairs are required (4 &times; 2 = 8 equations).</div>
+    </div>
+
+    <h3>Comparison: Which OpenCV Function to Use?</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Function</th>
+          <th>Input</th>
+          <th>Robustness</th>
+          <th>Primary Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>cv2.getPerspectiveTransform(src, dst)</code></td>
+          <td>Exactly 4 points</td>
+          <td>No outlier tolerance</td>
+          <td>Document scanning jab 4 corner coordinates manually ya contour se precisely known hon.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.findHomography(src, dst, cv2.RANSAC)</code></td>
+          <td>Many points (4 to 1000s)</td>
+          <td>RANSAC rejects noisy outliers</td>
+          <td>Feature matching (ORB/SIFT), image stitching (panoramas), augmented reality tracking.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.warpPerspective(img, M, (w, h))</code></td>
+          <td>Image + 3&times;3 matrix</td>
+          <td>Interpolates pixels</td>
+          <td>Full image frame ko warp karke nayi perspective image produce karna.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.perspectiveTransform(pts, M)</code></td>
+          <td>Coordinate array + 3&times;3 matrix</td>
+          <td>Exact math</td>
+          <td>Sirf coordinate points (e.g. bounding box corners ya vehicle coordinates) transform karna.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 6: Practical Code Examples -->
+  <div class="card">
+    <h2>6. Practical Python OpenCV Code Examples</h2>
+
+    <h3>Example 1: Document Perspective Correction (CamScanner Flow)</h3>
+    <p>Ek tilted document photograph ke 4 corners detect karke flat upright scan banana:</p>
+    <div class="code-title">Python Code: Document Perspective Rectification</div>
+    <pre><code>import cv2
+import numpy as np
+
+# 1. Tilted document image load karein
+image = cv2.imread("document_tilted.jpg")
+if image is None:
+    # Testing ke liye dummy image create karein
+    image = np.full((480, 640, 3), 40, dtype=np.uint8)
+
+# 2. Source image par document ke 4 corners (TL, TR, BR, BL)
+# (Real application mein yeh contours ya Harris corners se milte hain)
+src_pts = np.float32([
+    [140, 75],   # Top-Left (TL)
+    [490, 110],  # Top-Right (TR)
+    [570, 410],  # Bottom-Right (BR)
+    [90, 375]    # Bottom-Left (BL)
+])
+
+# 3. Desired flat output rectangle size define karein (A4 ratio: 400 x 520)
+target_w, target_h = 400, 520
+dst_pts = np.float32([
+    [0, 0],
+    [target_w - 1, 0],
+    [target_w - 1, target_h - 1],
+    [0, target_h - 1]
+])
+
+# 4. 3x3 Perspective Transformation Matrix compute karein
+M = cv2.getPerspectiveTransform(src_pts, dst_pts)
+
+# 5. Warp perspective apply karein
+warped_doc = cv2.warpPerspective(image, M, (target_w, target_h), flags=cv2.INTER_LINEAR)
+
+print("3x3 Perspective Matrix M:")
+print(M)
+cv2.imwrite("document_rectified.jpg", warped_doc)</code></pre>
+
+    <h3>Example 2: Estimating Homography with RANSAC & Point Projection</h3>
+    <p>Jab feature matching se bahut saare point pairs milte hain jinme kuch galat (outliers) hote hain, to <code>cv2.findHomography()</code> RANSAC use karke clean matrix nikalta hai:</p>
+
+    <div class="image-card">
+      <img src="assets/topic22_findhomography_ransac_points.png" alt="findHomography with RANSAC">
+      <div class="image-caption">Figure 22.5: cv2.findHomography() with RANSAC — Green lines denote valid spatial inliers; Red lines are noisy false matches successfully rejected.</div>
+    </div>
+
+    <div class="code-title">Python Code: Homography Estimation & Point Projection</div>
+    <pre><code>import cv2
+import numpy as np
+
+# Points format: float32 array of shape (N, 1, 2)
+# Maan lijiye matching algorithms (ORB/SIFT) se points mile hain:
+pts_src = np.array([[[50, 60]], [[280, 40]], [[270, 210]], [[70, 200]], [[150, 120]]], dtype=np.float32)
+pts_dst = np.array([[[40, 70]], [[290, 30]], [[260, 220]], [[80, 190]], [[160, 115]]], dtype=np.float32)
+
+# cv2.RANSAC outlier rejection ke saath matrix estimate karta hai
+H_matrix, mask = cv2.findHomography(pts_src, pts_dst, cv2.RANSAC, 5.0)
+
+print("Estimated Homography Matrix H:")
+print(H_matrix)
+print("Inlier Mask (1=Inlier, 0=Outlier):", mask.ravel())
+
+# Kisi naye point coordinate ko project karein (e.g. object center)
+query_point = np.array([[[100.0, 150.0]]], dtype=np.float32)
+projected_point = cv2.perspectiveTransform(query_point, H_matrix)
+print(f"Point {query_point[0,0]} maps to {projected_point[0,0]} in target view")</code></pre>
+
+    <h3>Example 3: Bird's-Eye View (Inverse Perspective Mapping)</h3>
+    <p>Autonomous driving mein dashcam road view ko 2D top-down ground plane mein convert karna taaki lane curvature accurately measure ho sake:</p>
+
+    <div class="image-card">
+      <img src="assets/topic22_birds_eye_road_transformation.png" alt="Bird's-Eye View Inverse Perspective Mapping">
+      <div class="image-caption">Figure 22.6: Inverse Perspective Mapping (IPM) — Converging road perspective (Left) converted into strictly parallel lane lines with linear metric distance grid (Right).</div>
+    </div>
+
+    <div class="code-title">Python Code: Inverse Perspective Mapping (IPM)</div>
+    <pre><code>import cv2
+import numpy as np
+
+# Road frame load karein
+frame = cv2.imread("road_dashcam.jpg")
+if frame is None:
+    frame = np.zeros((400, 640, 3), dtype=np.uint8)
+
+# Road ke trapezoidal region ke corners
+src_road = np.float32([
+    [240, 210],  # Top-Left near horizon
+    [400, 210],  # Top-Right near horizon
+    [560, 380],  # Bottom-Right near car hood
+    [80, 380]    # Bottom-Left near car hood
+])
+
+# Top-down view par parallel rectangle
+bev_w, bev_h = 360, 400
+dst_road = np.float32([
+    [60, 0],
+    [bev_w - 60, 0],
+    [bev_w - 60, bev_h - 1],
+    [60, bev_h - 1]
+])
+
+# Matrix compute karke warp karein
+M_ipm = cv2.getPerspectiveTransform(src_road, dst_road)
+birds_eye_view = cv2.warpPerspective(frame, M_ipm, (bev_w, bev_h),
+                                     flags=cv2.INTER_LINEAR,
+                                     borderMode=cv2.BORDER_CONSTANT)
+
+cv2.imwrite("road_birds_eye.jpg", birds_eye_view)</code></pre>
+  </div>
+
+  <!-- Section 7: Real-Life Applications -->
+  <div class="card">
+    <h2>7. Real-Life Industry Applications</h2>
+    <div class="grid-2">
+      <div class="grid-item">
+        <h4>&#128196; Document Scanning Apps (CamScanner / Adobe Scan)</h4>
+        <p>User kisi bhi angle se receipt ya book page ki photo leta hai; app automatically 4 corners detect karta hai aur flat rectangular PDF page generate kar deta hai.</p>
+      </div>
+      <div class="grid-item">
+        <h4>&#128663; Autonomous Driving & Lane Departure (ADAS)</h4>
+        <p>Dashcam perspective mein lane lines triangle ki tarah converge hoti hain. Inverse Perspective Mapping (IPM) unhe parallel straight lines mein convert karta hai jisse lane curvature aur car offset accurately calculate hota hai.</p>
+      </div>
+      <div class="grid-item">
+        <h4>&#9917; Sports Analytics & Hawk-Eye (Cricket / Football)</h4>
+        <p>Stadium camera ke tilted view se pitch ya penalty box ko 2D top-down grid par map karke ball trajectory, offside lines, aur LBW review simulate kiye jaate hain.</p>
+      </div>
+      <div class="grid-item">
+        <h4>&#127912; Augmented Reality & Billboard Replacement</h4>
+        <p>Cricket broadcast mein ground par sponsor logo digitally paint karna, ya live video mein stadium hoardings par custom advertisements project karna.</p>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <strong>Planar Assumption Limitation:</strong> Homography tabhi 100% accurate hoti hai jab target scene flat 2D plane ho (jaise paper sheet ya flat road), ya camera pure rotation around its optical center kar raha ho. Agar scene mein complex 3D depth variations hain (e.g. mountainous terrain), to single 3&times;3 homography parallax handle nahi kar sakti!
+    </div>
+  </div>
+
+  <!-- Section 8: Common Errors and Troubleshooting -->
+  <div class="card">
+    <h2>8. Common Errors & Troubleshooting</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Common Issue</th>
+          <th>Root Cause</th>
+          <th>Solution / Fix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Twisted / Hourglass Warped Output</strong></td>
+          <td>Source aur destination points ka sequence match nahi karta (e.g. TR and BR swapped).</td>
+          <td>Dono arrays ko consistent clockwise sequence mein arrange karein: <code>TL &rarr; TR &rarr; BR &rarr; BL</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>TypeError: layout/dtype mismatch</strong></td>
+          <td>Points array integer type ya galat shape mein pass kiya gaya.</td>
+          <td>Hamesha <code>np.float32()</code> use karein: <code>pts = np.float32([...])</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Black or Cropped Output Image</strong></td>
+          <td><code>cv2.warpPerspective()</code> mein pass kiya gaya <code>(width, height)</code> tuple inverted hai <code>(height, width)</code>.</td>
+          <td>OpenCV dimensions format <code>(w, h)</code> hota hai, jabki numpy shape <code>(h, w)</code> hoti hai! Parameter <code>(target_w, target_h)</code> pass karein.</td>
+        </tr>
+        <tr>
+          <td><strong>Singular Matrix / Assertion Failure</strong></td>
+          <td>3 ya 4 points ek hi seedhi line par hain (collinear) ya overlapping hain.</td>
+          <td>Check karein ki points non-collinear hon aur ek valid 4-sided polygon banate hon.</td>
+        </tr>
+        <tr>
+          <td><strong>RANSAC Matrix Unstable / Inaccurate</strong></td>
+          <td>Matching points mein noise zyada hai ya threshold parameter bohot strict hai.</td>
+          <td><code>cv2.findHomography(src, dst, cv2.RANSAC, ransacReprojThreshold=5.0)</code> use karein aur minimum 15-20 matches verify karein.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 9: Key Takeaways -->
+  <div class="card">
+    <h2>9. Key Takeaways & Quick Revision</h2>
+    <ul>
+      <li><strong>Projective Geometry:</strong> Perspective transform straight lines ko straight rakhta hai par parallel lines ko vanishing point par converge kar deta hai.</li>
+      <li><strong>Degrees of Freedom:</strong> 3&times;3 homography matrix ke 8 independent parameters hote hain (normalized by <code>h33 = 1</code>).</li>
+      <li><strong>4 Points Rule:</strong> Exactly 4 non-collinear point pairs 8 equations provide karte hain jo <code>cv2.getPerspectiveTransform()</code> se solve hoti hain.</li>
+      <li><strong>Robust Estimation:</strong> Real-world matching mein hamesha <code>cv2.findHomography()</code> ke saath <code>cv2.RANSAC</code> use karein taaki false matches reject ho sakein.</li>
+      <li><strong>Coordinates Transformation:</strong> Bounding boxes ya tracking points ko transform karne ke liye <code>cv2.perspectiveTransform(pts, H)</code> use hota hai.</li>
+    </ul>
+  </div>
+
+  <!-- Section 10: Interactive Self-Check -->
+  <div class="card">
+    <h2>10. Interactive Self-Check (Interview Questions)</h2>
+    <details>
+      <summary>Q1: Affine Transformation ke liye 3 points kyu kaafi hote hain jabki Perspective Transformation ke liye 4 points chahiye hote hain?</summary>
+      <div class="answer-content">
+        <p><strong>Answer:</strong> Affine transformation mein parallel lines ko parallel rehna mandatory hota hai, isliye isme sirf 6 degrees of freedom hote hain (2 translation, 1 rotation, 2 scale, 1 shear). Har point pair 2 equations (x aur y) deta hai, to 3 points &times; 2 = 6 equations kaafi hoti hain. Perspective transformation mein parallelism preserve nahi hoti aur 8 degrees of freedom hote hain, isliye 4 points &times; 2 = 8 equations mandatory hoti hain.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Q2: cv2.getPerspectiveTransform() aur cv2.findHomography() mein main difference kya hai?</summary>
+      <div class="answer-content">
+        <p><strong>Answer:</strong> <code>cv2.getPerspectiveTransform()</code> strictly 4 source aur 4 destination points expect karta hai aur exact mathematical solution nikalta hai (outliers handle nahi karta). Jabki <code>cv2.findHomography()</code> 4 se lekar hazaaro matching points le sakta hai aur RANSAC algorithm use karke noisy, galat matches ko automatically filter karke best-fit planar matrix calculate karta hai.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Q3: Inverse Perspective Mapping (IPM) self-driving cars ke lane detection mein kyu critical hai?</summary>
+      <div class="answer-content">
+        <p><strong>Answer:</strong> Forward-facing dashcam perspective mein door jaati hui road lines converge hoti hain, jisse curve ka radius aur vehicle ka lane center se distance non-linear ban jata hai. IPM ke through road surface ko top-down 2D orthogonal grid par warp karne se lane boundaries strictly parallel ho jaati hain, jisse vehicle ke steering angle aur distance to lane edge ka direct metric conversion (meters) feasible ho jata hai.</p>
+      </div>
+    </details>
+  </div>
+
+</div>
+</body>
+</html>

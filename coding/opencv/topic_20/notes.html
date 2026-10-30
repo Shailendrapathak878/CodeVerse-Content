@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 20: Background Subtraction & Motion Detection - CodeVerse OpenCV</title>
+<style>
+  :root {
+    --bg-main: #0b0f19;
+    --card-bg: #131b2e;
+    --border-color: #23324d;
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --accent-blue: #38bdf8;
+    --accent-green: #22c55e;
+    --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
+    --accent-rose: #f43f5e;
+    --code-bg: #090d16;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.65;
+    padding: 24px 16px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .topic-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #0284c7, #0369a1);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  .header-card {
+    background: linear-gradient(145deg, #131b2e, #1a2642);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 28px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.25;
+    margin-bottom: 10px;
+  }
+  .subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .meta-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .meta-pill {
+    background: rgba(56, 189, 248, 0.1);
+    color: var(--accent-blue);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 24px;
+  }
+  h2 {
+    font-size: 21px;
+    font-weight: 700;
+    color: #38bdf8;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 18px 0 10px 0;
+  }
+  p {
+    margin-bottom: 12px;
+    color: #cbd5e1;
+    font-size: 15px;
+  }
+  .hinglish-box {
+    background: rgba(168, 85, 247, 0.08);
+    border-left: 4px solid var(--accent-purple);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .info-box {
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 4px solid var(--accent-blue);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .warning-box {
+    background: rgba(244, 63, 94, 0.08);
+    border-left: 4px solid var(--accent-rose);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #fecdd3;
+  }
+  .tip-box {
+    background: rgba(34, 197, 94, 0.08);
+    border-left: 4px solid var(--accent-green);
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 14.5px;
+    color: #e2e8f0;
+  }
+  .flow-diagram {
+    background: #090d16;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 14px;
+    color: var(--accent-blue);
+    margin: 16px 0;
+    line-height: 1.8;
+  }
+  .flow-arrow {
+    color: #f59e0b;
+    font-weight: bold;
+    padding: 0 6px;
+  }
+  .image-card {
+    background-color: #0c1220;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px;
+    margin: 18px 0;
+    text-align: center;
+  }
+  .image-card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+  }
+  .image-caption {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    font-style: italic;
+  }
+  pre {
+    background-color: var(--code-bg);
+    border: 1px solid #1c273d;
+    border-radius: 10px;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin: 14px 0;
+    color: #e2e8f0;
+  }
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    background: rgba(56, 189, 248, 0.12);
+    color: #7dd3fc;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13.5px;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: inherit;
+  }
+  .code-title {
+    font-size: 12.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--accent-blue);
+    margin-bottom: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+  th {
+    background-color: rgba(56, 189, 248, 0.08);
+    color: var(--accent-blue);
+    font-weight: 600;
+  }
+  tr:hover {
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .grid-item {
+    background: #0d1527;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .grid-item h4 {
+    font-size: 15px;
+    color: var(--accent-amber);
+    margin-bottom: 8px;
+  }
+  details {
+    background-color: #0d1527;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    cursor: pointer;
+  }
+  summary {
+    font-weight: 600;
+    color: var(--accent-blue);
+    font-size: 15px;
+    outline: none;
+  }
+  details[open] summary {
+    margin-bottom: 12px;
+    color: #60a5fa;
+  }
+  details p {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header Card -->
+  <div class="header-card">
+    <span class="topic-badge">OpenCV Topic 20</span>
+    <h1>Background Subtraction & Motion Detection</h1>
+    <p class="subtitle">Statistical Background Modeling (MOG2 & KNN), Foreground Mask Extraction, Shadow Filtering & Surveillance Analytics</p>
+    <div class="meta-pills">
+      <span class="meta-pill">⏱️ 7–8 min read</span>
+      <span class="meta-pill">🤖 MOG2 (Gaussian Mixture)</span>
+      <span class="meta-pill">🌲 KNN Subtractor</span>
+      <span class="meta-pill">🧹 Mask Morphology</span>
+      <span class="meta-pill">📦 Motion Bounding Boxes</span>
+    </div>
+  </div>
+
+  <!-- Section 1: Introduction to Background Subtraction -->
+  <div class="card">
+    <h2>1. Introduction to Background Subtraction</h2>
+    <p>Real-world surveillance aur automated computer vision systems fixed cameras (CCTV) se continuous streams analyze karte hain. In scenes mein mostly do components hote hain:</p>
+    <ul>
+      <li><strong>Background:</strong> Scene ke static ya stationary elements (jaise floor, walls, road, buildings, stationary furniture).</li>
+      <li><strong>Foreground:</strong> Scene mein aane wale dynamic ya moving objects (jaise log, vehicles, animals, packages).</li>
+    </ul>
+
+    <p><strong>Background Subtraction</strong> ek computational technique hai jo har incoming frame mein se estimated static background ko mathematically subtract karke dynamic <strong>Foreground Mask</strong> isolate karti hai.</p>
+
+    <div class="hinglish-box">
+      <strong>Crucial Difference: Frame Differencing vs Background Subtraction:</strong><br>
+      • <strong>Frame Differencing (Topic 19):</strong> Sirf consecutive frames (Frame T aur T-1) ko compare karta hai. Agar koi person ya car chalte-chalte 2 second ke liye ruk jaye, toh frame differencing use instantly bhool jati hai (difference zero ho jata hai)!<br>
+      • <strong>Background Subtraction (Topic 20):</strong> Hazaron frames ka statistical history model build karta hai. Agar koi object ruk bhi jaye, tab bhi woh background se different rehta hai aur foreground mask mein accurately detected rehta hai!
+    </div>
+
+    <div class="flow-diagram">
+      Video Frame <span class="flow-arrow">&rarr;</span> Background Model <span class="flow-arrow">&rarr;</span> Foreground Mask <span class="flow-arrow">&rarr;</span> Noise Removal (Morphology) <span class="flow-arrow">&rarr;</span> Contour Extraction <span class="flow-arrow">&rarr;</span> Bounding Boxes
+    </div>
+
+    <div class="image-card">
+      <img src="assets/topic20_background_subtraction_pipeline.png" alt="Background Subtraction Architecture Pipeline">
+      <div class="image-caption">Figure 20.1: Architecture pipeline of Background Subtraction and Motion Detection: From raw frame ingestion to statistical modeling, mask generation, morphological cleanup, and bounding box localization.</div>
+    </div>
+
+    <div class="warning-box">
+      <strong>Important Understanding:</strong> Foreground mask sirf yeh batata hai ki scene ke konse pixels background se alag hain. Yeh automatically object ko classify ya identify nahi karta (e.g. Yeh nahi batata ki pixel person ka hai ya dog ka). Object classification ke liye alag Deep Learning models lagaye jaate hain.
+    </div>
+  </div>
+
+  <!-- Section 2: Essential Definitions & Terminology -->
+  <div class="card">
+    <h2>2. Essential Definitions & Terminology</h2>
+    <p>Background subtraction mein frequently use hone wale core OpenCV concepts aur methods ka quick reference:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Concept / Method</th>
+          <th>Type</th>
+          <th>Beginner Explanation & Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Background Model</strong></td>
+          <td>Concept</td>
+          <td>Camera view ke stationary scene ka mathematical/statistical representation (e.g. mean aur variance per pixel).</td>
+        </tr>
+        <tr>
+          <td><strong>Foreground Mask</strong></td>
+          <td>Data Array</td>
+          <td>Output 2D image jisme 255 (White) = Foreground Object, 0 (Black) = Background, aur 127 (Gray) = Shadow.</td>
+        </tr>
+        <tr>
+          <td><strong>Shadow Detection</strong></td>
+          <td>Feature</td>
+          <td>Moving objects ki cast shadows ko alag gray color (pixel value 127) mark karna taaki false bounding boxes na banein.</td>
+        </tr>
+        <tr>
+          <td><strong>Learning Rate</strong></td>
+          <td>Parameter</td>
+          <td>Model kitni fast nayi information seekhta hai. <code>-1</code> = auto (1/history), <code>0</code> = model freezes, <code>1</code> = instant update.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.createBackgroundSubtractorMOG2()</code></td>
+          <td>OpenCV Method</td>
+          <td>Mixture of Gaussians 2 algorithm ka subtractor instance banata hai (fast illumination adaptation).</td>
+        </tr>
+        <tr>
+          <td><code>cv2.createBackgroundSubtractorKNN()</code></td>
+          <td>OpenCV Method</td>
+          <td>K-Nearest Neighbors algorithm ka subtractor instance banata hai (sharp boundaries on complex backgrounds).</td>
+        </tr>
+        <tr>
+          <td><code>subtractor.apply(frame)</code></td>
+          <td>OpenCV Method</td>
+          <td>Next frame ko background model se compare karke foreground mask return karta hai aur model update karta hai.</td>
+        </tr>
+        <tr>
+          <td><code>getBackgroundImage()</code></td>
+          <td>OpenCV Method</td>
+          <td>Current estimated static background image reconstruct karke return karta hai (visualization ke liye useful).</td>
+        </tr>
+        <tr>
+          <td><code>cv2.morphologyEx()</code></td>
+          <td>OpenCV Method</td>
+          <td>Opening (noise dots hatane) aur Closing (holes seal karne) ke liye morphological transformation lagata hai.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.findContours()</code></td>
+          <td>OpenCV Method</td>
+          <td>Cleaned binary mask ke white foreground blobs ke boundary coordinates nikalta hai.</td>
+        </tr>
+        <tr>
+          <td><code>cv2.boundingRect()</code></td>
+          <td>OpenCV Method</td>
+          <td>Contour ke around upright bounding rectangle <code>(x, y, w, h)</code> calculate karta hai.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 3: How Background Subtraction Works -->
+  <div class="card">
+    <h2>3. How Background Subtraction Works (Step-by-Step Workflow)</h2>
+    <p>Background Subtraction ek progressive adaptive cycle follow karta hai jisme har naye frame ke saath model refine hota hai:</p>
+
+    <div class="image-card">
+      <img src="assets/topic20_subtraction_workflow_stages.png" alt="5-Stage Subtraction Workflow Stages">
+      <div class="image-caption">Figure 20.2: Five stages of Background Subtraction: (1) Input Video Frame &rarr; (2) Estimated Static Background &rarr; (3) Raw Mask with Shadows &rarr; (4) Morphologically Cleaned Mask &rarr; (5) Final Detected Region.</div>
+    </div>
+
+    <h3>The 8-Step Internal Processing Pipeline:</h3>
+    <ol style="margin-left: 20px; color: #cbd5e1; font-size: 14.5px; line-height: 1.8;">
+      <li><strong>Read Frame:</strong> <code>ret, frame = cap.read()</code> se video ka current frame grab karein.</li>
+      <li><strong>Update Background Model:</strong> Subtractor har pixel ki history evaluate karta hai aur distribution update karta hai.</li>
+      <li><strong>Pixel Classification:</strong> Har pixel check hota hai: kya yeh background distribution mein fit hota hai ya significantly alag hai?</li>
+      <li><strong>Shadow Detection:</strong> Agar pixel color same hai lekin sirf brightness kam hui hai, toh use shadow (value 127) mark karta hai.</li>
+      <li><strong>Generate Raw Mask:</strong> White (255) for object, gray (127) for shadow, black (0) for background.</li>
+      <li><strong>Shadow Filtering & Threshold:</strong> Binary threshold lagakar gray shadows aur sensor noise filter karein.</li>
+      <li><strong>Morphological Cleaning:</strong> Opening se noise dots hatayein aur Closing se object ke gaps fill karein.</li>
+      <li><strong>Extract Bounding Boxes:</strong> Contours nikal kar minimum area check karein aur original frame par green box draw karein.</li>
+    </ol>
+
+    <div class="info-box">
+      <strong>Model Adaptation & Object Absorption:</strong><br>
+      Background model time ke saath evolve hota hai. Agar koi moving car parking space mein aakar permanently park ho jaye, toh shuru mein woh foreground rahegi. Lekin kuch hundred frames baad algorithm use naya static background maan lega aur mask se absorb kar lega!
+    </div>
+  </div>
+
+  <!-- Section 4: MOG2 vs KNN Background Subtractors -->
+  <div class="card">
+    <h2>4. MOG2 vs KNN Background Subtractors</h2>
+    <p>OpenCV do state-of-the-art background subtraction algorithms provide karta hai: <strong>MOG2</strong> aur <strong>KNN</strong>.</p>
+
+    <div class="image-card">
+      <img src="assets/topic20_mog2_vs_knn_comparison.png" alt="MOG2 vs KNN Comparison">
+      <div class="image-caption">Figure 20.3: Side-by-side comparison of MOG2 (Mixture of Gaussians) and KNN (K-Nearest Neighbors) on the exact same surveillance frame.</div>
+    </div>
+
+    <h3>Comparison: MOG2 vs KNN:</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Feature / Property</th>
+          <th>MOG2 (Mixture of Gaussians 2)</th>
+          <th>KNN (K-Nearest Neighbors)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Underlying Approach</strong></td>
+          <td>Har pixel ko 3 se 5 Gaussian distributions ka mixture model karta hai.</td>
+          <td>Non-parametric K-Nearest Neighbors sample-based density estimation.</td>
+        </tr>
+        <tr>
+          <td><strong>Primary Sensitivity Tuning</strong></td>
+          <td><code>varThreshold</code> (Default: 16–25). Lower = more sensitive.</td>
+          <td><code>dist2Threshold</code> (Default: 400.0). Lower = stricter matching.</td>
+        </tr>
+        <tr>
+          <td><strong>Shadow Detection</strong></td>
+          <td><code>detectShadows=True</code> (Marks shadows as gray = 127).</td>
+          <td><code>detectShadows=True</code> (Also marks shadows as gray = 127).</td>
+        </tr>
+        <tr>
+          <td><strong>Strengths</strong></td>
+          <td>Illumination changes (sunlight, shadows, lamp flickers) par fast adapt hota hai; fast execution speed.</td>
+          <td>Complex scene geometry aur repetitive background motion par aksar sharper boundaries retain karta hai.</td>
+        </tr>
+        <tr>
+          <td><strong>Ideal Use Cases</strong></td>
+          <td>Outdoor traffic surveillance, outdoor CCTV cameras, fast illumination changes.</td>
+          <td>Indoor tracking, crowded scenes, cluttered factory floors.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 5: Practical OpenCV Code Examples -->
+  <div class="card">
+    <h2>5. Practical OpenCV Code Examples</h2>
+
+    <!-- Example 1 -->
+    <h3>Example 1: Basic Background Subtraction using MOG2</h3>
+    <p>MOG2 subtractor initialize karke video stream par mask generate karne ka baseline runnable code:</p>
+    <div class="code-title">Python / OpenCV — MOG2 Subtractor Baseline</div>
+    <pre><code>import cv2
+
+# 1. Open sample video
+cap = cv2.VideoCapture("surveillance_sample.mp4")
+if not cap.isOpened():
+    print("Error: Could not open video file!")
+    exit()
+
+# 2. Initialize MOG2 Subtractor
+# history: number of previous frames affecting the background model (default 500)
+# varThreshold: Mahalanobis distance threshold for foreground classification
+# detectShadows: True marks shadows as gray (127), keeping mask cleaner
+subtractor = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=25, detectShadows=True)
+
+frame_idx = 0
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame_idx += 1
+
+    # 3. Apply subtractor to current frame
+    fg_mask = subtractor.apply(frame)
+
+    # 4. Display input and mask
+    cv2.imshow("Surveillance Feed", frame)
+    cv2.imshow("MOG2 Foreground Mask", fg_mask)
+
+    if cv2.waitKey(25) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+</code></pre>
+
+    <div class="tip-box">
+      <strong>Model Warmup Observation:</strong> Pehle 5–10 frames mein mask empty ya inaccurate lag sakta hai. Yeh expected behavior hai kyunki algorithm ko static background ka distribution estimate karne ke liye initial frames ki history zaroorat hoti hai.
+    </div>
+
+    <!-- Example 2 -->
+    <h3>Example 2: Compare MOG2 and KNN Side by Side</h3>
+    <p>Dono algorithms ko identical frames feed karke visual masks compare karein:</p>
+    <div class="code-title">Python / OpenCV — MOG2 vs KNN Comparison</div>
+    <pre><code>import cv2
+import numpy as np
+
+cap = cv2.VideoCapture("surveillance_sample.mp4")
+
+# Initialize both subtractors with matching history
+mog2 = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=25, detectShadows=True)
+knn = cv2.createBackgroundSubtractorKNN(history=300, dist2Threshold=400.0, detectShadows=True)
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    mask_mog2 = mog2.apply(frame)
+    mask_knn = knn.apply(frame)
+
+    # Stack both masks side by side for direct comparison
+    combined_masks = np.hstack((mask_mog2, mask_knn))
+
+    cv2.imshow("MOG2 (Left) vs KNN (Right)", combined_masks)
+    if cv2.waitKey(25) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+</code></pre>
+
+    <!-- Example 3 -->
+    <h3>Example 3: Clean the Foreground Mask with Morphology</h3>
+    <p>Raw mask mein sensor noise aur gray shadows hote hain. Morphological <strong>Opening</strong> aur <strong>Closing</strong> se mask ko solid blob mein convert kiya jata hai:</p>
+
+    <div class="image-card">
+      <img src="assets/topic20_mask_morphology_cleaning.png" alt="Morphological Mask Cleaning Process">
+      <div class="image-caption">Figure 20.4: Morphological Mask Cleaning: (Stage 1) Raw mask with noise and gaps &rarr; (Stage 2) Opening removes noise specks &rarr; (Stage 3) Closing seals internal gaps for clean contour extraction.</div>
+    </div>
+
+    <div class="code-title">Python / OpenCV — Shadow Removal & Morphological Cleaning</div>
+    <pre><code>import cv2
+
+cap = cv2.VideoCapture("surveillance_sample.mp4")
+mog2 = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=25, detectShadows=True)
+
+# Define rectangular morphological kernels
+kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    raw_mask = mog2.apply(frame)
+
+    # 1. Eliminate shadows (value 127): Keep only genuine foreground (value 255)
+    _, binary_fg = cv2.threshold(raw_mask, 200, 255, cv2.THRESH_BINARY)
+
+    # 2. Opening: Erode then Dilate (erases isolated tiny noise dots)
+    opened_mask = cv2.morphologyEx(binary_fg, cv2.MORPH_OPEN, kernel_open)
+
+    # 3. Closing: Dilate then Erode (fills interior holes & bridges fractures)
+    cleaned_mask = cv2.morphologyEx(opened_mask, cv2.MORPH_CLOSE, kernel_close)
+
+    cv2.imshow("Raw Mask", raw_mask)
+    cv2.imshow("Cleaned Solid Mask", cleaned_mask)
+
+    if cv2.waitKey(25) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+</code></pre>
+
+    <!-- Example 4 -->
+    <h3>Example 4: Detect and Draw Moving Regions (Bounding Boxes)</h3>
+    <p>Cleaned mask se contours extract karke moving targets ke around bounding rectangle draw karein:</p>
+
+    <div class="image-card">
+      <img src="assets/topic20_motion_bounding_boxes.png" alt="Detected Moving Regions and Stationary Persistence">
+      <div class="image-caption">Figure 20.5: Target persistence: In motion phase (Frame #46) and temporary stationary pause (Frame #58), MOG2 continues detecting the target, demonstrating superiority over simple frame differencing.</div>
+    </div>
+
+    <div class="code-title">Python / OpenCV — Moving Object Localization & Bounding Boxes</div>
+    <pre><code>import cv2
+
+cap = cv2.VideoCapture("surveillance_sample.mp4")
+mog2 = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=25, detectShadows=True)
+
+kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    raw_mask = mog2.apply(frame)
+    _, binary_fg = cv2.threshold(raw_mask, 200, 255, cv2.THRESH_BINARY)
+    clean_mask = cv2.morphologyEx(binary_fg, cv2.MORPH_OPEN, kernel_open)
+    clean_mask = cv2.morphologyEx(clean_mask, cv2.MORPH_CLOSE, kernel_close)
+
+    # Find external contours of moving objects
+    contours, _ = cv2.findContours(clean_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    annotated = frame.copy()
+
+    for cnt in contours:
+        # Area filter eliminates tiny residual noise blobs
+        if cv2.contourArea(cnt) > 400:
+            x, y, w, h = cv2.boundingRect(cnt)
+            # Draw green bounding rectangle around detected target
+            cv2.rectangle(annotated, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.putText(annotated, f"TARGET ({w}x{h})", (x, y - 8),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 2)
+
+    cv2.imshow("Detected Moving Regions", annotated)
+    if cv2.waitKey(25) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+</code></pre>
+
+    <!-- Example 5 -->
+    <h3>Example 5: Practical Motion-Monitoring Demo</h3>
+    <p>Poore pipeline ko combine karke target counter aur status HUD ke saath processed video disk par save karein:</p>
+
+    <div class="image-card">
+      <img src="assets/topic20_videowriter_output_verification.png" alt="VideoWriter Reopened Output Verification">
+      <div class="image-caption">Figure 20.6: Automated integrity check: Reopening and verifying the processed surveillance video output on disk (90/90 frames, 640x360 @ 30 FPS).</div>
+    </div>
+
+    <div class="code-title">Python / OpenCV — Complete Surveillance Motion Monitoring Demo</div>
+    <pre><code>import cv2
+import time
+
+# 1. Open video and extract properties
+cap = cv2.VideoCapture("surveillance_sample.mp4")
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fps = cap.get(cv2.CAP_PROP_FPS)
+
+# 2. Configure VideoWriter to save processed stream
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+output_path = "surveillance_motion_output.mp4"
+out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
+# 3. Initialize background subtractor and morphological filters
+mog2 = cv2.createBackgroundSubtractorMOG2(history=300, varThreshold=25, detectShadows=True)
+k_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+k_close = cv2.getStructuringElement(cv2.MORPH_RECT, (7, 7))
+
+frames_processed = 0
+start_time = time.perf_counter()
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frames_processed += 1
+
+    # Apply MOG2 subtraction
+    raw_mask = mog2.apply(frame)
+
+    # Filter shadows & clean noise
+    _, binary_fg = cv2.threshold(raw_mask, 200, 255, cv2.THRESH_BINARY)
+    clean_mask = cv2.morphologyEx(binary_fg, cv2.MORPH_OPEN, k_open)
+    clean_mask = cv2.morphologyEx(clean_mask, cv2.MORPH_CLOSE, k_close)
+
+    # Extract contours
+    contours, _ = cv2.findContours(clean_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    annotated = frame.copy()
+    targets_detected = 0
+
+    for cnt in contours:
+        if cv2.contourArea(cnt) > 400:
+            targets_detected += 1
+            x, y, w, h = cv2.boundingRect(cnt)
+            cv2.rectangle(annotated, (x, y), (x + w, y + h), (34, 197, 94), 2)
+            cv2.putText(annotated, f"TARGET #{targets_detected}", (x, y - 6),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (34, 197, 94), 2)
+
+    # Real-time HUD status
+    status_text = f"MOTION DETECTED ({targets_detected} Target)" if targets_detected > 0 else "SURVEILLANCE: SECURE"
+    status_col = (34, 197, 94) if targets_detected > 0 else (148, 163, 184)
+    cv2.putText(annotated, f"Frame: #{frames_processed:02d} | {status_text}", (20, 35),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.65, status_col, 2)
+
+    out.write(annotated)
+
+elapsed = time.perf_counter() - start_time
+cap.release()
+out.release()
+
+print(f"Processed {frames_processed} frames in {elapsed:.3f}s ({frames_processed/elapsed:.1f} FPS)")
+
+# Verify reopened video
+check_cap = cv2.VideoCapture(output_path)
+print(f"Verification: {int(check_cap.get(cv2.CAP_PROP_FRAME_COUNT))} frames confirmed on disk.")
+check_cap.release()
+</code></pre>
+  </div>
+
+  <!-- Section 6: Real-Life Applications -->
+  <div class="card">
+    <h2>6. Real-Life Applications of Background Subtraction</h2>
+    <p>Background Subtraction modern video analytics systems mein wide range of real-world use cases solve karta hai:</p>
+
+    <div class="grid-2">
+      <div class="grid-item">
+        <h4>🚨 Smart CCTV & Perimeter Security</h4>
+        <p><strong>Connection:</strong> Industrial plants aur restricted zones mein 24x7 static cameras background subtraction se perimeter breach detect karte hain aur human entry par automated alarm bajate hain.</p>
+      </div>
+      <div class="grid-item">
+        <h4>🚗 Highway Traffic & Congestion Analysis</h4>
+        <p><strong>Connection:</strong> Fixed traffic cameras road lane par moving vehicles ko isolate karte hain, vehicle density calculate karte hain, aur traffic signal timing dynamically adjust karte hain.</p>
+      </div>
+      <div class="grid-item">
+        <h4>🛒 Retail Footfall & Store Analytics</h4>
+        <p><strong>Connection:</strong> Shopping malls aur stores mein overhead cameras floor par customers ka movement track karte hain, popular product aisles par heatmaps banate hain, aur queue length monitor karte hain.</p>
+      </div>
+      <div class="grid-item">
+        <h4>🏭 Factory & Industrial Workstation Safety</h4>
+        <p><strong>Connection:</strong> Heavy robotic machinery ke danger zones mein human entry detect hoti hi conveyor system ko emergency stop signal bhej diya jata hai.</p>
+      </div>
+    </div>
+
+    <div class="hinglish-box">
+      <strong>Capability Reality Check:</strong> Background subtraction sirf <em>unusual foreground pixels</em> dhoondhta hai. Yeh akele kisi person ka face recognize nahi kar sakta, vehicle ka registration number nahi padh sakta, aur na hi cross-occlusion ke time individual objects ko uniquely identify kar sakta hai. Uske liye advanced tracking (DeepSORT) aur object detection models zaroori hote hain.
+    </div>
+  </div>
+
+  <!-- Section 7: Limitations & Troubleshooting -->
+  <div class="card">
+    <h2>7. Common Beginner Pitfalls & Troubleshooting</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Symptom / Bug</th>
+          <th>Root Cause</th>
+          <th>Recommended Solution</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Initial frames are completely white / noisy</td>
+          <td>Subtractor warmup phase; model lacks sufficient history.</td>
+          <td>Allow 10–20 frames for the background model to settle before triggering alerts.</td>
+        </tr>
+        <tr>
+          <td>Moving shadows create false large boxes</td>
+          <td><code>detectShadows</code> is False, or shadow gray values (127) are not thresholded out.</td>
+          <td>Ensure <code>detectShadows=True</code> and threshold mask with <code>cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)</code>.</td>
+        </tr>
+        <tr>
+          <td>Stationary object disappears from mask</td>
+          <td>Model has absorbed the stationary object over time.</td>
+          <td>Increase <code>history</code> (e.g. 500–1000) or pass a very small <code>learningRate</code> (e.g. 0.001) in <code>apply()</code>.</td>
+        </tr>
+        <tr>
+          <td>Small sensor noise specks trigger boxes</td>
+          <td>Contour area threshold is missing or set too low.</td>
+          <td>Apply morphological opening and ignore contours with <code>cv2.contourArea(cnt) < 400</code>.</td>
+        </tr>
+        <tr>
+          <td>Camera shake causes whole frame motion</td>
+          <td>Wind or vibrations displace background pixels.</td>
+          <td>Use rigid camera mounts or apply digital video stabilization prior to subtraction.</td>
+        </tr>
+        <tr>
+          <td>Headless Environment Crash</td>
+          <td><code>cv2.imshow()</code> called on cloud servers without GUI.</td>
+          <td>Skip <code>imshow()</code> in headless environments; direct output to <code>VideoWriter</code> or save image frames.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 8: Quick Revision & Self-Assessment -->
+  <div class="card">
+    <h2>8. Quick Revision & Self-Assessment</h2>
+
+    <h3>Key Takeaways:</h3>
+    <ul>
+      <li><strong>Background Modeling:</strong> Background subtraction maintains statistical distributions per pixel over time, unlike simple frame differencing which only checks the previous frame.</li>
+      <li><strong>MOG2 vs KNN:</strong> MOG2 uses Gaussian mixtures (fast illumination adaptation); KNN uses nearest neighbors (crisp boundaries in complex scenes).</li>
+      <li><strong>Shadow Values:</strong> With <code>detectShadows=True</code>, OpenCV marks shadows as gray (127), allowing clean binary filtering.</li>
+      <li><strong>Morphological Cleaning:</strong> Always apply Opening (removes noise) and Closing (fills interior holes) before contour detection.</li>
+      <li><strong>Area Filtering:</strong> Always filter contours by minimum area (e.g. &gt; 400 px) to prevent false sensor noise alarms.</li>
+    </ul>
+
+    <h3>Comparison: Frame Diff vs Background Subtraction vs Deep Learning:</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Technique</th>
+          <th>Approach</th>
+          <th>Handles Stopped Objects?</th>
+          <th>Recognizes Object Class?</th>
+          <th>Compute Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Frame Differencing (Topic 19)</strong></td>
+          <td>Subtract Frame T - (T-1)</td>
+          <td>No (Object disappears instantly)</td>
+          <td>No</td>
+          <td>Ultra Low</td>
+        </tr>
+        <tr>
+          <td><strong>Background Subtraction (Topic 20)</strong></td>
+          <td>Statistical History Model</td>
+          <td>Yes (Retains until absorbed)</td>
+          <td>No</td>
+          <td>Low to Moderate</td>
+        </tr>
+        <tr>
+          <td><strong>Deep Learning (YOLO / SSD)</strong></td>
+          <td>Pretrained Neural Network</td>
+          <td>Yes (Always detected)</td>
+          <td>Yes (Person, Car, Dog, etc.)</td>
+          <td>High (GPU recommended)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Interactive Self-Check Questions:</h3>
+    <details>
+      <summary>Q1: detectShadows=True hone par foreground mask mein gray (127) pixels kyu aate hain aur unhe kaise filter kiya jata hai?</summary>
+      <p><strong>Answer:</strong> OpenCV moving object ke floor par padne wali shadows ko identify karke pixel value 127 (gray) assign karta hai. Agar hum direct contours nikalenge toh shadow bhi box mein include ho jayegi. Isliye hum <code>_, thresh = cv2.threshold(mask, 200, 255, cv2.THRESH_BINARY)</code> lagate hain, jisse gray shadows (127) black (0) ban jati hain aur sirf genuine object (255) bachta hai.</p>
+    </details>
+
+    <details>
+      <summary>Q2: Agar koi person room mein aakar chair par baith jaye, toh MOG2 background subtractor use kab tak detect karega?</summary>
+      <p><strong>Answer:</strong> Shuru mein person foreground (white) detect hoga. Lekin jaise-jaise frames aage badhenge, MOG2 ka Gaussian distribution update hota rahega. <code>history</code> frames (e.g. 300 to 500 frames) ke baad woh stationary person background model ka part ban jayega aur mask se disappear ho jayega (absorption). Agar aap absorption delay karna chahte hain, toh <code>history</code> badhayein ya <code>learningRate</code> reduce karein.</p>
+    </details>
+
+    <details>
+      <summary>Q3: Simple frame differencing ke mukable Background Subtraction kyu superior mana jata hai?</summary>
+      <p><strong>Answer:</strong> Frame differencing sirf do frames ka difference leti hai, isliye agar moving target temporary stop ho jaye (jaise traffic signal par car ruk jaye), toh difference 0 ho jata hai aur tracking fail ho jati hai. Background subtraction scene ki long-term statistical memory rakhta hai, isliye stopped object bhi accurate bounding box ke saath track hota rehta hai.</p>
+    </details>
+
+    <div class="hinglish-box" style="margin-top: 18px;">
+      <strong>OpenCV Video Processing Completed!</strong> Topic 18, 19, aur 20 complete karke aapne basic video I/O, frame-by-frame analysis, temporal differencing, aur statistical background subtraction ka solid foundation bana liya hai!
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

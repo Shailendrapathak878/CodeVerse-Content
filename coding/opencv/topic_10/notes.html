@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 10: Edge Detection | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+
+        .hero p {
+            font-size: 14.5px;
+            color: #f0f9ff;
+            opacity: 0.95;
+            max-width: 680px;
+            line-height: 1.55;
+            margin-bottom: 0;
+        }
+
+        /* Content Sections */
+        .section {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 10px;
+        }
+
+        .section-num {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-size: 13px;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        p {
+            margin-bottom: 14px;
+            color: #334155;
+        }
+
+        strong {
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        /* Callout Boxes */
+        .callout {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border-left: 4px solid var(--primary);
+            background: var(--primary-light);
+            font-size: 14px;
+        }
+
+        .callout-title {
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .callout-tip {
+            border-left-color: var(--accent-green);
+            background: var(--accent-green-bg);
+        }
+        .callout-tip .callout-title { color: var(--accent-green); }
+
+        .callout-warning {
+            border-left-color: var(--accent-amber);
+            background: var(--accent-amber-bg);
+        }
+        .callout-warning .callout-title { color: var(--accent-amber); }
+
+        .callout-danger {
+            border-left-color: var(--accent-red);
+            background: var(--accent-red-bg);
+        }
+        .callout-danger .callout-title { color: var(--accent-red); }
+
+        /* Media Card & Images */
+        .media-card {
+            background: #0f172a;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin: 18px 0;
+            border: 1px solid #1e293b;
+            box-shadow: var(--shadow-md);
+        }
+
+        .media-card img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .media-caption {
+            padding: 10px 14px;
+            color: #94a3b8;
+            font-size: 12.5px;
+            text-align: center;
+            background: #0f172a;
+            border-top: 1px solid #1e293b;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            background: var(--code-bg);
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            padding: 8px 14px;
+            color: #94a3b8;
+            font-size: 11.5px;
+            font-family: monospace;
+            border-bottom: 1px solid #334155;
+        }
+
+        pre {
+            padding: 14px;
+            overflow-x: auto;
+            font-family: Consolas, Monaco, "Courier New", monospace;
+            font-size: 13px;
+            color: var(--code-text);
+            line-height: 1.5;
+        }
+
+        code {
+            font-family: Consolas, Monaco, "Courier New", monospace;
+        }
+
+        p code, li code {
+            background: #e2e8f0;
+            color: #0369a1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        /* Grid Cards */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        @media (max-width: 640px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+            body {
+                padding: 10px;
+            }
+            .hero {
+                padding: 22px 16px;
+            }
+            .section {
+                padding: 16px;
+            }
+        }
+
+        .card {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background: #ffffff;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--text-main);
+            padding: 10px 14px;
+            font-weight: 700;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Interactive Quiz & Collapsible */
+        details {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            cursor: pointer;
+            background: #ffffff;
+            display: block;
+            user-select: none;
+            line-height: 1.45;
+        }
+
+        summary:hover {
+            background: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 13.5px;
+            background: #f8fafc;
+            border-top: 1px solid var(--border);
+            color: #334155;
+        }
+
+        .quiz-options {
+            margin: 10px 0;
+            list-style: none;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 4px;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            background: var(--accent-green-bg);
+            color: #065f46;
+            font-weight: 600;
+            border-left: 3px solid var(--accent-green);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <div class="hero-tags">
+            <span class="tag">Computer Vision • OpenCV</span>
+            <span class="tag">Topic 10 of 25</span>
+            <span class="tag">&#9201; ~6-8 min read</span>
+        </div>
+        <h1>Edge Detection in OpenCV</h1>
+        <p>Discover how computers locate object boundaries and shape outlines: First-order directional Sobel gradients (Sobel X &amp; Y), second-order isotropic Laplacian derivatives, and the gold-standard 5-stage Canny Edge Detector.</p>
+    </header>
+
+    <!-- Section 1: What is an Edge -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What Is an Edge &amp; Why Does It Matter?</h2>
+        </div>
+        <p>Ek digital image mein <strong>Edge</strong> us jagah ko kehte hain jahan pixel brightness ya color achanak aur tezi se change hota hai (sharp intensity transition).</p>
+        
+        <p>Computer Vision mein edges ka bohot bada significance hai:</p>
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><strong>Boundary Identification:</strong> Edges aksar foreground objects ki physical boundaries aur silhouettes ko represent karte hain.</li>
+            <li><strong>Data Reduction:</strong> Poore 2 Million pixels process karne ki jagah computer sirf 1-pixel thin boundaries par focus kar sakta hai, jisse processing speed 100x fast ho jaati hai!</li>
+            <li><strong>Shape Recognition:</strong> Bounding boxes, circular wheels, lane lines aur document borders detect karne ke liye edges primary foundation hain.</li>
+        </ul>
+
+        <div class="callout callout-tip">
+            <div class="callout-title">&#128161; Real-Life Applications</div>
+            &bull; <strong>Tesla Autopilot / Lane Detection:</strong> Road par white aur yellow lane stripes ke sharp edges ko trace karna.<br>
+            &bull; <strong>Medical X-Ray / CT Scans:</strong> Bones aur tumors ki precise outer boundaries identify karna.<br>
+            &bull; <strong>Industrial Quality Control:</strong> Factory conveyor belt par ban rahe products mein hairline cracks detect karna.
+        </div>
+    </section>
+
+    <!-- Section 2: Anatomy of an Edge -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Anatomy of an Edge: Derivatives &amp; Gradients</h2>
+        </div>
+        <p>Mathematics ki nazar se edge ek mathematical function ka rate-of-change (derivative) hota hai:</p>
+
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">&#128200; 1st Derivative (Sobel Gradient)</div>
+                <p style="font-size: 13.5px; margin: 0; color: #334155;">Brightness ka slope measure karta hai. Jahan edge hoti hai, wahan slope ka <strong>Maximum Peak</strong> banta hai!</p>
+            </div>
+            <div class="card">
+                <div class="card-title">&#128260; 2nd Derivative (Laplacian)</div>
+                <p style="font-size: 13.5px; margin: 0; color: #334155;">Slope ke change ka rate measure karta hai. Jahan edge ka exact center hota hai, wahan graph zero ko cross karta hai (<strong>Zero Crossing</strong>)!</p>
+            </div>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic10_edge_concept_anatomy.png" alt="Anatomy of an Edge: Spatial intensity profile, First derivative Sobel peak, and Second derivative Laplacian zero-crossing">
+            <div class="media-caption">Figure 10.1: Anatomy of an edge: (1) Step intensity jump, (2) First derivative (Sobel) reaches a sharp maximum peak at the edge boundary, and (3) Second derivative (Laplacian) produces a zero-crossing.</div>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; The Edge Detection Pipeline</div>
+            <strong>Color BGR &rarr; Grayscale &rarr; Gaussian Blur (Noise Reduction) &rarr; Edge Detector &rarr; Edge Map</strong><br>
+            Derivatives noise ke prati bohot sensitive hote hain. Isliye edge detection se pehle halka sa Gaussian blur (Topic 7) lagana mandatory best practice hai!
+        </div>
+    </section>
+
+    <!-- Section 3: Sobel Edge Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">1. Sobel Operator: Directional Gradients (Sobel X &amp; Y)</h2>
+        </div>
+        <p><strong>Sobel</strong> ek gradient-based first-order edge detector hai jo horizontal aur vertical directions mein alag-alag brightness changes calculate karta hai:</p>
+
+        <ul style="padding-left: 20px; margin-bottom: 14px; color: #334155;">
+            <li><code>dx=1, dy=0</code>: Horizontal change &rarr; Yeh <strong>Vertical Edges</strong> ko highlight karta hai!</li>
+            <li><code>dx=0, dy=1</code>: Vertical change &rarr; Yeh <strong>Horizontal Edges</strong> ko highlight karta hai!</li>
+        </ul>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • SOBEL_GRADIENTS.PY</span>
+                <span>DIRECTIONAL DERIVATIVES</span>
+            </div>
+            <pre><code>import cv2
+
+# Compute Sobel Gradients in float64 to preserve negative slopes!
+sobel_x = cv2.Sobel(gray, ddepth=cv2.CV_64F, dx=1, dy=0, ksize=3)
+sobel_y = cv2.Sobel(gray, ddepth=cv2.CV_64F, dx=0, dy=1, ksize=3)
+
+# Convert signed float values back to 8-bit unsigned integer (0-255)
+abs_x = cv2.convertScaleAbs(sobel_x)
+abs_y = cv2.convertScaleAbs(sobel_y)
+
+# Combine X and Y gradients into a single complete edge map
+sobel_combined = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)</code></pre>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#9888; CRITICAL GOTCHA: The Signed Float cv2.CV_64F Rule!</div>
+            Black-to-White transition ka slope positive hota hai, lekin White-to-Black transition ka slope <strong>Negative (negative gradient)</strong> hota hai!<br>
+            Agar aap output depth <code>CV_8U</code> rakh denge, to OpenCV sabhi negative slopes ko <strong>0 (black)</strong> par clip kar dega aur aadhi boundaries gayab ho jayengi!<br>
+            <strong>Golden Rule:</strong> Hamesha <code>ddepth=cv2.CV_64F</code> use karein, aur baad mein <code>cv2.convertScaleAbs()</code> lagayein!
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic10_sobel_x_vs_y.png" alt="Sobel directional gradients: Sobel X vertical edges vs Sobel Y horizontal edges vs Combined">
+            <div class="media-caption">Figure 10.2: Sobel directional gradients: Sobel X isolates vertical boundaries (horizontal lines vanish), Sobel Y isolates horizontal boundaries, and Combined captures both.</div>
+        </div>
+    </section>
+
+    <!-- Section 4: Laplacian Edge Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">2. Laplacian Operator: Second-Order Derivative</h2>
+        </div>
+        <p>Jabki Sobel direction-specific hota hai (X alag, Y alag), <strong>Laplacian</strong> ek isotropic (all-direction) operator hai jo second-order derivative use karke sabhi directions ki boundaries ek saath highlight karta hai:</p>
+
+        <p style="text-align: center; font-weight: 700; color: var(--primary-dark); font-size: 16px; margin: 12px 0; background: var(--primary-light); padding: 8px; border-radius: var(--radius-sm); font-family: monospace;">
+            &nabla;<sup>2</sup>f = &part;<sup>2</sup>f / &part;x<sup>2</sup> + &part;<sup>2</sup>f / &part;y<sup>2</sup>
+        </p>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • LAPLACIAN.PY</span>
+                <span>SECOND DERIVATIVE</span>
+            </div>
+            <pre><code>import cv2
+
+# Apply Laplacian
+lap = cv2.Laplacian(gray, ddepth=cv2.CV_64F, ksize=3)
+abs_lap = cv2.convertScaleAbs(lap)</code></pre>
+        </div>
+
+        <div class="callout callout-warning">
+            <div class="callout-title">&#9888; Laplacian ki Sabse Badi Weakness: Extreme Noise Sensitivity!</div>
+            Second-order derivatives high-frequency noise ko square rate se multiply karte hain. Agar image mein halka sa bhi camera sensor static hai, to Laplacian poori image ko dirty white static dots se bhar dega! Isliye Laplacian use karne se pehle strong Gaussian Blur lagana padta hai (jise <strong>LoG: Laplacian of Gaussian</strong> kehte hain).
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic10_laplacian_derivative.png" alt="Laplacian edge detection on clean vs noisy image showing severe noise amplification">
+            <div class="media-caption">Figure 10.3: Laplacian on clean vs noisy benchmark: Second derivative magnifies camera noise into severe background static unless heavily smoothed.</div>
+        </div>
+    </section>
+
+    <!-- Section 5: Canny Edge Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">3. Canny Edge Detector: The Industry Gold Standard</h2>
+        </div>
+        <p>Sobel edges bohot thick aur blurry hote hain, aur Laplacian noisy hota hai. 1986 mein John F. Canny ne ek revolutionary 5-stage algorithm banaya jise aaj computer vision ka <strong>Gold Standard</strong> maana jata hai:</p>
+
+        <h3 style="font-size: 15px; font-weight: 700; margin: 16px 0 8px; color: var(--primary-dark);">&#128394; The 5 Stages of Canny Algorithm:</h3>
+        <ol style="padding-left: 20px; line-height: 1.8; color: #334155; margin-bottom: 14px;">
+            <li><strong>Gaussian Filter:</strong> 5x5 Gaussian kernel se camera noise ko smooth karta hai.</li>
+            <li><strong>Gradient Calculation:</strong> Sobel kernels se image ke gradient magnitude aur angle (0&deg;, 45&deg;, 90&deg;, 135&deg;) calculate karta hai.</li>
+            <li><strong>Non-Maximum Suppression (NMS):</strong> Gradient direction ke along sirf local maximum pixels ko rakhta hai aur baaki sab ko 0 bana deta hai. Isse thick edges <strong>1-pixel thin</strong> ho jaate hain!</li>
+            <li><strong>Double Thresholding (minVal, maxVal):</strong> Edges ko 3 categories mein divide karta hai: <strong>Strong</strong> (&gt; maxVal), <strong>Weak</strong> (minVal se maxVal ke beech), aur <strong>Non-edge</strong> (&lt; minVal).</li>
+            <li><strong>Edge Tracking by Hysteresis:</strong> Weak edges ko sirf tab retain karta hai jab wo kisi Strong edge se physically connected hon! Isolated noise dots discard ho jaate hain.</li>
+        </ol>
+
+        <div class="code-container">
+            <div class="code-header">
+                <span>PYTHON • CANNY.PY</span>
+                <span>OPTIMAL EDGE DETECTOR</span>
+            </div>
+            <pre><code>import cv2
+
+# Pre-smooth image
+blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+
+# Apply Canny Edge Detection
+# threshold1 = minVal, threshold2 = maxVal
+edges = cv2.Canny(blurred, threshold1=50, threshold2=150)</code></pre>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic10_canny_thresholds_comparison.png" alt="Canny edge detection threshold comparison: low thresholds vs optimal vs high thresholds">
+            <div class="media-caption">Figure 10.4: Canny double thresholding effect: Low thresholds (20, 60) capture spurious noise; Optimal (70, 160) yields crisp 1-pixel outlines; High thresholds (180, 240) break weak edges.</div>
+        </div>
+    </section>
+
+    <!-- Section 6: Methods Comparison & Decision Matrix -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Edge Detection Methods Decision Matrix</h2>
+        </div>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Detector</th>
+                        <th>Derivative Type</th>
+                        <th>Edge Thickness</th>
+                        <th>Noise Resistance</th>
+                        <th>Best Use-Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Sobel</strong></td>
+                        <td>1st Order Gradient</td>
+                        <td>Thick / Fuzzy</td>
+                        <td>Moderate</td>
+                        <td>Measuring edge angle/direction (e.g. Sobel X for lane detection).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Laplacian</strong></td>
+                        <td>2nd Order Derivative</td>
+                        <td>Double Edge Lines</td>
+                        <td>Very Low (Poor)</td>
+                        <td>Image sharpness testing, detecting rapid intensity curvature.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Canny</strong></td>
+                        <td>Multi-Stage (Sobel + NMS + Hysteresis)</td>
+                        <td><strong>1-Pixel Thin</strong></td>
+                        <td><strong>Very High (Best)</strong></td>
+                        <td>General object detection, contours, OCR, robotics, autonomous driving.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="media-card">
+            <img src="assets/topic10_edge_methods_benchmark.png" alt="Benchmark comparing Input, Sobel, Laplacian, and Canny side-by-side">
+            <div class="media-caption">Figure 10.5: Direct visual comparison of Sobel, Laplacian, and Canny edge detection on the benchmark scene.</div>
+        </div>
+    </section>
+
+    <!-- Section 7: 4 Practical Code Recipes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">4 Practical Code Recipes (Copy &amp; Run)</h2>
+        </div>
+
+        <!-- Recipe 1 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 14px 0 6px; color: var(--primary-dark);">&#128203; Recipe 1: Complete Sobel Gradient Explorer</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_1_SOBEL.PY</span>
+                <span>DIRECTIONAL GRADIENTS</span>
+            </div>
+            <pre><code>import cv2
+
+# Load image in grayscale
+img = cv2.imread("scene.jpg", cv2.IMREAD_GRAYSCALE)
+
+# 1. Compute horizontal and vertical gradients
+sobel_x = cv2.Sobel(img, cv2.CV_64F, 1, 0, ksize=3)
+sobel_y = cv2.Sobel(img, cv2.CV_64F, 0, 1, ksize=3)
+
+# 2. Take absolute values and convert to uint8
+abs_x = cv2.convertScaleAbs(sobel_x)
+abs_y = cv2.convertScaleAbs(sobel_y)
+
+# 3. Combine both directions
+sobel_combined = cv2.addWeighted(abs_x, 0.5, abs_y, 0.5, 0)
+
+cv2.imwrite("sobel_vertical_edges.png", abs_x)
+cv2.imwrite("sobel_horizontal_edges.png", abs_y)
+cv2.imwrite("sobel_full.png", sobel_combined)</code></pre>
+        </div>
+
+        <!-- Recipe 2 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 2: Laplacian with Noise Protection</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_2_LAPLACIAN.PY</span>
+                <span>LAPLACIAN OF GAUSSIAN</span>
+            </div>
+            <pre><code>import cv2
+
+img = cv2.imread("scene.jpg", cv2.IMREAD_GRAYSCALE)
+
+# Essential: Blur before Laplacian to suppress noise!
+blurred = cv2.GaussianBlur(img, (3, 3), 0)
+
+# Compute Laplacian
+lap = cv2.Laplacian(blurred, cv2.CV_64F, ksize=3)
+lap_clean = cv2.convertScaleAbs(lap)
+
+cv2.imwrite("laplacian_edges.png", lap_clean)</code></pre>
+        </div>
+
+        <!-- Recipe 3 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 3: Production Canny Edge Detector</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_3_CANNY.PY</span>
+                <span>HYSTERESIS THRESHOLDS</span>
+            </div>
+            <pre><code>import cv2
+
+# 1. Read input
+image = cv2.imread("road_lane.jpg", cv2.IMREAD_GRAYSCALE)
+
+# 2. Mild 3x3 Gaussian smoothing
+smoothed = cv2.GaussianBlur(image, (3, 3), 0)
+
+# 3. Run Canny (standard 1:2 or 1:3 ratio for thresholds)
+canny_edges = cv2.Canny(smoothed, threshold1=50, threshold2=150)
+
+cv2.imwrite("road_edges.png", canny_edges)</code></pre>
+        </div>
+
+        <!-- Recipe 4 -->
+        <h3 style="font-size: 15px; font-weight: 700; margin: 18px 0 6px; color: var(--primary-dark);">&#128203; Recipe 4: Automated Canny with Median Sigma</h3>
+        <div class="code-container">
+            <div class="code-header">
+                <span>RECIPE_4_AUTO_CANNY.PY</span>
+                <span>ZERO MANUAL GUESSWORK</span>
+            </div>
+            <pre><code>import cv2
+import numpy as np
+
+def auto_canny(image, sigma=0.33):
+    # Compute median pixel intensity
+    v = np.median(image)
+    # Apply automatic threshold formula
+    lower = int(max(0, (1.0 - sigma) * v))
+    upper = int(min(255, (1.0 + sigma) * v))
+    return cv2.Canny(image, lower, upper)
+
+# Apply auto canny directly
+auto_edges = auto_canny(image)
+cv2.imwrite("auto_canny.png", auto_edges)</code></pre>
+        </div>
+    </section>
+
+    <!-- Section 8: Common Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 1: Output Depth CV_8U in Sobel</div>
+            <code>sobel_x = cv2.Sobel(gray, cv2.CV_8U, 1, 0)</code><br>
+            <strong>Problem:</strong> White-se-black transitions negative (-255) hoti hain, jo CV_8U mein 0 par clip ho kar gayab ho jaati hain!<br>
+            <strong>Fix:</strong> Hamesha <code>cv2.CV_64F</code> use karein aur baad mein <code>cv2.convertScaleAbs()</code> lagayein.
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 2: Confusing dx=1 with Horizontal Edges</div>
+            <strong>Problem:</strong> Beginners sochte hain ki <code>dx=1</code> horizontal line dega.<br>
+            <strong>Clarification:</strong> <code>dx=1</code> X-axis ke along difference dekhta hai (left to right). Jab aap left se right move karte hain to <strong>Vertical Line</strong> hit hoti hai! Isliye <code>dx=1</code> vertical boundaries deta hai.
+        </div>
+
+        <div class="callout callout-danger">
+            <div class="callout-title">&#10060; Mistake 3: Skipping Pre-Blurring</div>
+            <strong>Problem:</strong> Noisy raw photo par direct Canny chalane se background carpet ya road texture bhi false edges ban jata hai.<br>
+            <strong>Fix:</strong> Canny se pehle hamesha ek chota <code>cv2.GaussianBlur((3, 3), 0)</code> lagayein!
+        </div>
+    </section>
+
+    <!-- Section 9: Summary & Cheat Sheet -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">09</span>
+            <h2 class="section-title">Quick Summary &amp; Cheat Sheet</h2>
+        </div>
+        <ul style="padding-left: 20px; line-height: 1.8; color: #334155;">
+            <li><strong>Edge:</strong> Image intensity ka sharp change, jo objects ki outer shape boundaries ko trace karta hai.</li>
+            <li><strong>Sobel (First Derivative):</strong> <code>cv2.Sobel()</code> with <code>dx=1, dy=0</code> detects vertical edges, and <code>dx=0, dy=1</code> detects horizontal edges. Requires <code>cv2.CV_64F</code>.</li>
+            <li><strong>Laplacian (Second Derivative):</strong> <code>cv2.Laplacian()</code> isotropic edge detector based on zero-crossings. Highly sensitive to noise.</li>
+            <li><strong>Canny Detector:</strong> 5-stage optimal algorithm (Blur &rarr; Sobel &rarr; Non-Max Suppression &rarr; Double Threshold &rarr; Hysteresis). Produces crisp 1-pixel thin edges with high noise immunity.</li>
+        </ul>
+    </section>
+
+    <!-- Section 10: Interactive Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">10</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: <code>cv2.Sobel(gray, cv2.CV_64F, 1, 0)</code> run karne par kaunsi edges highlight hongi?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Horizontal edges (chhat aur zameen ki lines)</li>
+                    <li>B) Vertical edges (khadi deewar aur poles ki lines)</li>
+                    <li>C) Poori image blur ho jayegi</li>
+                    <li>D) Sirf circular shapes highlight hongi</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) Vertical edges<br>
+                    <strong>Explanation:</strong> <code>dx=1, dy=0</code> ka matlab hai X-axis (horizontal) ke along intensity change measure karna. Left se right move karte waqt khadi (vertical) boundaries hit hoti hain!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Canny algorithm mein Non-Maximum Suppression (NMS) ka main function kya hota hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Image ko colorize karna</li>
+                    <li>B) Thick aur blurry edges ko 1-pixel thin boundary banana</li>
+                    <li>C) Image ko invert karna</li>
+                    <li>D) Image ko resize karna</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B) Thick edges ko 1-pixel thin boundary banana<br>
+                    <strong>Explanation:</strong> NMS gradient direction ke perpendicular pixels ko check karta hai aur sirf local maximum peak pixel ko retain karta hai, jisse edge razor-thin 1-pixel ban jati hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: Sobel calculation mein <code>ddepth=cv2.CV_64F</code> pass karna kyun zaroori hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Kyunki 8-bit unsigned integer (CV_8U) negative slope values ko 0 par clip kar deta hai.</li>
+                    <li>B) Kyunki CV_64F image ko transparent bana deta hai.</li>
+                    <li>C) Kyunki OpenCV crash ho jata hai bina CV_64F ke.</li>
+                    <li>D) Kyunki CV_64F se file size chota ho jata hai.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> White se Black transition ka gradient negative hota hai. Agar CV_8U use karenge to wo 0 par truncate ho jayega aur aadhi image boundaries vanish ho jayengi!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 11: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 11 — Contours &amp; Shape Detection in OpenCV</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne Canny aur Sobel se crisp 1-pixel edge maps nikaalna seekh liya hai, agle topic mein hum seekhenge ki kaise <code>cv2.findContours()</code> in edges ko connected vector curves mein convert karta hai taaki hum objects ki area, perimeter, center of mass, bounding boxes, aur geometric shapes (circles, triangles, rectangles) detect kar sakein!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

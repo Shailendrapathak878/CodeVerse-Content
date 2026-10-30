@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 15: Object Detection with Haar Cascades | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #f0f9ff;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Section Cards */
+        .section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-num {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: var(--primary);
+            color: #0369a1;
+        }
+
+        .callout-success {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        /* Image Containers */
+        .diagram-container {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-caption {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Syntax and Code Boxes */
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+            white-space: pre;
+        }
+
+        .code-output {
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12.5px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #38bdf8;
+            white-space: pre;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        .code-block code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Responsive Comparison Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #475569;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fcfdfe;
+        }
+
+        /* Formula & Math Display Box */
+        .formula-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 13.5px;
+            color: #0f172a;
+            margin: 12px 0;
+            display: inline-block;
+        }
+
+        /* Interactive Collapsible Quizzes */
+        details {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            background-color: #ffffff;
+            border-bottom: 1px solid transparent;
+            display: block;
+            line-height: 1.45;
+        }
+
+        details[open] summary {
+            border-bottom-color: var(--border);
+            background-color: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .quiz-options {
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            background-color: #ecfdf5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        /* Key Takeaway Grid */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 14px;
+            margin: 16px 0;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+        }
+
+        .card h4 {
+            color: var(--primary);
+            font-size: 15px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .card p {
+            font-size: 13.5px;
+            color: var(--text-muted);
+            line-height: 1.55;
+        }
+
+        /* Step List */
+        .step-list {
+            list-style: none;
+            counter-reset: step-counter;
+            margin: 14px 0;
+        }
+
+        .step-list li {
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 36px;
+            margin-bottom: 14px;
+            font-size: 14.5px;
+        }
+
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 24px;
+            height: 24px;
+            background-color: var(--primary);
+            color: #ffffff;
+            border-radius: 50%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 24px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+        <div class="hero-badge">OpenCV Computer Vision Masterclass</div>
+        <h1>Topic 15: Object Detection with Haar Cascades</h1>
+        <p>Viola-Jones Framework, Integral Images, Attentional Cascades, and Real-Time Face &amp; Eye Detection on CPUs</p>
+        <div class="meta-tags">
+            <span class="meta-pill">&#x23F1;&#xFE0F; 6-8 Min Read</span>
+            <span class="meta-pill">&#x1F9E0; Viola-Jones (2001)</span>
+            <span class="meta-pill">&#x26A1; Real-Time CPU Inference</span>
+            <span class="meta-pill">&#x1F4CD; detectMultiScale()</span>
+        </div>
+    </header>
+
+    <!-- SECTION 1: INTRODUCTION -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">Introduction: Object Detection &amp; Viola-Jones Architecture</h2>
+        </div>
+        <p>
+            Previous chapters mein humne edges, contours aur template matching dekha. Lekin real-world computer vision ka sabse common sawal hota hai: 
+            <strong>"Kya is tasveer mein koi chehra (face) ya gaadi (car) maujood hai, aur wo theek kahan sthit hai?"</strong>
+        </p>
+        <p style="margin-top: 10px;">
+            Is process ko <strong>Object Detection</strong> kehte hain, jismein do tasks ek sath hote hain:
+        </p>
+        <ul style="margin: 10px 0 10px 24px;">
+            <li><strong>Classification:</strong> Ye pehchanna ki object kya hai (e.g., "Face").</li>
+            <li><strong>Localization:</strong> Object ke charo taraf ek bounding box <code>[x, y, w, h]</code> banana.</li>
+        </ul>
+
+        <div class="callout callout-info">
+            <strong>The Viola-Jones Milestone (2001):</strong><br>
+            Deep learning se pehle, 2001 mein <em>Paul Viola</em> aur <em>Michael Jones</em> ne ek groundbreaking framework banaya jo ordinary desktop computer par real-time 15+ FPS par chehre detect kar sakta tha. Aaj bhi ye security cameras, digital cameras (autofocus triggers), aur low-power IoT microcontrollers par widely use hota hai.
+        </div>
+
+        <h3 style="font-size: 16px; margin: 18px 0 8px; color: var(--text-main);">Haar-like Features Kya Hote Hain?</h3>
+        <p>
+            Human face mein natural light &amp; dark contrast patterns hote hain:
+        </p>
+        <ul style="margin: 10px 0 10px 24px;">
+            <li>Forehead aur cheeks ke mukable <strong>aankhein (eyes) hamesha zyada dark</strong> hoti hain.</li>
+            <li>Nose bridge (naak ka ubhar) cheek shadows ke mukable hamesha <strong>zyada bright</strong> hota hai.</li>
+            <li>Hoth (lips) aur chin ke beech contrast shadow banti hai.</li>
+        </ul>
+        <p>
+            Viola-Jones inhin patterns ko capture karne ke liye <strong>Haar-like rectangular filters</strong> ka istemal karta hai. Har feature ki value calculate ki jaati hai:
+        </p>
+
+        <div class="formula-box">
+            Feature Value (&Delta;) = &sum; Pixels(Dark Rectangles) &minus; &sum; Pixels(Light Rectangles)
+        </div>
+
+        <!-- DIAGRAM 1: HAAR FEATURES -->
+        <div class="diagram-container">
+            <img src="assets/topic15_haar_features_types.png" alt="Viola-Jones Haar-like Features Anatomy (Edge, Line, and Four-Rectangle Features)">
+            <div class="diagram-caption">Figure 15.1: The three primary families of Haar-like features: Edge Features, Line Features (Nose bridge), and Four-Rectangle Diagonal Features.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: INTEGRAL IMAGES -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">The Secret to O(1) Speed: Integral Images</h2>
+        </div>
+        <p>
+            Ek standard <code>24 &times; 24</code> pixel ke detection window ke andar <strong>160,000+</strong> alag-alag size aur position ke rectangular features bante hain. 
+            Agar hum standard loops se har pixel ko jodte, to ek single frame process hone mein kai seconds lag jaate!
+        </p>
+
+        <div class="callout callout-success">
+            <strong>Viola-Jones Innovation &mdash; Integral Image (Summed-Area Table):</strong><br>
+            Integral image ek aisi intermediate table hoti hai jismein har coordinate <code>(x, y)</code> par uske upar aur bayein (top-left) sthit sabhi pixels ka sum pre-calculated store hota hai. 
+            Is table ki madad se kisi bhi rectangular box ka sum <strong>sirf 4 array lookups</strong> mein calculate ho jaata hai &mdash; chahe box 5&times;5 pixels ka ho ya 500&times;500 pixels ka!
+        </div>
+
+        <!-- DIAGRAM 2: INTEGRAL IMAGE -->
+        <div class="diagram-container">
+            <img src="assets/topic15_integral_image_concept.png" alt="Integral Image Summed-Area Table 4-Corner Lookup Calculation">
+            <div class="diagram-caption">Figure 15.2: Any arbitrary rectangle sum D is computed in O(1) constant time: Sum(D) = Point 4 + Point 1 &minus; Point 2 &minus; Point 3.</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Lookup Method</th>
+                        <th>Pixel Operations Required</th>
+                        <th>Time Complexity</th>
+                        <th>Practical Speed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Naive Nested Loops</strong></td>
+                        <td>Width &times; Height additions (e.g. 50 &times; 50 = 2,500 operations)</td>
+                        <td><code>O(W &times; H)</code></td>
+                        <td>Slow, unusable for real-time video</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Integral Image (SAT)</strong></td>
+                        <td>Strictly 4 array reads + 3 additions/subtractions</td>
+                        <td><code>O(1) Constant</code></td>
+                        <td>Super fast, 100+ FPS feature evaluation</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 3: CASCADE WORKFLOW -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">Attentional Cascade &amp; AdaBoost Feature Selection</h2>
+        </div>
+        <p>
+            160,000 features mein se har feature face pehchanne ke liye zaroori nahi hota. Isliye Viola-Jones do clever algorithms combine karta hai:
+        </p>
+
+        <ol class="step-list">
+            <li>
+                <strong>AdaBoost (Adaptive Boosting):</strong> Ye algorithm 160,000 features ko filter karke sirf sabse accurate <strong>~6,000 top features</strong> ko select karta hai jo face aur non-face mein sabse solid farq bata sakte hain.
+            </li>
+            <li>
+                <strong>Cascade of Classifiers (Water-Fall Pipeline):</strong> Sabhi 6,000 features ko ek sath check karne ke bajaye, unhe <strong>30&ndash;40 stages</strong> mein baant diya jaata hai. 
+                Pehle stage mein sirf 10 sabse basic features hote hain.
+            </li>
+        </ol>
+
+        <!-- DIAGRAM 3: CASCADE STAGES -->
+        <div class="diagram-container">
+            <img src="assets/topic15_cascade_workflow_stages.png" alt="Attentional Cascade Classifier Pipeline Early Rejection Workflow">
+            <div class="diagram-caption">Figure 15.3: The Early Rejection Cascade: 95%+ of sliding background windows fail Stage 1 immediately, freeing CPU cycles for actual faces.</div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Early Rejection Advantage:</strong><br>
+            Kisi bhi photo mein 90% se zyada hissa background (deewar, ped, sky, kapde) hota hai. Jaise hi koi sliding window background par aati hai, wo Stage 1 mein hi fail ho jaati hai. Classifier bache hue 5,990 features par apna time waste hi nahi karta!
+        </div>
+    </section>
+
+    <!-- SECTION 4: PRETRAINED XML IN OPENCV -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">Loading Pretrained Classifiers in OpenCV</h2>
+        </div>
+        <p>
+            OpenCV library ke sath kai common objects ke trained Haar models pre-bundled aate hain (XML format mein):
+        </p>
+        <ul style="margin: 10px 0 10px 24px;">
+            <li><code>haarcascade_frontalface_default.xml</code> &mdash; Frontal human faces</li>
+            <li><code>haarcascade_eye.xml</code> &mdash; Human eyes</li>
+            <li><code>haarcascade_smile.xml</code> &mdash; Smiling faces</li>
+            <li><code>haarcascade_fullbody.xml</code> &mdash; Pedestrians / Walking humans</li>
+        </ul>
+
+        <div class="callout callout-warning">
+            <strong>Crucial Best Practice:</strong> Hardcoded path likhne ke bajaye hamesha <code>cv2.data.haarcascades</code> ka istemal karein. Ye ensure karta hai ki aapka code Windows, Linux, macOS aur virtual environments mein bina path error ke chale.
+        </div>
+
+        <div class="code-block">
+<code>import cv2
+
+# 1. Load official pre-trained cascade files via cv2.data.haarcascades
+face_xml = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+eye_xml = cv2.data.haarcascades + 'haarcascade_eye.xml'
+
+face_cascade = cv2.CascadeClassifier(face_xml)
+eye_cascade = cv2.CascadeClassifier(eye_xml)
+
+# 2. Defensive check: Ensure XML was loaded properly
+if face_cascade.empty():
+    raise IOError(f"Failed to load cascade classifier from: {face_xml}")
+
+print("Haar Cascade loaded successfully! Ready for inference.")</code>
+        </div>
+        <div class="code-output">
+Haar Cascade loaded successfully! Ready for inference.
+        </div>
+    </section>
+
+    <!-- SECTION 5: FACE DETECTION CODE -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">Face Detection with detectMultiScale()</h2>
+        </div>
+        <p>
+            OpenCV mein detection perform karne ke liye <code>CascadeClassifier.detectMultiScale()</code> method use hota hai:
+        </p>
+
+        <div class="formula-box">
+            faces = face_cascade.detectMultiScale(image, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Recommended Value</th>
+                        <th>Role &amp; Significance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>image</code></td>
+                        <td>Grayscale image (8-bit)</td>
+                        <td>Haar features brightness contrast par kaam karte hain, isliye image ko grayscale hona zaroori hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>scaleFactor</code></td>
+                        <td><code>1.1</code> (or <code>1.05</code>&ndash;<code>1.2</code>)</td>
+                        <td>Pyramid scaling step. <code>1.1</code> ka matlab har step par image 10% chhoti hoti hai taaki door aur paas dono chehre detect ho sakein.</td>
+                    </tr>
+                    <tr>
+                        <td><code>minNeighbors</code></td>
+                        <td><code>4</code> to <code>6</code></td>
+                        <td>Candidate bounding boxes grouping threshold. Higher values false positives ko eliminate karte hain.</td>
+                    </tr>
+                    <tr>
+                        <td><code>minSize</code></td>
+                        <td><code>(30, 30)</code></td>
+                        <td>Isse chhota koi bhi rectangle reject ho jaayega (noise filtering).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- CODE EXAMPLE 1 -->
+        <div class="code-block">
+<code>import cv2
+
+# Load image and convert to grayscale
+img = cv2.imread('sample_face.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# Load classifier
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+
+# Detect faces in multi-scale pyramid
+faces = face_cascade.detectMultiScale(
+    gray,
+    scaleFactor=1.1,
+    minNeighbors=5,
+    minSize=(30, 30)
+)
+
+print(f"Total faces detected: {len(faces)}")
+
+# Draw green bounding boxes around all detected faces
+for (x, y, w, h) in faces:
+    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    cv2.putText(img, f"Face: {w}x{h}", (x, y - 8),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+# Save or display result
+cv2.imwrite('detected_faces.jpg', img)</code>
+        </div>
+        <div class="code-output">
+Total faces detected: 1
+Face coordinates: [x=219, y=203, w=169, h=169]
+        </div>
+
+        <!-- DIAGRAM 4: FACE DETECTION RESULT -->
+        <div class="diagram-container">
+            <img src="assets/topic15_face_detection_result.png" alt="Single Face Detection Result with Bounding Box Annotation">
+            <div class="diagram-caption">Figure 15.4: Input portrait vs OpenCV Haar face detection result with bounding box annotation [219, 203, 169, 169].</div>
+        </div>
+    </section>
+
+    <!-- SECTION 6: NESTED EYE DETECTION (ROI) -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Nested Detection: Detecting Eyes Inside Face ROI</h2>
+        </div>
+        <p>
+            Agar aap poori tasveer mein <code>eye_cascade</code> chalaoge, to shirt ke buttons, background ke patterns ya chashme par bohot saare <strong>false positives</strong> aa sakte hain. 
+            Isliye industrial best practice hoti hai: <strong>Hierarchical / Nested Detection</strong>.
+        </p>
+
+        <ol class="step-list">
+            <li>Pehle poori image mein <strong>Face bounding box</strong> <code>(x, y, w, h)</code> detect karo.</li>
+            <li>Sirf us face ke hisse ko crop karke <strong>Region of Interest (ROI)</strong> banao.</li>
+            <li>Eye cascade ko <em>sirf</em> us face ROI ke andar chalao.</li>
+            <li>Detected local eye coordinates <code>(ex, ey)</code> ko global image coordinates mein transform karne ke liye <code>(x + ex, y + ey)</code> karo.</li>
+        </ol>
+
+        <!-- CODE EXAMPLE 2: NESTED DETECTION -->
+        <div class="code-block">
+<code>import cv2
+
+img = cv2.imread('sample_face.jpg')
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+eye_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
+
+faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+
+for (x, y, w, h) in faces:
+    # 1. Draw Green box for Face
+    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    
+    # 2. Extract Face ROI (Grayscale for detection, Color for drawing)
+    roi_gray = gray[y:y+h, x:x+w]
+    roi_color = img[y:y+h, x:x+w]
+    
+    # 3. Detect eyes STRICTLY inside Face ROI
+    eyes = eye_cascade.detectMultiScale(roi_gray, scaleFactor=1.1, minNeighbors=5, minSize=(20, 20))
+    
+    for (ex, ey, ew, eh) in eyes:
+        # 4. Draw Cyan box for Eye (inside ROI directly using ex, ey)
+        cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (255, 255, 0), 2)
+
+cv2.imwrite('face_and_eyes.jpg', img)</code>
+        </div>
+        <div class="code-output">
+Face detected at: x=219, y=203, w=169, h=169
+Eye 1 found inside ROI: local=(90, 43) -> global=(309, 246)
+Eye 2 found inside ROI: local=(24, 36) -> global=(243, 239)
+        </div>
+
+        <!-- DIAGRAM 5: HIERARCHICAL DETECTION -->
+        <div class="diagram-container">
+            <img src="assets/topic15_face_and_eyes_detection.png" alt="Hierarchical Detection: Constraining Eye Search within Face ROI">
+            <div class="diagram-caption">Figure 15.5: Hierarchical Eye Detection: Searching eyes strictly inside the Face ROI eliminates false background detections.</div>
+        </div>
+    </section>
+
+    <!-- SECTION 7: HYPERPARAMETER TUNING -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Hyperparameter Tuning: scaleFactor &amp; minNeighbors</h2>
+        </div>
+        <p>
+            Haar Cascade ki accuracy aur false-positive rate poori tarah aapke do parameters par depend karti hai:
+        </p>
+
+        <div class="grid-2">
+            <div class="card">
+                <h4>1. scaleFactor Tuning</h4>
+                <p>
+                    <strong>scaleFactor=1.05:</strong> Chhote scale steps leta hai. Accuracy high hoti hai aur door baithe chhote chehre bhi detect ho jaate hain, lekin computation time badh jaata hai (~25 ms).<br><br>
+                    <strong>scaleFactor=1.2:</strong> Bade steps leta hai. Boht fast hota hai (~5 ms), lekin kai baar border-line faces skip ho jaate hain.
+                </p>
+            </div>
+            <div class="card">
+                <h4>2. minNeighbors Tuning</h4>
+                <p>
+                    <strong>minNeighbors=0:</strong> Zero grouping. Raw candidates milte hain (70+ overlapping boxes &mdash; Figure 15.6 dekhein).<br><br>
+                    <strong>minNeighbors=4 to 6:</strong> Ideal balance. Noise aur duplicate boxes group hokar ek crisp bounding box banate hain.<br><br>
+                    <strong>minNeighbors=10+:</strong> Bohot strict. False positives zero ho jaate hain lekin real faces miss hone ka risk rehta hai.
+                </p>
+            </div>
+        </div>
+
+        <!-- DIAGRAM 6: PARAMETER COMPARISON -->
+        <div class="diagram-container">
+            <img src="assets/topic15_parameter_comparison.png" alt="Hyperparameter Impact: Tuning detectMultiScale minNeighbors">
+            <div class="diagram-caption">Figure 15.6: Impact of minNeighbors: minNeighbors=0 (74 raw overlapping proposals) vs minNeighbors=3 (clean grouping) vs minNeighbors=8 (strict consensus).</div>
+        </div>
+    </section>
+
+    <!-- SECTION 8: COMPARISON TABLE -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Haar Cascades vs. Modern Deep Learning Detectors</h2>
+        </div>
+        <p>
+            Industry mein kab Haar Cascades use karna chahiye aur kab modern Deep Learning (YOLO, SSD, MediaPipe Face Mesh)?
+        </p>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature / Metric</th>
+                        <th>Haar Cascades (Viola-Jones)</th>
+                        <th>Deep Learning (YOLO / MediaPipe / SSD)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Hardware Requirements</strong></td>
+                        <td>Extremely Low (Raspberry Pi, CPU, Microcontrollers)</td>
+                        <td>Medium to High (GPU, NPU, or heavy CPU neural runtime)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Inference Speed</strong></td>
+                        <td>Ultra-fast (5&ndash;15 ms on pure CPU)</td>
+                        <td>Fast on GPU (10&ndash;30 ms), moderate on pure CPU</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Side-Pose &amp; Tilt Handling</strong></td>
+                        <td>Poor (Only frontal faces; fails beyond &plusmn;20&deg; yaw/pitch)</td>
+                        <td>Excellent (Handles profile, tilted, partially covered faces)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Lighting Sensitivity</strong></td>
+                        <td>High (Shadows or extreme contrast confuse features)</td>
+                        <td>Robust (Robust against harsh lighting, blur, darkness)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Model Weight Size</strong></td>
+                        <td>~1 MB (Compact XML file)</td>
+                        <td>10 MB to 200+ MB (ONNX / PyTorch weights)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ideal Use Cases</strong></td>
+                        <td>Classroom projects, low-power embedded robotics, quick webcam triggers</td>
+                        <td>Commercial biometric attendance, self-driving cars, security surveillance</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- SECTION 9: COMMON PITFALLS -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">09</span>
+            <h2 class="section-title">5 Common Pitfalls &amp; Debugging Tips</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>Pitfall 1: Passing a 3-Channel BGR Image to detectMultiScale</strong><br>
+            Haar features pixel intensity contrast par kaam karte hain. Agar aap BGR image bhejoge, to ya to OpenCV error phekega ya execution 3x slow ho jaayega. Hamesha <code>cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)</code> karke grayscale pass karein.
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>Pitfall 2: Silent Failures with Missing XML Files</strong><br>
+            Agar aapne galat path diya, to <code>CascadeClassifier</code> exception raise nahi karta balki khali object return kar deta hai. Jab aap <code>detectMultiScale</code> call karte ho tab crash hota hai! <strong>Solution:</strong> Hamesha <code>assert not face_cascade.empty()</code> check karein.
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Pitfall 3: Forgetting ROI Coordinate Offsets</strong><br>
+            Face ROI ke andar eye coordinates <code>(ex, ey)</code> relative hote hain. Agar aap unhe poori image par bina <code>x + ex</code> aur <code>y + ey</code> jode draw karoge, to eyes hamesha image ke top-left corner par draw hongi!
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>Pitfall 4: Setting scaleFactor Too Low (e.g., 1.01)</strong><br>
+            <code>scaleFactor=1.01</code> set karne se detector 1% ke chhote steps se har scale par window slide karega, jisse 1 frame process hone mein 500 ms se zyada lag jaayenge. Balanced real-time video ke liye <code>1.1</code> se <code>1.15</code> use karein.
+        </div>
+
+        <div class="callout callout-info">
+            <strong>Pitfall 5: Assuming Haar Detects Tilted / Inverted Faces</strong><br>
+            Haar rectangular features vertical aur horizontal contrast par train hote hain. Agar person sar ko 45&deg; ya 90&deg; tilt kar leta hai, to Haar cascade use detect nahi karega jab tak aap image ko pehle rotate na karein.
+        </div>
+    </section>
+
+    <!-- SECTION 10: INTERACTIVE QUIZZES -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">10</span>
+            <h2 class="section-title">Interactive Review Quizzes</h2>
+        </div>
+        <p style="margin-bottom: 16px;">Apni understanding test karne ke liye questions par click karein aur answer reveal karein:</p>
+
+        <!-- QUIZ 1 -->
+        <details>
+            <summary>&#x1F914; Quiz 1: Integral Image kisi rectangular feature ka sum kis complexity mein compute karti hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) O(W &times; H) &mdash; Jahan W aur H rectangle ki dimensions hain.</li>
+                    <li>B) O(log N) &mdash; Binary tree search ke dwara.</li>
+                    <li>C) O(1) &mdash; Sirf 4 corner lookups ke dwara chahe rectangle kitna bhi bada ho.</li>
+                    <li>D) O(N) &mdash; Image ke total pixels ke barabar.</li>
+                </ul>
+                <div class="answer-box">
+                    &#x2705; <strong>Correct Answer: C &mdash; O(1) Constant Time</strong><br>
+                    <strong>Explanation:</strong> Integral image (Summed-Area Table) ki khoobi yahi hai ki kisi bhi rectangle ka sum <code>Point 4 + Point 1 &minus; Point 2 &minus; Point 3</code> formula se strictly 4 array lookups mein mil jaata hai, bina kisi pixel iteration loop ke.
+                </div>
+            </div>
+        </details>
+
+        <!-- QUIZ 2 -->
+        <details>
+            <summary>&#x1F914; Quiz 2: Video call app mein face detection bohot zyada false positive boxes (false detections) dikha raha hai. Kaunsa parameter tune karna chahiye?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) scaleFactor ko 1.1 se badhakar 2.0 karna chahiye.</li>
+                    <li>B) minNeighbors ko badhana chahiye (e.g. 2 se badhakar 5 ya 6).</li>
+                    <li>C) Image ko BGR format mein pass karna chahiye.</li>
+                    <li>D) minSize ko (1, 1) set kar dena chahiye.</li>
+                </ul>
+                <div class="answer-box">
+                    &#x2705; <strong>Correct Answer: B &mdash; minNeighbors ko badhana chahiye</strong><br>
+                    <strong>Explanation:</strong> <code>minNeighbors</code> define karta hai ki ek candidate box ko valid manne ke liye uske aas-paas kitne overlapping candidate rectangles hona zaroori hai. Isko badhane se isolated noise aur false positives filter ho jaate hain.
+                </div>
+            </div>
+        </details>
+
+        <!-- QUIZ 3 -->
+        <details>
+            <summary>&#x1F914; Quiz 3: Nested detection mein Face ROI ke andar Eye detect karne ke baad full image par rectangle draw karne ke liye sahi coordinates kya honge?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) <code>(ex, ey)</code> aur <code>(ex + ew, ey + eh)</code></li>
+                    <li>B) <code>(x, y)</code> aur <code>(x + w, y + h)</code></li>
+                    <li>C) <code>(x + ex, y + ey)</code> aur <code>(x + ex + ew, y + ey + eh)</code></li>
+                    <li>D) <code>(ex - x, ey - y)</code> aur <code>(ew, eh)</code></li>
+                </ul>
+                <div class="answer-box">
+                    &#x2705; <strong>Correct Answer: C &mdash; (x + ex, y + ey)</strong><br>
+                    <strong>Explanation:</strong> <code>(ex, ey)</code> local ROI ke relative coordinates hote hain. Global image par draw karne ke liye usme Face bounding box ka origin <code>(x, y)</code> add karna anivarya hai.
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <p><strong>CodeVerse OpenCV Educational Series</strong> &bull; Topic 15: Object Detection with Haar Cascades</p>
+        <p style="margin-top: 6px; font-size: 12px; color: #64748b;">
+            Next Topic: <strong>Topic 16 &mdash; Deep Learning Object Detection (SSD, YOLO &amp; DNN Module)</strong> &rarr;
+        </p>
+    </footer>
+
+</div>
+
+</body>
+</html>

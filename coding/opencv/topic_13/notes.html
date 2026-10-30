@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 13: Feature Detection & Description | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #f0f9ff;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Section Cards */
+        .section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-num {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: var(--primary);
+            color: #0369a1;
+        }
+
+        .callout-success {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        /* Image Containers */
+        .diagram-container {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-caption {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Syntax and Code Boxes */
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+        }
+
+        .code-output {
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12.5px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        .code-block code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Responsive Comparison Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #475569;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fcfdfe;
+        }
+
+        /* Formula & Math Display Box */
+        .formula-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 13.5px;
+            color: #0f172a;
+            margin: 12px 0;
+            display: inline-block;
+        }
+
+        /* Interactive Collapsible Quizzes */
+        details {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            background-color: #ffffff;
+            border-bottom: 1px solid transparent;
+            display: block;
+            line-height: 1.45;
+        }
+
+        details[open] summary {
+            border-bottom-color: var(--border);
+            background-color: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .quiz-options {
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            background-color: var(--accent-green-bg);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            color: #065f46;
+            font-size: 13.5px;
+        }
+
+        /* Grid cards for properties */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card h4 {
+            color: var(--primary-dark);
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Syntax Highlight Helpers */
+        .hl-k { color: #f472b6; } /* keyword */
+        .hl-f { color: #60a5fa; } /* function */
+        .hl-s { color: #34d399; } /* string */
+        .hl-c { color: #94a3b8; font-style: italic; } /* comment */
+        .hl-n { color: #fbbf24; } /* number */
+        .hl-v { color: #e2e8f0; } /* variable */
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .hero { padding: 20px 16px; }
+            .hero h1 { font-size: 21px; }
+            .section { padding: 18px 14px; }
+            .section-title { font-size: 17px; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <span class="hero-badge">&#128736; OpenCV Core Series &bull; Topic 13</span>
+        <h1>Feature Detection &amp; Description</h1>
+        <p>Do alag-alag angles, lighting ya zoom se li gayi photos mein same object ko kaise pehchanein? <strong>Features (Keypoints + Descriptors)</strong> image ke wo distinctive landmarks hote hain jo camera movement ke bawajood invariant rehte hain. Seekhein Harris, Shi-Tomasi, SIFT, ORB aur Feature Matching!</p>
+        <div class="meta-tags">
+            <span class="meta-pill">&#9201; ~6-8 min read</span>
+            <span class="meta-pill">&#127919; Target: OpenCV 4.x + Python</span>
+            <span class="meta-pill">&#128202; Difficulty: Intermediate</span>
+            <span class="meta-pill">&#128279; Requires: Topics 10 &amp; 11</span>
+        </div>
+    </header>
+
+    <!-- Section 1: Introduction to Features -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What is an Image Feature? (The Landmark Analogy)</h2>
+        </div>
+        <p>Maan lijiye aapke paas ek hi historic monument (jaise Taj Mahal) ki do alag-alag photos hain: ek subah li gayi door se, aur ek shaam ko paas se thode tirche angle se. In dono photos ko match karne ke liye hum kya dekhte hain?</p>
+
+        <p>Neela aasmaan ya safed marble ka plain hissa dono photos mein ek jaisa lagta hai (no uniqueness). Lekin gumbad ki choti, minar ke corners, aur khidkiyon ke sharp patterns dono images mein turant pehchane ja sakte hain! Inhi unique points ko hum <strong>Image Features</strong> kehte hain.</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#128205; 1. Keypoint (Location &amp; Scale)</h4>
+                <p>Image mein feature kahan situated hai: Pixel coordinate <code>(x, y)</code>, size/scale (&sigma;), orientation angle (&theta;), aur response strength.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#129532; 2. Descriptor (Fingerprint Vector)</h4>
+                <p>Keypoint ke aas-paas ke pixel neighborhood ka numerical fingerprint. Do alag images ke keypoints ko compare karne ke liye descriptors use hote hain.</p>
+            </div>
+        </div>
+
+        <!-- Visual Diagram 1 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_feature_workflow_diagram.png" alt="Feature Detection Workflow Diagram: Detection to Matching">
+            <div class="diagram-caption">Figure 13.1: The 4-stage feature pipeline: Input Image &rarr; Keypoint Detection (x, y) &rarr; Feature Description (vector) &rarr; Descriptor Distance Matching.</div>
+        </div>
+    </section>
+
+    <!-- Section 2: Corner Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Corner Detection: Harris vs Shi-Tomasi</h2>
+        </div>
+        <p>Computer vision mein <strong>Corners</strong> sabse primary features hote hain kyunki agar aap kisi chote window ko kisi bhi direction (X ya Y) mein move karenge, to pixel intensity mein massive change aayega (unlike straight edges jahan line ke along koi intensity change nahi dikhta — <em>Aperture Problem</em>).</p>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128308; 1. Harris Corner Detection (<code>cv2.cornerHarris</code>)</h3>
+        <p>Harris detector image gradients se 2&times;2 auto-correlation matrix <code>M</code> banata hai aur corner response score nikaalta hai:</p>
+        <div class="formula-box">
+            R = det(M) - k &middot; (trace(M))<sup>2</sup>
+        </div>
+        <p>Agar <code>R &gt; 0</code> bada positive number ho, to wo region ek <strong>Corner</strong> hai!</p>
+        <div class="code-block"><code><span class="hl-v">dst</span> = <span class="hl-f">cv2.cornerHarris</span>(<span class="hl-v">gray_float32</span>, <span class="hl-v">blockSize</span>=<span class="hl-n">2</span>, <span class="hl-v">ksize</span>=<span class="hl-n">3</span>, <span class="hl-v">k</span>=<span class="hl-n">0.04</span>)</code></div>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128994; 2. Shi-Tomasi Corner Detection (<code>cv2.goodFeaturesToTrack</code>)</h3>
+        <p>1994 mein Jianbo Shi aur Carlo Tomasi ne Harris score ko simplify aur improve kiya: <strong><code>R = min(&lambda;<sub>1</sub>, &lambda;<sub>2</sub>)</code></strong>. Agar dono eigenvalues threshold se bade hain, tabhi corner declare hota hai.</p>
+        <div class="code-block"><code><span class="hl-v">corners</span> = <span class="hl-f">cv2.goodFeaturesToTrack</span>(<span class="hl-v">gray</span>, <span class="hl-v">maxCorners</span>=<span class="hl-n">25</span>, <span class="hl-v">qualityLevel</span>=<span class="hl-n">0.01</span>, <span class="hl-v">minDistance</span>=<span class="hl-n">10</span>)</code></div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Comparison Feature</th>
+                        <th>Harris Corner Detector</th>
+                        <th>Shi-Tomasi Detector (goodFeaturesToTrack)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Scoring Formula</strong></td>
+                        <td><code>R = det(M) - k(trace(M))<sup>2</sup></code></td>
+                        <td><code>R = min(&lambda;<sub>1</sub>, &lambda;<sub>2</sub>)</code> (Strict &amp; Clean)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Output Format</strong></td>
+                        <td>Full response map (same height &times; width as image).</td>
+                        <td>Clean array of discrete <code>[[x, y]]</code> point coordinates.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Spacing Control</strong></td>
+                        <td>Manual post-processing thresholding required.</td>
+                        <td>Built-in <code>minDistance</code> prevents corner clustering!</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best Application</strong></td>
+                        <td>Mathematical analysis, gradient study.</td>
+                        <td><strong>Motion tracking (Optical Flow)</strong>, point features.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Diagram 2 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_harris_vs_shitomasi.png" alt="Harris vs Shi-Tomasi Corner Detection Benchmark">
+            <div class="diagram-caption">Figure 13.2: (Left) Harris corner response pixels in red. (Right) Shi-Tomasi goodFeaturesToTrack() neatly isolating distinct corner points with minDistance filtering.</div>
+        </div>
+
+        <!-- Code Example 1 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Corner Detection with OpenCV</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'blocks.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># 1. Harris Corner Detection (requires float32 input)</span>
+<span class="hl-v">gray_f</span> = np.<span class="hl-f">float32</span>(<span class="hl-v">gray</span>)
+<span class="hl-v">dst</span> = <span class="hl-f">cv2.cornerHarris</span>(<span class="hl-v">gray_f</span>, <span class="hl-v">blockSize</span>=<span class="hl-n">2</span>, <span class="hl-v">ksize</span>=<span class="hl-n">3</span>, <span class="hl-v">k</span>=<span class="hl-n">0.04</span>)
+<span class="hl-c"># Threshold: Top 1% response pixels ko mark karein</span>
+<span class="hl-v">img_harris</span> = <span class="hl-v">img</span>.<span class="hl-f">copy</span>()
+<span class="hl-v">img_harris</span>[<span class="hl-v">dst</span> &gt; <span class="hl-n">0.01</span> * <span class="hl-v">dst</span>.<span class="hl-f">max</span>()] = [<span class="hl-n">0</span>, <span class="hl-n">0</span>, <span class="hl-n">255</span>] <span class="hl-c"># Red</span>
+
+<span class="hl-c"># 2. Shi-Tomasi Corner Detection</span>
+<span class="hl-v">corners</span> = <span class="hl-f">cv2.goodFeaturesToTrack</span>(<span class="hl-v">gray</span>, <span class="hl-v">maxCorners</span>=<span class="hl-n">30</span>, <span class="hl-v">qualityLevel</span>=<span class="hl-n">0.01</span>, <span class="hl-v">minDistance</span>=<span class="hl-n">10</span>)
+<span class="hl-v">img_st</span> = <span class="hl-v">img</span>.<span class="hl-f">copy</span>()
+<span class="hl-k">if</span> <span class="hl-v">corners</span> <span class="hl-k">is not</span> <span class="hl-v">None</span>:
+    <span class="hl-k">for</span> <span class="hl-v">c</span> <span class="hl-k">in</span> np.<span class="hl-f">int32</span>(<span class="hl-v">corners</span>):
+        <span class="hl-v">x</span>, <span class="hl-v">y</span> = <span class="hl-v">c</span>.<span class="hl-f">ravel</span>()
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">img_st</span>, (<span class="hl-v">x</span>, <span class="hl-v">y</span>), <span class="hl-n">5</span>, (<span class="hl-n">0</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), -<span class="hl-n">1</span>) <span class="hl-c"># Green</span>
+
+<span class="hl-f">print</span>(<span class="hl-s">f"Shi-Tomasi detected {len(corners)} distinctive corners!"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console: Shi-Tomasi detected 8 distinctive corners! (Exact corner coordinates extracted)</div>
+    </section>
+
+    <!-- Section 3: SIFT Feature Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">SIFT (Scale-Invariant Feature Transform)</h2>
+        </div>
+        <p>Corners rotation ke liye to invariant hote hain, lekin <strong>Scale (zoom in / zoom out)</strong> ke liye nahi hote! Jab camera kisi object ke paas jata hai, to ek chhota sa sharp corner bada ho kar ek smooth curve ban jata hai, jisse Harris corner fail ho jata hai.</p>
+
+        <p>1999 mein David Lowe ne <strong>SIFT</strong> develop kiya jo dono scale aur rotation ke liye robust hai:</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#128065; Scale Invariance (DoG Pyramids)</h4>
+                <p>Image ko alag-alag octave scales par blur karke Difference-of-Gaussians (DoG) banata hai. Isse feature chahe kitna bhi zoom ho, wo pehchana jata hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128290; 128-D Feature Descriptor</h4>
+                <p>Keypoint ke 16&times;16 neighborhood ko 16 spatial blocks (4&times;4) mein divide karke 8 gradient orientation bins nikaalta hai: <code>16 &times; 8 = 128 floating-point values</code>!</p>
+            </div>
+        </div>
+
+        <div class="callout callout-success">
+            <strong>&#9989; SIFT Patent Status in Modern OpenCV:</strong><br>
+            SIFT ka US patent March 2020 mein expire ho chuka hai. Isiliye OpenCV 4.4.0+ se ye open-source core library mein bina kisi restriction ke <code>cv2.SIFT_create()</code> ke saath fully available hai!
+        </div>
+
+        <!-- Visual Diagram 3 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_sift_keypoints.png" alt="SIFT Scale-Invariant Keypoints Visualization">
+            <div class="diagram-caption">Figure 13.3: Rich SIFT keypoint visualization (cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS). Circle size corresponds to scale (&sigma;), and the line ray points to dominant gradient orientation (&theta;).</div>
+        </div>
+
+        <!-- Code Example 2 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: SIFT Keypoint Extraction</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'scene.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># SIFT detector initialize karein</span>
+<span class="hl-v">sift</span> = <span class="hl-f">cv2.SIFT_create</span>()
+
+<span class="hl-c"># Keypoints aur 128-D Descriptors extract karein</span>
+<span class="hl-v">keypoints</span>, <span class="hl-v">descriptors</span> = <span class="hl-v">sift</span>.<span class="hl-f">detectAndCompute</span>(<span class="hl-v">gray</span>, <span class="hl-v">None</span>)
+
+<span class="hl-f">print</span>(<span class="hl-s">f"Detected keypoints: {len(keypoints)}"</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Descriptors shape: {descriptors.shape}"</span>)  <span class="hl-c"># (N, 128) float32</span>
+
+<span class="hl-c"># Rich keypoints draw karein (scale &amp; orientation ke saath)</span>
+<span class="hl-v">sift_img</span> = <span class="hl-f">cv2.drawKeypoints</span>(
+    <span class="hl-v">img</span>, <span class="hl-v">keypoints</span>, <span class="hl-v">None</span>,
+    <span class="hl-v">flags</span>=<span class="hl-v">cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS</span>
+)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>Detected keypoints: 16<br>Descriptors shape: (16, 128), dtype: float32</div>
+    </section>
+
+    <!-- Section 4: ORB Feature Detection -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">ORB: Oriented FAST and Rotated BRIEF</h2>
+        </div>
+        <p>SIFT accurate to hai, par ye <strong>bohot slow</strong> hai aur har keypoint ke liye 512 bytes (128 floats &times; 4 bytes) consume karta hai. Mobile phones ya real-time drones par SIFT 30 FPS par run nahi ho sakta!</p>
+
+        <p>Iska solution OpenCV lab ne 2011 mein banaya: <strong>ORB (Oriented FAST and Rotated BRIEF)</strong>:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+            <li><strong>Detector: FAST</strong> (Features from Accelerated Segment Test) &mdash; Pixel circle test se corners ko lightning-fast identify karta hai.</li>
+            <li><strong>Descriptor: Rotated BRIEF</strong> &mdash; 256 simple pairwise binary intensity comparisons <code>I(p) &lt; I(q)</code> se <strong>32 bytes (256 bits)</strong> ka binary string banata hai!</li>
+        </ul>
+
+        <!-- Visual Diagram 4 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_orb_keypoints.png" alt="ORB Keypoints Detection: FAST Corners">
+            <div class="diagram-caption">Figure 13.4: ORB keypoints detected at FAST corner positions. Lightning-fast computation optimized for real-time edge devices.</div>
+        </div>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#9879; SIFT vs ORB: Side-by-Side Architectural Comparison</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature Attribute</th>
+                        <th>SIFT (Scale-Invariant Feature Transform)</th>
+                        <th>ORB (Oriented FAST &amp; Rotated BRIEF)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Speed &amp; Performance</strong></td>
+                        <td>Heavy &amp; Slow (suitable for offline high-precision tasks).</td>
+                        <td><strong>Ultra-Fast</strong> (ideal for mobile, drones, real-time SLAM).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Descriptor Format</strong></td>
+                        <td><strong>128 Floating-point numbers</strong> (512 bytes per point).</td>
+                        <td><strong>256 Binary bits</strong> (sirf 32 bytes per point!).</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Matching Distance Metric</strong></td>
+                        <td><strong>L2 Norm (Euclidean Distance)</strong>: <code>cv2.NORM_L2</code></td>
+                        <td><strong>Hamming Distance (Bitwise XOR)</strong>: <code>cv2.NORM_HAMMING</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Scale &amp; Rotation Invariance</strong></td>
+                        <td>High robustness across wide scale and rotation variations.</td>
+                        <td>Moderate scale pyramid, good in-plane rotation invariance.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Diagram 5 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_sift_vs_orb_comparison.png" alt="Descriptor Representation: SIFT Float vs ORB Binary">
+            <div class="diagram-caption">Figure 13.5: Descriptor layout comparison: (Left) SIFT 128 floating-point gradient values. (Right) ORB 256-bit compact binary fingerprint string.</div>
+        </div>
+
+        <!-- Code Example 3 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: ORB Keypoint Detection</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'scene.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># ORB detector initialize karein (max 500 features)</span>
+<span class="hl-v">orb</span> = <span class="hl-f">cv2.ORB_create</span>(<span class="hl-v">nfeatures</span>=<span class="hl-n">500</span>)
+<span class="hl-v">kp_orb</span>, <span class="hl-v">des_orb</span> = <span class="hl-v">orb</span>.<span class="hl-f">detectAndCompute</span>(<span class="hl-v">gray</span>, <span class="hl-v">None</span>)
+
+<span class="hl-f">print</span>(<span class="hl-s">f"ORB detected: {len(kp_orb)} keypoints"</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"ORB descriptor shape: {des_orb.shape}, dtype: {des_orb.dtype}"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>ORB detected: 173 keypoints<br>ORB descriptor shape: (173, 32), dtype: uint8 (32 bytes = 256 bits)</div>
+    </section>
+
+    <!-- Section 5: Feature Matching -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">Feature Matching: Brute-Force Matcher &amp; Distance Metrics</h2>
+        </div>
+        <p>Ek baar dono images ke descriptors nikalne ke baad, hum unhe match karte hain. <strong>Brute-Force Matcher (<code>cv2.BFMatcher</code>)</strong> Image 1 ke har descriptor ko Image 2 ke saare descriptors se compare karta hai aur sabse kam distance wale pair ko connect karta hai.</p>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128680; Matcher Norm Rules (Never Mix Incompatible Types!):</h3>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descriptor Type</th>
+                        <th>Required Matcher Norm Flag</th>
+                        <th>Matching Principle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ORB / BRIEF (Binary)</strong></td>
+                        <td><code>cv2.NORM_HAMMING</code></td>
+                        <td>Bitwise XOR + CPU popcount. Do binary strings ke kitne bits alag hain count karta hai. Super fast!</td>
+                    </tr>
+                    <tr>
+                        <td><strong>SIFT / SURF (Floating)</strong></td>
+                        <td><code>cv2.NORM_L2</code></td>
+                        <td>Euclidean distance &radic;(&sum;(a<sub>i</sub> - b<sub>i</sub>)<sup>2</sup>). Floating vector distance.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#127919; Lowe's Ratio Test (Filtering Ambiguous Matches)</h3>
+        <p>SIFT matching mein aksar galat pairs match ho jate hain. David Lowe ne iske liye <strong>Ratio Test</strong> propose kiya: <code>knnMatch(k=2)</code> se har keypoint ke top 2 best matches mangwao (<code>m</code> aur <code>n</code>). Agar best match (<code>m</code>) second-best match (<code>n</code>) se kaafi behtar (closer) hai:</p>
+        <div class="formula-box">
+            m.distance &lt; 0.75 &middot; n.distance
+        </div>
+        <p>Tabhi us match ko valid maana jata hai, warna ambiguous maan kar drop kar diya jata hai!</p>
+
+        <!-- Visual Diagram 6 -->
+        <div class="diagram-container">
+            <img src="assets/topic13_feature_matching_bf.png" alt="Brute Force Feature Matching on Transformed Image">
+            <div class="diagram-caption">Figure 13.6: Robust feature matching using cv2.drawMatches(). Green lines connect identical physical points between the original building and its rotated &amp; scaled transformation!</div>
+        </div>
+
+        <!-- Code Example 4 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Match Transformed Images</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+
+<span class="hl-v">img1</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'scene_original.png'</span>)
+<span class="hl-v">img2</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'scene_transformed.png'</span>)
+
+<span class="hl-c"># 1. ORB features detect karein</span>
+<span class="hl-v">orb</span> = <span class="hl-f">cv2.ORB_create</span>(<span class="hl-v">nfeatures</span>=<span class="hl-n">400</span>)
+<span class="hl-v">kp1</span>, <span class="hl-v">des1</span> = <span class="hl-v">orb</span>.<span class="hl-f">detectAndCompute</span>(<span class="hl-v">img1</span>, <span class="hl-v">None</span>)
+<span class="hl-v">kp2</span>, <span class="hl-v">des2</span> = <span class="hl-v">orb</span>.<span class="hl-f">detectAndCompute</span>(<span class="hl-v">img2</span>, <span class="hl-v">None</span>)
+
+<span class="hl-c"># 2. BFMatcher initialize karein (Binary descriptors ke liye NORM_HAMMING zaroori hai!)</span>
+<span class="hl-v">bf</span> = <span class="hl-f">cv2.BFMatcher</span>(<span class="hl-v">cv2.NORM_HAMMING</span>, <span class="hl-v">crossCheck</span>=<span class="hl-v">True</span>)
+<span class="hl-v">matches</span> = <span class="hl-v">bf</span>.<span class="hl-f">match</span>(<span class="hl-v">des1</span>, <span class="hl-v">des2</span>)
+
+<span class="hl-c"># Distance ke hisaab se sort karein (sabse best matches pehle)</span>
+<span class="hl-v">matches</span> = <span class="hl-f">sorted</span>(<span class="hl-v">matches</span>, <span class="hl-v">key</span>=<span class="hl-k">lambda</span> <span class="hl-v">m</span>: <span class="hl-v">m</span>.<span class="hl-v">distance</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Kul {len(matches)} matching pairs mile!"</span>)
+
+<span class="hl-c"># 3. Top 20 matches visualize karein</span>
+<span class="hl-v">matched_img</span> = <span class="hl-f">cv2.drawMatches</span>(
+    <span class="hl-v">img1</span>, <span class="hl-v">kp1</span>, <span class="hl-v">img2</span>, <span class="hl-v">kp2</span>, <span class="hl-v">matches</span>[:<span class="hl-n">20</span>], <span class="hl-v">None</span>,
+    <span class="hl-v">flags</span>=<span class="hl-v">cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS</span>
+)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>ORB Matcher: Image 1 has 228 kps, Image 2 has 238 kps.<br>Total cross-checked ORB matches: 71 (Top match Hamming distance: 1.0 bits)</div>
+    </section>
+
+    <!-- Section 6: Real-World Applications -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Real-World Industry Applications</h2>
+        </div>
+        <p>Feature detection aur description computer vision ke sabse powerful tools hain:</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#127964; 1. Panorama Stitching</h4>
+                <p>Smartphone camera ko ghuma kar panoramic photo lete waqt, software consecutive frames ke SIFT/ORB features match karta hai aur Homography matrix nikaal kar unhe seamlessly blend karta hai!</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#129302; 2. Visual SLAM &amp; Robotics</h4>
+                <p>Autonomous vacuum cleaners aur drones kamre ke corners aur visual landmarks ko track karke live 3D map banate hain aur apni exact position calculate karte hain.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128269; 3. Image Retrieval &amp; Reverse Search</h4>
+                <p>Google Lens kisi product ya book cover ki photo se uske local descriptors nikaalta hai aur database ke millions of images ke saath instant match karta hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128065; 4. Augmented Reality (AR)</h4>
+                <p>Table par rakhi hui kisi book cover ya marker image ke keypoints detect karke virtual 3D characters ko uske upar perfectly stabilize kiya jata hai.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 7: Common Beginner Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>&#10060; Mistake 1: ORB Descriptors ke saath <code>cv2.NORM_L2</code> use karna</strong><br>
+            <em>Problem:</em> ORB binary strings return karta hai. Agar aap L2 Euclidean distance use karenge to computation bohot slow hogi aur matches completely inaccurate honge.<br>
+            <em>Solution:</em> ORB ke liye hamesha <strong><code>cv2.NORM_HAMMING</code></strong> use karein!
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Mistake 2: Color BGR image ko direct <code>cornerHarris</code> mein pass karna</strong><br>
+            <em>Problem:</em> <code>cv2.error: (-215:Assertion failed) src.type() == CV_32FC1</code>.<br>
+            <em>Solution:</em> Pehle BGR ko Grayscale karein, aur fir <code>np.float32(gray)</code> mein convert karein!
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Mistake 3: Lowe's Ratio test mein k=1 pass karna</strong><br>
+            <em>Problem:</em> Ratio test ke liye top 2 matches (best aur second best) chahiye hote hain.<br>
+            <em>Solution:</em> <code>bf.knnMatch(des1, des2, k=2)</code> call karein jisse har keypoint ke do matches milein!
+        </div>
+    </section>
+
+    <!-- Section 8: Mini Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">08</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: SIFT descriptors aur ORB descriptors ke data format mein kya main antar hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) SIFT 128 floating-point numbers deta hai, jabki ORB 32 bytes (256 bits) ka binary string deta hai.</li>
+                    <li>B) SIFT sirf black-and-white images par kaam karta hai.</li>
+                    <li>C) Dono identical floating arrays return karte hain.</li>
+                    <li>D) ORB video par run nahi ho sakta.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> SIFT 128-D float32 vector hota hai jise match karne ke liye L2 norm lagta hai, jabki ORB 256-bit binary string hota hai jise ultra-fast bitwise Hamming distance se match kiya jata hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: Feature matching mein Lowe's Ratio Test (<code>m.distance &lt; 0.75 * n.distance</code>) ka kya uddeshya hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Image ko resize karna.</li>
+                    <li>B) Ambiguous (confusing) matches ko discard karke sirf confident true pairs retain karna.</li>
+                    <li>C) Color inversion karna.</li>
+                    <li>D) Keypoints ka count double karna.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: B<br>
+                    <strong>Explanation:</strong> Agar best match (m) aur second best match (n) lagbhag barabar doori par hain (ratio close to 1.0), to iska matlab scene mein repetitive textures hain aur match ambiguous hai. Ratio test aisi false connections ko filter out kar deta hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: Shi-Tomasi corner detection (<code>goodFeaturesToTrack</code>) mein <code>minDistance</code> parameter ka kya fayda hota hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Ye corners ke beech minimum pixel distance enforce karta hai taaki ek hi corner par 10 points cluster na ho jayein.</li>
+                    <li>B) Ye image contrast badhata hai.</li>
+                    <li>C) Ye video frame rate control karta hai.</li>
+                    <li>D) Ye image resolution reduce karta hai.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> <code>minDistance</code> spatial suppression provide karta hai, jisse detected corners poore object par well-distributed rehte hain aur clustering nahi hoti!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 9: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 14 — Image Histograms &amp; Equalization (CLAHE)</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne geometric shapes aur invariant local features ko extract aur match karna seekh liya hai, agle topic mein hum image ke tonal distribution ko analyse karna seekhenge: kaise <strong>Histograms</strong> se andheri ya overexposed photos ko diagnose karte hain aur <strong>CLAHE</strong> se medical scans aur low-light images ka contrast restore karte hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>

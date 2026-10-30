@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>OpenCV Topic 12: Hough Transform & Geometric Detection | CodeVerse</title>
+    <style>
+        /* Modern Offline-First Responsive Design System for CodeVerse OpenCV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #0284c7;
+            --primary-light: #e0f2fe;
+            --primary-dark: #0369a1;
+            --accent-green: #059669;
+            --accent-green-bg: #ecfdf5;
+            --accent-amber: #d97706;
+            --accent-amber-bg: #fffbeb;
+            --accent-red: #dc2626;
+            --accent-red-bg: #fef2f2;
+            --accent-purple: #7c3aed;
+            --accent-purple-bg: #f5f3ff;
+            --border: #e2e8f0;
+            --code-bg: #0f172a;
+            --code-text: #f8fafc;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            line-height: 1.68;
+            font-size: 15px;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 50%, #0f172a 100%);
+            color: #ffffff;
+            padding: 30px 24px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(4px);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+
+        .hero h1 {
+            font-size: 26px;
+            line-height: 1.3;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            color: #f0f9ff;
+            font-size: 14.5px;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .meta-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .meta-pill {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Section Cards */
+        .section {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 22px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f1f5f9;
+        }
+
+        .section-num {
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 800;
+            font-size: 14px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* Callout Boxes */
+        .callout {
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin: 16px 0;
+            border-left: 4px solid;
+            font-size: 14px;
+        }
+
+        .callout-info {
+            background-color: #f0f9ff;
+            border-color: var(--primary);
+            color: #0369a1;
+        }
+
+        .callout-success {
+            background-color: var(--accent-green-bg);
+            border-color: var(--accent-green);
+            color: #065f46;
+        }
+
+        .callout-warning {
+            background-color: var(--accent-amber-bg);
+            border-color: var(--accent-amber);
+            color: #92400e;
+        }
+
+        .callout-danger {
+            background-color: var(--accent-red-bg);
+            border-color: var(--accent-red);
+            color: #991b1b;
+        }
+
+        /* Image Containers */
+        .diagram-container {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: var(--radius-md);
+            padding: 10px;
+            margin: 18px 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+        }
+
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-sm);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .diagram-caption {
+            font-size: 12.5px;
+            color: #94a3b8;
+            margin-top: 8px;
+            font-weight: 500;
+        }
+
+        /* Syntax and Code Boxes */
+        .code-block {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 13.5px;
+            line-height: 1.55;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+        }
+
+        .code-output {
+            background-color: #1e293b;
+            color: #38bdf8;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 12.5px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+            border-left: 3px solid #38bdf8;
+        }
+
+        code {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-weight: 600;
+        }
+
+        .code-block code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            font-size: inherit;
+        }
+
+        /* Responsive Comparison Tables */
+        .table-wrapper {
+            overflow-x: auto;
+            margin: 16px 0;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            text-align: left;
+            background-color: #ffffff;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            padding: 10px 14px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: #475569;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fcfdfe;
+        }
+
+        /* Formula & Math Display Box */
+        .formula-box {
+            background-color: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-family: ui-monospace, SFMono-Regular, monospace;
+            font-size: 13.5px;
+            color: #0f172a;
+            margin: 12px 0;
+            display: inline-block;
+        }
+
+        /* Interactive Collapsible Quizzes */
+        details {
+            background-color: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        summary {
+            padding: 12px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+            background-color: #ffffff;
+            border-bottom: 1px solid transparent;
+            display: block;
+            line-height: 1.45;
+        }
+
+        details[open] summary {
+            border-bottom-color: var(--border);
+            background-color: #f1f5f9;
+        }
+
+        .quiz-content {
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .quiz-options {
+            list-style-type: none;
+            margin: 10px 0;
+        }
+
+        .quiz-options li {
+            padding: 6px 10px;
+            margin-bottom: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--radius-sm);
+        }
+
+        .answer-box {
+            background-color: var(--accent-green-bg);
+            border-left: 4px solid var(--accent-green);
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+            color: #065f46;
+            font-size: 13.5px;
+        }
+
+        /* Grid cards for properties */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .feature-card {
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feature-card h4 {
+            color: var(--primary-dark);
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feature-card p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        /* Syntax Highlight Helpers */
+        .hl-k { color: #f472b6; } /* keyword */
+        .hl-f { color: #60a5fa; } /* function */
+        .hl-s { color: #34d399; } /* string */
+        .hl-c { color: #94a3b8; font-style: italic; } /* comment */
+        .hl-n { color: #fbbf24; } /* number */
+        .hl-v { color: #e2e8f0; } /* variable */
+
+        @media (max-width: 640px) {
+            body { padding: 10px; }
+            .hero { padding: 20px 16px; }
+            .hero h1 { font-size: 21px; }
+            .section { padding: 18px 14px; }
+            .section-title { font-size: 17px; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Hero Header -->
+    <header class="hero">
+        <span class="hero-badge">&#128736; OpenCV Core Series &bull; Topic 12</span>
+        <h1>Hough Transform &amp; Geometric Detection</h1>
+        <p>Edges sirf tooti-phooti boundary pixels dete hain. <strong>Hough Transform</strong> ek revolutionary parameter-space voting technique hai jo inhi scattered pixels ko mathematically combine karke straight lines, highway road lanes, aur circular coins/bearings detect karti hai!</p>
+        <div class="meta-tags">
+            <span class="meta-pill">&#9201; ~6-8 min read</span>
+            <span class="meta-pill">&#127919; Target: OpenCV 4.x + Python</span>
+            <span class="meta-pill">&#128202; Difficulty: Beginner to Intermediate</span>
+            <span class="meta-pill">&#128279; Requires: Topics 7, 8 &amp; 10</span>
+        </div>
+    </header>
+
+    <!-- Section 1: What is the Hough Transform? -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">01</span>
+            <h2 class="section-title">What is the Hough Transform? (The Voting Analogy)</h2>
+        </div>
+        <p>Imagine kijiye aap ek self-driving car ke liye camera image process kar rahe hain. Canny edge detector road ke kinaron par hazaron 1-pixel white dots nikaalta hai. Par computer ko kaise pata chalega ki kaunse dots milkar ek straight <strong>highway lane</strong> bana rahe hain?</p>
+        
+        <p>Yahin par kaam aata hai <strong>Hough Transform</strong>:</p>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4>&#128507; 1. Image Space to Parameter Space</h4>
+                <p>Image ke har ek edge pixel <code>(x, y)</code> ko parameter space mein map kiya jata hai. Ek point se infinite lines guzar sakti hain!</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#128499; 2. The Accumulator Voting Process</h4>
+                <p>Ek 2D voting grid (Accumulator) banti hai. Har edge pixel un sabhi lines ke liye ek "Vote" daalta hai jinpar wo lie karta hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4>&#127942; 3. Peak Voting Wins</h4>
+                <p>Grid cell jisme sabse zyada votes jama hote hain, wo announce karti hai: <em>"Mujhpar 200 edge pixels lie karte hain, main ek real straight line hoon!"</em></p>
+            </div>
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Why Preprocessing is Mandatory:</strong><br>
+            Hough Transform direct raw BGR image par run nahi hota! Pehle <strong>Gaussian Blur</strong> se noise reduce karna hota hai, aur fir <strong>Canny Edge Detection</strong> se 1-pixel binary boundary map nikaalna padta hai. Agar image mein noise hoga to accumulator galat peaks (false lines) detect kar lega!
+        </div>
+
+        <!-- Visual Diagram 1 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_canny_edges_input.png" alt="Hough Transform Pipeline: Input Image, Canny Edge Map, and Accumulator Voting Space">
+            <div class="diagram-caption">Figure 12.1: The 3-step Hough workflow: Original Scene &rarr; Canny 1-px Edge Map &rarr; Hough Accumulator Voting Space (&theta; vs &rho;). Notice how bright peaks represent detected lines!</div>
+        </div>
+    </section>
+
+    <!-- Section 2: Line Detection Using Hough Transform -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">02</span>
+            <h2 class="section-title">Line Detection: Standard Hough Lines (cv2.HoughLines)</h2>
+        </div>
+        <p>School geometry mein hum line ki equation <code>y = mx + c</code> padhte hain. Lekin image processing mein ek problem hai: jab line bilkul vertical (khadi) hoti hai, to slope <code>m &rarr; &infin;</code> ho jata hai, jisse computer division by zero se crash ho sakta hai!</p>
+
+        <p>Isiliye Hough Transform <strong>Polar Coordinate System</strong> use karta hai:</p>
+
+        <div class="formula-box">
+            &rho; = x &middot; cos(&theta;) + y &middot; sin(&theta;)
+        </div>
+
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+            <li><strong>&rho; (rho)</strong>: Origin <code>(0, 0)</code> se line tak ka perpendicular distance (in pixels).</li>
+            <li><strong>&theta; (theta)</strong>: Perpendicular line dwara horizontal X-axis ke saath banaya gaya angle (in radians, usually 0 to &pi;).</li>
+        </ul>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128269; Function Signature: <code>cv2.HoughLines()</code></h3>
+        <div class="code-block"><code><span class="hl-v">lines</span> = <span class="hl-f">cv2.HoughLines</span>(<span class="hl-v">edges</span>, <span class="hl-v">rho</span>=<span class="hl-n">1</span>, <span class="hl-v">theta</span>=np.pi/<span class="hl-n">180</span>, <span class="hl-v">threshold</span>=<span class="hl-n">100</span>)</code></div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Meaning &amp; Recommended Value</th>
+                        <th>Impact on Detection</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>rho</code></td>
+                        <td>Distance resolution (typically <strong>1 pixel</strong>).</td>
+                        <td>Chhoti value zyada precision deti hai, badi value vote grouping fast karti hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>theta</code></td>
+                        <td>Angle resolution (typically <strong>&pi; / 180 = 1 degree</strong> in radians).</td>
+                        <td>Angle step size. 1 degree accuracy standard hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>threshold</code></td>
+                        <td>Minimum votes needed in accumulator cell (e.g. <strong>100 votes</strong>).</td>
+                        <td>Zyada threshold = sirf lambi/prominent lines; Kam threshold = noisy faint lines.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Note on Standard Hough Output:</strong><br>
+            <code>cv2.HoughLines()</code> finite line segments nahi deta! Ye <strong>infinite lines (anant rekhaayein)</strong> ke <code>(&rho;, &theta;)</code> parameters return karta hai jo poori image ke cross pass hoti hain!
+        </div>
+
+        <!-- Visual Diagram 2 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_hough_lines_standard.png" alt="Standard Hough Line Detection: Horizontal, Vertical and Diagonal Lines">
+            <div class="diagram-caption">Figure 12.2: Standard cv2.HoughLines() output. Infinite green lines plotted across the canvas using polar equations.</div>
+        </div>
+
+        <!-- Code Example 1 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Detect Straight Lines with cv2.HoughLines</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-c"># 1. Image load karein aur Grayscale mein convert karein</span>
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'grid_lines.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># 2. Canny edge detector se 1-pixel boundary nikaalein</span>
+<span class="hl-v">edges</span> = <span class="hl-f">cv2.Canny</span>(<span class="hl-v">gray</span>, <span class="hl-n">50</span>, <span class="hl-n">150</span>)
+
+<span class="hl-c"># 3. Standard Hough Line Transform (rho=1 px, theta=1 deg, threshold=100 votes)</span>
+<span class="hl-v">lines</span> = <span class="hl-f">cv2.HoughLines</span>(<span class="hl-v">edges</span>, <span class="hl-v">rho</span>=<span class="hl-n">1</span>, <span class="hl-v">theta</span>=np.pi/<span class="hl-n">180</span>, <span class="hl-v">threshold</span>=<span class="hl-n">100</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Kul {len(lines)} lines detect hui!"</span>)
+
+<span class="hl-c"># 4. Infinite lines draw karne ke liye polar coordinates se do endpoints nikaalein</span>
+<span class="hl-v">output</span> = <span class="hl-v">img</span>.<span class="hl-f">copy</span>()
+<span class="hl-k">if</span> <span class="hl-v">lines</span> <span class="hl-k">is not</span> <span class="hl-v">None</span>:
+    <span class="hl-k">for</span> <span class="hl-v">line</span> <span class="hl-k">in</span> <span class="hl-v">lines</span>:
+        <span class="hl-v">rho</span>, <span class="hl-v">theta</span> = <span class="hl-v">line</span>[<span class="hl-n">0</span>]
+        <span class="hl-v">a</span> = np.<span class="hl-f">cos</span>(<span class="hl-v">theta</span>)
+        <span class="hl-v">b</span> = np.<span class="hl-f">sin</span>(<span class="hl-v">theta</span>)
+        <span class="hl-v">x0</span> = <span class="hl-v">a</span> * <span class="hl-v">rho</span>
+        <span class="hl-v">y0</span> = <span class="hl-v">b</span> * <span class="hl-v">rho</span>
+        <span class="hl-c"># Line ko 1000 pixels aage-peeche extend karein</span>
+        <span class="hl-v">x1</span> = <span class="hl-f">int</span>(<span class="hl-v">x0</span> + <span class="hl-n">1000</span> * (-<span class="hl-v">b</span>))
+        <span class="hl-v">y1</span> = <span class="hl-f">int</span>(<span class="hl-v">y0</span> + <span class="hl-n">1000</span> * (<span class="hl-v">a</span>))
+        <span class="hl-v">x2</span> = <span class="hl-f">int</span>(<span class="hl-v">x0</span> - <span class="hl-n">1000</span> * (-<span class="hl-v">b</span>))
+        <span class="hl-v">y2</span> = <span class="hl-f">int</span>(<span class="hl-v">y0</span> - <span class="hl-n">1000</span> * (<span class="hl-v">a</span>))
+        <span class="hl-f">cv2.line</span>(<span class="hl-v">output</span>, (<span class="hl-v">x1</span>, <span class="hl-v">y1</span>), (<span class="hl-v">x2</span>, <span class="hl-v">y2</span>), (<span class="hl-n">0</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), <span class="hl-n">2</span>)</code></div>
+        <div class="code-output">&#10004; Output Console: Kul 8 lines detect hui! (Thick lines ki dono boundaries capture hui)</div>
+    </section>
+
+    <!-- Section 3: Probabilistic Hough Lines -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">03</span>
+            <h2 class="section-title">Probabilistic Hough Lines (cv2.HoughLinesP)</h2>
+        </div>
+        <p>Standard Hough algorithm slow hota hai kyunki wo har edge pixel ke liye voting compute karta hai. Saath hi, ye real-life line segments ke start aur end points nahi deta.</p>
+
+        <p><strong>Probabilistic Hough Transform (<code>cv2.HoughLinesP</code>)</strong> iska perfect solution hai:</p>
+        <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
+            <li><strong>Random Sampling</strong>: Ye edge pixels ke random subset ko sample karta hai, jisse speed 10&times; fast ho jaati hai!</li>
+            <li><strong>Exact Line Segments</strong>: Ye direct finite segment coordinates return karta hai: <code>[x1, y1, x2, y2]</code>!</li>
+        </ul>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128269; Key Extra Parameters in <code>HoughLinesP</code></h3>
+        <div class="code-block"><code><span class="hl-v">lines</span> = <span class="hl-f">cv2.HoughLinesP</span>(<span class="hl-v">edges</span>, <span class="hl-n">1</span>, np.pi/<span class="hl-n">180</span>, <span class="hl-v">threshold</span>=<span class="hl-n">50</span>, <span class="hl-v">minLineLength</span>=<span class="hl-n">40</span>, <span class="hl-v">maxLineGap</span>=<span class="hl-n">15</span>)</code></div>
+
+        <div class="card-grid">
+            <div class="feature-card">
+                <h4><code>minLineLength</code></h4>
+                <p>Minimum pixel length. Isse chhoti lines reject ho jayengi. Chhote noisy dashes ko filter out karne ke liye useful hai.</p>
+            </div>
+            <div class="feature-card">
+                <h4><code>maxLineGap</code></h4>
+                <p>Maximum allowed gap between broken segments. Agar ek hi line ke do pieces beech mein 15 pixels se kam toote hain, to OpenCV unhe jodkar ek single segment bana dega!</p>
+            </div>
+        </div>
+
+        <!-- Visual Diagram 3 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_standard_vs_probabilistic.png" alt="Standard vs Probabilistic Hough Lines on Highway Lanes">
+            <div class="diagram-caption">Figure 12.3: Comparison on road lane markings. (Left) Standard Hough draws infinite orange rays. (Right) Probabilistic HoughLinesP accurately isolates finite green segments with cyan endpoints.</div>
+        </div>
+
+        <!-- Code Example 2 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Lane Marking Detection with HoughLinesP</h4>
+        <div class="code-block"><code><span class="hl-c"># Probabilistic Hough Line Transform run karein</span>
+<span class="hl-v">lines_p</span> = <span class="hl-f">cv2.HoughLinesP</span>(
+    <span class="hl-v">edges</span>,
+    <span class="hl-v">rho</span>=<span class="hl-n">1</span>,
+    <span class="hl-v">theta</span>=np.pi/<span class="hl-n">180</span>,
+    <span class="hl-v">threshold</span>=<span class="hl-n">30</span>,       <span class="hl-c"># Accumulator threshold</span>
+    <span class="hl-v">minLineLength</span>=<span class="hl-n">20</span>,   <span class="hl-c"># Reject lines shorter than 20 px</span>
+    <span class="hl-v">maxLineGap</span>=<span class="hl-n">15</span>       <span class="hl-c"># Connect broken dashed gaps up to 15 px</span>
+)
+
+<span class="hl-v">output_p</span> = <span class="hl-v">img</span>.<span class="hl-f">copy</span>()
+<span class="hl-k">if</span> <span class="hl-v">lines_p</span> <span class="hl-k">is not</span> <span class="hl-v">None</span>:
+    <span class="hl-k">for</span> <span class="hl-v">line</span> <span class="hl-k">in</span> <span class="hl-v">lines_p</span>:
+        <span class="hl-v">x1</span>, <span class="hl-v">y1</span>, <span class="hl-v">x2</span>, <span class="hl-v">y2</span> = <span class="hl-v">line</span>[<span class="hl-n">0</span>]
+        <span class="hl-c"># Seedhe endpoints ke beech line segment draw karein</span>
+        <span class="hl-f">cv2.line</span>(<span class="hl-v">output_p</span>, (<span class="hl-v">x1</span>, <span class="hl-v">y1</span>), (<span class="hl-v">x2</span>, <span class="hl-v">y2</span>), (<span class="hl-n">0</span>, <span class="hl-n">230</span>, <span class="hl-n">118</span>), <span class="hl-n">3</span>)
+        <span class="hl-c"># Endpoints par cyan dots banayein</span>
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">output_p</span>, (<span class="hl-v">x1</span>, <span class="hl-v">y1</span>), <span class="hl-n">4</span>, (<span class="hl-n">255</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), -<span class="hl-n">1</span>)
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">output_p</span>, (<span class="hl-v">x2</span>, <span class="hl-v">y2</span>), <span class="hl-n">4</span>, (<span class="hl-n">255</span>, <span class="hl-n">255</span>, <span class="hl-n">0</span>), -<span class="hl-n">1</span>)</code></div>
+        <div class="code-output">&#10004; Output Console: Detected finite segments: (202, 261) &rarr; (202, 39), Length = 222.0 px</div>
+    </section>
+
+    <!-- Section 4: Circle Detection Using Hough Circle Transform -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">04</span>
+            <h2 class="section-title">Circle Detection: Hough Circle Transform (cv2.HoughCircles)</h2>
+        </div>
+        <p>Circle ki equation hoti hai: <code>(x - x<sub>c</sub>)<sup>2</sup> + (y - y<sub>c</sub>)<sup>2</sup> = r<sup>2</sup></code>. Isme 3 unknowns hote hain: Center coordinates <code>(x<sub>c</sub>, y<sub>c</sub>)</code> aur Radius <code>r</code>.</p>
+
+        <p>Agar hum 3D voting accumulator banayein to memory blast ho jayegi! Isiliye OpenCV <strong>Hough Gradient Method</strong> use karta hai: edge gradient ki direction seedhe circle ke center ki taraf point karti hai, jisse calculation fast 2D space mein ho jaati hai.</p>
+
+        <h3 style="margin: 16px 0 8px; font-size: 16px; color: var(--primary-dark);">&#128269; Function Signature &amp; Parameters:</h3>
+        <div class="code-block"><code><span class="hl-v">circles</span> = <span class="hl-f">cv2.HoughCircles</span>(<span class="hl-v">blurred</span>, <span class="hl-v">cv2.HOUGH_GRADIENT</span>, <span class="hl-v">dp</span>=<span class="hl-n">1.2</span>, <span class="hl-v">minDist</span>=<span class="hl-n">80</span>,
+                           <span class="hl-v">param1</span>=<span class="hl-n">100</span>, <span class="hl-v">param2</span>=<span class="hl-n">35</span>, <span class="hl-v">minRadius</span>=<span class="hl-n">20</span>, <span class="hl-v">maxRadius</span>=<span class="hl-n">90</span>)</code></div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Recommended</th>
+                        <th>Function &amp; Practical Role</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>dp</code></td>
+                        <td><code>1.0</code> ya <code>1.2</code></td>
+                        <td>Inverse accumulator resolution. <code>1.0</code> par original image resolution jitni voting hoti hai.</td>
+                    </tr>
+                    <tr>
+                        <td><code>minDist</code></td>
+                        <td>Distance in px (e.g. <code>80</code>)</td>
+                        <td>Do alag-alag circle centers ke beech ka minimum distance. Ek hi coin par multiple duplicate circles avoid karta hai!</td>
+                    </tr>
+                    <tr>
+                        <td><code>param1</code></td>
+                        <td><code>100</code></td>
+                        <td>Internal <strong>Canny edge detector</strong> ka higher threshold (lower threshold automatically <code>param1 / 2</code> hoti hai).</td>
+                    </tr>
+                    <tr>
+                        <td><code>param2</code> &#9733;</td>
+                        <td><code>30</code> to <code>50</code></td>
+                        <td><strong>Accumulator voting threshold</strong> for center detection. Jitna chota hoga, utne zyada false ghost circles aayenge; jitna bada hoga, utne strict detections honge!</td>
+                    </tr>
+                    <tr>
+                        <td><code>minRadius</code> / <code>maxRadius</code></td>
+                        <td>Expected size range</td>
+                        <td>Sirf specific size ke circles dhoondhne ke liye (e.g. coin ka radius 25px se 80px ke beech). Compute time bachta hai!</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Visual Diagram 4 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_hough_circles_detection.png" alt="Hough Circle Detection: Centers and Radii">
+            <div class="diagram-caption">Figure 12.4: cv2.HoughCircles() successfully extracting exact center coordinates (Red dots), boundary rings (Green), and radius lengths (Yellow) for 3 synthetic coins.</div>
+        </div>
+
+        <h3 style="margin: 18px 0 8px; font-size: 16px; color: var(--primary-dark);">&#9879; Sensitivity Tuning: The Critical Impact of <code>param2</code></h3>
+        <p>Circle detection mein sabse common mistake <code>param2</code> ko galat set karna hota hai:</p>
+
+        <!-- Visual Diagram 5 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_param_sensitivity_comparison.png" alt="Accumulator Sensitivity: The Critical Impact of param2 Tuning">
+            <div class="diagram-caption">Figure 12.5: Real test execution showing the effect of param2: (A) param2=18 causes false positive ghost circles; (B) param2=45 accurately isolates both real circles; (C) param2=85 is too strict and misses the faint left circle.</div>
+        </div>
+
+        <!-- Code Example 3 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Circle Detection with Sensitivity Check</h4>
+        <div class="code-block"><code><span class="hl-k">import</span> cv2
+<span class="hl-k">import</span> numpy <span class="hl-k">as</span> np
+
+<span class="hl-v">img</span> = <span class="hl-f">cv2.imread</span>(<span class="hl-s">'coins.png'</span>)
+<span class="hl-v">gray</span> = <span class="hl-f">cv2.cvtColor</span>(<span class="hl-v">img</span>, <span class="hl-v">cv2.COLOR_BGR2GRAY</span>)
+
+<span class="hl-c"># 1. Circle detection ke liye strong Gaussian blur zaroori hai!</span>
+<span class="hl-v">blurred</span> = <span class="hl-f">cv2.GaussianBlur</span>(<span class="hl-v">gray</span>, (<span class="hl-n">9</span>, <span class="hl-n">9</span>), <span class="hl-n">2</span>)
+
+<span class="hl-c"># 2. Hough Circles run karein</span>
+<span class="hl-v">circles</span> = <span class="hl-f">cv2.HoughCircles</span>(
+    <span class="hl-v">blurred</span>, <span class="hl-v">cv2.HOUGH_GRADIENT</span>,
+    <span class="hl-v">dp</span>=<span class="hl-n">1.2</span>, <span class="hl-v">minDist</span>=<span class="hl-n">80</span>,
+    <span class="hl-v">param1</span>=<span class="hl-n">100</span>, <span class="hl-v">param2</span>=<span class="hl-n">35</span>,
+    <span class="hl-v">minRadius</span>=<span class="hl-n">25</span>, <span class="hl-v">maxRadius</span>=<span class="hl-n">80</span>
+)
+
+<span class="hl-k">if</span> <span class="hl-v">circles</span> <span class="hl-k">is not</span> <span class="hl-v">None</span>:
+    <span class="hl-v">circles</span> = np.<span class="hl-f">uint16</span>(np.<span class="hl-f">around</span>(<span class="hl-v">circles</span>))
+    <span class="hl-f">print</span>(<span class="hl-s">f"Kul {len(circles[0])} circles detect hue!"</span>)
+    <span class="hl-k">for</span> <span class="hl-v">pt</span> <span class="hl-k">in</span> <span class="hl-v">circles</span>[<span class="hl-n">0</span>, :]:
+        <span class="hl-v">cx</span>, <span class="hl-v">cy</span>, <span class="hl-v">r</span> = <span class="hl-f">int</span>(<span class="hl-v">pt</span>[<span class="hl-n">0</span>]), <span class="hl-f">int</span>(<span class="hl-v">pt</span>[<span class="hl-n">1</span>]), <span class="hl-f">int</span>(<span class="hl-v">pt</span>[<span class="hl-n">2</span>])
+        <span class="hl-c"># Outer circle (Green)</span>
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">img</span>, (<span class="hl-v">cx</span>, <span class="hl-v">cy</span>), <span class="hl-v">r</span>, (<span class="hl-n">0</span>, <span class="hl-n">230</span>, <span class="hl-n">118</span>), <span class="hl-n">3</span>)
+        <span class="hl-c"># Center point (Red dot)</span>
+        <span class="hl-f">cv2.circle</span>(<span class="hl-v">img</span>, (<span class="hl-v">cx</span>, <span class="hl-v">cy</span>), <span class="hl-n">4</span>, (<span class="hl-n">0</span>, <span class="hl-n">0</span>, <span class="hl-n">255</span>), -<span class="hl-n">1</span>)
+        <span class="hl-f">print</span>(<span class="hl-s">f"  Center: ({cx}, {cy}), Radius: {r} px"</span>)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>Kul 2 circles detect hue!<br>  Center: (340, 151), Radius: 59 px<br>  Center: (121, 151), Radius: 45 px</div>
+    </section>
+
+    <!-- Section 5: Combined Geometric Detection & Applications -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">05</span>
+            <h2 class="section-title">Combined Geometric Detection &amp; Industry Applications</h2>
+        </div>
+        <p>Real-world industrial vision systems mein scenes mein lines aur circles dono ek saath exist karte hain (jaise conveyor belt ke straight rails par aane wale cylindrical bearings ya cans):</p>
+
+        <!-- Visual Diagram 6 -->
+        <div class="diagram-container">
+            <img src="assets/topic12_combined_geometric_scene.png" alt="Combined Geometric Detection: Rails and Circular Bearings">
+            <div class="diagram-caption">Figure 12.6: Joint geometric detection: Yellow segments represent structural rails detected by HoughLinesP, while Magenta rings represent circular parts detected by HoughCircles.</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Algorithm Technique</th>
+                        <th>Real-Life Industry Application</th>
+                        <th>Why Hough is Used</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>cv2.HoughLinesP()</code></td>
+                        <td><strong>Autonomous Lane Keeping (ADAS)</strong></td>
+                        <td>Road ki tooti hui dashed markings ko connect karke vehicle lane trajectory nikaalna.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.HoughLines()</code></td>
+                        <td><strong>Document Deskewing &amp; OCR</strong></td>
+                        <td>Scanned paper ke straight horizontal page borders detect karke tilt angle (&theta;) se image seedhi karna.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.HoughCircles()</code></td>
+                        <td><strong>Coin &amp; Currency Sorters</strong></td>
+                        <td>Fast processing mein coins ke accurate centers aur radii nikaalkar cash denomination count karna.</td>
+                    </tr>
+                    <tr>
+                        <td><code>cv2.HoughCircles()</code></td>
+                        <td><strong>Bottle Cap &amp; Eye Iris Tracking</strong></td>
+                        <td>Assembly lines par bottle caps ki sealing check karna aur biometric scanners mein pupil detect karna.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Practical Limitation in Modern Computer Vision:</strong><br>
+            Hough Transform ek mathematical feature extractor hai, koi full-fledged autonomous driving model ya general AI object detector (jaise YOLO) nahi hai! High lighting changes, curved bends ya cluttered backgrounds mein ise advanced filtering ya deep learning ke saath combine kiya jata hai.
+        </div>
+
+        <!-- Code Example 4 -->
+        <h4 style="margin: 16px 0 6px; color: #0f172a;">Hands-on Code: Combined Geometric Fusion</h4>
+        <div class="code-block"><code><span class="hl-c"># Conveyor scene par lines aur circles dono extract karein</span>
+<span class="hl-v">lines</span> = <span class="hl-f">cv2.HoughLinesP</span>(<span class="hl-v">edges</span>, <span class="hl-n">1</span>, np.pi/<span class="hl-n">180</span>, <span class="hl-v">threshold</span>=<span class="hl-n">60</span>, <span class="hl-v">minLineLength</span>=<span class="hl-n">80</span>, <span class="hl-v">maxLineGap</span>=<span class="hl-n">10</span>)
+<span class="hl-v">circles</span> = <span class="hl-f">cv2.HoughCircles</span>(<span class="hl-v">blurred</span>, <span class="hl-v">cv2.HOUGH_GRADIENT</span>, <span class="hl-v">dp</span>=<span class="hl-n">1.2</span>, <span class="hl-v">minDist</span>=<span class="hl-n">50</span>,
+                           <span class="hl-v">param1</span>=<span class="hl-n">100</span>, <span class="hl-v">param2</span>=<span class="hl-n">30</span>, <span class="hl-v">minRadius</span>=<span class="hl-n">20</span>, <span class="hl-v">maxRadius</span>=<span class="hl-n">60</span>)
+
+<span class="hl-f">print</span>(<span class="hl-s">f"Conveyor rails: {len(lines)} line segments detected."</span>)
+<span class="hl-f">print</span>(<span class="hl-s">f"Moving items: {len(circles[0])} circular bearings detected."</span>)</code></div>
+        <div class="code-output">&#10004; Output Console:<br>Conveyor rails: 4 line segments detected.<br>Moving items: 1 circular wheel at center (200, 151) with radius 39 px detected.</div>
+    </section>
+
+    <!-- Section 6: Common Beginner Mistakes -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">06</span>
+            <h2 class="section-title">Common Beginner Mistakes &amp; Fixes</h2>
+        </div>
+
+        <div class="callout callout-danger">
+            <strong>&#10060; Mistake 1: HoughCircles se pehle GaussianBlur skip karna</strong><br>
+            <em>Problem:</em> Camera image ke subtle high-frequency pixel noise par hundreds of fake ghost circles detect ho jate hain.<br>
+            <em>Solution:</em> Hamesha <code>cv2.GaussianBlur(gray, (9, 9), 2)</code> ya median blur zaroor apply karein!
+        </div>
+
+        <div class="callout callout-warning">
+            <strong>&#9888; Mistake 2: Standard <code>HoughLines</code> mein <code>minLineLength</code> pass karna</strong><br>
+            <em>Problem:</em> <code>TypeError: HoughLines() takes at most 4 arguments</code>.<br>
+            <em>Solution:</em> <code>minLineLength</code> aur <code>maxLineGap</code> sirf <strong><code>cv2.HoughLinesP()</code></strong> ke parameters hain! Standard <code>HoughLines</code> infinite lines return karta hai.
+        </div>
+
+        <div class="callout callout-info">
+            <strong>&#128161; Mistake 3: <code>param1</code> aur <code>param2</code> ko aapas mein confuse karna</strong><br>
+            <em>Problem:</em> <code>param1</code> internal Canny edge detection sensitivity hai, jabki <code>param2</code> circle center voting accumulator threshold hai! Agar circle detect nahi ho rahe, to pehle <code>param2</code> ko dheere-dheere kam (e.g. 40 se 25) karein!
+        </div>
+    </section>
+
+    <!-- Section 7: Mini Knowledge Check -->
+    <section class="section">
+        <div class="section-header">
+            <span class="section-num">07</span>
+            <h2 class="section-title">Mini Knowledge Check</h2>
+        </div>
+
+        <details>
+            <summary>&#10067; Q1: Image processing mein <code>y = mx + c</code> ke bajaye polar coordinates <code>&rho; = x cos(&theta;) + y sin(&theta;)</code> kyun use karte hain?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) Kyunki vertical lines par slope <code>m &rarr; &infin;</code> ho jata hai jisse divide by zero error aata hai.</li>
+                    <li>B) Kyunki polar coordinates se image black and white ho jaati hai.</li>
+                    <li>C) Kyunki Python mein slope calculate karna impossible hai.</li>
+                    <li>D) Kyunki polar coordinates sirf circles detect karte hain.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> Vertical line (90&deg;) ka slope mathematically infinite (&infin;) hota hai, jise digital memory store nahi kar sakti. Polar system mein vertical line simply <code>&theta; = 90&deg;</code> ya <code>0&deg;</code> se cleanly represent ho jaati hai!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q2: <code>cv2.HoughLines()</code> aur <code>cv2.HoughLinesP()</code> ke output format mein kya mukhya antar hai?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) <code>HoughLines</code> infinite line parameters <code>(&rho;, &theta;)</code> deta hai, jabki <code>HoughLinesP</code> finite line segments ke coordinates <code>(x1, y1, x2, y2)</code> deta hai.</li>
+                    <li>B) <code>HoughLinesP</code> sirf 3D video par chalta hai.</li>
+                    <li>C) Dono identical output dete hain.</li>
+                    <li>D) <code>HoughLinesP</code> circles return karta hai.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A<br>
+                    <strong>Explanation:</strong> <code>cv2.HoughLinesP</code> probabilistic random sampling use karke finite segment endpoints <code>[x1, y1, x2, y2]</code> return karta hai, jo road lanes draw karne ke liye perfect hain!
+                </div>
+            </div>
+        </details>
+
+        <details>
+            <summary>&#10067; Q3: Agar <code>cv2.HoughCircles()</code> run karne par image mein actual circle ke alawa bahut saare false "ghost circles" detect ho rahe hain, to kya karna chahiye?</summary>
+            <div class="quiz-content">
+                <ul class="quiz-options">
+                    <li>A) <code>param2</code> ki value badhaayein (e.g. 20 se 40 ya 50 karein).</li>
+                    <li>B) <code>param2</code> ko 0 kar dein.</li>
+                    <li>C) Image ko delete kar dein.</li>
+                    <li>D) OpenCV ko reinstall karein.</li>
+                </ul>
+                <div class="answer-box">
+                    &#9989; Correct Answer: A) param2 ki value badhaayein<br>
+                    <strong>Explanation:</strong> <code>param2</code> accumulator threshold hai. Ise badhane se sirf wahi centers pass honge jinhe bohot saare edge pixels vote karte hain, jisse false ghost circles filter out ho jaate hain!
+                </div>
+            </div>
+        </details>
+    </section>
+
+    <!-- Section 8: Next Topic Teaser -->
+    <section class="section" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border-color: #a7f3d0;">
+        <div class="section-header" style="border-bottom-color: #6ee7b7;">
+            <span class="section-num" style="background: #a7f3d0; color: #065f46;">NEXT</span>
+            <h2 class="section-title" style="color: #065f46;">Up Next: Topic 13 — Image Histograms &amp; Equalization (CLAHE)</h2>
+        </div>
+        <p style="color: #047857; margin-bottom: 0;">Ab jab humne geometric shapes (lines aur circles) ko isolate karna seekh liya hai, agle topic mein hum image ke tonal distribution ko analyse karna seekhenge: kaise <strong>Histograms</strong> se andheri ya overexposed photos ko detect karte hain aur <strong>CLAHE</strong> se lighting contrast ko instantly restore karte hain!</p>
+    </section>
+
+</div>
+
+</body>
+</html>
