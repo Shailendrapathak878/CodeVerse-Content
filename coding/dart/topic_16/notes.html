@@ -1,0 +1,2527 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 16: Abstract Classes &amp; Interfaces — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 16</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-badge">DART LEARNING TRACK &bull; TOPIC 16</div>
+    <h1>Abstract Classes &amp; Interfaces</h1>
+    <p class="subtitle">Deepen your OOP architectural skills in Dart! Discover how <strong>abstract classes</strong> provide incomplete foundation blueprints with shared code, how <strong>implicit interfaces</strong> define rigid contracts via <code>implements</code>, and how to design extensible, professional software systems.</p>
+  </header>
+
+  <!-- SECTION 1 -->
+  <section id="section-1">
+    <h2>1. Introduction to Abstract Classes</h2>
+    <p>In real-world software, certain high-level concepts exist only as ideas or categories rather than physical standalone objects. For instance, you can drive a <em>Honda Civic</em> or ride a <em>Yamaha R15</em>, but you cannot purchase a plain generic "Vehicle".</p>
+    <p>An <strong>abstract class</strong> represents an incomplete conceptual blueprint. It defines what child classes <em>must do</em> without dictating how every single action is done. It exists solely to be extended and specialized by concrete subclasses.</p>
+
+    <div class="callout callout-info">
+      <div class="callout-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        Real-Life Analogy: The Payment Gateway
+      </div>
+      <p>Consider a modern checkout system. Every payment method shares one common responsibility: making a payment. However, the exact technical execution is completely different for <strong>UPI</strong>, <strong>Credit Card</strong>, and <strong>Net Banking</strong>. An abstract <code>Payment</code> class establishes the universal payment rule, while each payment type provides its own distinct implementation.</p>
+    </div>
+
+    <!-- SVG 1: Intro to Abstract Classes Analogy -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 110" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="110" rx="8" fill="#F8FAFC"/>
+        <!-- Parent Abstract -->
+        <rect x="270" y="8" width="220" height="38" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="380" y="24" font-family="sans-serif" font-weight="700" font-size="11" fill="#6D28D9" text-anchor="middle">Payment (Abstract Class)</text>
+        <text x="380" y="38" font-family="monospace" font-size="9" fill="#4C1D95" text-anchor="middle">Enforces: void pay(double amount);</text>
+
+        <!-- Branches -->
+        <path d="M330 46 L140 64" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M380 46 L380 64" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M430 46 L620 64" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+
+        <!-- Concrete Children -->
+        <rect x="50" y="64" width="180" height="34" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="140" y="80" font-family="sans-serif" font-weight="700" font-size="10" fill="#0F172A" text-anchor="middle">UPI Payment</text>
+        <text x="140" y="92" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Executes via VPA/QR</text>
+
+        <rect x="290" y="64" width="180" height="34" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="380" y="80" font-family="sans-serif" font-weight="700" font-size="10" fill="#0F172A" text-anchor="middle">Card Payment</text>
+        <text x="380" y="92" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Executes via Visa/Mastercard</text>
+
+        <rect x="530" y="64" width="180" height="34" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="620" y="80" font-family="sans-serif" font-weight="700" font-size="10" fill="#0F172A" text-anchor="middle">Net Banking</text>
+        <text x="620" y="92" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Executes via Bank Portal</text>
+
+        <defs>
+          <marker id="arr1" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 8 5 L 0 9 z" fill="#00B4AB"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 1.1: An abstract class serves as a conceptual parent enforcing shared responsibilities.</div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="section-2">
+    <h2>2. Creating an Abstract Class in Dart</h2>
+    <p>In Dart, we declare an abstract class by prepending the <strong><code>abstract</code></strong> keyword before <code>class</code>. An abstract class cannot be directly instantiated using <code>ClassName()</code>; attempting to do so triggers a compile-time error.</p>
+
+    <!-- SVG 2 & 3: Normal Class vs Abstract Class -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <!-- Normal Class -->
+        <rect x="40" y="15" width="310" height="65" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="195" y="36" font-family="sans-serif" font-weight="700" font-size="11" fill="#15803D" text-anchor="middle">Normal (Concrete) Class</text>
+        <text x="60" y="54" font-family="sans-serif" font-size="9" fill="#334155">&bull; Complete blueprint with all method bodies</text>
+        <text x="60" y="70" font-family="monospace" font-size="9" fill="#15803D">&check; Can instantiate: Dog dog = Dog();</text>
+
+        <!-- Abstract Class -->
+        <rect x="400" y="15" width="320" height="65" rx="6" fill="#FFF1F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="560" y="36" font-family="sans-serif" font-weight="700" font-size="11" fill="#BE123C" text-anchor="middle">Abstract Class</text>
+        <text x="420" y="54" font-family="sans-serif" font-size="9" fill="#334155">&bull; Incomplete blueprint containing abstract rules</text>
+        <text x="420" y="70" font-family="monospace" font-size="9" fill="#EF4444">&cross; Cannot instantiate: Animal a = Animal(); // ERROR</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 2.1: Normal classes can be instantiated directly; abstract classes cannot.</div>
+
+    <!-- SVG 2.2: Concrete vs Abstract Class Comparison -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="345" height="66" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="197" y="32" font-family="sans-serif" font-weight="700" font-size="11" fill="#334155" text-anchor="middle">CONCRETE CLASS (Regular)</text>
+        <text x="45" y="50" font-family="sans-serif" font-size="9" fill="#475569">&bull; Direct instantiation allowed: <tspan font-family="monospace">Car()</tspan></text>
+        <text x="45" y="67" font-family="sans-serif" font-size="9" fill="#475569">&bull; All methods MUST have code bodies <tspan font-family="monospace">{ ... }</tspan></text>
+
+        <rect x="390" y="12" width="345" height="66" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="562" y="32" font-family="sans-serif" font-weight="700" font-size="11" fill="#0175C2" text-anchor="middle">ABSTRACT CLASS</text>
+        <text x="410" y="50" font-family="sans-serif" font-size="9" fill="#02569B">&bull; CANNOT be instantiated directly: <tspan font-family="monospace" fill="#EF4444">&cross; Vehicle()</tspan></text>
+        <text x="410" y="67" font-family="sans-serif" font-size="9" fill="#02569B">&bull; Can contain abstract method signatures ending with <tspan font-family="monospace">;</tspan></text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 2.2: Key fundamental differences between concrete and abstract classes.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; ABSTRACT CLASS DECLARATION</span><span>abstract_animal.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Declaring an abstract class</span>
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-keyword">void</span> makeSound(); <span class="hljs-comment">// Abstract method (no body)</span>
+}
+
+<span class="hljs-comment">// Concrete subclass providing implementation</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> makeSound() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Dog barks&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// Valid: Instantiating the concrete subclass</span>
+  Dog dog = Dog();
+  dog.makeSound();
+
+  <span class="hljs-comment">// INVALID: An abstract class cannot be instantiated directly!</span>
+  <span class="hljs-comment">// Animal animal = Animal(); // Compile-time Error: &#x27;Animal&#x27; is abstract</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Dog barks
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="section-3">
+    <h2>3. Abstract Methods</h2>
+    <p>An <strong>abstract method</strong> has a return type, a name, and parameter list, but <em>no body</em> (no curly braces <code>{}</code>). It ends with a semicolon <code>;</code>. It acts as an unbreakable contract: every non-abstract child class extending this class <strong>must</strong> implement the method.</p>
+
+    <!-- SVG 4 & 5 & 6: Abstract Methods Enforced Implementation -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="100" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="20" width="220" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="135" y="44" font-family="monospace" font-size="11" font-weight="700" fill="#6D28D9" text-anchor="middle">abstract class Shape</text>
+        <text x="135" y="62" font-family="monospace" font-size="9" fill="#4C1D95" text-anchor="middle">void calculateArea();</text>
+
+        <path d="M255 50 L345 35" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <path d="M255 50 L345 65" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="355" y="10" width="370" height="34" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="370" y="30" font-family="monospace" font-size="9.5" fill="#0F172A">Circle &rarr; calculateArea() { print('Circle area'); }</text>
+
+        <rect x="355" y="52" width="370" height="34" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="370" y="72" font-family="monospace" font-size="9.5" fill="#0F172A">Rectangle &rarr; calculateArea() { print('Rectangle area'); }</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 3.1: One abstract method signature enforced across multiple concrete child implementations.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; ABSTRACT METHODS</span><span>shape_area.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-keyword">void</span> calculateArea(); <span class="hljs-comment">// Abstract method declaration</span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> calculateArea() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Calculating circle area&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> calculateArea() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Calculating rectangle area&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Circle circle = Circle();
+  Rectangle rectangle = Rectangle();
+
+  circle.calculateArea();
+  rectangle.calculateArea();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Calculating circle area<br>
+Calculating rectangle area
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="section-4">
+    <h2>4. Concrete Methods Inside Abstract Classes</h2>
+    <p>An abstract class does not need to be 100% abstract. It can contain <strong>concrete methods</strong> (methods with complete bodies <code>{ ... }</code>). This allows developers to write shared logic once in the abstract parent, while still enforcing abstract requirements on subclasses.</p>
+
+    <!-- SVG 7: Concrete + Abstract Methods in One Class -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="100" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="15" width="310" height="70" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="185" y="36" font-family="sans-serif" font-weight="700" font-size="11" fill="#0175C2" text-anchor="middle">abstract class Vehicle</text>
+        <text x="50" y="55" font-family="monospace" font-size="9" fill="#02569B">&bull; void start(); (Abstract &rarr; Child MUST write)</text>
+        <text x="50" y="72" font-family="monospace" font-size="9" fill="#15803D">&bull; void stop() { ... } (Concrete &rarr; Child REUSES)</text>
+
+        <path d="M350 50 L420 50" stroke="#00B4AB" stroke-width="2.5" marker-end="url(#arr1)"/>
+
+        <rect x="430" y="15" width="290" height="70" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+        <text x="575" y="36" font-family="sans-serif" font-weight="700" font-size="11" fill="#15803D" text-anchor="middle">class Car extends Vehicle</text>
+        <text x="450" y="55" font-family="sans-serif" font-size="9" fill="#334155">&check; Implements <tspan font-family="monospace">start()</tspan></text>
+        <text x="450" y="72" font-family="sans-serif" font-size="9" fill="#334155">&check; Inherits complete <tspan font-family="monospace">stop()</tspan> without rewriting</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 4.1: Abstract classes seamlessly combine shared concrete code with abstract requirements.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; CONCRETE METHODS IN ABSTRACT CLASS</span><span>vehicle_stop.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Vehicle</span> </span>{
+  <span class="hljs-comment">// Abstract method: child must provide implementation</span>
+  <span class="hljs-keyword">void</span> start();
+
+  <span class="hljs-comment">// Concrete method: shared reusable code</span>
+  <span class="hljs-keyword">void</span> stop() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Vehicle stopped&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Car</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Vehicle</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> start() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Car started&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Car car = Car();
+  car.start(); <span class="hljs-comment">// Implemented in Car</span>
+  car.stop();  <span class="hljs-comment">// Reused from Vehicle</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Car started<br>
+Vehicle stopped
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="section-5">
+    <h2>5. Properties, Fields &amp; Members in Abstract Classes</h2>
+    <p>Abstract classes in Dart can contain virtually any member that a regular class contains:</p>
+    <ul>
+      <li><strong>Instance Variables &amp; Final Fields:</strong> State held on behalf of subclasses.</li>
+      <li><strong>Constructors:</strong> Executed by child classes to initialize fields.</li>
+      <li><strong>Getters &amp; Setters:</strong> Either abstract or concrete.</li>
+      <li><strong>Static Variables &amp; Methods:</strong> Utility logic belonging to the class type.</li>
+    </ul>
+
+    <!-- SVG 8: Abstract Class Full Anatomy -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="100" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="15" width="700" height="70" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="380" y="34" font-family="sans-serif" font-weight="700" font-size="11" fill="#0175C2" text-anchor="middle">Permitted Members Inside an Abstract Class</text>
+
+        <rect x="50" y="44" width="150" height="32" rx="4" fill="#F1F5F9"/>
+        <text x="125" y="63" font-family="monospace" font-size="9" fill="#0F172A" text-anchor="middle">Fields: String name;</text>
+
+        <rect x="215" y="44" width="155" height="32" rx="4" fill="#F0F9FF"/>
+        <text x="292" y="63" font-family="monospace" font-size="9" fill="#0175C2" text-anchor="middle">Constructor: Employee(name)</text>
+
+        <rect x="385" y="44" width="155" height="32" rx="4" fill="#EDE9FE"/>
+        <text x="462" y="63" font-family="monospace" font-size="9" fill="#6D28D9" text-anchor="middle">Abstract: void work();</text>
+
+        <rect x="555" y="44" width="155" height="32" rx="4" fill="#F0FDF4"/>
+        <text x="632" y="63" font-family="monospace" font-size="9" fill="#15803D" text-anchor="middle">Concrete: void showName()</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 5.1: Abstract classes support full member variety including state, constructors, and logic.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; ABSTRACT CLASS MEMBERS</span><span>employee_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Employee</span> </span>{
+  <span class="hljs-built_in">String</span> name;
+
+  <span class="hljs-comment">// Abstract class constructor</span>
+  Employee(<span class="hljs-keyword">this</span>.name);
+
+  <span class="hljs-comment">// Abstract method</span>
+  <span class="hljs-keyword">void</span> work();
+
+  <span class="hljs-comment">// Concrete helper method</span>
+  <span class="hljs-keyword">void</span> showName() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Employee: <span class="hljs-subst">$name</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Developer</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Employee</span> </span>{
+  Developer(<span class="hljs-built_in">String</span> name) : <span class="hljs-keyword">super</span>(name);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> work() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$name</span> writes code&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Developer developer = Developer(<span class="hljs-string">&#x27;Rahul&#x27;</span>);
+  developer.showName();
+  developer.work();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Employee: Rahul<br>
+Rahul writes code
+    </div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="section-6">
+    <h2>6. Constructors in Abstract Classes &amp; Chaining</h2>
+    <p>Beginners often ask: <em>"If an abstract class cannot be instantiated, why can it have a constructor?"</em></p>
+    <p>An abstract class has a constructor so that its subclasses can initialize the abstract class's instance fields through <strong>constructor chaining</strong> using <code>: super(...)</code>.</p>
+
+    <!-- SVG 9 & 10: Abstract Class Constructor Chaining -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="220" height="60" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="38" font-family="sans-serif" font-weight="700" font-size="10" fill="#0175C2" text-anchor="middle">1. SavingsAccount('Amit', 5000)</text>
+        <text x="135" y="56" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Child constructor called</text>
+
+        <path d="M255 45 L325 45" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="335" y="15" width="230" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="450" y="38" font-family="sans-serif" font-weight="700" font-size="10" fill="#6D28D9" text-anchor="middle">2. super(accountHolder) Runs</text>
+        <text x="450" y="56" font-family="monospace" font-size="8.5" fill="#4C1D95" text-anchor="middle">BankAccount constructor initializes field</text>
+
+        <path d="M575 45 L625 45" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="635" y="15" width="100" height="60" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="685" y="38" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">3. Ready</text>
+        <text x="685" y="56" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">RAM allocated</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 6.1: Subclasses chain parameters to initialize abstract superclass state.</div>
+
+    <!-- SVG 6.2: Polymorphic Dispatch with Abstract Classes -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="36" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#02569B" text-anchor="middle">List&lt;Employee&gt; staff = [...]</text>
+        <text x="135" y="55" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Unified Abstract Collection</text>
+
+        <path d="M250 45 L320 25" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <path d="M250 45 L320 65" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="330" y="10" width="190" height="32" rx="5" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="425" y="30" font-family="sans-serif" font-size="9" fill="#15803D" text-anchor="middle">FullTimeEmployee.calculatePay()</text>
+
+        <rect x="330" y="48" width="190" height="32" rx="5" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="425" y="68" font-family="sans-serif" font-size="9" fill="#15803D" text-anchor="middle">Freelancer.calculatePay()</text>
+
+        <rect x="540" y="15" width="195" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="637" y="36" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">Dynamic Runtime Dispatch</text>
+        <text x="637" y="55" font-family="sans-serif" font-size="8.5" fill="#334155" text-anchor="middle">Executes overridden method</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 6.2: Polymorphic dispatch handling multiple derived classes via abstract parent reference.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; CONSTRUCTOR CHAINING</span><span>bank_account_ctor.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BankAccount</span> </span>{
+  <span class="hljs-built_in">String</span> accountHolder;
+
+  BankAccount(<span class="hljs-keyword">this</span>.accountHolder);
+
+  <span class="hljs-keyword">void</span> withdraw(<span class="hljs-built_in">double</span> amount);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SavingsAccount</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BankAccount</span> </span>{
+  <span class="hljs-built_in">double</span> balance;
+
+  <span class="hljs-comment">// Chains to abstract parent constructor</span>
+  SavingsAccount(<span class="hljs-built_in">String</span> accountHolder, <span class="hljs-keyword">this</span>.balance)
+      : <span class="hljs-keyword">super</span>(accountHolder);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> withdraw(<span class="hljs-built_in">double</span> amount) {
+    balance -= amount;
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Remaining balance: ₹<span class="hljs-subst">$balance</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  SavingsAccount account = SavingsAccount(<span class="hljs-string">&#x27;Amit&#x27;</span>, <span class="hljs-number">5000</span>);
+  account.withdraw(<span class="hljs-number">1000</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Remaining balance: ₹4000.0
+    </div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section id="section-7">
+    <h2>7. What Is an Interface?</h2>
+    <p>An <strong>interface</strong> is a formal contract in Object-Oriented Programming. It dictates <em>what methods and properties</em> a class must provide, without specifying any of the internal code implementation.</p>
+
+    <!-- SVG 11 & 12: Interface Contract Concept -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="250" y="8" width="260" height="34" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
+        <text x="380" y="24" font-family="sans-serif" font-weight="700" font-size="11" fill="#15803D" text-anchor="middle">Interface Contract: Printable</text>
+        <text x="380" y="36" font-family="monospace" font-size="8.5" fill="#15803D" text-anchor="middle">Promise: Must provide void printDocument();</text>
+
+        <path d="M330 42 L210 56" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M430 42 L550 56" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+
+        <rect x="90" y="56" width="240" height="26" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1"/>
+        <text x="210" y="73" font-family="monospace" font-size="9" fill="#0F172A" text-anchor="middle">Report: prints tabular data</text>
+
+        <rect x="430" y="56" width="240" height="26" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1"/>
+        <text x="550" y="73" font-family="monospace" font-size="9" fill="#0F172A" text-anchor="middle">Invoice: prints billing totals</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 7.1: An interface enforces an identical contract on completely different classes.</div>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section id="section-8">
+    <h2>8. How Dart Interfaces Work: The Implicit Interface</h2>
+    <p>Unlike Java or C#, <strong>traditional Dart has no separate <code>interface</code> declaration keyword</strong>. In Dart, <strong>every single class implicitly defines an interface</strong> composed of all its instance members (methods, getters, setters, and fields).</p>
+    <p>When class B uses <code>implements A</code>, class B promises to satisfy A's interface, but <strong>does not inherit any of A's code</strong>.</p>
+
+    <!-- SVG 13: Dart Implicit Interface Concept -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="15" width="210" height="65" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="135" y="36" font-family="monospace" font-size="11" font-weight="700" fill="#1E293B" text-anchor="middle">class Printer</text>
+        <text x="135" y="52" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">Concrete Implementation</text>
+        <text x="135" y="68" font-family="monospace" font-size="8.5" fill="#0F172A" text-anchor="middle">void printDocument() { ... }</text>
+
+        <path d="M250 47 L340 47" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="295" y="38" font-family="sans-serif" font-size="8" fill="#0175C2" text-anchor="middle">IMPLICIT</text>
+
+        <rect x="350" y="15" width="370" height="65" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="535" y="36" font-family="sans-serif" font-weight="700" font-size="11" fill="#02569B" text-anchor="middle">OfficePrinter implements Printer</text>
+        <text x="370" y="54" font-family="sans-serif" font-size="9" fill="#334155">&bull; Reuses 0% of Printer's method body</text>
+        <text x="370" y="70" font-family="sans-serif" font-size="9" fill="#10B981">&check; Must write its own custom <tspan font-family="monospace">printDocument()</tspan> body</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 8.1: Every class in Dart acts as an implicit interface for implements.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; IMPLICIT INTERFACE IMPLEMENTATION</span><span>implicit_interface.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// A normal concrete class</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Printer</span> </span>{
+  <span class="hljs-keyword">void</span> printDocument() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Printing document&#x27;</span>);
+  }
+}
+
+<span class="hljs-comment">// OfficePrinter treats Printer purely as an interface</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OfficePrinter</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Printer</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> printDocument() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Office printer is printing&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  OfficePrinter printer = OfficePrinter();
+  printer.printDocument();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Office printer is printing
+    </div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section id="section-9">
+    <h2>9. The <code>implements</code> Keyword</h2>
+    <p>We use the <strong><code>implements</code></strong> keyword to indicate that a class agrees to fulfill an interface contract. Unlike <code>extends</code>, you can implement either an abstract class or a normal class, but you <strong>must provide implementations for all of its members</strong>.</p>
+
+    <!-- SVG 14 & 15: Implementing Abstract Class vs Normal Class -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="40" y="15" width="310" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="195" y="38" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">Case A: Implementing Abstract Class</text>
+        <text x="195" y="56" font-family="monospace" font-size="9" fill="#02569B">class Bird implements Flyable</text>
+
+        <rect x="400" y="15" width="310" height="60" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="555" y="38" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#15803D" text-anchor="middle">Case B: Implementing Normal Class</text>
+        <text x="555" y="56" font-family="monospace" font-size="9" fill="#15803D">class OfficePrinter implements Printer</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 9.1: Both abstract and concrete classes can be implemented via the implements keyword.</div>
+
+    <!-- SVG 9.2: Contract Fulfillment Architecture -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="15" width="210" height="60" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="135" y="36" font-family="monospace" font-size="10.5" font-weight="700" fill="#1E293B" text-anchor="middle">class MockDatabase</text>
+        <text x="135" y="54" font-family="sans-serif" font-size="8.5" fill="#64748B" text-anchor="middle">implements RealDatabase</text>
+
+        <path d="M245 45 L320 45" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="330" y="15" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="440" y="36" font-family="sans-serif" font-weight="700" font-size="10" fill="#0175C2" text-anchor="middle">Zero Real DB Network Calls</text>
+        <text x="440" y="54" font-family="sans-serif" font-size="8.5" fill="#02569B" text-anchor="middle">Fakes all responses in memory</text>
+
+        <rect x="565" y="15" width="170" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="650" y="36" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">Lightning Fast Tests</text>
+        <text x="650" y="54" font-family="sans-serif" font-size="8.5" fill="#334155" text-anchor="middle">100% contract compliant</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 9.2: Unit testing pattern: Implementing a concrete class to create a mock double.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; IMPLEMENTS KEYWORD</span><span>flyable_bird.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Flyable</span> </span>{
+  <span class="hljs-keyword">void</span> fly();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Bird</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Flyable</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> fly() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Bird is flying&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Bird bird = Bird();
+  bird.fly();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Bird is flying
+    </div>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section id="section-10">
+    <h2>10. Implementing Multiple Interfaces</h2>
+    <p>While Dart strictly prohibits extending multiple classes with <code>extends</code>, a class can <strong>implement multiple interfaces simultaneously</strong> by separating them with commas: <code>class Duck implements Flyable, Swimmable</code>.</p>
+
+    <!-- SVG 17: Multiple Interface Implementation -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <rect x="120" y="10" width="180" height="32" rx="4" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="210" y="30" font-family="monospace" font-size="10" fill="#0175C2" text-anchor="middle">Flyable (void fly();)</text>
+
+        <rect x="460" y="10" width="180" height="32" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="550" y="30" font-family="monospace" font-size="10" fill="#15803D" text-anchor="middle">Swimmable (void swim();)</text>
+
+        <path d="M240 42 L340 58" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <path d="M520 42 L420 58" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="250" y="58" width="260" height="30" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="380" y="78" font-family="monospace" font-size="10.5" font-weight="700" fill="#6D28D9" text-anchor="middle">Duck implements Flyable, Swimmable</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 10.1: A class can fulfill multiple interface contracts at the same time.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MULTIPLE INTERFACES</span><span>duck_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Flyable</span> </span>{
+  <span class="hljs-keyword">void</span> fly();
+}
+
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Swimmable</span> </span>{
+  <span class="hljs-keyword">void</span> swim();
+}
+
+<span class="hljs-comment">// Duck satisfies both contracts</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Duck</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Flyable</span>, <span class="hljs-title">Swimmable</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> fly() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Duck is flying&#x27;</span>);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> swim() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Duck is swimming&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Duck duck = Duck();
+  duck.fly();
+  duck.swim();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Duck is flying<br>
+Duck is swimming
+    </div>
+  </section>
+
+  <!-- SECTION 11 -->
+  <section id="section-11">
+    <h2>11. Abstract Class vs Interface Comparison</h2>
+    <p>A side-by-side comparison of abstract classes and interfaces in Dart:</p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Abstract Class</th>
+            <th>Interface (implements)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Declaration</strong></td>
+            <td>Declared with <code>abstract class Name</code></td>
+            <td>Implicitly defined by any Dart class</td>
+          </tr>
+          <tr>
+            <td><strong>Code Reuse</strong></td>
+            <td>Reuses concrete method bodies via <code>extends</code></td>
+            <td>Zero code reuse; must implement all bodies</td>
+          </tr>
+          <tr>
+            <td><strong>Multiplicity</strong></td>
+            <td>Can extend only ONE class</td>
+            <td>Can implement MULTIPLE interfaces</td>
+          </tr>
+          <tr>
+            <td><strong>Constructors</strong></td>
+            <td>Can have constructors (for <code>: super()</code> chaining)</td>
+            <td>Constructors are completely ignored</td>
+          </tr>
+          <tr>
+            <td><strong>Fields</strong></td>
+            <td>Can have initialized concrete fields</td>
+            <td>Fields become abstract getter/setter requirements</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SVG 18: Abstract Class vs Interface Matrix -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="50" y="15" width="310" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="205" y="38" font-family="sans-serif" font-weight="700" font-size="11" fill="#0175C2" text-anchor="middle">Abstract Class (extends)</text>
+        <text x="205" y="56" font-family="sans-serif" font-size="9" fill="#334155">&check; Shares state, fields, and concrete method bodies</text>
+
+        <rect x="400" y="15" width="310" height="60" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="555" y="38" font-family="sans-serif" font-weight="700" font-size="11" fill="#15803D" text-anchor="middle">Interface (implements)</text>
+        <text x="555" y="56" font-family="sans-serif" font-size="9" fill="#334155">&check; Enforces pure behavioral contract without code reuse</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 11.1: Visualizing the core architectural trade-off between code sharing and contract enforcement.</div>
+  </section>
+
+  <!-- SECTION 12 -->
+  <section id="section-12">
+    <h2>12. <code>extends</code> vs <code>implements</code></h2>
+    <p>Remember this simple rule:</p>
+    <ul>
+      <li><strong><code>extends</code> is for REUSE:</strong> You want to inherit ready-made code from a parent class.</li>
+      <li><strong><code>implements</code> is for CONTRACTS:</strong> You want to guarantee that a class conforms to a specific set of methods, even if you write every line from scratch.</li>
+    </ul>
+
+    <!-- SVG 19: extends vs implements code flow -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="40" y="15" width="310" height="55" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="195" y="36" font-family="monospace" font-size="10.5" fill="#334155" text-anchor="middle">class Dog extends Animal</text>
+        <text x="195" y="54" font-family="sans-serif" font-size="8.5" fill="#15803D">&check; Automatically gets eat()</text>
+
+        <rect x="400" y="15" width="310" height="55" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="555" y="36" font-family="monospace" font-size="10.5" fill="#334155" text-anchor="middle">class Bird implements Flyable</text>
+        <text x="555" y="54" font-family="sans-serif" font-size="8.5" fill="#0175C2">&bull; Must write own fly() body</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 12.1: extends inherits logic; implements requires new logic.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXTENDS VS IMPLEMENTS</span><span>extends_vs_implements.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-keyword">void</span> eat() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Animal is eating&#x27;</span>);
+}
+
+<span class="hljs-comment">// Reuses eat() from Animal</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{}
+
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Flyable</span> </span>{
+  <span class="hljs-keyword">void</span> fly();
+}
+
+<span class="hljs-comment">// Fulfills contract for fly()</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Bird</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Flyable</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> fly() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Bird is flying&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Dog dog = Dog();
+  Bird bird = Bird();
+
+  dog.eat();
+  bird.fly();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Animal is eating<br>
+Bird is flying
+    </div>
+  </section>
+
+  <!-- SECTION 13 -->
+  <section id="section-13">
+    <h2>13. Abstract Class + Interface Together</h2>
+    <p>Dart enables you to combine both powers: extend one abstract class for code reuse, while implementing one or more interfaces for added capabilities.</p>
+
+    <!-- SVG 20: Abstract Class + Interface Together -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="50" y="12" width="220" height="32" rx="4" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="160" y="32" font-family="monospace" font-size="10" fill="#0175C2" text-anchor="middle">extends Vehicle (start, move)</text>
+
+        <rect x="490" y="12" width="220" height="32" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="600" y="32" font-family="monospace" font-size="10" fill="#15803D" text-anchor="middle">implements GPS (showLocation)</text>
+
+        <path d="M220 44 L310 58" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <path d="M540 44 L450 58" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="250" y="56" width="260" height="28" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="380" y="75" font-family="monospace" font-size="10.5" font-weight="700" fill="#6D28D9" text-anchor="middle">class SmartCar extends Vehicle implements GPS</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 13.1: Combining inheritance for shared code with interface implementation for capabilities.</div>
+
+    <!-- SVG 13.2: Modern Dart 3 Modifiers Summary -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="20" y="12" width="165" height="66" rx="6" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="102" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#334155" text-anchor="middle">class</text>
+        <text x="102" y="50" font-family="sans-serif" font-size="8" fill="#10B981" text-anchor="middle">&check; Construct</text>
+        <text x="102" y="65" font-family="sans-serif" font-size="8" fill="#10B981" text-anchor="middle">&check; Extend &bull; &check; Implement</text>
+
+        <rect x="205" y="12" width="165" height="66" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="287" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#0175C2" text-anchor="middle">abstract class</text>
+        <text x="287" y="50" font-family="sans-serif" font-size="8" fill="#EF4444" text-anchor="middle">&cross; No Direct Instance</text>
+        <text x="287" y="65" font-family="sans-serif" font-size="8" fill="#10B981" text-anchor="middle">&check; Extend &bull; &check; Implement</text>
+
+        <rect x="390" y="12" width="165" height="66" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="472" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">interface class</text>
+        <text x="472" y="50" font-family="sans-serif" font-size="8" fill="#10B981" text-anchor="middle">&check; Construct</text>
+        <text x="472" y="65" font-family="sans-serif" font-size="8" fill="#EF4444" text-anchor="middle">&cross; No Outside Extend</text>
+
+        <rect x="575" y="12" width="165" height="66" rx="6" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5"/>
+        <text x="657" y="32" font-family="monospace" font-size="8.5" font-weight="700" fill="#B45309" text-anchor="middle">abstract interface</text>
+        <text x="657" y="50" font-family="sans-serif" font-size="8" fill="#EF4444" text-anchor="middle">&cross; No Direct Instance</text>
+        <text x="657" y="65" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">&check; Implement Only</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 13.2: Quick comparative cheat sheet for Dart 3 class modifiers outside current library.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXTENDS &amp; IMPLEMENTS TOGETHER</span><span>smart_car.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Vehicle</span> </span>{
+  <span class="hljs-keyword">void</span> start() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Vehicle started&#x27;</span>);
+  <span class="hljs-keyword">void</span> move();
+}
+
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GPS</span> </span>{
+  <span class="hljs-keyword">void</span> showLocation();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SmartCar</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Vehicle</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">GPS</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> move() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Smart car is moving&#x27;</span>);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> showLocation() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Current location displayed&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  SmartCar car = SmartCar();
+  car.start();        <span class="hljs-comment">// From Vehicle base</span>
+  car.move();         <span class="hljs-comment">// Implemented for Vehicle</span>
+  car.showLocation(); <span class="hljs-comment">// Implemented for GPS</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Vehicle started<br>
+Smart car is moving<br>
+Current location displayed
+    </div>
+  </section>
+
+  <!-- SECTION 14 -->
+  <section id="section-14">
+    <h2>14. Polymorphism with Abstract Classes &amp; Interfaces</h2>
+    <p>By typing variables or collections to an abstract class or interface (e.g. <code>Notification</code>), you can swap or mix concrete implementations effortlessly without changing caller code.</p>
+
+    <!-- SVG 21 & 22 & 23: Polymorphic Notification Architecture -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="210" height="65" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="130" y="42" font-family="monospace" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">List&lt;Notification&gt;</text>
+        <text x="130" y="60" font-family="sans-serif" font-size="9" fill="#0175C2" text-anchor="middle">Uniform Polymorphic List</text>
+
+        <path d="M245 47 L305 47" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="315" y="15" width="130" height="65" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="380" y="42" font-family="monospace" font-size="9.5" fill="#0F172A" text-anchor="middle">EmailNotification</text>
+        <text x="380" y="60" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">&rarr; 'Email sent'</text>
+
+        <rect x="455" y="15" width="130" height="65" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="520" y="42" font-family="monospace" font-size="9.5" fill="#0F172A" text-anchor="middle">SMSNotification</text>
+        <text x="520" y="60" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">&rarr; 'SMS sent'</text>
+
+        <rect x="595" y="15" width="130" height="65" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="660" y="42" font-family="monospace" font-size="9.5" fill="#0F172A" text-anchor="middle">PushNotification</text>
+        <text x="660" y="60" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">&rarr; 'Push sent'</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 14.1: Polymorphism enables a single loop to dispatch to three completely different classes.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; POLYMORPHIC NOTIFICATIONS</span><span>notification_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Notification</span> </span>{
+  <span class="hljs-keyword">void</span> send();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EmailNotification</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Notification</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> send() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Email sent&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SMSNotification</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Notification</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> send() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;SMS sent&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PushNotification</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Notification</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> send() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Push notification sent&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> notifications = [
+    EmailNotification(),
+    SMSNotification(),
+    PushNotification(),
+  ];
+
+  <span class="hljs-keyword">for</span> (Notification notification <span class="hljs-keyword">in</span> notifications) {
+    notification.send();
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Email sent<br>
+SMS sent<br>
+Push notification sent
+    </div>
+  </section>
+
+  <!-- SECTION 15 -->
+  <section id="section-15">
+    <h2>15. Dart Class Modifiers — Beginner Introduction</h2>
+
+    <!-- SVG 15.1: Dart 3 Class Modifiers Concept -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="66" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#1E293B" text-anchor="middle">interface class</text>
+        <text x="135" y="50" font-family="sans-serif" font-size="8.5" fill="#10B981" text-anchor="middle">&check; Can be instantiated directly</text>
+        <text x="135" y="66" font-family="sans-serif" font-size="8.5" fill="#EF4444" text-anchor="middle">&cross; Cannot be extended outside library</text>
+
+        <rect x="270" y="12" width="220" height="66" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#6D28D9" text-anchor="middle">abstract interface class</text>
+        <text x="380" y="50" font-family="sans-serif" font-size="8.5" fill="#EF4444" text-anchor="middle">&cross; Cannot be instantiated</text>
+        <text x="380" y="66" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">&check; Pure contract for outside implements</text>
+
+        <rect x="515" y="12" width="220" height="66" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="625" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">Dart 3 Modern Protection</text>
+        <text x="625" y="50" font-family="sans-serif" font-size="8.5" fill="#334155" text-anchor="middle">Guarantees safe API evolution</text>
+        <text x="625" y="66" font-family="sans-serif" font-size="8" fill="#64748B" text-anchor="middle">Prevents fragile base classes</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 15.1: Dart 3 class modifiers control how other libraries can consume and inherit code.</div>
+    <p>Starting in Dart 3.0, Dart introduced formal <strong>class modifiers</strong> to give API authors strict control over how libraries may be used outside their original files:</p>
+    <ul>
+      <li><strong><code>interface class</code>:</strong> Allows other libraries to construct or implement the class, but forbids other libraries from using <code>extends</code> on it.</li>
+      <li><strong><code>abstract interface class</code>:</strong> Combines <code>abstract</code> and <code>interface</code>, defining a pure contract that cannot be instantiated and cannot be extended outside its library.</li>
+    </ul>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART 3 &bull; CLASS MODIFIERS</span><span>class_modifiers.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Interface class (Cannot be extended outside its library)</span>
+<span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">class</span> <span class="hljs-title">Logger</span> </span>{
+  <span class="hljs-keyword">void</span> log(<span class="hljs-built_in">String</span> message) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Log: <span class="hljs-subst">$message</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-comment">// Pure interface contract</span>
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">class</span> <span class="hljs-title">Repository</span> </span>{
+  <span class="hljs-keyword">void</span> save();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SqlRepository</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Repository</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> save() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Saved to SQL database&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Logger logger = Logger();
+  logger.log(<span class="hljs-string">&#x27;Testing class modifiers&#x27;</span>);
+
+  Repository repo = SqlRepository();
+  repo.save();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Log: Testing class modifiers<br>
+Saved to SQL database
+    </div>
+  </section>
+
+  <!-- SECTION 16 -->
+  <section id="section-16">
+    <h2>16. When to Use Abstract Classes vs Interfaces</h2>
+    <p>Use this practical mental checklist when architecting features:</p>
+
+    <!-- SVG 24 & 26: Decision Tree -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="220" height="65" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="135" y="38" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#1E293B" text-anchor="middle">Do classes share common code?</text>
+        <text x="135" y="56" font-family="sans-serif" font-size="9" fill="#0175C2">&rarr; Use <tspan font-weight="700">Abstract Class</tspan></text>
+        <text x="135" y="70" font-family="sans-serif" font-size="8" fill="#64748B">(e.g. BankAccount, BaseVehicle)</text>
+
+        <rect x="270" y="15" width="220" height="65" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="380" y="38" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#02569B" text-anchor="middle">Need pure contract for diverse classes?</text>
+        <text x="380" y="56" font-family="sans-serif" font-size="9" fill="#15803D">&rarr; Use <tspan font-weight="700">Interface (implements)</tspan></text>
+        <text x="380" y="70" font-family="sans-serif" font-size="8" fill="#64748B">(e.g. Flyable, Printable, Storage)</text>
+
+        <rect x="515" y="15" width="220" height="65" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="625" y="38" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#6D28D9" text-anchor="middle">Need multiple capabilities?</text>
+        <text x="625" y="56" font-family="sans-serif" font-size="9" fill="#6D28D9">&rarr; Use <tspan font-weight="700">Multiple Interfaces</tspan></text>
+        <text x="625" y="70" font-family="sans-serif" font-size="8" fill="#64748B">implements A, B, C</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 16.1: Architectural guide for choosing between abstract classes and interfaces.</div>
+  </section>
+
+  <!-- SECTION 17 -->
+  <section id="section-17">
+    <h2>17. Common Mistakes &amp; Gotchas</h2>
+
+    <!-- SVG 17.1: Common Gotchas and Visual Warnings -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="66" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#DC2626" text-anchor="middle">Gotcha 1: Direct Instantiation</text>
+        <text x="135" y="50" font-family="monospace" font-size="8.5" fill="#991B1B" text-anchor="middle">var v = Vehicle();</text>
+        <text x="135" y="66" font-family="sans-serif" font-size="8" fill="#DC2626" text-anchor="middle">&cross; Compile Error: Abstract class</text>
+
+        <rect x="270" y="12" width="220" height="66" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#DC2626" text-anchor="middle">Gotcha 2: Missing Override</text>
+        <text x="380" y="50" font-family="sans-serif" font-size="8.5" fill="#991B1B" text-anchor="middle">implements Printer without printDoc()</text>
+        <text x="380" y="66" font-family="sans-serif" font-size="8" fill="#DC2626" text-anchor="middle">&cross; Missing 1 concrete implementation</text>
+
+        <rect x="515" y="12" width="220" height="66" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="625" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">The Golden Rule</text>
+        <text x="625" y="50" font-family="sans-serif" font-size="8.5" fill="#334155" text-anchor="middle">implements = rewrite ALL members</text>
+        <text x="625" y="66" font-family="sans-serif" font-size="8" fill="#16A34A" text-anchor="middle">extends = reuse existing code</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 17.1: Visualizing the two most common compile errors beginners encounter.</div>
+    <div class="callout callout-warning">
+      <div class="callout-title">1. Directly Instantiating an Abstract Class</div>
+      <p><strong>Why it fails:</strong> Abstract classes cannot have concrete instances created with <code>new</code> or <code>()</code>.</p>
+      <p><span class="syntax-kw">&cross; Bad:</span> <code>Payment p = Payment(); // Compile error</code> &nbsp;&bull;&nbsp; <span class="syntax-fn">&check; Good:</span> <code>Payment p = UpiPayment();</code></p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">2. Assuming <code>implements</code> Reuses Concrete Method Bodies</div>
+      <p><strong>Why it fails:</strong> Implementing a class ignores all its code bodies; you must re-implement every method.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">3. Forgetting to Implement All Interface Members</div>
+      <p><strong>Why it fails:</strong> If an interface declares 3 methods and your class implements 2, Dart throws an error.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">4. Assuming Dart Has a Standalone <code>interface</code> Declaration Keyword</div>
+      <p><strong>Why it fails:</strong> In core Dart, interfaces are defined by classes and implemented via <code>implements</code>.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">5. Trying to Extend Multiple Classes</div>
+      <p><strong>Why it fails:</strong> Dart restricts <code>extends</code> to a single superclass. Use <code>implements</code> for multiple contracts.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 18 -->
+  <section id="section-18">
+    <h2>18. Practical Real-Life Mini Programs</h2>
+
+    <h3>Program 1: Payment Gateway with Shared State</h3>
+    <p>Store payment amounts in an abstract base class while delegating the payment logic to UPI and Card processors.</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; PAYMENT PROCESSING</span><span>prog1_payment.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Payment</span> </span>{
+  <span class="hljs-built_in">double</span> amount;
+  Payment(<span class="hljs-keyword">this</span>.amount);
+  <span class="hljs-keyword">void</span> pay();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UpiPayment</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Payment</span> </span>{
+  <span class="hljs-built_in">String</span> upiId;
+  UpiPayment(<span class="hljs-built_in">double</span> amount, <span class="hljs-keyword">this</span>.upiId) : <span class="hljs-keyword">super</span>(amount);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> pay() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Paid ₹<span class="hljs-subst">$amount</span> via UPI (<span class="hljs-subst">$upiId</span>)&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CardPayment</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Payment</span> </span>{
+  <span class="hljs-built_in">String</span> cardLast4;
+  CardPayment(<span class="hljs-built_in">double</span> amount, <span class="hljs-keyword">this</span>.cardLast4) : <span class="hljs-keyword">super</span>(amount);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> pay() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Paid ₹<span class="hljs-subst">$amount</span> via Card ending in <span class="hljs-subst">$cardLast4</span>&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> payments = [
+    UpiPayment(<span class="hljs-number">850</span>, <span class="hljs-string">&#x27;user@okhdfc&#x27;</span>),
+    CardPayment(<span class="hljs-number">2400</span>, <span class="hljs-string">&#x27;9981&#x27;</span>),
+  ];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> p <span class="hljs-keyword">in</span> payments) {
+    p.pay();
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Paid ₹850.0 via UPI (user@okhdfc)<br>
+Paid ₹2400.0 via Card ending in 9981
+    </div>
+
+    <h3>Program 2: Notification Dispatcher System</h3>
+    <p>Dispatch alerts to Email, SMS, and Push services uniformly.</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; NOTIFICATION SERVICE</span><span>prog2_notifs.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppNotification</span> </span>{
+  <span class="hljs-built_in">String</span> recipient;
+  AppNotification(<span class="hljs-keyword">this</span>.recipient);
+  <span class="hljs-keyword">void</span> dispatch(<span class="hljs-built_in">String</span> message);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EmailService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppNotification</span> </span>{
+  EmailService(<span class="hljs-built_in">String</span> recipient) : <span class="hljs-keyword">super</span>(recipient);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> dispatch(<span class="hljs-built_in">String</span> message) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Email to <span class="hljs-subst">$recipient</span>: <span class="hljs-subst">$message</span>&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SmsService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppNotification</span> </span>{
+  SmsService(<span class="hljs-built_in">String</span> recipient) : <span class="hljs-keyword">super</span>(recipient);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> dispatch(<span class="hljs-built_in">String</span> message) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;SMS to <span class="hljs-subst">$recipient</span>: <span class="hljs-subst">$message</span>&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PushService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppNotification</span> </span>{
+  PushService(<span class="hljs-built_in">String</span> recipient) : <span class="hljs-keyword">super</span>(recipient);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> dispatch(<span class="hljs-built_in">String</span> message) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Push alert to <span class="hljs-subst">$recipient</span>: <span class="hljs-subst">$message</span>&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> services = [
+    EmailService(<span class="hljs-string">&#x27;alice@codeverse.io&#x27;</span>),
+    SmsService(<span class="hljs-string">&#x27;+91-9876543210&#x27;</span>),
+    PushService(<span class="hljs-string">&#x27;device-token-abc&#x27;</span>),
+  ];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> s <span class="hljs-keyword">in</span> services) {
+    s.dispatch(<span class="hljs-string">&#x27;Your order #4102 has shipped!&#x27;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Email to alice@codeverse.io: Your order #4102 has shipped!<br>
+SMS to +91-9876543210: Your order #4102 has shipped!<br>
+Push alert to device-token-abc: Your order #4102 has shipped!
+    </div>
+
+    <h3>Program 3: Vehicle Capability System</h3>
+    <p>Combine base vehicle inheritance with multiple capability contracts (GPS &amp; Electric).</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; CAPABILITY CONTRACTS</span><span>prog3_capabilities.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BaseVehicle</span> </span>{
+  <span class="hljs-built_in">String</span> model;
+  BaseVehicle(<span class="hljs-keyword">this</span>.model);
+  <span class="hljs-keyword">void</span> ignite() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$model</span> engine started&#x27;</span>);
+}
+
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GpsEnabled</span> </span>{
+  <span class="hljs-keyword">void</span> navigateTo(<span class="hljs-built_in">String</span> destination);
+}
+
+<span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ElectricVehicle</span> </span>{
+  <span class="hljs-keyword">void</span> chargeBattery();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AutonomousCar</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">BaseVehicle</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">GpsEnabled</span>, <span class="hljs-title">ElectricVehicle</span> </span>{
+  AutonomousCar(<span class="hljs-built_in">String</span> model) : <span class="hljs-keyword">super</span>(model);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> navigateTo(<span class="hljs-built_in">String</span> destination) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Autonavigating <span class="hljs-subst">$model</span> to <span class="hljs-subst">$destination</span>&#x27;</span>);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> chargeBattery() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$model</span> fast charging at 250 kW&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  AutonomousCar cyber = AutonomousCar(<span class="hljs-string">&#x27;CyberTruck&#x27;</span>);
+  cyber.ignite();
+  cyber.navigateTo(<span class="hljs-string">&#x27;Connaught Place, New Delhi&#x27;</span>);
+  cyber.chargeBattery();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+CyberTruck engine started<br>
+Autonavigating CyberTruck to Connaught Place, New Delhi<br>
+CyberTruck fast charging at 250 kW
+    </div>
+
+    <h3>Program 4: Shape Management</h3>
+    <p>Manage geometric calculations polymorphically through an abstract Shape class.</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; SHAPE HIERARCHY</span><span>prog4_shapes.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-built_in">String</span> name;
+  Shape(<span class="hljs-keyword">this</span>.name);
+  <span class="hljs-built_in">double</span> calculateArea();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-built_in">double</span> radius;
+  Circle(<span class="hljs-keyword">this</span>.radius) : <span class="hljs-keyword">super</span>(<span class="hljs-string">&#x27;Circle&#x27;</span>);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">double</span> calculateArea() =&gt; <span class="hljs-number">3.14159</span> * radius * radius;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-built_in">double</span> width, height;
+  Rectangle(<span class="hljs-keyword">this</span>.width, <span class="hljs-keyword">this</span>.height) : <span class="hljs-keyword">super</span>(<span class="hljs-string">&#x27;Rectangle&#x27;</span>);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">double</span> calculateArea() =&gt; width * height;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Square</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Shape</span> </span>{
+  <span class="hljs-built_in">double</span> side;
+  Square(<span class="hljs-keyword">this</span>.side) : <span class="hljs-keyword">super</span>(<span class="hljs-string">&#x27;Square&#x27;</span>);
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">double</span> calculateArea() =&gt; side * side;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> shapeList = [Circle(<span class="hljs-number">5</span>), Rectangle(<span class="hljs-number">8</span>, <span class="hljs-number">4</span>), Square(<span class="hljs-number">6</span>)];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> sh <span class="hljs-keyword">in</span> shapeList) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">${sh.name}</span> area: <span class="hljs-subst">${sh.calculateArea().toStringAsFixed(<span class="hljs-number">1</span>)}</span>&#x27;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Circle area: 78.5<br>
+Rectangle area: 32.0<br>
+Square area: 36.0
+    </div>
+
+    <!-- SVG 25: File Storage Architecture -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="250" y="8" width="260" height="32" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="380" y="28" font-family="monospace" font-size="10.5" fill="#6D28D9" text-anchor="middle">StorageService (saveFile, readFile)</text>
+
+        <path d="M320 40 L210 52" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M440 40 L550 52" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+
+        <rect x="90" y="52" width="240" height="26" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1"/>
+        <text x="210" y="69" font-family="monospace" font-size="9" fill="#0F172A" text-anchor="middle">LocalStorageService &rarr; writes to disk</text>
+
+        <rect x="430" y="52" width="240" height="26" rx="4" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1"/>
+        <text x="550" y="69" font-family="monospace" font-size="9" fill="#0F172A" text-anchor="middle">CloudStorageService &rarr; uploads to S3</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 18.1: Interchangeable storage engines implementing the StorageService contract.</div>
+
+    <!-- SVG 18.2: Swappable Payment Gateway Architecture -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="270" y="8" width="220" height="30" rx="5" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="380" y="24" font-family="sans-serif" font-weight="700" font-size="10" fill="#0175C2" text-anchor="middle">PaymentGateway (Contract)</text>
+        <text x="380" y="34" font-family="monospace" font-size="7.5" fill="#02569B" text-anchor="middle">void processPayment(double amount);</text>
+
+        <path d="M320 40 L150 56" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M380 40 L380 56" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+        <path d="M440 40 L610 56" stroke="#00B4AB" stroke-width="1.5" marker-end="url(#arr1)"/>
+
+        <rect x="50" y="58" width="200" height="22" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="150" y="73" font-family="sans-serif" font-weight="600" font-size="8.5" fill="#15803D" text-anchor="middle">PayPalPayment &bull; fee: 2%</text>
+
+        <rect x="280" y="58" width="200" height="22" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="380" y="73" font-family="sans-serif" font-weight="600" font-size="8.5" fill="#15803D" text-anchor="middle">CreditCardPayment &bull; fee: $0.30</text>
+
+        <rect x="510" y="58" width="200" height="22" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="610" y="73" font-family="sans-serif" font-weight="600" font-size="8.5" fill="#15803D" text-anchor="middle">CryptoPayment &bull; fee: 0.5%</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 18.2: Swappable payment gateway architecture implementing a shared contract.</div>
+
+    <h3>Program 5: File Storage Engine Contract</h3>
+    <p>Swap between local and cloud storage providers with zero changes to caller code.</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; STORAGE INTERFACE</span><span>prog5_storage.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StorageService</span> </span>{
+  <span class="hljs-keyword">void</span> saveFile(<span class="hljs-built_in">String</span> filename, <span class="hljs-built_in">String</span> content);
+  <span class="hljs-built_in">String</span> readFile(<span class="hljs-built_in">String</span> filename);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">LocalStorageService</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">StorageService</span> </span>{
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> saveFile(<span class="hljs-built_in">String</span> filename, <span class="hljs-built_in">String</span> content) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Saved &quot;<span class="hljs-subst">$filename</span>&quot; (<span class="hljs-subst">$content</span>) to local disk: /data/<span class="hljs-subst">$filename</span>&#x27;</span>);
+  }
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">String</span> readFile(<span class="hljs-built_in">String</span> filename) =&gt; <span class="hljs-string">&#x27;Local content of <span class="hljs-subst">$filename</span>&#x27;</span>;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CloudStorageService</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">StorageService</span> </span>{
+  <span class="hljs-built_in">String</span> bucket;
+  CloudStorageService(<span class="hljs-keyword">this</span>.bucket);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> saveFile(<span class="hljs-built_in">String</span> filename, <span class="hljs-built_in">String</span> content) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Uploaded &quot;<span class="hljs-subst">$filename</span>&quot; to S3 bucket &quot;<span class="hljs-subst">$bucket</span>&quot;&#x27;</span>);
+  }
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">String</span> readFile(<span class="hljs-built_in">String</span> filename) =&gt; <span class="hljs-string">&#x27;Cloud content of <span class="hljs-subst">$filename</span> from <span class="hljs-subst">$bucket</span>&#x27;</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  StorageService localStore = LocalStorageService();
+  StorageService cloudStore = CloudStorageService(<span class="hljs-string">&#x27;codeverse-assets-prod&#x27;</span>);
+
+  localStore.saveFile(<span class="hljs-string">&#x27;user_config.json&#x27;</span>, <span class="hljs-string">&#x27;{&quot;theme&quot;: &quot;dark&quot;}&#x27;</span>);
+  cloudStore.saveFile(<span class="hljs-string">&#x27;profile.png&#x27;</span>, <span class="hljs-string">&#x27;binary_bytes&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Saved "user_config.json" ({"theme": "dark"}) to local disk: /data/user_config.json<br>
+Uploaded "profile.png" to S3 bucket "codeverse-assets-prod"
+    </div>
+
+    <h3>Program 6: Employee Work Management with Concrete Helpers</h3>
+    <p>Share clock-in attendance logic while specializing work tasks per team role.</p>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; WORKFORCE ROLES</span><span>prog6_workforce.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Employee</span> </span>{
+  <span class="hljs-built_in">String</span> name;
+  <span class="hljs-built_in">int</span> id;
+  Employee(<span class="hljs-keyword">this</span>.name, <span class="hljs-keyword">this</span>.id);
+
+  <span class="hljs-keyword">void</span> recordAttendance() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$name</span> (ID: <span class="hljs-subst">$id</span>) clocked in at 9:00 AM&#x27;</span>);
+  <span class="hljs-keyword">void</span> performWork();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SoftwareEngineer</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Employee</span> </span>{
+  <span class="hljs-built_in">String</span> language;
+  SoftwareEngineer(<span class="hljs-built_in">String</span> name, <span class="hljs-built_in">int</span> id, <span class="hljs-keyword">this</span>.language) : <span class="hljs-keyword">super</span>(name, id);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> performWork() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$name</span> is building backend services in <span class="hljs-subst">$language</span>&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UiDesigner</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Employee</span> </span>{
+  <span class="hljs-built_in">String</span> designTool;
+  UiDesigner(<span class="hljs-built_in">String</span> name, <span class="hljs-built_in">int</span> id, <span class="hljs-keyword">this</span>.designTool) : <span class="hljs-keyword">super</span>(name, id);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> performWork() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;<span class="hljs-subst">$name</span> is crafting design system tokens in <span class="hljs-subst">$designTool</span>&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> team = [
+    SoftwareEngineer(<span class="hljs-string">&#x27;Kunal&#x27;</span>, <span class="hljs-number">301</span>, <span class="hljs-string">&#x27;Dart &amp; Flutter&#x27;</span>),
+    UiDesigner(<span class="hljs-string">&#x27;Pooja&#x27;</span>, <span class="hljs-number">302</span>, <span class="hljs-string">&#x27;Figma&#x27;</span>),
+  ];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> member <span class="hljs-keyword">in</span> team) {
+    member.recordAttendance();
+    member.performWork();
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Expected Console Output</span>
+Kunal (ID: 301) clocked in at 9:00 AM<br>
+Kunal is building backend services in Dart &amp; Flutter<br>
+Pooja (ID: 302) clocked in at 9:00 AM<br>
+Pooja is crafting design system tokens in Figma
+    </div>
+  </section>
+
+  <!-- SVG 27: Full Concept Map -->
+  <div class="svg-container">
+    <svg viewBox="0 0 760 120" xmlns="http://www.w3.org/2000/svg">
+      <rect width="760" height="120" rx="8" fill="#F8FAFC"/>
+      <rect x="20" y="10" width="720" height="100" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="2"/>
+      <text x="380" y="30" font-family="sans-serif" font-weight="700" font-size="12" fill="#02569B" text-anchor="middle">Topic 16 Complete Architecture Map: Abstract Classes &amp; Interfaces</text>
+
+      <rect x="40" y="45" width="150" height="50" rx="4" fill="#EDE9FE"/>
+      <text x="115" y="66" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#6D28D9" text-anchor="middle">1. abstract class</text>
+      <text x="115" y="82" font-family="sans-serif" font-size="8.5" fill="#4C1D95" text-anchor="middle">Base state + methods</text>
+
+      <rect x="210" y="45" width="160" height="50" rx="4" fill="#F0F9FF"/>
+      <text x="290" y="66" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#0175C2" text-anchor="middle">2. extends (Reuse)</text>
+      <text x="290" y="82" font-family="sans-serif" font-size="8.5" fill="#0175C2" text-anchor="middle">Inherits concrete bodies</text>
+
+      <rect x="390" y="45" width="160" height="50" rx="4" fill="#F0FDF4"/>
+      <text x="470" y="66" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">3. implements (Contract)</text>
+      <text x="470" y="82" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">Enforces all bodies</text>
+
+      <rect x="570" y="45" width="150" height="50" rx="4" fill="#FFFBEB"/>
+      <text x="645" y="66" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#B45309" text-anchor="middle">4. Polymorphism</text>
+      <text x="645" y="82" font-family="sans-serif" font-size="8.5" fill="#B45309" text-anchor="middle">Unified dynamic dispatch</text>
+    </svg>
+  </div>
+  <div class="diagram-caption">Figure 27.1: Master concept map synthesizing abstract classes, interfaces, and polymorphism.</div>
+
+  <!-- SECTION 19 -->
+  <section id="section-19">
+    <h2>19. Quick Revision</h2>
+
+    <!-- SVG 19.1: Comprehensive Topic 16 Synthesis Mindmap -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <circle cx="380" cy="45" r="35" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="380" y="42" font-family="sans-serif" font-weight="700" font-size="9" fill="#0175C2" text-anchor="middle">Dart OOP</text>
+        <text x="380" y="53" font-family="sans-serif" font-weight="700" font-size="7.5" fill="#02569B" text-anchor="middle">Contracts</text>
+
+        <line x1="345" y1="45" x2="230" y2="45" stroke="#00B4AB" stroke-width="1.8"/>
+        <rect x="25" y="22" width="200" height="46" rx="6" fill="#F1F5F9" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="125" y="38" font-family="sans-serif" font-weight="700" font-size="9" fill="#00B4AB" text-anchor="middle">abstract class (extends)</text>
+        <text x="125" y="53" font-family="sans-serif" font-size="8" fill="#475569" text-anchor="middle">Code reuse + enforced abstract methods</text>
+
+        <line x1="415" y1="45" x2="530" y2="45" stroke="#8B5CF6" stroke-width="1.8"/>
+        <rect x="535" y="22" width="200" height="46" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="635" y="38" font-family="sans-serif" font-weight="700" font-size="9" fill="#6D28D9" text-anchor="middle">implements (interfaces)</text>
+        <text x="635" y="53" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">100% pure contracts &bull; Multiple allowed</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.1: Comprehensive architectural synthesis of Abstract Classes and Interfaces in Dart.</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>One-Line Definition</th>
+            <th>Canonical Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Abstract Class</strong></td>
+            <td>Incomplete blueprint; cannot be instantiated directly.</td>
+            <td><code>abstract class Shape {}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Abstract Method</strong></td>
+            <td>Method signature with no body ending with semicolon.</td>
+            <td><code>void calculateArea();</code></td>
+          </tr>
+          <tr>
+            <td><strong>Concrete Method</strong></td>
+            <td>Method inside abstract class containing executable body.</td>
+            <td><code>void stop() { print('Stop'); }</code></td>
+          </tr>
+          <tr>
+            <td><strong>Abstract Constructor</strong></td>
+            <td>Initializes fields via <code>: super(...)</code> chaining.</td>
+            <td><code>Employee(this.name);</code></td>
+          </tr>
+          <tr>
+            <td><strong>Implicit Interface</strong></td>
+            <td>Every Dart class defines an interface for its members.</td>
+            <td>Every class can be implemented.</td>
+          </tr>
+          <tr>
+            <td><strong>implements</strong></td>
+            <td>Enforces interface contract without code reuse.</td>
+            <td><code>class B implements A {}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Interfaces</strong></td>
+            <td>Implementing multiple contracts separated by commas.</td>
+            <td><code>implements Flyable, Swimmable</code></td>
+          </tr>
+          <tr>
+            <td><strong>interface class</strong></td>
+            <td>Dart 3 modifier: can implement but not extend outside file.</td>
+            <td><code>interface class Logger {}</code></td>
+          </tr>
+          <tr>
+            <td><strong>abstract interface class</strong></td>
+            <td>Dart 3 modifier: pure contract that cannot be extended.</td>
+            <td><code>abstract interface class Repo {}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 20 -->
+  <section id="section-20">
+    <h2>20. Knowledge Check</h2>
+
+    <!-- SVG 20.1: Stage 4 OOP Progression Roadmap -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="20" y="18" width="160" height="48" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="100" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#64748B" text-anchor="middle">Topic 14</text>
+        <text x="100" y="51" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">Classes &amp; Objects &check;</text>
+
+        <path d="M185 42 L205 42" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="210" y="18" width="160" height="48" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="290" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#64748B" text-anchor="middle">Topic 15</text>
+        <text x="290" y="51" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">Inheritance &amp; Poly &check;</text>
+
+        <path d="M375 42 L395 42" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="400" y="18" width="160" height="48" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="480" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#0175C2" text-anchor="middle">Topic 16 (Current)</text>
+        <text x="480" y="51" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">Abstract &amp; Interfaces &check;</text>
+
+        <path d="M565 42 L585 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="590" y="18" width="150" height="48" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
+        <text x="665" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#15803D" text-anchor="middle">Topic 17 (Next)</text>
+        <text x="665" y="51" font-family="sans-serif" font-size="8" fill="#16A34A" text-anchor="middle">Mixins in Dart &rarr;</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 20.1: Stage 4 OOP roadmap bridging Abstract Classes and Interfaces to Mixins.</div>
+
+    <h3>Interactive Multiple Choice Questions</h3>
+
+    <details>
+      <summary>1. What happens if you try to execute <code>Shape s = Shape();</code> on an abstract class?</summary>
+      <p><strong>A)</strong> Dart throws a compile-time error because abstract classes cannot be directly instantiated.<br>
+      <strong>B)</strong> Dart creates a null object.<br>
+      <strong>C)</strong> It instantiates without issue if there are no abstract methods.<br>
+      <strong>D)</strong> It works only in release mode.</p>
+      <p><strong>Correct Answer: A</strong><br>
+      <em>Explanation:</em> Abstract classes cannot be instantiated directly. You must instantiate a concrete subclass that implements all abstract methods.</p>
+    </details>
+
+    <details>
+      <summary>2. How does <code>implements</code> differ from <code>extends</code> in Dart?</summary>
+      <p><strong>A)</strong> <code>implements</code> treats the class purely as an interface, requiring you to provide method bodies for all members without inheriting any code.<br>
+      <strong>B)</strong> <code>implements</code> inherits concrete code, while <code>extends</code> does not.<br>
+      <strong>C)</strong> <code>extends</code> allows multiple classes; <code>implements</code> allows only one.<br>
+      <strong>D)</strong> They are exact aliases.</p>
+      <p><strong>Correct Answer: A</strong><br>
+      <em>Explanation:</em> <code>implements</code> extracts the interface contract and receives zero implementation reuse from the target class.</p>
+    </details>
+
+    <details>
+      <summary>3. Can an abstract class in Dart contain a constructor?</summary>
+      <p><strong>A)</strong> Yes, to initialize instance fields when concrete subclasses delegate via <code>: super(...)</code>.<br>
+      <strong>B)</strong> No, abstract classes are strictly forbidden from having constructors.<br>
+      <strong>C)</strong> Only named constructors with zero parameters.<br>
+      <strong>D)</strong> Only private constructors.</p>
+      <p><strong>Correct Answer: A</strong><br>
+      <em>Explanation:</em> Abstract classes can declare constructors so child classes can initialize inherited fields during constructor chaining.</p>
+    </details>
+
+    <details>
+      <summary>4. How do you implement multiple interfaces in a single Dart class?</summary>
+      <p><strong>A)</strong> List them separated by commas after the <code>implements</code> keyword.<br>
+      <strong>B)</strong> Use multiple <code>extends</code> keywords.<br>
+      <strong>C)</strong> Nest them inside braces.<br>
+      <strong>D)</strong> Dart does not allow multiple interfaces.</p>
+      <p><strong>Correct Answer: A</strong><br>
+      <em>Explanation:</em> Multiple interface implementation is supported using commas: <code>class Duck implements Flyable, Swimmable</code>.</p>
+    </details>
+
+    <details>
+      <summary>5. What does the Dart 3 <code>interface class</code> modifier enforce?</summary>
+      <p><strong>A)</strong> Other libraries can construct or implement the class, but cannot extend it with <code>extends</code>.<br>
+      <strong>B)</strong> All methods must be static.<br>
+      <strong>C)</strong> The class cannot have any instance variables.<br>
+      <strong>D)</strong> The class must be written in C++.</p>
+      <p><strong>Correct Answer: A</strong><br>
+      <em>Explanation:</em> The `interface` class modifier in Dart 3 prevents external libraries from sub-classing via `extends`, preserving the author's internal implementation hierarchy.</p>
+    </details>
+
+    <h3>Output Prediction Challenges</h3>
+
+    <details>
+      <summary>Prediction 1: Concrete Reusability in Abstract Class</summary><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Vehicle car = Car();
+car.start();
+car.stop();</code></pre>
+</div>
+      <p><strong>Expected Output:</strong><br>
+      <code>Car started</code><br>
+      <code>Vehicle stopped</code><br>
+      <em>Explanation:</em> <code>start()</code> runs Car's implemented version, while <code>stop()</code> reuses the concrete method defined in Vehicle.</p>
+    </details>
+
+    <details>
+      <summary>Prediction 2: Multiple Interface Implementation</summary><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Duck duck = Duck();
+duck.fly();
+duck.swim();</code></pre>
+</div>
+      <p><strong>Expected Output:</strong><br>
+      <code>Duck is flying</code><br>
+      <code>Duck is swimming</code><br>
+      <em>Explanation:</em> <code>Duck</code> fulfills both the <code>Flyable</code> and <code>Swimmable</code> contracts.</p>
+    </details>
+
+    <details>
+      <summary>Prediction 3: Polymorphic Notification Dispatch</summary><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Notification n = SMSNotification();
+n.send();</code></pre>
+</div>
+      <p><strong>Expected Output:</strong> <code>SMS sent</code><br>
+      <em>Explanation:</em> Dynamic dispatch routes the method call to <code>SMSNotification</code>'s overridden implementation.</p>
+    </details>
+
+    <h3>Practice Exercises</h3>
+    <div class="callout callout-info">
+      <div class="callout-title">Exercise 1: Audio Player Contract</div>
+      <p>Create an abstract class <code>AudioPlayer</code> with concrete field <code>volume</code>, concrete method <code>setVolume(int v)</code>, and abstract method <code>play(String track)</code>. Implement <code>Mp3Player</code> and test it.</p>
+      <details>
+        <summary>View Hint</summary>
+        <p>Use <code>abstract class AudioPlayer { int volume = 50; void play(String track); }</code>.</p>
+      </details>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Exercise 2: Multi-Interface Smart Device</div>
+      <p>Define two interfaces: <code>Camera</code> (method <code>takePhoto()</code>) and <code>Phone</code> (method <code>makeCall()</code>). Create a class <code>SmartPhone</code> implementing both.</p>
+      <details>
+        <summary>View Hint</summary>
+        <p>Write <code>class SmartPhone implements Camera, Phone { ... }</code> and provide both method bodies.</p>
+      </details>
+    </div>
+
+    <div class="callout callout-info">
+      <div class="callout-title">Exercise 3: Database Repository Pattern</div>
+      <p>Create an <code>abstract interface class DataRepository</code> with methods <code>save(String data)</code> and <code>fetch()</code>. Implement a mock <code>MemoryRepository</code> that stores strings in a <code>List&lt;String&gt;</code>.</p>
+      <details>
+        <summary>View Hint</summary>
+        <p>Use <code>abstract interface class DataRepository { void save(String data); String fetch(); }</code>.</p>
+      </details>
+    </div>
+
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

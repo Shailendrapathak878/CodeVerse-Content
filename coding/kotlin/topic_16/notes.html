@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 16: Inheritance &amp; Polymorphism in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 16</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-badge">Stage 4 &bull; Object-Oriented Kotlin &bull; Topic 16</div>
+    <h1 class="hero-title">Inheritance &amp; Polymorphism in Kotlin</h1>
+    <p class="hero-subtitle">
+      Build scalable, reusable software architectures. Understand how <strong>Inheritance</strong> reuses code through <strong>Parent</strong> and <strong>Child</strong> classes, why Kotlin requires the <code>open</code> keyword, how to customize behavior with <code>override</code> and <code>super</code>, and how <strong>Runtime Polymorphism</strong> powers flexible "one name, many forms" execution.
+    </p>
+  </header>
+
+  <!-- 1. INTRODUCTION TO INHERITANCE -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">1</span> Introduction to Inheritance</h2>
+    <p>
+      In programming, writing the same properties and functions repeatedly for similar entities leads to messy, duplicate code. <strong>Inheritance</strong> is an Object-Oriented Programming (OOP) mechanism where a new class inherits properties and functions from an existing class.
+    </p>
+    <p>
+      The primary benefit is <strong>Code Reusability</strong>: you write common features once in a shared base class, and specialized classes inherit and reuse those features automatically without rewriting them.
+    </p>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">🚗</div>
+      <div class="alert-content">
+        <strong>Real-Life Analogy:</strong> Think of a general <strong>Vehicle</strong>. Both a <strong>Car</strong> and a <strong>Bike</strong> are vehicles. They share common features like <code>speed</code> and a <code>start()</code> action. Instead of defining speed and start from scratch for every vehicle, Car and Bike inherit them from Vehicle, and add their own unique parts (e.g., Car adds <code>airConditioner</code>, Bike adds <code>kickStand</code>).
+      </div>
+    </div>
+
+    <!-- Diagram 1: Vehicle Inheritance Hierarchy -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 1.1: Vehicle Inheritance Hierarchy</div>
+      <svg viewBox="0 0 620 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="220" y="8" width="180" height="36" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="310" y="26" fill="#F8FAFC" font-size="12" font-weight="700" text-anchor="middle" font-family="sans-serif">Parent Class: Vehicle</text>
+        <text x="310" y="38" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">brand, speed, start()</text>
+
+        <!-- Connecting Lines -->
+        <path d="M 310 44 L 310 64 M 140 64 L 480 64 M 140 64 L 140 76 M 480 64 L 480 76" fill="none" stroke="#64748B" stroke-width="1.6"/>
+
+        <!-- Child 1: Car -->
+        <rect x="50" y="76" width="180" height="36" rx="6" fill="#0F172A" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="140" y="93" fill="#38BDF8" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Child Class: Car</text>
+        <text x="140" y="105" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">hasAirConditioner, doors</text>
+
+        <!-- Child 2: Bike -->
+        <rect x="390" y="76" width="180" height="36" rx="6" fill="#0F172A" stroke="#059669" stroke-width="1.6"/>
+        <text x="480" y="93" fill="#34D399" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Child Class: Bike</text>
+        <text x="480" y="105" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">hasKickStand, helmetBox</text>
+      </svg>
+    </div>
+
+    <div class="grid-2">
+      <div class="grid-card">
+        <div class="grid-card-title">🏛️ Parent Class (Superclass / Base)</div>
+        <p style="font-size: 12.5px;">The general class whose properties and functions are inherited by another class. Example: <code>Vehicle</code>, <code>Animal</code>, <code>Person</code>.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-card-title">👶 Child Class (Subclass / Derived)</div>
+        <p style="font-size: 12.5px;">The specialized class that inherits from the parent and can add its own new features or modify existing ones. Example: <code>Car</code>, <code>Dog</code>, <code>Student</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. CREATING A PARENT CLASS & THE OPEN KEYWORD -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">2</span> The <code>open</code> Keyword: Why Kotlin Classes are Final by Default</h2>
+    <p>
+      In many languages like Java, all classes can be inherited by default. However, Kotlin takes a safer, modern approach: <strong>By default, all classes in Kotlin are <code>final</code>!</strong>
+    </p>
+    <p>
+      A <code>final</code> class cannot be inherited. To allow a class to be used as a parent class, you <strong>must</strong> explicitly mark it with the <span class="pill pill-purple">open</span> keyword.
+    </p>
+
+    <!-- Diagram 2: Open vs Final -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 2.1: Final by Default vs Open Inheritance</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <!-- Default Final -->
+        <rect x="30" y="12" width="260" height="66" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.6"/>
+        <text x="160" y="32" fill="#FCA5A5" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">🔒 Default: class Animal</text>
+        <text x="160" y="50" fill="#94A3B8" font-size="9.5" text-anchor="middle" font-family="monospace">Implicitly 'final' in Kotlin</text>
+        <text x="160" y="66" fill="#F87171" font-size="9.5" font-weight="600" text-anchor="middle" font-family="sans-serif">❌ Cannot be inherited! Compilation error</text>
+
+        <!-- Marked Open -->
+        <rect x="330" y="12" width="260" height="66" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.6"/>
+        <text x="460" y="32" fill="#6EE7B7" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">🔓 open class Animal</text>
+        <text x="460" y="50" fill="#94A3B8" font-size="9.5" text-anchor="middle" font-family="monospace">Explicitly marked 'open'</text>
+        <text x="460" y="66" fill="#34D399" font-size="9.5" font-weight="600" text-anchor="middle" font-family="sans-serif">✅ Can be inherited by Child Classes</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ParentClassDeclaration.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// The &#x27;open&#x27; keyword permits other classes to inherit from Animal</span>
+<span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">eat</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Animal is eating food&quot;</span>)
+    }
+}</code></pre>
+</div>
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <strong>What happens without <code>open</code>?</strong> If you write <code>class Animal</code> and then try to create <code>class Dog : Animal()</code>, the Kotlin compiler halts with an error: <em>"This type has a constructor, and thus must be initialized here / This type is final, so it cannot be inherited from"</em>. Kotlin enforces this design rule to protect against unintended subclassing (the "fragile base class" problem).
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CREATING A CHILD CLASS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">3</span> Creating a Child Class with the <code>:</code> Colon Syntax</h2>
+    <p>
+      In Kotlin, inheritance is specified using the colon (<span class="pill pill-purple">:</span>) symbol followed by the parent class name and its constructor call parentheses <code>()</code>.
+    </p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">BasicChildClass.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">eat</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Animal is eating&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Dog inherits from Animal using &#x27;: Animal()&#x27;</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>()
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> myDog = Dog()
+    myDog.eat() <span class="hljs-comment">// Inherited from Animal!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Animal is eating
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-content">
+        <strong>Single Class Inheritance Rule:</strong> A Kotlin class can directly inherit from <strong>only one</strong> parent class (Kotlin does not allow multiple class inheritance like C++). However, a parent can have multiple children, and classes can form chains (e.g., <code>Puppy</code> inherits <code>Dog</code>, which inherits <code>Animal</code>).
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. PARENT CLASS AND CHILD CLASS FEATURES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">4</span> Inherited Features vs Child-Specific Features</h2>
+    <p>
+      A child class inherits all accessible properties and member functions from its parent class, while also being free to add its own brand new properties and functions.
+    </p>
+
+    <!-- Diagram 3: Feature Split -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 4.1: Inherited Features + Child-Specific Features</div>
+      <svg viewBox="0 0 620 95" xmlns="http://www.w3.org/2000/svg">
+        <rect x="40" y="10" width="240" height="75" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="160" y="30" fill="#DDD6FE" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Parent Class: Animal</text>
+        <text x="160" y="50" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="monospace">val species = "Canine"</text>
+        <text x="160" y="68" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="monospace">fun eat()</text>
+
+        <!-- Arrow -->
+        <path d="M 285 47 L 335 47" fill="none" stroke="#10B981" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+        <defs>
+          <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#10B981"/>
+          </marker>
+        </defs>
+
+        <rect x="340" y="10" width="240" height="75" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1.6"/>
+        <text x="460" y="26" fill="#6EE7B7" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Child Class: Dog</text>
+        <text x="460" y="44" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">Inherited: species, eat()</text>
+        <text x="460" y="60" fill="#FBBF24" font-size="9.5" font-weight="700" text-anchor="middle" font-family="monospace">+ val breed = "Labrador"</text>
+        <text x="460" y="74" fill="#FBBF24" font-size="9.5" font-weight="700" text-anchor="middle" font-family="monospace">+ fun bark()</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">FeaturesDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-keyword">val</span> species = <span class="hljs-string">&quot;Canine&quot;</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">eat</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;This animal eats food.&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-keyword">val</span> breed = <span class="hljs-string">&quot;Labrador&quot;</span> <span class="hljs-comment">// Child-specific property</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">bark</span><span class="hljs-params">()</span></span> {            <span class="hljs-comment">// Child-specific function</span>
+        println(<span class="hljs-string">&quot;Dog barks: Woof! Woof!&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dog = Dog()
+    println(<span class="hljs-string">&quot;Species: <span class="hljs-subst">${dog.species}</span>&quot;</span>) <span class="hljs-comment">// From Parent</span>
+    dog.eat()                          <span class="hljs-comment">// From Parent</span>
+    println(<span class="hljs-string">&quot;Breed: <span class="hljs-subst">${dog.breed}</span>&quot;</span>)     <span class="hljs-comment">// From Child</span>
+    dog.bark()                         <span class="hljs-comment">// From Child</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Species: Canine<br>
+      This animal eats food.<br>
+      Breed: Labrador<br>
+      Dog barks: Woof! Woof!
+    </div>
+  </section>
+
+  <!-- 5. FUNCTION OVERRIDING -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">5</span> Function Overriding &amp; <code>open fun</code></h2>
+    <p>
+      Sometimes the general behavior provided by a parent class is not specific enough for a child. <strong>Function Overriding</strong> allows a child class to provide its own custom implementation of a function already declared in its parent class.
+    </p>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">🔑</div>
+      <div class="alert-content">
+        <strong>Two Requirements for Overriding in Kotlin:</strong><br>
+        1. The parent function <strong>must</strong> be declared with the <span class="pill pill-purple">open</span> keyword (functions are final by default).<br>
+        2. The child function <strong>must</strong> be declared with the <span class="pill pill-green">override</span> keyword.
+      </div>
+    </div>
+
+    <!-- Diagram 4: Function Overriding -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 5.1: Function Overriding in Child Classes</div>
+      <svg viewBox="0 0 620 110" xmlns="http://www.w3.org/2000/svg">
+        <rect x="220" y="8" width="180" height="34" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="310" y="24" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Parent: Animal</text>
+        <text x="310" y="36" fill="#A78BFA" font-size="9" text-anchor="middle" font-family="monospace">open fun sound()</text>
+
+        <path d="M 310 42 L 310 58 M 140 58 L 480 58 M 140 58 L 140 68 M 480 58 L 480 68" fill="none" stroke="#64748B" stroke-width="1.5"/>
+
+        <rect x="50" y="68" width="180" height="34" rx="6" fill="#0F172A" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="140" y="83" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Dog : Animal()</text>
+        <text x="140" y="96" fill="#34D399" font-size="9" text-anchor="middle" font-family="monospace">override fun sound() -> "Woof!"</text>
+
+        <rect x="390" y="68" width="180" height="34" rx="6" fill="#0F172A" stroke="#059669" stroke-width="1.6"/>
+        <text x="480" y="83" fill="#34D399" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Cat : Animal()</text>
+        <text x="480" y="96" fill="#FBBF24" font-size="9" text-anchor="middle" font-family="monospace">override fun sound() -> "Meow!"</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">OverridingDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-comment">// &#x27;open&#x27; allows this function to be overridden</span>
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Animal makes a general sound&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-comment">// &#x27;override&#x27; replaces parent&#x27;s implementation</span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Dog barks: Woof! Woof!&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cat</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Cat meows: Meow! Meow!&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dog = Dog()
+    <span class="hljs-keyword">val</span> cat = Cat()
+
+    dog.sound() <span class="hljs-comment">// Calls Dog&#x27;s overridden sound</span>
+    cat.sound() <span class="hljs-comment">// Calls Cat&#x27;s overridden sound</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Dog barks: Woof! Woof!<br>
+      Cat meows: Meow! Meow!
+    </div>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">⚖️</div>
+      <div class="alert-content">
+        <strong>Overriding vs Overloading:</strong> <em>Overriding</em> means a child class changes the implementation of an inherited function with the exact same name and parameters. <em>Overloading</em> means writing multiple functions within the same class that share the same name but have different parameter lists (e.g. <code>print(x: Int)</code> vs <code>print(x: String)</code>).
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. OVERRIDING PROPERTIES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">6</span> Overriding Properties</h2>
+    <p>
+      Just like member functions, class properties can also be overridden by child classes if they are marked <span class="pill pill-purple">open</span> in the parent class.
+    </p>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">PropertyOverriding.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-keyword">open</span> <span class="hljs-keyword">val</span> category: String = <span class="hljs-string">&quot;Wild or Domestic Animal&quot;</span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-comment">// Overriding the property value</span>
+    <span class="hljs-keyword">override</span> <span class="hljs-keyword">val</span> category: String = <span class="hljs-string">&quot;Loyal Pet Companion&quot;</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> animal = Animal()
+    <span class="hljs-keyword">val</span> dog = Dog()
+
+    println(animal.category)
+    println(dog.category)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Wild or Domestic Animal<br>
+      Loyal Pet Companion
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-content">
+        <strong>Property Mutability Rule:</strong> You can override an <code>open val</code> property with a <code>var</code> in a child class (widening mutability), but you <strong>cannot</strong> override an <code>open var</code> with a <code>val</code> (restricting mutability is disallowed).
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. USING THE SUPER KEYWORD -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">7</span> The <code>super</code> Keyword: Calling Parent Behavior</h2>
+    <p>
+      When a child class overrides a function, it often wants to <strong>extend</strong> the parent class behavior rather than discarding it completely. The <span class="pill pill-purple">super</span> keyword refers to the direct parent class instance.
+    </p>
+
+    <!-- Diagram 5: Super Execution Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 7.1: super.sound() Execution Flow</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="15" width="160" height="60" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="110" y="38" fill="#38BDF8" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Dog.sound()</text>
+        <text x="110" y="56" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">Calls super.sound()</text>
+
+        <path d="M 195 45 L 245 45" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <defs>
+          <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#7F52FF"/>
+          </marker>
+        </defs>
+
+        <rect x="250" y="15" width="180" height="60" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="340" y="36" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">1. Parent Animal.sound()</text>
+        <text x="340" y="54" fill="#34D399" font-size="9.5" text-anchor="middle" font-family="monospace">"Animal makes sound"</text>
+
+        <path d="M 435 45 L 475 45" fill="none" stroke="#10B981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+        <rect x="480" y="15" width="120" height="60" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1.6"/>
+        <text x="540" y="36" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">2. Child Code</text>
+        <text x="540" y="54" fill="#FBBF24" font-size="9.5" text-anchor="middle" font-family="monospace">"Dog barks"</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SuperKeywordDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Animal produces generic sound.&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        <span class="hljs-keyword">super</span>.sound() <span class="hljs-comment">// Step 1: Run parent&#x27;s code</span>
+        println(<span class="hljs-string">&quot;Dog barks enthusiastically: Woof!&quot;</span>) <span class="hljs-comment">// Step 2: Add child code</span>
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dog = Dog()
+    dog.sound()
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Animal produces generic sound.<br>
+      Dog barks enthusiastically: Woof!
+    </div>
+  </section>
+
+  <!-- 8. CONSTRUCTORS IN INHERITANCE -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">8</span> Constructors in Inheritance</h2>
+    <p>
+      When a parent class has a parameterized primary constructor, the child class <strong>must initialize the parent</strong> by passing the required arguments during inheritance header declaration.
+    </p>
+
+    <!-- Diagram 6: Constructor Delegation Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 8.1: Passing Parameters to Parent Constructor</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="15" width="260" height="60" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="150" y="35" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Student(name, age, val branch)</text>
+        <text x="150" y="55" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">name, age are passed upward</text>
+
+        <path d="M 285 45 L 345 45" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+        <rect x="350" y="15" width="250" height="60" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="475" y="35" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">: Person(name, age)</text>
+        <text x="475" y="55" fill="#34D399" font-size="9" text-anchor="middle" font-family="monospace">Parent initializes val name, val age</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ConstructorInheritance.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Parent class with primary constructor properties</span>
+<span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> age: <span class="hljs-built_in">Int</span>)
+
+<span class="hljs-comment">// Child class receives name &amp; age, passes them to Person(name, age),</span>
+<span class="hljs-comment">// and introduces its own property: val rollNumber</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(
+    name: String,
+    age: <span class="hljs-built_in">Int</span>,
+    <span class="hljs-keyword">val</span> rollNumber: <span class="hljs-built_in">Int</span>,
+    <span class="hljs-keyword">val</span> branch: String
+) : Person(name, age)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> s = Student(<span class="hljs-string">&quot;Aman&quot;</span>, <span class="hljs-number">20</span>, <span class="hljs-number">101</span>, <span class="hljs-string">&quot;Computer Science&quot;</span>)
+
+    println(<span class="hljs-string">&quot;Name: <span class="hljs-subst">${s.name}</span>&quot;</span>)         <span class="hljs-comment">// Inherited from Person</span>
+    println(<span class="hljs-string">&quot;Age: <span class="hljs-subst">${s.age}</span>&quot;</span>)           <span class="hljs-comment">// Inherited from Person</span>
+    println(<span class="hljs-string">&quot;Roll No: <span class="hljs-subst">${s.rollNumber}</span>&quot;</span>) <span class="hljs-comment">// Student&#x27;s own property</span>
+    println(<span class="hljs-string">&quot;Branch: <span class="hljs-subst">${s.branch}</span>&quot;</span>)     <span class="hljs-comment">// Student&#x27;s own property</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Name: Aman<br>
+      Age: 20<br>
+      Roll No: 101<br>
+      Branch: Computer Science
+    </div>
+
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-content">
+        <strong>Important Syntax Rule:</strong> Notice that in <code>Student(name: String, age: Int, ...)</code>, we do <strong>NOT</strong> write <code>val</code> or <code>var</code> before <code>name</code> and <code>age</code>! Because <code>name</code> and <code>age</code> are already declared as properties in <code>Person</code>, declaring them again with <code>val</code> would cause a redeclaration error. Only child-specific properties (like <code>val rollNumber</code>) need <code>val</code>/<code>var</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. WHAT IS POLYMORPHISM? -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">9</span> What is Polymorphism?</h2>
+    <p>
+      The word <strong>Polymorphism</strong> is derived from Greek: <em>Poly</em> (many) + <em>Morph</em> (forms) &rarr; <strong>"One Name, Many Forms"</strong>.
+    </p>
+    <p>
+      In programming, Polymorphism is the ability of a single interface, function call, or parent type reference to perform different operations depending on the actual underlying object being manipulated.
+    </p>
+
+    <!-- Diagram 7: One Name, Many Forms -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 9.1: Polymorphism: Single Action, Different Behaviors</div>
+      <svg viewBox="0 0 620 120" xmlns="http://www.w3.org/2000/svg">
+        <rect x="220" y="8" width="180" height="34" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="310" y="24" fill="#DDD6FE" font-size="11.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Action: vehicle.start()</text>
+        <text x="310" y="36" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">Same method name</text>
+
+        <path d="M 310 42 L 310 60 M 120 60 L 500 60 M 120 60 L 120 70 M 500 60 L 500 70" fill="none" stroke="#64748B" stroke-width="1.5"/>
+
+        <rect x="30" y="70" width="180" height="40" rx="6" fill="#0F172A" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="120" y="88" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Car starts</text>
+        <text x="120" y="101" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Turn key & ignition roars</text>
+
+        <rect x="410" y="70" width="180" height="40" rx="6" fill="#0F172A" stroke="#059669" stroke-width="1.6"/>
+        <text x="500" y="88" fill="#34D399" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Bike starts</text>
+        <text x="500" y="101" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Kick start & engine revs</text>
+      </svg>
+    </div>
+
+    <p>
+      When you press the start button on a machine, you issue the single command <code>start()</code>. How it starts internally differs whether you are in a car or on a motorcycle. That is polymorphism in action!
+    </p>
+  </section>
+
+  <!-- 10. RUNTIME POLYMORPHISM & DYNAMIC METHOD DISPATCH -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">10</span> Runtime Polymorphism &amp; Parent References</h2>
+    <p>
+      In Kotlin, <strong>Runtime Polymorphism</strong> (also called <em>Dynamic Method Dispatch</em>) is achieved when:
+    </p>
+    <ol>
+      <li>A variable is declared with a <strong>Parent Class reference type</strong> (e.g., <code>val a: Animal</code>).</li>
+      <li>The variable actually points to a <strong>Child Class instance</strong> in heap memory (e.g., <code>Dog()</code> or <code>Cat()</code>).</li>
+      <li>When an overridden function is invoked, Kotlin inspects the <strong>actual runtime object</strong> and executes the child's implementation!</li>
+    </ol>
+
+    <!-- Diagram 8: Runtime Polymorphism Heap Allocation -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 10.1: Reference Type vs Actual Heap Object</div>
+      <svg viewBox="0 0 620 95" xmlns="http://www.w3.org/2000/svg">
+        <!-- Reference in Stack -->
+        <rect x="30" y="15" width="200" height="65" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="130" y="35" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Reference (Stack)</text>
+        <text x="130" y="52" fill="#E2E8F0" font-size="10.5" text-anchor="middle" font-family="monospace">val a: Animal</text>
+        <text x="130" y="68" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Compiler sees Parent type</text>
+
+        <!-- Arrow -->
+        <path d="M 235 48 L 345 48" fill="none" stroke="#10B981" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+        <text x="290" y="42" fill="#34D399" font-size="9.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Points to</text>
+
+        <!-- Instance in Heap -->
+        <rect x="350" y="15" width="240" height="65" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1.6"/>
+        <text x="470" y="35" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Actual Object in Heap</text>
+        <text x="470" y="52" fill="#FBBF24" font-size="10.5" text-anchor="middle" font-family="monospace">Dog() Instance</text>
+        <text x="470" y="68" fill="#34D399" font-size="8.5" text-anchor="middle" font-family="sans-serif">Runs Dog's sound() at runtime!</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">RuntimePolymorphismDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Generic animal sound&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Dog barks: Woof! Woof!&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cat</span> : <span class="hljs-type">Animal</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Cat meows: Meow! Meow!&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// Both variables have the static type Animal</span>
+    <span class="hljs-keyword">val</span> a1: Animal = Dog()
+    <span class="hljs-keyword">val</span> a2: Animal = Cat()
+
+    <span class="hljs-comment">// At runtime, Kotlin invokes the function of the ACTUAL object</span>
+    a1.sound() <span class="hljs-comment">// Output: Dog barks</span>
+    a2.sound() <span class="hljs-comment">// Output: Cat meows</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Dog barks: Woof! Woof!<br>
+      Cat meows: Meow! Meow!
+    </div>
+  </section>
+
+  <!-- 11. POLYMORPHISM WITH COLLECTIONS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">11</span> Polymorphism with Collections</h2>
+    <p>
+      The greatest superpower of Polymorphism is storing different child objects inside a single uniform collection of the parent type. You can iterate through the list and call the common method without knowing or checking each object's exact child class.
+    </p>
+
+    <!-- Diagram 9: Polymorphic List Loop -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 11.1: Iterating a Polymorphic List&lt;Shape&gt;</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="15" width="160" height="60" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="100" y="36" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">List&lt;Shape&gt;</text>
+        <text x="100" y="55" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="monospace">[Circle, Rect, Tri]</text>
+
+        <path d="M 185 45 L 240 45" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+        <!-- Dispatch Targets -->
+        <rect x="250" y="10" width="110" height="22" rx="4" fill="#0F172A" stroke="#0284C7" stroke-width="1.2"/>
+        <text x="305" y="25" fill="#38BDF8" font-size="9.5" text-anchor="middle" font-family="sans-serif">Circle.draw()</text>
+
+        <rect x="250" y="34" width="110" height="22" rx="4" fill="#0F172A" stroke="#059669" stroke-width="1.2"/>
+        <text x="305" y="49" fill="#34D399" font-size="9.5" text-anchor="middle" font-family="sans-serif">Rectangle.draw()</text>
+
+        <rect x="250" y="58" width="110" height="22" rx="4" fill="#0F172A" stroke="#F59E0B" stroke-width="1.2"/>
+        <text x="305" y="73" fill="#FBBF24" font-size="9.5" text-anchor="middle" font-family="sans-serif">Triangle.draw()</text>
+
+        <path d="M 370 45 L 420 45" fill="none" stroke="#10B981" stroke-width="2" marker-end="url(#arrowGreen)"/>
+
+        <rect x="430" y="15" width="170" height="60" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.6"/>
+        <text x="515" y="36" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Clean, Scalable Code</text>
+        <text x="515" y="55" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Zero ugly if-else or when chains!</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">PolymorphicShapes.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span> </span>{
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">draw</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Drawing a generic shape&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span> : <span class="hljs-type">Shape</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">draw</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Drawing a Circle ⭕&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span> : <span class="hljs-type">Shape</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">draw</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Drawing a Rectangle ▭&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Triangle</span> : <span class="hljs-type">Shape</span></span>() {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">draw</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Drawing a Triangle 🔺&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// A list of Shape holding diverse child objects</span>
+    <span class="hljs-keyword">val</span> shapeList: List = listOf(
+        Circle(),
+        Rectangle(),
+        Triangle()
+    )
+
+    <span class="hljs-keyword">for</span> (s <span class="hljs-keyword">in</span> shapeList) {
+        s.draw() <span class="hljs-comment">// Polymorphic invocation!</span>
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Drawing a Circle ⭕<br>
+      Drawing a Rectangle ▭<br>
+      Drawing a Triangle 🔺
+    </div>
+  </section>
+
+  <!-- 12. INHERITANCE VS POLYMORPHISM COMPARISON -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">12</span> Inheritance vs Polymorphism</h2>
+    <p>
+      While Inheritance and Polymorphism work closely together in Object-Oriented design, they solve two different architectural challenges:
+    </p>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Characteristic</th>
+            <th>Inheritance</th>
+            <th>Polymorphism</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Core Purpose</strong></td>
+            <td>Code reusability (is-a relationship)</td>
+            <td>Flexibility ("one name, many forms")</td>
+          </tr>
+          <tr>
+            <td><strong>How it Works</strong></td>
+            <td>Child class inherits properties &amp; methods from Parent</td>
+            <td>Parent reference invokes overridden child methods at runtime</td>
+          </tr>
+          <tr>
+            <td><strong>Kotlin Syntax</strong></td>
+            <td><code>class Child : Parent()</code></td>
+            <td><code>val ref: Parent = Child()</code> with <code>override</code></td>
+          </tr>
+          <tr>
+            <td><strong>Primary Advantage</strong></td>
+            <td>Eliminates code duplication</td>
+            <td>Allows writing code that handles future new subclasses effortlessly</td>
+          </tr>
+          <tr>
+            <td><strong>Dependency</strong></td>
+            <td>Can exist without polymorphism</td>
+            <td>Runtime polymorphism relies on inheritance &amp; overriding</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 13. IMPORTANT KOTLIN KEYWORDS SUMMARY -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">13</span> Important Kotlin Keywords Quick Reference</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Keyword</th>
+            <th>Usage Target</th>
+            <th>Effect &amp; Meaning in Kotlin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-purple">open</span></td>
+            <td><code>class</code>, <code>fun</code>, <code>val</code></td>
+            <td>Removes default <code>final</code> restriction, permitting inheritance or overriding.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-green">override</span></td>
+            <td><code>fun</code>, <code>val</code>, <code>var</code></td>
+            <td>Explicitly marks a member as redefining an inherited open member.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue">super</span></td>
+            <td>Method calls, constructors</td>
+            <td>References the immediate parent class implementation.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-purple">:</span></td>
+            <td>Class header declaration</td>
+            <td>Specifies inheritance or constructor delegation in Kotlin.</td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-red">final</span></td>
+            <td><code>fun</code> in child class</td>
+            <td>Default for all classes; stops further overriding in subsequent subclasses.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 14. 5 REAL-WORLD PRACTICAL PROGRAMS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">14</span> Real-World Practical Programs</h2>
+
+    <!-- Program A -->
+    <h3 style="font-size: 14px; margin: 10px 0 4px; color: var(--brand-kotlin);">Program A: Animal Sound System</h3>
+    <p style="font-size: 12.8px;">Demonstrates basic inheritance, <code>open fun</code>, and method overriding across domestic animals.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ProgramA_AnimalSound.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span></span>(<span class="hljs-keyword">val</span> species: String) {
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">makeSound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;<span class="hljs-variable">$species</span> makes a generic sound.&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>(<span class="hljs-string">&quot;Dog&quot;</span>) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">makeSound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Dog barks: Woof! Woof!&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cow</span> : <span class="hljs-type">Animal</span></span>(<span class="hljs-string">&quot;Cow&quot;</span>) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">makeSound</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Cow moos: Moooo!&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dog = Dog()
+    <span class="hljs-keyword">val</span> cow = Cow()
+
+    dog.makeSound()
+    cow.makeSound()
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Dog barks: Woof! Woof!<br>
+      Cow moos: Moooo!
+    </div>
+
+    <!-- Program B -->
+    <h3 style="font-size: 14px; margin: 12px 0 4px; color: var(--brand-kotlin);">Program B: Vehicle System</h3>
+    <p style="font-size: 12.8px;">Shows code reuse of parent properties (<code>brand</code>, <code>maxSpeed</code>) with customized child <code>start()</code> implementations.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ProgramB_VehicleSystem.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Vehicle</span></span>(<span class="hljs-keyword">val</span> brand: String, <span class="hljs-keyword">val</span> maxSpeed: <span class="hljs-built_in">Int</span>) {
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">start</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;<span class="hljs-variable">$brand</span> vehicle is starting engine...&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Car</span></span>(brand: String, maxSpeed: <span class="hljs-built_in">Int</span>, <span class="hljs-keyword">val</span> doors: <span class="hljs-built_in">Int</span>) : Vehicle(brand, maxSpeed) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">start</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Pushing start button on <span class="hljs-variable">$brand</span> <span class="hljs-variable">$doors</span>-door car. Smooth start!&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Bike</span></span>(brand: String, maxSpeed: <span class="hljs-built_in">Int</span>) : Vehicle(brand, maxSpeed) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">start</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Kick-starting <span class="hljs-variable">$brand</span> motorcycle. Engine revving up!&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> myCar = Car(<span class="hljs-string">&quot;Tesla&quot;</span>, <span class="hljs-number">200</span>, <span class="hljs-number">4</span>)
+    <span class="hljs-keyword">val</span> myBike = Bike(<span class="hljs-string">&quot;Yamaha&quot;</span>, <span class="hljs-number">140</span>)
+
+    myCar.start()
+    myBike.start()
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Pushing start button on Tesla 4-door car. Smooth start!<br>
+      Kick-starting Yamaha motorcycle. Engine revving up!
+    </div>
+
+    <!-- Program C -->
+    <h3 style="font-size: 14px; margin: 12px 0 4px; color: var(--brand-kotlin);">Program C: Student and Person Management</h3>
+    <p style="font-size: 12.8px;">Illustrates constructor delegation and combining parent details with child-specific fields.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ProgramC_StudentPerson.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Person</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> age: <span class="hljs-built_in">Int</span>) {
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">displayBio</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Name: <span class="hljs-variable">$name</span> | Age: <span class="hljs-variable">$age</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(
+    name: String,
+    age: <span class="hljs-built_in">Int</span>,
+    <span class="hljs-keyword">val</span> branch: String,
+    <span class="hljs-keyword">val</span> rollNumber: <span class="hljs-built_in">Int</span>
+) : Person(name, age) {
+
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">displayBio</span><span class="hljs-params">()</span></span> {
+        <span class="hljs-keyword">super</span>.displayBio() <span class="hljs-comment">// Reuse person info</span>
+        println(<span class="hljs-string">&quot;Roll No: <span class="hljs-variable">$rollNumber</span> | Branch: <span class="hljs-variable">$branch</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> student = Student(<span class="hljs-string">&quot;Priya Sharma&quot;</span>, <span class="hljs-number">19</span>, <span class="hljs-string">&quot;Electronics&quot;</span>, <span class="hljs-number">202401</span>)
+    student.displayBio()
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Name: Priya Sharma | Age: 19<br>
+      Roll No: 202401 | Branch: Electronics
+    </div>
+
+    <!-- Program D -->
+    <h3 style="font-size: 14px; margin: 12px 0 4px; color: var(--brand-kotlin);">Program D: Shape Drawing &amp; Area Calculation (Runtime Polymorphism)</h3>
+    <p style="font-size: 12.8px;">Loops through a polymorphic list to calculate area and draw geometric shapes dynamically.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ProgramD_ShapePolymorphism.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span></span>(<span class="hljs-keyword">val</span> name: String) {
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">area</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> = <span class="hljs-number">0.0</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">printSummary</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;<span class="hljs-variable">$name</span> has an area of <span class="hljs-subst">${area()}</span> sq units&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span></span>(<span class="hljs-keyword">val</span> radius: <span class="hljs-built_in">Double</span>) : Shape(<span class="hljs-string">&quot;Circle&quot;</span>) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">area</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> = <span class="hljs-number">3.14159</span> * radius * radius
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span></span>(<span class="hljs-keyword">val</span> width: <span class="hljs-built_in">Double</span>, <span class="hljs-keyword">val</span> height: <span class="hljs-built_in">Double</span>) : Shape(<span class="hljs-string">&quot;Rectangle&quot;</span>) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">area</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> = width * height
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> shapes: List = listOf(
+        Circle(<span class="hljs-number">5.0</span>),
+        Rectangle(<span class="hljs-number">4.0</span>, <span class="hljs-number">6.0</span>)
+    )
+
+    <span class="hljs-keyword">for</span> (s <span class="hljs-keyword">in</span> shapes) {
+        s.printSummary() <span class="hljs-comment">// Calls s.area() polymorphically!</span>
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Circle has an area of 78.53975 sq units<br>
+      Rectangle has an area of 24.0 sq units
+    </div>
+
+    <!-- Program E -->
+    <h3 style="font-size: 14px; margin: 12px 0 4px; color: var(--brand-kotlin);">Program E: Employee Salary &amp; Bonus Calculator</h3>
+    <p style="font-size: 12.8px;">Computes role-based bonuses dynamically using base employee references.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ProgramE_EmployeeSalary.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Employee</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> baseSalary: <span class="hljs-built_in">Double</span>) {
+    <span class="hljs-keyword">open</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">calculateBonus</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> {
+        <span class="hljs-keyword">return</span> baseSalary * <span class="hljs-number">0.05</span> <span class="hljs-comment">// Default 5% bonus</span>
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">displayCompensation</span><span class="hljs-params">()</span></span> {
+        <span class="hljs-keyword">val</span> bonus = calculateBonus()
+        <span class="hljs-keyword">val</span> total = baseSalary + bonus
+        println(<span class="hljs-string">&quot;<span class="hljs-variable">$name</span> | Base: \$<span class="hljs-variable">$baseSalary</span> | Bonus: \$<span class="hljs-variable">$bonus</span> | Total: \$<span class="hljs-variable">$total</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Manager</span></span>(name: String, baseSalary: <span class="hljs-built_in">Double</span>) : Employee(name, baseSalary) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">calculateBonus</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> {
+        <span class="hljs-keyword">return</span> baseSalary * <span class="hljs-number">0.20</span> <span class="hljs-comment">// 20% bonus for managers</span>
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Developer</span></span>(name: String, baseSalary: <span class="hljs-built_in">Double</span>) : Employee(name, baseSalary) {
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">calculateBonus</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Double</span> {
+        <span class="hljs-keyword">return</span> baseSalary * <span class="hljs-number">0.12</span> <span class="hljs-comment">// 12% bonus for developers</span>
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> team: List = listOf(
+        Manager(<span class="hljs-string">&quot;Karan&quot;</span>, <span class="hljs-number">80000.0</span>),
+        Developer(<span class="hljs-string">&quot;Rohan&quot;</span>, <span class="hljs-number">60000.0</span>),
+        Employee(<span class="hljs-string">&quot;Ankit&quot;</span>, <span class="hljs-number">40000.0</span>)
+    )
+
+    <span class="hljs-keyword">for</span> (emp <span class="hljs-keyword">in</span> team) {
+        emp.displayCompensation()
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Karan | Base: $80000.0 | Bonus: $16000.0 | Total: $96000.0<br>
+      Rohan | Base: $60000.0 | Bonus: $7200.0 | Total: $67200.0<br>
+      Ankit | Base: $40000.0 | Bonus: $2000.0 | Total: $42000.0
+    </div>
+  </section>
+
+  <!-- 15. COMMON BEGINNER MISTAKES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">15</span> Common Beginner Mistakes &amp; How to Fix Them</h2>
+
+    <div class="grid-2">
+      <!-- Mistake 1 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 1. Inheriting a class without 'open'</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>class Animal<br>class Dog : Animal() // Error: Animal is final</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Mark parent class with <code>open</code>: <code>open class Animal</code>.</p>
+      </div>
+
+      <!-- Mistake 2 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 2. Overriding a function without 'open'</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>fun sound() { ... }<br>override fun sound() // Error: cannot override final</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Add <code>open</code> to parent function: <code>open fun sound()</code>.</p>
+      </div>
+
+      <!-- Mistake 3 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 3. Forgetting the 'override' keyword</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>fun sound() { ... } in Dog<br>// Error: 'sound' hides member of supertype</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Kotlin mandates <code>override</code> keyword: <code>override fun sound()</code>.</p>
+      </div>
+
+      <!-- Mistake 4 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 4. Duplicate val in Child Constructor</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>class Student(val name: String) : Person(name)<br>// Error: 'name' hides supertype member</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Remove <code>val</code>: <code>class Student(name: String) : Person(name)</code>.</p>
+      </div>
+
+      <!-- Mistake 5 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 5. Forgetting constructor parentheses</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>class Dog : Animal // Error: Animal() must be initialized</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Always call parent constructor: <code>class Dog : Animal()</code>.</p>
+      </div>
+
+      <!-- Mistake 6 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 6. Multiple class inheritance</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>class Amphibian : Car(), Boat() // Error: Only one superclass</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Kotlin allows only <strong>single class inheritance</strong>. Use Interfaces for multi-role design.</p>
+      </div>
+
+      <!-- Mistake 7 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 7. Accessing child-only methods via Parent ref</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>val a: Animal = Dog()<br>a.bark() // Error: Unresolved reference 'bark'</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Parent reference can only access members declared in <code>Animal</code>.</p>
+      </div>
+
+      <!-- Mistake 8 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 8. Overriding open val with var vs val</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>open var count = 1<br>override val count = 2 // Error: cannot override var with val</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> A mutable <code>var</code> property cannot be restricted to read-only <code>val</code>.</p>
+      </div>
+
+      <!-- Mistake 9 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 9. Confusing super with this</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>override fun sound() { this.sound() } // Infinite recursion loop!</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Use <code>super.sound()</code> to invoke the parent class method.</p>
+      </div>
+
+      <!-- Mistake 10 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 10. Thinking Parent method runs automatically</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;"><code>override fun draw() { ... } // Parent code replaced completely</code></p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> If you want the parent's logic to execute, call <code>super.draw()</code> explicitly.</p>
+      </div>
+
+      <!-- Mistake 11 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 11. Confusing Overriding with Overloading</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;">Changing parameter types in a child class is function overloading, not overriding.</p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Overriding requires the exact identical function signature.</p>
+      </div>
+
+      <!-- Mistake 12 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 12. Unused Constructor parameters</div>
+        <p style="font-size: 11.8px; margin-bottom: 4px;">Declaring <code>class Student(val name: String)</code> without passing to <code>Person(name)</code> leads to uninitialized parent state.</p>
+        <p style="font-size: 11.8px; color: #047857;"><strong>Fix:</strong> Always pass common parameters to parent constructor invocation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 16. QUICK REVISION & TAKEAWAYS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">16</span> Quick Revision &amp; Takeaways</h2>
+    <ul style="font-size: 13px; line-height: 1.6;">
+      <li><strong>Inheritance:</strong> Reusing code where a child class inherits properties and functions from a parent class using <code>: Parent()</code>.</li>
+      <li><strong>Final by Default:</strong> In Kotlin, all classes and functions are <code>final</code> by default for safety.</li>
+      <li><strong>The <code>open</code> Keyword:</strong> Required before <code>class</code> or <code>fun</code> to enable inheritance or overriding.</li>
+      <li><strong>Function Overriding:</strong> Redefining a parent function using the mandatory <span class="pill pill-green">override</span> keyword.</li>
+      <li><strong>The <code>super</code> Keyword:</strong> Used inside a child class to call the parent's original function or constructor.</li>
+      <li><strong>Single Class Inheritance:</strong> A Kotlin class can have only one direct superclass.</li>
+      <li><strong>Polymorphism:</strong> "One Name, Many Forms". A parent reference variable (e.g. <code>val v: Vehicle = Car()</code>) dynamically executes the child's overridden code at runtime.</li>
+      <li><strong>Polymorphic Collections:</strong> Storing diverse child objects in a <code>List&lt;Parent&gt;</code> allows clean, modular, extensible loops.</li>
+    </ul>
+  </section>
+
+  <!-- 17. PRACTICE & ASSESSMENT -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">17</span> Practice &amp; Assessment: Test Your Knowledge</h2>
+
+    <!-- MCQ 1 -->
+    <div class="quiz-card">
+      <div class="quiz-question">1. Why does <code>class Dog : Animal()</code> cause a compiler error if <code>class Animal</code> has no modifiers?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Because Kotlin classes are final by default; Animal must be marked with the <code>open</code> keyword</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Because Dog must be declared before Animal</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Because Kotlin requires the <code>extends</code> keyword instead of colon <code>:</code></div>
+        <div class="quiz-opt incorrect">&#x2716; D) Because classes in Kotlin cannot have empty constructors</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> In Kotlin, all classes are final by default to prevent unintended subclassing. You must write <code>open class Animal</code>.
+      </div>
+    </div>
+
+    <!-- MCQ 2 -->
+    <div class="quiz-card">
+      <div class="quiz-question">2. Which keyword is mandatory in Kotlin when a child class implements an inherited open function?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) <code>override</code></div>
+        <div class="quiz-opt incorrect">&#x2716; B) <code>virtual</code></div>
+        <div class="quiz-opt incorrect">&#x2716; C) <code>super</code></div>
+        <div class="quiz-opt incorrect">&#x2716; D) <code>implements</code></div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Kotlin strictly enforces the <code>override</code> keyword to avoid accidental name collisions and typos.
+      </div>
+    </div>
+
+    <!-- MCQ 3 -->
+    <div class="quiz-card">
+      <div class="quiz-question">3. What is the role of the <code>super</code> keyword inside an overridden child function?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) It allows invoking the parent class's original implementation of that function</div>
+        <div class="quiz-opt incorrect">&#x2716; B) It terminates the child class function execution immediately</div>
+        <div class="quiz-opt incorrect">&#x2716; C) It re-initializes all local stack variables</div>
+        <div class="quiz-opt incorrect">&#x2716; D) It converts a child instance into a parent instance in memory</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> <code>super.functionName()</code> calls the parent class's version of the function, allowing the child to extend rather than replace it.
+      </div>
+    </div>
+
+    <!-- MCQ 4 -->
+    <div class="quiz-card">
+      <div class="quiz-question">4. Consider <code>val v: Vehicle = Car()</code>. When calling <code>v.start()</code>, which implementation executes?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Car's overridden start() method, determined at runtime via dynamic dispatch</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Vehicle's start() method, because the variable type is Vehicle</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Both methods execute simultaneously in parallel coroutines</div>
+        <div class="quiz-opt incorrect">&#x2716; D) A compilation error occurs because types do not match exactly</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> This is Runtime Polymorphism. Kotlin checks the actual heap object instance (which is <code>Car</code>) at runtime and executes Car's overridden method.
+      </div>
+    </div>
+
+    <!-- MCQ 5 -->
+    <div class="quiz-card">
+      <div class="quiz-question">5. Can a Kotlin class inherit directly from more than one parent class (e.g. <code>class C : A(), B()</code>)?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) No, Kotlin enforces single class inheritance (only one superclass)</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Yes, as long as both parent classes are marked open</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Yes, but only if neither class has any properties</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Yes, provided the secondary constructor is marked open</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Kotlin supports single class inheritance only to avoid multiple-inheritance ambiguity (the diamond problem). Multiple interfaces can be implemented, but only one class can be inherited.
+      </div>
+    </div>
+
+    <div class="grid-card" style="margin-top: 10px; background: #F8FAFC;">
+      <div class="grid-card-title">💻 Hands-On Coding Challenges</div>
+      <ol style="margin-left: 18px; font-size: 12.5px; line-height: 1.5;">
+        <li><strong>Appliance Power System:</strong> Create an <code>open class Appliance(val brand: String)</code> with <code>open fun turnOn()</code>. Create <code>WashingMachine</code> and <code>Refrigerator</code> subclasses that override <code>turnOn()</code> with customized print messages.</li>
+        <li><strong>Bank Accounts Hierarchy:</strong> Create an <code>open class Account(val accNumber: String, var balance: Double)</code> with <code>open fun withdraw(amount: Double)</code>. Inherit <code>SavingsAccount</code> which adds interest, and <code>CheckingAccount</code> which permits a limited overdraft.</li>
+        <li><strong>Game Character Attack:</strong> Create an <code>open class Hero(val name: String)</code> with <code>open fun attack()</code>. Create <code>Warrior</code>, <code>Mage</code>, and <code>Archer</code> child classes. Put them into a <code>List&lt;Hero&gt;</code> and loop through them calling <code>attack()</code> polymorphically.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

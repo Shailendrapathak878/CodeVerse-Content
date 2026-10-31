@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 19: Generics &amp; Type Constraints — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 19</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-badge">Stage 5 — Advanced Dart</div>
+    <h1>Topic 19: Generics &amp; Type Constraints</h1>
+    <p class="subtitle">Master writing flexible, reusable, and statically type-safe code using type parameters, generic functions, generic classes, and bounds.</p>
+  </header>
+
+  <!-- Section 1 -->
+  <section id="section-1">
+    <h2>1. Introduction to Generics (What and Why)</h2>
+    <p>In programming, we frequently write algorithms that do identical work across multiple data types. Imagine writing a storage box: you could make an <code>IntBox</code>, a <code>StringBox</code>, and a <code>UserBox</code>. Repeating identical code for every type is tedious, error-prone, and violates the <strong>DRY (Don't Repeat Yourself)</strong> principle.</p>
+    <p><strong>Generics</strong> solve this cleanly: they allow you to write a single function, class, or interface with <em>type placeholders</em> (called type parameters). When you instantiate or invoke that component, you supply the actual type, and the Dart compiler ensures strict type safety at compile time.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="8" width="160" height="38" rx="6" fill="#0175C2"/>
+        <text x="90" y="32" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">One Codebase</text>
+        <path d="M175 27 L225 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="235" y="8" width="165" height="38" rx="6" fill="#02569B"/>
+        <text x="317" y="25" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Generic Type &lt;T&gt;</text>
+        <text x="317" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">Type Safe at Compile Time</text>
+        <path d="M405 27 L455 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="465" y="8" width="95" height="38" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="512" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Box&lt;int&gt;</text>
+        <rect x="575" y="8" width="105" height="38" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="627" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Box&lt;String&gt;</text>
+        <rect x="695" y="8" width="95" height="38" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="742" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Box&lt;User&gt;</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.1: One generic component creates type-safe specialized variants for any type.</div>
+    
+    <div class="callout callout-success">
+      <div class="callout-title">Core Benefit of Generics</div>
+      Generics provide the ultimate balance: <strong>Maximum Code Reusability</strong> combined with <strong>100% Compile-Time Type Safety</strong> and <strong>Zero Performance Penalty</strong>.
+    </div>
+  </section>
+
+  <!-- Section 2 -->
+  <section id="section-2">
+    <h2>2. Problem Without Generics (Object / dynamic Risks)</h2>
+    <p>Before generics existed in languages, developers used <code>Object</code> or <code>dynamic</code> to store any value. However, this loses all type information. You are forced to perform manual runtime type casts (using <code>as</code>), which can easily crash your app if someone passes unexpected data.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="8" width="365" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="25" y="24" font-size="11" font-weight="700" fill="#991B1B" font-family="sans-serif">Without Generics (Object / dynamic):</text>
+        <text x="25" y="38" font-size="10" fill="#B91C1C" font-family="sans-serif">Requires casting (as String) - Risk of runtime crash</text>
+        <rect x="415" y="8" width="370" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="425" y="24" font-size="11" font-weight="700" fill="#166534" font-family="sans-serif">With Generics (&lt;T&gt;):</text>
+        <text x="425" y="38" font-size="10" fill="#15803D" font-family="sans-serif">Strict compile-time type check - Zero runtime casting</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.2: Object/dynamic leads to dangerous runtime casts vs Generics' compile-time safety.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>unsafe_box.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// UNSAFE: Using Object requires manual casting</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UnsafeBox</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">Object</span> value;
+  UnsafeBox(<span class="hljs-keyword">this</span>.value);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> box = UnsafeBox(<span class="hljs-string">&quot;Hello Dart&quot;</span>);
+  <span class="hljs-comment">// Danger: Must cast manually. If someone passes an int, this crashes at runtime!</span>
+  <span class="hljs-built_in">String</span> message = box.value <span class="hljs-keyword">as</span> <span class="hljs-built_in">String</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Extracted: <span class="hljs-subst">${message.toUpperCase()}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Extracted: HELLO DART
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">The Danger of Manual Casts</div>
+      If another developer creates <code>UnsafeBox(42)</code>, calling <code>box.value as String</code> compiles without warnings but explodes at runtime with <code>TypeError: int is not a subtype of type String</code>. Generics catch this at compile time before your code ever runs.
+    </div>
+  </section>
+
+  <!-- Section 3 -->
+  <section id="section-3">
+    <h2>3. Generic Type Parameters &amp; Naming Conventions</h2>
+    <p>By standard convention across Dart and Flutter, type parameter names are written as single uppercase letters. Each letter signifies a specific semantic role:</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="10" width="115" height="34" rx="5" fill="#0175C2"/>
+        <text x="72" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">T = Type</text>
+        <rect x="145" y="10" width="115" height="34" rx="5" fill="#02569B"/>
+        <text x="202" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">E = Element</text>
+        <rect x="275" y="10" width="115" height="34" rx="5" fill="#00B4AB"/>
+        <text x="332" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">K = Key</text>
+        <rect x="405" y="10" width="115" height="34" rx="5" fill="#0D9488"/>
+        <text x="462" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">V = Value</text>
+        <rect x="535" y="10" width="115" height="34" rx="5" fill="#6366F1"/>
+        <text x="592" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">R = Return</text>
+        <rect x="665" y="10" width="120" height="34" rx="5" fill="#8B5CF6"/>
+        <text x="725" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">S, U = Extra</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.3: Standard Dart naming conventions for generic type parameters.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Semantic Meaning</th>
+          <th>Typical Examples</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>T</code></td>
+          <td>Type (general purpose)</td>
+          <td><code>Box&lt;T&gt;</code>, <code>T getValue&lt;T&gt;()</code></td>
+        </tr>
+        <tr>
+          <td><code>E</code></td>
+          <td>Element (items inside collections)</td>
+          <td><code>List&lt;E&gt;</code>, <code>Set&lt;E&gt;</code>, <code>Queue&lt;E&gt;</code></td>
+        </tr>
+        <tr>
+          <td><code>K, V</code></td>
+          <td>Key and Value</td>
+          <td><code>Map&lt;K, V&gt;</code>, <code>Pair&lt;K, V&gt;</code>, <code>Cache&lt;K, V&gt;</code></td>
+        </tr>
+        <tr>
+          <td><code>R</code></td>
+          <td>Return type</td>
+          <td><code>R Function&lt;T, R&gt;(T input)</code></td>
+        </tr>
+        <tr>
+          <td><code>S, U</code></td>
+          <td>Secondary / additional arbitrary types</td>
+          <td><code>Tuple&lt;T, U, S&gt;</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 4 -->
+  <section id="section-4">
+    <h2>4. Generic Functions (&lt;T&gt;)</h2>
+    <p>A generic function declares one or more type parameters directly after the function name. This tells Dart: <em>"Whatever type the caller passes in, preserve that exact type throughout the function's return value and logic."</em></p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="12" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#F43F5E">T </tspan>
+          <tspan fill="#C084FC">getFirst</tspan>
+          <tspan fill="#FBBF24">&lt;T&gt;</tspan>
+          <tspan fill="#F8FAFC">(List&lt;</tspan>
+          <tspan fill="#FBBF24">T</tspan>
+          <tspan fill="#F8FAFC">&gt; items) =&gt; items.first;</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.4: Anatomy of a generic function in Dart.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_functions.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Generic function: works with ANY type T</span>
+T getFirst(<span class="hljs-built_in">List</span> items) {
+  <span class="hljs-keyword">if</span> (items.isEmpty) {
+    <span class="hljs-keyword">throw</span> StateError(<span class="hljs-string">&quot;List cannot be empty&quot;</span>);
+  }
+  <span class="hljs-keyword">return</span> items.first;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// 1. Explicit type arguments</span>
+  <span class="hljs-built_in">int</span> firstNum = getFirst([<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>]);
+  
+  <span class="hljs-comment">// 2. Inferred type arguments (Dart figures out T = String automatically)</span>
+  <span class="hljs-built_in">String</span> firstWord = getFirst([<span class="hljs-string">&quot;Dart&quot;</span>, <span class="hljs-string">&quot;Flutter&quot;</span>, <span class="hljs-string">&quot;Generics&quot;</span>]);
+  
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;First Number: <span class="hljs-subst">$firstNum</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;First Word: <span class="hljs-subst">$firstWord</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+First Number: 10
+First Word: Dart
+    </div>
+  </section>
+
+  <!-- Section 5 -->
+  <section id="section-5">
+    <h2>5. Generic Functions with Multiple Type Parameters</h2>
+    <p>Functions are not limited to one type parameter. When working with conversions, key-value mappings, or tuples, you can define multiple comma-separated type parameters like <code>&lt;K, V&gt;</code> or <code>&lt;T, R&gt;</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#02569B" font-family="sans-serif">Function with &lt;T, U&gt;:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">void displayPair&lt;K, V&gt;(K key, V val) =&gt; print("$key: $val");</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.5: Generic function accepting two distinct types K and V.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>multi_type_func.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Generic function with two type parameters</span>
+<span class="hljs-built_in">String</span> formatEntry(K key, V value) {
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Entry [<span class="hljs-subst">$key</span> (<span class="hljs-subst">${key.runtimeType}</span>) -&gt; <span class="hljs-subst">$value</span> (<span class="hljs-subst">${value.runtimeType}</span>)]&quot;</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">print</span>(formatEntry(<span class="hljs-string">&quot;userId&quot;</span>, <span class="hljs-number">1092</span>));
+  <span class="hljs-built_in">print</span>(formatEntry(<span class="hljs-number">404</span>, <span class="hljs-string">&quot;Not Found&quot;</span>));
+  <span class="hljs-built_in">print</span>(formatEntry(<span class="hljs-keyword">true</span>, [<span class="hljs-string">&quot;admin&quot;</span>, <span class="hljs-string">&quot;editor&quot;</span>]));
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Entry [userId (String) -> 1092 (int)]
+Entry [404 (int) -> Not Found (String)]
+Entry [true (bool) -> [admin, editor] (List&lt;String&gt;)]
+    </div>
+  </section>
+
+  <!-- Section 6 -->
+  <section id="section-6">
+    <h2>6. Generic Classes (e.g., Box&lt;T&gt;, Pair&lt;T, U&gt;)</h2>
+    <p>A generic class defines a reusable blueprint where fields, getters, setters, and method parameters all operate on the generic type <code>T</code>. You specify the type argument upon instantiation, or let Dart infer it.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="130" y="32" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">class Box&lt;T&gt; { T item; }</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="220" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="430" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Box&lt;int&gt;(100) -&gt; int</text>
+        <path d="M550 27 L610 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="620" y="8" width="160" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="700" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Box&lt;String&gt;("Hi")</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.6: Generic class Box&lt;T&gt; instantiated for int and String.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_classes.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Box</span> </span>{
+  <span class="hljs-keyword">final</span> T content;
+  Box(<span class="hljs-keyword">this</span>.content);
+
+  T <span class="hljs-keyword">get</span> item =&gt; content;
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">String</span> toString() =&gt; <span class="hljs-string">&quot;Box contains: <span class="hljs-subst">$content</span> (type: <span class="hljs-subst">${content.runtimeType}</span>)&quot;</span>;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pair</span> </span>{
+  <span class="hljs-keyword">final</span> T first;
+  <span class="hljs-keyword">final</span> U second;
+  <span class="hljs-keyword">const</span> Pair(<span class="hljs-keyword">this</span>.first, <span class="hljs-keyword">this</span>.second);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">String</span> toString() =&gt; <span class="hljs-string">&quot;Pair(<span class="hljs-subst">$first</span>, <span class="hljs-subst">$second</span>)&quot;</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> intBox = Box(<span class="hljs-number">42</span>);
+  <span class="hljs-keyword">var</span> strBox = Box(<span class="hljs-string">&quot;Dart Generics&quot;</span>);
+  <span class="hljs-keyword">var</span> scorePair = Pair(<span class="hljs-string">&quot;Average&quot;</span>, <span class="hljs-number">94.5</span>);
+
+  <span class="hljs-built_in">print</span>(intBox);
+  <span class="hljs-built_in">print</span>(strBox);
+  <span class="hljs-built_in">print</span>(scorePair);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Doubled int: <span class="hljs-subst">${intBox.item * <span class="hljs-number">2</span>}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Box contains: 42 (type: int)
+Box contains: Dart Generics (type: String)
+Pair(Average, 94.5)
+Doubled int: 84
+    </div>
+  </section>
+
+  <!-- Section 7 -->
+  <section id="section-7">
+    <h2>7. Generic Methods Inside Classes</h2>
+    <p>A non-generic class can contain generic methods, and a generic class can have methods with their <em>own separate</em> type parameters independent of the class's type parameter.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#0F172A" font-family="sans-serif">Generic Method inside Non-Generic Class:</text>
+        <text x="40" y="38" font-size="10" fill="#0175C2" font-family="monospace">class Printer { void printItem&lt;T&gt;(T value) { print(value); } }</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.7: Independent generic method signature inside a regular class.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_methods.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Printer</span> </span>{
+  <span class="hljs-comment">// Non-generic class with a generic method</span>
+  <span class="hljs-keyword">void</span> printValue(T value) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;[LOG] Value: <span class="hljs-subst">$value</span> (Type: <span class="hljs-subst">${value.runtimeType}</span>)&quot;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> printer = Printer();
+  printer.printValue(<span class="hljs-number">100</span>);
+  printer.printValue(<span class="hljs-string">&quot;System Online&quot;</span>);
+  printer.printValue&gt;([<span class="hljs-keyword">true</span>, <span class="hljs-keyword">false</span>]);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+[LOG] Value: 100 (Type: int)
+[LOG] Value: System Online (Type: String)
+[LOG] Value: [true, false] (Type: List&lt;bool&gt;)
+    </div>
+  </section>
+
+  <!-- Section 8 -->
+  <section id="section-8">
+    <h2>8. Generic Collections in Dart (List&lt;T&gt;, Set&lt;T&gt;, Map&lt;K, V&gt;)</h2>
+    <p>Every standard collection in Dart is built entirely on generics. When you write <code>&lt;int&gt;[1, 2, 3]</code> or <code>&lt;String, dynamic&gt;{}</code>, you are directly utilizing Dart's generic type arguments.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="230" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">List&lt;String&gt; = ['A', 'B']</text>
+        <rect x="270" y="10" width="240" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="390" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Set&lt;int&gt; = {10, 20, 30}</text>
+        <rect x="530" y="10" width="250" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="655" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Map&lt;String, int&gt; = {'a': 1}</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.8: Dart's primary collection interfaces use generic type parameters.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_collections.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// List of Strings: cannot add ints or doubles</span>
+  <span class="hljs-built_in">List</span> fruits = [<span class="hljs-string">&quot;Apple&quot;</span>, <span class="hljs-string">&quot;Banana&quot;</span>];
+  
+  <span class="hljs-comment">// Set of unique integers</span>
+  <span class="hljs-built_in">Set</span> uniqueIds = {<span class="hljs-number">101</span>, <span class="hljs-number">102</span>, <span class="hljs-number">101</span>}; <span class="hljs-comment">// duplicate 101 ignored</span>
+  
+  <span class="hljs-comment">// Map with String keys and double values</span>
+  <span class="hljs-built_in">Map</span> prices = {<span class="hljs-string">&quot;Coffee&quot;</span>: <span class="hljs-number">3.75</span>, <span class="hljs-string">&quot;Tea&quot;</span>: <span class="hljs-number">2.50</span>};
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Fruits: <span class="hljs-subst">$fruits</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Unique IDs count: <span class="hljs-subst">${uniqueIds.length}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Coffee price: <span class="hljs-subst">${prices[<span class="hljs-string">&#x27;Coffee&#x27;</span>]}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Fruits: [Apple, Banana]
+Unique IDs count: 2
+Coffee price: 3.75
+    </div>
+  </section>
+
+  <!-- Section 9 -->
+  <section id="section-9">
+    <h2>9. Type Constraints with `extends` (&lt;T extends num&gt;)</h2>
+    <p>Sometimes, an unconstrained generic <code>&lt;T&gt;</code> is too broad. If you want to write a mathematical function, you cannot call addition <code>+</code> or comparisons <code>&lt;</code> on an arbitrary <code>T</code> because strings or booleans don't support numeric operations.</p>
+    <p>To restrict allowable types, use the <code>extends</code> keyword in the type parameter declaration: <code>&lt;T extends num&gt;</code>. This restricts <code>T</code> strictly to <code>num</code>, <code>int</code>, or <code>double</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="260" height="38" rx="6" fill="#0175C2"/>
+        <text x="150" y="32" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">&lt;T extends num&gt;</text>
+        <path d="M290 27 L340 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="350" y="8" width="190" height="38" rx="5" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="445" y="24" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle" font-family="sans-serif">Allowed Types:</text>
+        <text x="445" y="38" font-size="10" fill="#15803D" text-anchor="middle" font-family="monospace">int, double</text>
+        <rect x="560" y="8" width="220" height="38" rx="5" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="670" y="24" font-size="10" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="sans-serif">Compile-Time Error:</text>
+        <text x="670" y="38" font-size="10" fill="#B91C1C" text-anchor="middle" font-family="monospace">String, bool, User</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.9: Type bounds restrict T to num and its subclasses int and double.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>bounded_clamp.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// T is constrained to num, allowing  operators</span>
+T clampValue(T val, T min, T max) {
+  <span class="hljs-keyword">if</span> (val  max) <span class="hljs-keyword">return</span> max;
+  <span class="hljs-keyword">return</span> val;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">int</span> boundedInt = clampValue(<span class="hljs-number">15</span>, <span class="hljs-number">0</span>, <span class="hljs-number">10</span>);
+  <span class="hljs-built_in">double</span> boundedDouble = clampValue(<span class="hljs-number">2.4</span>, <span class="hljs-number">5.0</span>, <span class="hljs-number">10.0</span>);
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Bounded Int (15 -&gt; 0..10): <span class="hljs-subst">$boundedInt</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Bounded Double (2.4 -&gt; 5.0..10.0): <span class="hljs-subst">$boundedDouble</span>&quot;</span>);
+
+  <span class="hljs-comment">// clampValue(&quot;hello&quot;, &quot;a&quot;, &quot;z&quot;); // COMPILE ERROR: String does not extend num!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Bounded Int (15 -> 0..10): 10
+Bounded Double (2.4 -> 5.0..10.0): 5.0
+    </div>
+  </section>
+
+  <!-- Section 10 -->
+  <section id="section-10">
+    <h2>10. Custom Class Hierarchy Constraints (&lt;T extends Animal&gt;)</h2>
+    <p>Type constraints work with your own custom classes and abstract interfaces. When you constrain <code>&lt;T extends Animal&gt;</code>, the Dart compiler guarantees that any instance of <code>T</code> contains all methods and properties defined in <code>Animal</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="130" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">&lt;T extends Animal&gt;</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="210" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="425" y="32" font-size="11" font-weight="700" fill="#166534" text-anchor="middle" font-family="sans-serif">Dog, Cat (Valid Subtypes)</text>
+        <path d="M540 27 L600 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="610" y="8" width="170" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="695" y="32" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">Can call item.speak()</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.10: AnimalShelter accepts Dog and Cat but rejects unrelated classes.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>animal_shelter.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-built_in">String</span> <span class="hljs-keyword">get</span> name;
+  <span class="hljs-keyword">void</span> speak();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-meta">@override</span> <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> name;
+  Dog(<span class="hljs-keyword">this</span>.name);
+  <span class="hljs-meta">@override</span> <span class="hljs-keyword">void</span> speak() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;<span class="hljs-subst">$name</span> says: Woof! 🐶&quot;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cat</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-meta">@override</span> <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> name;
+  Cat(<span class="hljs-keyword">this</span>.name);
+  <span class="hljs-meta">@override</span> <span class="hljs-keyword">void</span> speak() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;<span class="hljs-subst">$name</span> says: Meow! 🐱&quot;</span>);
+}
+
+<span class="hljs-comment">// Bounded generic class</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AnimalShelter</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> _residents = [];
+  <span class="hljs-keyword">void</span> adopt(T animal) =&gt; _residents.add(animal);
+  <span class="hljs-keyword">void</span> callRoll() {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> a <span class="hljs-keyword">in</span> _residents) {
+      a.speak(); <span class="hljs-comment">// Compiler knows .speak() exists on T!</span>
+    }
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> dogShelter = AnimalShelter();
+  dogShelter.adopt(Dog(<span class="hljs-string">&quot;Buddy&quot;</span>));
+  dogShelter.adopt(Dog(<span class="hljs-string">&quot;Max&quot;</span>));
+  dogShelter.callRoll();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Buddy says: Woof! 🐶
+Max says: Woof! 🐶
+    </div>
+  </section>
+
+  <!-- Section 11 -->
+  <section id="section-11">
+    <h2>11. Generic Interfaces and Abstract Classes</h2>
+    <p>In clean software architecture, interfaces declare generic contracts for data access, persistence, and caching. Classes implement these interfaces by either binding to a concrete type or propagating the generic type.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="280" height="38" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="160" y="24" font-size="11" font-weight="700" fill="#0175C2" text-anchor="middle" font-family="sans-serif">abstract class Repository&lt;T&gt;</text>
+        <text x="160" y="38" font-size="9" fill="#64748B" text-anchor="middle" font-family="monospace">T? getById(int id); void add(T item);</text>
+        <path d="M310 27 L380 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="390" y="8" width="390" height="38" rx="6" fill="#0175C2"/>
+        <text x="585" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">class UserRepo implements Repository&lt;User&gt;</text>
+        <text x="585" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="monospace">User? getById(int id); void add(User item);</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.11: Generic Repository interface implemented by InMemoryRepository.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_repo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Repository</span> </span>{
+  <span class="hljs-keyword">void</span> add(T item);
+  T? getById(<span class="hljs-built_in">int</span> id);
+  <span class="hljs-built_in">List</span> getAll();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InMemoryRepo</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">Repository</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> _storage = [];
+  
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-keyword">void</span> add(T item) =&gt; _storage.add(item);
+  
+  <span class="hljs-meta">@override</span>
+  T? getById(<span class="hljs-built_in">int</span> id) =&gt; (id &gt;= <span class="hljs-number">0</span> &amp;&amp; id  getAll() =&gt; <span class="hljs-built_in">List</span>.unmodifiable(_storage);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> repo = InMemoryRepo();
+  repo.add(<span class="hljs-string">&quot;Flutter&quot;</span>);
+  repo.add(<span class="hljs-string">&quot;Dart&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Items: <span class="hljs-subst">${repo.getAll()}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Item 0: <span class="hljs-subst">${repo.getById(<span class="hljs-number">0</span>)}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Items: [Flutter, Dart]
+Item 0: Flutter
+    </div>
+  </section>
+
+  <!-- Section 12 -->
+  <section id="section-12">
+    <h2>12. Generics and Inheritance (ChildBox&lt;T&gt; extends Box&lt;T&gt;)</h2>
+    <p>When a subclass extends a generic parent class, it has two choices:
+      <ol>
+        <li><strong>Propagate the generic parameter:</strong> <code>class GiftBox&lt;T&gt; extends Box&lt;T&gt;</code></li>
+        <li><strong>Bind the parent parameter to a concrete type:</strong> <code>class StringBox extends Box&lt;String&gt;</code></li>
+      </ol>
+    </p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="140" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Base: Box&lt;T&gt;</text>
+        <path d="M260 27 L330 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="340" y="8" width="430" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="555" y="24" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">class GiftBox&lt;T&gt; extends Box&lt;T&gt;</text>
+        <text x="555" y="38" font-size="9" fill="#0369A1" text-anchor="middle" font-family="sans-serif">Passes type parameter T directly down to parent super constructor</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.12: Propagating generic parameters through class inheritance hierarchies.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_inheritance.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Box</span> </span>{
+  <span class="hljs-keyword">final</span> T content;
+  Box(<span class="hljs-keyword">this</span>.content);
+}
+
+<span class="hljs-comment">// Option 1: Keep it generic and forward to super</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GiftBox</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Box</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> ribbonColor;
+  GiftBox(<span class="hljs-keyword">super</span>.content, <span class="hljs-keyword">this</span>.ribbonColor);
+
+  <span class="hljs-meta">@override</span>
+  <span class="hljs-built_in">String</span> toString() =&gt; <span class="hljs-string">&quot;GiftBox [<span class="hljs-subst">$ribbonColor</span> ribbon, item: <span class="hljs-subst">$content</span>]&quot;</span>;
+}
+
+<span class="hljs-comment">// Option 2: Bind parent to a concrete type</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">IntCounterBox</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Box</span> </span>{
+  IntCounterBox(<span class="hljs-keyword">super</span>.content);
+  <span class="hljs-built_in">int</span> next() =&gt; content + <span class="hljs-number">1</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> watch = GiftBox(<span class="hljs-string">&quot;Gold Watch&quot;</span>, <span class="hljs-string">&quot;Crimson&quot;</span>);
+  <span class="hljs-keyword">var</span> counter = IntCounterBox(<span class="hljs-number">99</span>);
+
+  <span class="hljs-built_in">print</span>(watch);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Counter content: <span class="hljs-subst">${counter.content}</span>, Next: <span class="hljs-subst">${counter.next()}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+GiftBox [Crimson ribbon, item: Gold Watch]
+Counter content: 99, Next: 100
+    </div>
+  </section>
+
+  <!-- Section 13 -->
+  <section id="section-13">
+    <h2>13. Generic Type Aliases / Typedefs</h2>
+    <p>Dart allows declaring type aliases for function signatures and complex types using <code>typedef</code>. When combined with generics, typedefs make higher-order function parameters clean, concise, and easy to read.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="11" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#F43F5E">typedef </tspan>
+          <tspan fill="#C084FC">Transformer</tspan>
+          <tspan fill="#FBBF24">&lt;T&gt; </tspan>
+          <tspan fill="#F8FAFC">= </tspan>
+          <tspan fill="#FBBF24">T </tspan>
+          <tspan fill="#F43F5E">Function</tspan>
+          <tspan fill="#F8FAFC">(</tspan>
+          <tspan fill="#FBBF24">T </tspan>
+          <tspan fill="#94A3B8">input</tspan>
+          <tspan fill="#F8FAFC">);</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.13: Generic typedef Transformer&lt;T&gt; defines a clean function contract.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>generic_typedefs.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Generic type alias for a transformation function</span>
+<span class="hljs-keyword">typedef</span> Transformer = T <span class="hljs-built_in">Function</span>(T input);
+<span class="hljs-keyword">typedef</span> Mapper = R <span class="hljs-built_in">Function</span>(T input);
+
+<span class="hljs-built_in">List</span> mapList(<span class="hljs-built_in">List</span> source, Mapper mapper) {
+  <span class="hljs-keyword">return</span> [ <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> item <span class="hljs-keyword">in</span> source) mapper(item) ];
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Transformer square = (n) =&gt; n * n;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Squared 6: <span class="hljs-subst">${square(<span class="hljs-number">6</span>)}</span>&quot;</span>);
+
+  Mapper stringify = (n) =&gt; <span class="hljs-string">&quot;Score #<span class="hljs-subst">$n</span>&quot;</span>;
+  <span class="hljs-keyword">var</span> results = mapList([<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>], stringify);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Mapped results: <span class="hljs-subst">$results</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Squared 6: 36
+Mapped results: [Score #10, Score #20, Score #30]
+    </div>
+  </section>
+
+  <!-- Section 14 -->
+  <section id="section-14">
+    <h2>14. Generics and Null Safety</h2>
+    <p>In Dart's sound null safety system, understanding how generic type parameters interact with null is crucial:
+      <ul>
+        <li><code>&lt;T&gt;</code>: By default, <code>T</code> is bounded by <code>Object?</code>, meaning <code>T</code> can be instantiated as either a nullable or non-nullable type (e.g. <code>Box&lt;int&gt;</code> or <code>Box&lt;int?&gt;</code>).</li>
+        <li><code>&lt;T extends Object&gt;</code>: Explicitly forbids <code>null</code>. The caller can <strong>only</strong> supply non-nullable types.</li>
+        <li><code>T?</code>: Explicitly designates that the value can be <code>null</code>, regardless of whether <code>T</code> itself is nullable.</li>
+      </ul>
+    </p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="230" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="25" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">&lt;T&gt;</text>
+        <text x="135" y="37" font-size="8.5" fill="#0369A1" text-anchor="middle" font-family="sans-serif">T can be nullable or non-nullable</text>
+        <rect x="270" y="10" width="240" height="34" rx="5" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="390" y="25" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle" font-family="monospace">&lt;T extends Object&gt;</text>
+        <text x="390" y="37" font-size="8.5" fill="#166534" text-anchor="middle" font-family="sans-serif">Strictly Non-Nullable only</text>
+        <rect x="530" y="10" width="250" height="34" rx="5" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="655" y="25" font-size="10" font-weight="700" fill="#B45309" text-anchor="middle" font-family="monospace">&lt;T extends Object?&gt;</text>
+        <text x="655" y="37" font-size="8.5" fill="#92400E" text-anchor="middle" font-family="sans-serif">Explicitly allows null</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.14: Nullable bounds vs strictly non-nullable bounds with Object.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>null_safe_generics.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Strictly non-nullable: T cannot be int? or String?</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StrictContainer</span> </span>{
+  <span class="hljs-keyword">final</span> T item;
+  StrictContainer(<span class="hljs-keyword">this</span>.item);
+}
+
+<span class="hljs-comment">// Permissive: allows null values via T?</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">NullableHolder</span> </span>{
+  <span class="hljs-keyword">final</span> T? item;
+  NullableHolder([<span class="hljs-keyword">this</span>.item]);
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> hasValue =&gt; item != <span class="hljs-keyword">null</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> validStrict = StrictContainer(<span class="hljs-string">&quot;Clean&quot;</span>);
+  <span class="hljs-comment">// StrictContainer(null); // COMPILE ERROR: String? doesn&#x27;t extend Object</span>
+
+  <span class="hljs-keyword">var</span> holder1 = NullableHolder(<span class="hljs-number">42</span>);
+  <span class="hljs-keyword">var</span> holder2 = NullableHolder();
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Strict item: <span class="hljs-subst">${validStrict.item}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Holder1 hasValue: <span class="hljs-subst">${holder1.hasValue}</span>, val: <span class="hljs-subst">${holder1.item}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Holder2 hasValue: <span class="hljs-subst">${holder2.hasValue}</span>, val: <span class="hljs-subst">${holder2.item}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Strict item: Clean
+Holder1 hasValue: true, val: 42
+Holder2 hasValue: false, val: null
+    </div>
+  </section>
+
+  <!-- Section 15 -->
+  <section id="section-15">
+    <h2>15. Nested Generics (List&lt;List&lt;int&gt;&gt;, Map&lt;String, List&lt;T&gt;&gt;)</h2>
+    <p>Generic types can be nested to arbitrary depths. Dart preserves full static type safety across every layer of nesting, ensuring full IDE autocompletion and compiler checks.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#02569B" font-family="sans-serif">Nested Generic Structures:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">Map&lt;String, List&lt;int&gt;&gt; studentScores = {'Alice': [95, 88], 'Bob': [78, 92]};</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.15: Nested collections maintain type safety through every inner tier.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>nested_generics.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// Nested Matrix: List of Lists of ints</span>
+  <span class="hljs-built_in">List</span>&gt; matrix = [
+    [<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>],
+    [<span class="hljs-number">4</span>, <span class="hljs-number">5</span>, <span class="hljs-number">6</span>],
+  ];
+
+  <span class="hljs-comment">// Grouped map: String key to List of Doubles</span>
+  <span class="hljs-built_in">Map</span>&gt; studentGrades = {
+    <span class="hljs-string">&quot;Alice&quot;</span>: [<span class="hljs-number">92.0</span>, <span class="hljs-number">88.5</span>, <span class="hljs-number">95.0</span>],
+    <span class="hljs-string">&quot;Bob&quot;</span>: [<span class="hljs-number">78.0</span>, <span class="hljs-number">82.5</span>],
+  };
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Matrix row 1, col 2: <span class="hljs-subst">${matrix[<span class="hljs-number">1</span>][<span class="hljs-number">2</span>]}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Alice 1st score: <span class="hljs-subst">${studentGrades[<span class="hljs-string">&#x27;Alice&#x27;</span>]?.first}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Matrix row 1, col 2: 6
+Alice 1st score: 92.0
+    </div>
+  </section>
+
+  <!-- Section 16 -->
+  <section id="section-16">
+    <h2>16. Generics Covariance in Dart (List Covariance &amp; Runtime Safety)</h2>
+    <p>In Dart, generic classes are <strong>covariant</strong> by default. This means that if <code>Dog</code> is a subtype of <code>Animal</code>, then <code>List&lt;Dog&gt;</code> is considered a subtype of <code>List&lt;Animal&gt;</code>.</p>
+    <p>While this is convenient for reading collections, it creates a subtle runtime hazard when mutating collections:</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="250" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="145" y="24" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">List&lt;Dog&gt; as List&lt;Animal&gt;</text>
+        <text x="145" y="38" font-size="9" fill="#0369A1" text-anchor="middle" font-family="sans-serif">Allowed at compile time (covariant)</text>
+        <path d="M280 27 L350 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="360" y="8" width="420" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="570" y="24" font-size="10" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="sans-serif">animals.add(Cat()) throws TypeError at Runtime!</text>
+        <text x="570" y="38" font-size="9" fill="#991B1B" text-anchor="middle" font-family="sans-serif">The underlying runtime backing array is still restricted to Dog</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.16: Dart covariance allows assignment, but invalid runtime mutations throw a TypeError.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>covariance_demo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{}
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{}
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cat</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> dogs = [Dog()];
+  
+  <span class="hljs-comment">// Allowed at compile time due to covariance:</span>
+  <span class="hljs-built_in">List</span> animals = dogs;
+  
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Animals length: <span class="hljs-subst">${animals.length}</span>&quot;</span>);
+
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-comment">// Runtime failure: animals is actually backed by a List!</span>
+    animals.add(Cat());
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Caught Expected Runtime Error: <span class="hljs-subst">${e.runtimeType}</span>&quot;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Animals length: 1
+Caught Expected Runtime Error: TypeError
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Architectural Note on Covariance</div>
+      If a method only <em>reads</em> items from a generic collection, covariance is completely safe. But if you mutate collections received as parameters, ensure the underlying collection type matches the elements being added, or use defensive copies like <code>List.of(items)</code>.
+    </div>
+  </section>
+
+  <!-- Section 17 -->
+  <section id="section-17">
+    <h2>17. Runtime Type Inspection with Generics (is T, Type)</h2>
+    <p>Unlike languages with type erasure (like Java), Dart retains <strong>reified types</strong> at runtime. You can check if an object is an instance of <code>T</code> using <code>is T</code>, print <code>T.toString()</code>, or compare type tokens directly.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#0F172A" font-family="sans-serif">Runtime Type Inspection with Generics:</text>
+        <text x="40" y="38" font-size="10" fill="#02569B" font-family="monospace">if (item is T) { print("Type matches $T!"); } print(T == int);</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.17: Reified types allow runtime introspection in Dart.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>reified_generics.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Inspector</span> </span>{
+  <span class="hljs-built_in">bool</span> check(<span class="hljs-built_in">Object</span> item) {
+    <span class="hljs-keyword">return</span> item <span class="hljs-keyword">is</span> T; <span class="hljs-comment">// Checked at runtime!</span>
+  }
+
+  <span class="hljs-keyword">void</span> describe() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Inspector configured for type parameter: <span class="hljs-subst">$T</span>&quot;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> stringInspector = Inspector();
+  stringInspector.describe();
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Is &#x27;Hello&#x27; a String? <span class="hljs-subst">${stringInspector.check(<span class="hljs-string">&#x27;Hello&#x27;</span>)}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Is 42 a String? <span class="hljs-subst">${stringInspector.check(<span class="hljs-number">42</span>)}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Inspector configured for type parameter: String
+Is 'Hello' a String? true
+Is 42 a String? false
+    </div>
+  </section>
+
+  <!-- Section 18 -->
+  <section id="section-18">
+    <h2>18. Generic Default Types and Local Type Inference</h2>
+    <p>Dart features powerful local type inference. In almost all situations, you do not need to explicitly write <code>Box&lt;int&gt;(42)</code>. Writing <code>Box(42)</code> causes the Dart compiler to automatically infer <code>Box&lt;int&gt;</code> based on the argument passed.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#0175C2"/>
+        <text x="200" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Type Inference &amp; Fallbacks:</text>
+        <text x="200" y="38" font-size="9.5" fill="#E0F2FE" text-anchor="middle" font-family="monospace">var box = Box(42); // Infers Box&lt;int&gt;</text>
+        <rect x="400" y="8" width="380" height="38" rx="6" fill="#02569B"/>
+        <text x="590" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Unspecified Fallback:</text>
+        <text x="590" y="38" font-size="9.5" fill="#99F6E4" text-anchor="middle" font-family="monospace">Box&lt;dynamic&gt; or upper bound bound type</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.18: Dart automatically deduces type parameters through contextual inference.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>type_inference.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Holder</span> </span>{
+  <span class="hljs-keyword">final</span> T data;
+  Holder(<span class="hljs-keyword">this</span>.data);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// Inferred as Holder</span>
+  <span class="hljs-keyword">var</span> h1 = Holder(<span class="hljs-string">&quot;Flutter&quot;</span>);
+  
+  <span class="hljs-comment">// Inferred as Holder&gt;</span>
+  <span class="hljs-keyword">var</span> h2 = Holder([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]);
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;h1 type: <span class="hljs-subst">${h1.runtimeType}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;h2 type: <span class="hljs-subst">${h2.runtimeType}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+h1 type: Holder&lt;String&gt;
+h2 type: Holder&lt;List&lt;int&gt;&gt;
+    </div>
+  </section>
+
+  <!-- Section 19 -->
+  <section id="section-19">
+    <h2>19. 6 Practical Real-World Patterns with Generics</h2>
+    <p>Here are 6 production-grade patterns showcasing how generics power enterprise Flutter and Dart applications.</p>
+
+    <h3>19.1 Pattern 1: Generic Result / ApiResponse (Railway Oriented Programming)</h3>
+    <p>Representing success or failure cleanly without throwing unhandled exceptions.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="130" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">sealed class Result&lt;T&gt;</text>
+        <path d="M250 27 L300 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="310" y="8" width="220" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="420" y="32" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle" font-family="monospace">Success&lt;T&gt;(T data)</text>
+        <rect x="550" y="8" width="230" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="665" y="32" font-size="11" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="monospace">Failure&lt;T&gt;(String error)</text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern1_result.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>sealed <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Result</span> </span>{
+  <span class="hljs-keyword">const</span> Result();
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Success</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Result</span> </span>{
+  <span class="hljs-keyword">final</span> T data;
+  <span class="hljs-keyword">const</span> Success(<span class="hljs-keyword">this</span>.data);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Failure</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Result</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> errorMessage;
+  <span class="hljs-keyword">const</span> Failure(<span class="hljs-keyword">this</span>.errorMessage);
+}
+
+Result fetchUserAge(<span class="hljs-built_in">bool</span> online) {
+  <span class="hljs-keyword">if</span> (online) <span class="hljs-keyword">return</span> Success(<span class="hljs-number">26</span>);
+  <span class="hljs-keyword">return</span> Failure(<span class="hljs-string">&quot;Network connection lost&quot;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> outcome = fetchUserAge(<span class="hljs-keyword">true</span>);
+  <span class="hljs-keyword">switch</span> (outcome) {
+    <span class="hljs-keyword">case</span> Success(:<span class="hljs-keyword">final</span> data):
+      <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Loaded Age: <span class="hljs-subst">$data</span>&quot;</span>);
+    <span class="hljs-keyword">case</span> Failure(:<span class="hljs-keyword">final</span> errorMessage):
+      <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Error: <span class="hljs-subst">$errorMessage</span>&quot;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Loaded Age: 26
+    </div>
+
+    <h3>19.2 Pattern 2: Generic Cache Store (Key-Value In-Memory Storage)</h3>
+    <p>A type-safe key-value cache with eviction or expiration support.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#0175C2" font-family="sans-serif">Generic Cache Pattern:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">class Cache&lt;K, V&gt; { final Map&lt;K, V&gt; _store = {}; V? get(K key); void put(K key, V val); }</text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern2_cache.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Cache</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">Map</span> _entries = {};
+
+  <span class="hljs-keyword">void</span> put(K key, V value) =&gt; _entries[key] = value;
+  V? <span class="hljs-keyword">get</span>(K key) =&gt; _entries[key];
+  <span class="hljs-built_in">bool</span> contains(K key) =&gt; _entries.containsKey(key);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> tokenCache = Cache();
+  tokenCache.put(<span class="hljs-string">&quot;auth&quot;</span>, <span class="hljs-string">&quot;eyJhbGciOi...&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Token cached: <span class="hljs-subst">${tokenCache.get(<span class="hljs-string">&#x27;auth&#x27;</span>)}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Token cached: eyJhbGciOi...
+    </div>
+
+    <h3>19.3 Pattern 3: Generic CrudRepository Pattern</h3>
+    <p>Standard data abstraction used in Clean Architecture Flutter apps.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="10.5" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#F43F5E">abstract class </tspan>
+          <tspan fill="#C084FC">CrudRepository</tspan>
+          <tspan fill="#FBBF24">&lt;T, ID&gt; </tspan>
+          <tspan fill="#F8FAFC">{ Future&lt;T?&gt; findById(ID id); Future&lt;void&gt; save(T entity); }</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern3_crud.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CrudRepository</span> </span>{
+  <span class="hljs-keyword">void</span> save(T entity);
+  T? findById(ID id);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserProfile</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">int</span> id;
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> username;
+  UserProfile(<span class="hljs-keyword">this</span>.id, <span class="hljs-keyword">this</span>.username);
+  <span class="hljs-meta">@override</span> <span class="hljs-built_in">String</span> toString() =&gt; <span class="hljs-string">&quot;User(<span class="hljs-subst">$id</span>: <span class="hljs-subst">$username</span>)&quot;</span>;
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserRepo</span> <span class="hljs-keyword">implements</span> <span class="hljs-title">CrudRepository</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">Map</span> _db = {};
+  <span class="hljs-meta">@override</span> <span class="hljs-keyword">void</span> save(UserProfile entity) =&gt; _db[entity.id] = entity;
+  <span class="hljs-meta">@override</span> UserProfile? findById(<span class="hljs-built_in">int</span> id) =&gt; _db[id];
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> repo = UserRepo();
+  repo.save(UserProfile(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;alice_coder&quot;</span>));
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Found: <span class="hljs-subst">${repo.findById(<span class="hljs-number">1</span>)}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Found: User(1: alice_coder)
+    </div>
+
+    <h3>19.4 Pattern 4: Numeric Clamping with &lt;T extends num&gt;</h3>
+    <p>Reusable mathematical functions restricted to numeric types.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#02569B" font-family="sans-serif">Bounded Math Operations:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">T clamp&lt;T extends num&gt;(T val, T min, T max) =&gt; val &lt; min ? min : (val &gt; max ? max : val);</text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern4_math.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>T clampNumber(T value, T minVal, T maxVal) {
+  <span class="hljs-keyword">if</span> (value  maxVal) <span class="hljs-keyword">return</span> maxVal;
+  <span class="hljs-keyword">return</span> value;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Clamped int: <span class="hljs-subst">${clampNumber(<span class="hljs-number">150</span>, <span class="hljs-number">0</span>, <span class="hljs-number">100</span>)}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Clamped double: <span class="hljs-subst">${clampNumber(<span class="hljs-number">-4.5</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">10.0</span>)}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Clamped int: 100
+Clamped double: 0.0
+    </div>
+
+    <h3>19.5 Pattern 5: Generic Stack Data Structure (LIFO)</h3>
+    <p>A classic computer science stack supporting type-safe push, pop, and peek.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Stack&lt;T&gt;</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="210" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="425" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">push(T item) [LIFO]</text>
+        <path d="M540 27 L600 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="610" y="8" width="170" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="695" y="32" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">T pop()</text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern5_stack.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Stack</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> _items = [];
+
+  <span class="hljs-keyword">void</span> push(T item) =&gt; _items.add(item);
+  T pop() {
+    <span class="hljs-keyword">if</span> (_items.isEmpty) <span class="hljs-keyword">throw</span> StateError(<span class="hljs-string">&quot;Stack empty&quot;</span>);
+    <span class="hljs-keyword">return</span> _items.removeLast();
+  }
+  T <span class="hljs-keyword">get</span> peek =&gt; _items.last;
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> isEmpty =&gt; _items.isEmpty;
+  <span class="hljs-built_in">int</span> <span class="hljs-keyword">get</span> size =&gt; _items.length;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> callStack = Stack();
+  callStack.push(<span class="hljs-string">&quot;main()&quot;</span>);
+  callStack.push(<span class="hljs-string">&quot;fetchData()&quot;</span>);
+  callStack.push(<span class="hljs-string">&quot;parseJson()&quot;</span>);
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Top function: <span class="hljs-subst">${callStack.peek}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Popped: <span class="hljs-subst">${callStack.pop()}</span>&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Remaining size: <span class="hljs-subst">${callStack.size}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Top function: parseJson()
+Popped: parseJson()
+Remaining size: 2
+    </div>
+
+    <h3>19.6 Pattern 6: Generic Event Bus / Notification Handler</h3>
+    <p>Dispatching and listening to typed events in modern reactive architectures.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#6366F1" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#4338CA" font-family="sans-serif">Type-Safe Event Listener Pattern:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">void on&lt;E extends Event&gt;(void Function(E event) listener) { ... }</text>
+      </svg>
+    </div>
+    <div class="code-card">
+      <div class="code-header"><span>pattern6_eventbus.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">abstract</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppEvent</span> </span>{}
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserLoggedIn</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">AppEvent</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> username;
+  UserLoggedIn(<span class="hljs-keyword">this</span>.username);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SimpleEventBus</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> _listeners = [];
+
+  <span class="hljs-keyword">void</span> <span class="hljs-keyword">on</span>(<span class="hljs-keyword">void</span> <span class="hljs-built_in">Function</span>(E event) callback) {
+    _listeners.add((e) {
+      <span class="hljs-keyword">if</span> (e <span class="hljs-keyword">is</span> E) callback(e);
+    });
+  }
+
+  <span class="hljs-keyword">void</span> emit(AppEvent event) {
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> l <span class="hljs-keyword">in</span> _listeners) {
+      l(event);
+    }
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> bus = SimpleEventBus();
+  bus.<span class="hljs-keyword">on</span>((e) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Event received: Welcome <span class="hljs-subst">${e.username}</span>!&quot;</span>));
+  bus.emit(UserLoggedIn(<span class="hljs-string">&quot;Sarah_Dev&quot;</span>));
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Event received: Welcome Sarah_Dev!
+    </div>
+  </section>
+
+  <!-- Section 20 -->
+  <section id="section-20">
+    <h2>20. Common Mistakes &amp; Anti-Patterns with Generics</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="35" y="24" font-size="10" font-weight="700" fill="#B91C1C" font-family="sans-serif">Anti-Pattern: Manual Casts (as T)</text>
+        <text x="35" y="38" font-size="9" fill="#991B1B" font-family="sans-serif">Bypasses compiler safety; causes runtime exceptions</text>
+        <rect x="400" y="8" width="380" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="415" y="24" font-size="10" font-weight="700" fill="#15803D" font-family="sans-serif">Best Practice: Bounded Generics</text>
+        <text x="415" y="38" font-size="9" fill="#166534" font-family="sans-serif">Use &lt;T extends SuperClass&gt; to access members safely</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.20: Avoid dangerous anti-patterns when using generics in Dart.</div>
+
+    <ul>
+      <li><strong>Anti-Pattern 1: Casting raw values to <code>as T</code>:</strong> Never do <code>value as T</code> without checking <code>if (value is T)</code>. Blindly casting defeats the entire point of generics.</li>
+      <li><strong>Anti-Pattern 2: Unnecessary Generics:</strong> If a class or method only ever deals with <code>String</code>, do not add <code>&lt;T&gt;</code> just to make it look advanced. Generics add complexity; only use them when true polymorphism across multiple types is needed.</li>
+      <li><strong>Anti-Pattern 3: Forgetting Type Bounds:</strong> Writing <code>&lt;T&gt;</code> and then trying to call <code>item.toJson()</code> or <code>item &gt; 0</code> causes compile errors. Always constrain with <code>&lt;T extends DesiredClass&gt;</code> when specific methods are required.</li>
+      <li><strong>Anti-Pattern 4: Mutating Covariant Collections:</strong> Storing a <code>List&lt;Cat&gt;</code> into a <code>List&lt;Animal&gt;</code> variable and attempting to insert a <code>Dog</code> crashes at runtime.</li>
+    </ul>
+  </section>
+
+  <!-- Section 21 -->
+  <section id="section-21">
+    <h2>21. Best Practices &amp; Design Guidelines</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="240" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="140" y="32" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Prefer Single Letter Names (T, E)</text>
+        <rect x="280" y="10" width="230" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="395" y="32" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Constrain Non-Null: T extends Object</text>
+        <rect x="530" y="10" width="250" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="655" y="32" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Leverage Local Type Inference</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.21: Summary of key best practice rules for Dart Generics.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Principle</th>
+          <th>Rule</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Naming</strong></td>
+          <td>Use single uppercase letters (<code>T</code>, <code>E</code>, <code>K</code>, <code>V</code>)</td>
+          <td>Follows Dart style guide; clearly distinguishes type parameters from regular classes.</td>
+        </tr>
+        <tr>
+          <td><strong>Null Safety</strong></td>
+          <td>Use <code>&lt;T extends Object&gt;</code> for non-nullable types</td>
+          <td>Prevents accidental null assignments at compile time.</td>
+        </tr>
+        <tr>
+          <td><strong>Inference</strong></td>
+          <td>Let the compiler infer type arguments where obvious</td>
+          <td>Reduces boilerplate; writing <code>Box(10)</code> is cleaner than <code>Box&lt;int&gt;(10)</code>.</td>
+        </tr>
+        <tr>
+          <td><strong>Const Safety</strong></td>
+          <td>Provide <code>const</code> constructors for generic data holders</td>
+          <td>Enables compile-time canonicalization and optimal Flutter widget rebuild performance.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 22 -->
+  <section id="section-22">
+    <h2>22. Output Prediction Challenges</h2>
+    <p>Test your understanding of generic type resolution, inference, and runtime bounds with these 3 challenges:</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="11" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#FBBF24">Challenge: </tspan>
+          <tspan fill="#F8FAFC">Trace type substitutions through generic functions, bounds, and lists!</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.22: Predict the output before opening the solution drawers.</div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 1: Generic Type Argument Resolution</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>T echo(T value) =&gt; value;
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> a = echo(<span class="hljs-number">10</span>);
+  <span class="hljs-keyword">var</span> b = echo(<span class="hljs-string">&quot;CodeVerse&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;<span class="hljs-subst">${a.runtimeType}</span> | <span class="hljs-subst">${b.runtimeType}</span>&quot;</span>);
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>int | String</code><br>
+          <strong>Explanation:</strong> Dart infers <code>T = int</code> for <code>echo(10)</code> and <code>T = String</code> for <code>echo("CodeVerse")</code>, preserving their exact runtime types.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 2: Type Bound Rejection</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Measurer</span> </span>{
+  <span class="hljs-keyword">final</span> T val;
+  Measurer(<span class="hljs-keyword">this</span>.val);
+  <span class="hljs-built_in">bool</span> isPositive() =&gt; val &gt; <span class="hljs-number">0</span>;
+}
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> m = Measurer(<span class="hljs-number">4.5</span>);
+  <span class="hljs-built_in">print</span>(m.isPositive());
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>true</code><br>
+          <strong>Explanation:</strong> <code>4.5</code> is a <code>double</code>, which extends <code>num</code>. The condition <code>4.5 &gt; 0</code> evaluates safely to <code>true</code>.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 3: Generic Equality Check</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">bool</span> isSameType() =&gt; A == B;
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">print</span>(isSameType());
+  <span class="hljs-built_in">print</span>(isSameType());
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>false</code> followed by <code>true</code><br>
+          <strong>Explanation:</strong> Even though <code>int</code> extends <code>num</code>, they are not the identical type symbol (<code>int != num</code>). In the second call, both types are identical (<code>String == String</code>).
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Section 23 -->
+  <section id="section-23">
+    <h2>23. Interactive Practice Exercises</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="230" height="34" rx="5" fill="#0175C2"/>
+        <text x="135" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Level 1: Generic Pair &amp; Swapper</text>
+        <rect x="270" y="10" width="240" height="34" rx="5" fill="#02569B"/>
+        <text x="390" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Level 2: Bounded Cache Store</text>
+        <rect x="530" y="10" width="250" height="34" rx="5" fill="#00B4AB"/>
+        <text x="655" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Level 3: Generic Pipeline</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.23: Progressive hands-on exercises from Beginner to Advanced.</div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 1 (Beginner): Generic Swap Function</div>
+      <p>Write a generic function <code>Pair&lt;T, T&gt; swap&lt;T&gt;(T a, T b)</code> that accepts two values of the same type and returns a <code>Pair</code> with their positions reversed.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pair</span> </span>{
+  <span class="hljs-keyword">final</span> T first;
+  <span class="hljs-keyword">final</span> U second;
+  Pair(<span class="hljs-keyword">this</span>.first, <span class="hljs-keyword">this</span>.second);
+}
+
+Pair swap(T a, T b) =&gt; Pair(b, a);
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> p = swap(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;<span class="hljs-subst">${p.first}</span>, <span class="hljs-subst">${p.second}</span>&quot;</span>); <span class="hljs-comment">// 20, 10</span>
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 2 (Intermediate): Bounded Key-Value Storage</div>
+      <p>Create a class <code>NumericRegistry&lt;T extends num&gt;</code> that maintains a list of numbers and provides an <code>average()</code> method returning a <code>double</code>.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">NumericRegistry</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> _values = [];
+  <span class="hljs-keyword">void</span> add(T val) =&gt; _values.add(val);
+  <span class="hljs-built_in">double</span> average() {
+    <span class="hljs-keyword">if</span> (_values.isEmpty) <span class="hljs-keyword">return</span> <span class="hljs-number">0.0</span>;
+    <span class="hljs-built_in">double</span> sum = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> v <span class="hljs-keyword">in</span> _values) sum += v;
+    <span class="hljs-keyword">return</span> sum / _values.length;
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> reg = NumericRegistry();
+  reg.add(<span class="hljs-number">10</span>);
+  reg.add(<span class="hljs-number">20</span>);
+  <span class="hljs-built_in">print</span>(reg.average()); <span class="hljs-comment">// 15.0</span>
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 3 (Advanced): Type-Safe Processing Pipeline</div>
+      <p>Create a class <code>Pipeline&lt;T&gt;</code> that stores an initial value of type <code>T</code> and allows chaining transformations <code>Pipeline&lt;R&gt; transform&lt;R&gt;(R Function(T) func)</code>.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Pipeline</span> </span>{
+  <span class="hljs-keyword">final</span> T value;
+  Pipeline(<span class="hljs-keyword">this</span>.value);
+
+  Pipeline transform(R <span class="hljs-built_in">Function</span>(T) fn) {
+    <span class="hljs-keyword">return</span> Pipeline(fn(value));
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">var</span> result = Pipeline(<span class="hljs-number">5</span>)
+      .transform((n) =&gt; n * <span class="hljs-number">3</span>)            <span class="hljs-comment">// 15 (int)</span>
+      .transform((n) =&gt; <span class="hljs-string">&quot;Result is <span class="hljs-subst">$n</span>&quot;</span>)  <span class="hljs-comment">// String</span>
+      .transform((s) =&gt; s.toUpperCase()); <span class="hljs-comment">// String</span>
+  <span class="hljs-built_in">print</span>(result.value); <span class="hljs-comment">// RESULT IS 15</span>
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Section 24 -->
+  <section id="section-24">
+    <h2>24. Topic Summary &amp; Cheat Sheet</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#02569B"/>
+        <text x="400" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Topic 19 Cheat Sheet:</text>
+        <text x="400" y="38" font-size="9.5" fill="#99F6E4" text-anchor="middle" font-family="monospace">&lt;T&gt; (Universal) | &lt;T extends Bound&gt; (Constrained) | &lt;T extends Object&gt; (Non-Null)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.24: Quick reference syntax matrix for Dart Generics.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Concept</th>
+          <th>Syntax Pattern</th>
+          <th>Primary Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Generic Function</strong></td>
+          <td><code>T getFirst&lt;T&gt;(List&lt;T&gt; list)</code></td>
+          <td>Reusable helper functions maintaining argument &amp; return types.</td>
+        </tr>
+        <tr>
+          <td><strong>Generic Class</strong></td>
+          <td><code>class Box&lt;T&gt; { final T val; }</code></td>
+          <td>Type-safe container objects, wrappers, and data structures.</td>
+        </tr>
+        <tr>
+          <td><strong>Type Constraints</strong></td>
+          <td><code>&lt;T extends num&gt;</code></td>
+          <td>Restricts acceptable types to a specific hierarchy or interface.</td>
+        </tr>
+        <tr>
+          <td><strong>Non-Nullable Bound</strong></td>
+          <td><code>&lt;T extends Object&gt;</code></td>
+          <td>Forbids null values from ever being passed to the generic parameter.</td>
+        </tr>
+        <tr>
+          <td><strong>Generic Typedef</strong></td>
+          <td><code>typedef Mapper&lt;T, R&gt; = R Function(T);</code></td>
+          <td>Declares clean reusable higher-order function signatures.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 25 -->
+  <section id="section-25">
+    <h2>25. Knowledge Check &amp; Quiz</h2>
+    <p>Complete the interactive 10-question assessment in the CodeVerse app to test your mastery of Generics and Type Constraints.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#10B981"/>
+        <text x="400" y="32" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Mastery Quiz: 10 Interactive Knowledge Check Questions</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.25: Interactive quiz assessment in questions.json.</div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Interactive Assessment Ready</div>
+      10 comprehensive multiple-choice questions have been prepared and loaded into <code>questions.json</code>, covering type parameter conventions, function and class generics, null-safety interactions, and runtime covariance.
+    </div>
+  </section>
+
+  <footer style="margin-top: 0.35rem; padding-top: 0.2rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.72rem; color: var(--text-secondary);">
+    CodeVerse Educational Platform &bull; Stage 5: Advanced Dart &bull; Topic 19: Generics &amp; Type Constraints
+  </footer>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 21: Exceptions, Scope Functions &amp; Delegation in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 21</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+      <div class="hero-badge">STAGE 5 &bull; ADVANCED KOTLIN &bull; TOPIC 21</div>
+      <h1 class="hero-title">Exceptions, Scope Functions &amp; Delegation in Kotlin</h1>
+      <p class="hero-subtitle">Master reliable runtime crash prevention, concise idiomatic code scoping with <code>let</code>, <code>run</code>, <code>with</code>, <code>apply</code>, <code>also</code>, and lightweight class/property composition using <code>by</code>.</p>
+    </header>
+
+    <!-- SECTION A: EXCEPTION HANDLING IN KOTLIN -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">A</span>
+        Section A: Exception Handling in Kotlin
+      </h2>
+
+      <p>In computer programming, unexpected runtime issues inevitably occur &mdash; users enter letters when asked for numbers, server networks disconnect, or files disappear from storage. <strong>Exception handling</strong> is the technique that allows your program to intercept these errors gracefully instead of crashing abruptly.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Spare Tire</strong><br>
+          Imagine driving a car and getting a flat tire. A program with <em>no exception handling</em> would crash completely into a ditch. A program <em>with exception handling</em> safely detects the flat tire, pulls over to the shoulder, mounts the spare tire, and continues driving to the destination.
+        </div>
+      </div>
+
+      <!-- DIAGRAM 1: BASIC EXCEPTION FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.1: Basic Exception Handling Flow</div>
+        <svg viewBox="0 0 720 110" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="30" width="130" height="50" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+          <text x="75" y="52" fill="#F8FAFC" font-size="11.5" font-weight="700" text-anchor="middle">1. Normal Execution</text>
+          <text x="75" y="68" fill="#94A3B8" font-size="9" text-anchor="middle">try { riskyCode() }</text>
+
+          <path d="M 140 55 L 190 55" stroke="#94A3B8" stroke-width="2" marker-end="url(#arrow)"/>
+
+          <rect x="200" y="30" width="140" height="50" rx="8" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.5"/>
+          <text x="270" y="52" fill="#FEE2E2" font-size="11.5" font-weight="700" text-anchor="middle">2. Error Triggered!</text>
+          <text x="270" y="68" fill="#FCA5A5" font-size="9" text-anchor="middle">Exception is thrown</text>
+
+          <path d="M 340 55 L 390 55" stroke="#EF4444" stroke-width="2"/>
+
+          <rect x="400" y="30" width="140" height="50" rx="8" fill="#064E3B" stroke="#10B981" stroke-width="1.5"/>
+          <text x="470" y="52" fill="#D1FAE5" font-size="11.5" font-weight="700" text-anchor="middle">3. Intercept &amp; Catch</text>
+          <text x="470" y="68" fill="#6EE7B7" font-size="9" text-anchor="middle">catch (e: Exception)</text>
+
+          <path d="M 540 55 L 590 55" stroke="#10B981" stroke-width="2"/>
+
+          <rect x="600" y="30" width="110" height="50" rx="8" fill="#1E293B" stroke="#A78BFA" stroke-width="1.5"/>
+          <text x="655" y="52" fill="#EDE9FE" font-size="11.5" font-weight="700" text-anchor="middle">4. Safe Recovery</text>
+          <text x="655" y="68" fill="#C4B5FD" font-size="9" text-anchor="middle">App stays alive!</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Error vs Exception: Beginner Understanding</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title"><span class="pill pill-red">Error</span> Fatal System Failures</div>
+          <p>Caused by catastrophic hardware or JVM limitations (e.g., <code>OutOfMemoryError</code>, <code>StackOverflowError</code>). The application <strong>cannot recover</strong>.</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title"><span class="pill pill-green">Exception</span> Recoverable Application Issues</div>
+          <p>Caused by logical conditions or bad input (e.g., bad format, divide by zero). The application <strong>can catch, recover, and continue</strong>.</p>
+        </div>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">&check;</span>
+        <div class="alert-content">
+          <strong>Kotlin Technical Fact: Unchecked Exceptions Only!</strong><br>
+          In Java, checked exceptions force developers to declare <code>throws IOException</code> on function signatures. <strong>Kotlin has NO checked exceptions!</strong> All exceptions in Kotlin are unchecked. You can catch any exception you wish, but the compiler never forces tedious boilerplate declarations.
+        </div>
+      </div>
+
+      <h3 class="sub-heading">Common Kotlin Runtime Exceptions</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Exception Class</th>
+              <th>Trigger Cause</th>
+              <th>Typical Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>ArithmeticException</code></td>
+              <td>Mathematical violations such as dividing an integer by zero.</td>
+              <td><code>val x = 10 / 0</code></td>
+            </tr>
+            <tr>
+              <td><code>NullPointerException</code></td>
+              <td>Attempting to invoke methods or fields on a <code>null</code> reference.</td>
+              <td><code>val length = text!!.length</code></td>
+            </tr>
+            <tr>
+              <td><code>NumberFormatException</code></td>
+              <td>Attempting to parse a non-numeric string into a number.</td>
+              <td><code>"abc".toInt()</code></td>
+            </tr>
+            <tr>
+              <td><code>IndexOutOfBoundsException</code></td>
+              <td>Accessing an index outside list/array boundaries.</td>
+              <td><code>val item = list[99]</code></td>
+            </tr>
+            <tr>
+              <td><code>IllegalArgumentException</code></td>
+              <td>Passing an illegal or inappropriate argument to a method.</td>
+              <td><code>require(age &gt;= 0)</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DIAGRAM 2: TRY-CATCH-FINALLY FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.2: Try - Catch - Finally Execution Lifecycle</div>
+        <svg viewBox="0 0 720 125" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="35" width="130" height="55" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+          <text x="85" y="58" fill="#F8FAFC" font-size="12" font-weight="700" text-anchor="middle">try Block</text>
+          <text x="85" y="74" fill="#94A3B8" font-size="9" text-anchor="middle">Execute risky code</text>
+
+          <!-- Branch No Error -->
+          <path d="M 150 48 L 470 48" stroke="#10B981" stroke-width="2" stroke-dasharray="4"/>
+          <text x="310" y="42" fill="#10B981" font-size="9" font-weight="700" text-anchor="middle">&check; Success (Bypasses catch)</text>
+
+          <!-- Branch On Error -->
+          <path d="M 150 72 L 230 72" stroke="#EF4444" stroke-width="2"/>
+          <rect x="230" y="50" width="160" height="45" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="310" y="68" fill="#FEE2E2" font-size="11" font-weight="700" text-anchor="middle">catch (e: Exception)</text>
+          <text x="310" y="83" fill="#FCA5A5" font-size="8.5" text-anchor="middle">&cross; Handles error gracefully</text>
+
+          <path d="M 390 72 L 470 72" stroke="#EF4444" stroke-width="2"/>
+
+          <!-- Finally Block -->
+          <rect x="470" y="35" width="220" height="55" rx="8" fill="#312E81" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="580" y="58" fill="#EEF2FF" font-size="12" font-weight="700" text-anchor="middle">finally Block (Always Runs!)</text>
+          <text x="580" y="74" fill="#C7D2FE" font-size="9" text-anchor="middle">Closes files, releases DB locks, stops spinners</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Keywords: try, catch, finally, throw, and Expression Returns</h3>
+      <p>Kotlin's exception syntax is clean and supports using <code>try-catch</code> as an <strong>expression</strong> (assigning its result directly to a variable).</p>
+
+      <!-- CODE EXAMPLE 1 & 2 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 1 &amp; 2: Basic try-catch &amp; try as an Expression</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 1: Standard try-catch with finally block</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">divideSafely</span><span class="hljs-params">(numerator: <span class="hljs-type">Int</span>, denominator: <span class="hljs-type">Int</span>)</span></span> {
+    <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">val</span> result = numerator / denominator
+        println(<span class="hljs-string">&quot;Result: <span class="hljs-variable">$result</span>&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: ArithmeticException) {
+        println(<span class="hljs-string">&quot;Caught ArithmeticException: Cannot divide by zero!&quot;</span>)
+    } <span class="hljs-keyword">finally</span> {
+        println(<span class="hljs-string">&quot;Cleanup: Division operation finished.&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Example 2: Using try as an expression to parse user input safely</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">parseAge</span><span class="hljs-params">(rawInput: <span class="hljs-type">String</span>)</span></span>: <span class="hljs-built_in">Int</span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">try</span> {
+        rawInput.toInt()
+    } <span class="hljs-keyword">catch</span> (e: NumberFormatException) {
+        -<span class="hljs-number">1</span> <span class="hljs-comment">// Default fallback value when parsing fails</span>
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    divideSafely(<span class="hljs-number">20</span>, <span class="hljs-number">4</span>)
+    divideSafely(<span class="hljs-number">15</span>, <span class="hljs-number">0</span>)
+    
+    <span class="hljs-keyword">val</span> validAge = parseAge(<span class="hljs-string">&quot;25&quot;</span>)
+    <span class="hljs-keyword">val</span> badAge = parseAge(<span class="hljs-string">&quot;twenty-five&quot;</span>)
+    println(<span class="hljs-string">&quot;Valid age: <span class="hljs-variable">$validAge</span>, Bad input fallback: <span class="hljs-variable">$badAge</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Result: 5<br>
+Cleanup: Division operation finished.<br>
+Caught ArithmeticException: Cannot divide by zero!<br>
+Cleanup: Division operation finished.<br>
+Valid age: 25, Bad input fallback: -1
+      </div>
+
+      <!-- DIAGRAM 3: MULTIPLE CATCH BLOCKS -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.3: Multiple Catch Blocks Matching Order</div>
+        <svg viewBox="0 0 720 95" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="25" width="130" height="45" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="80" y="44" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">Exception Thrown</text>
+          <text x="80" y="58" fill="#94A3B8" font-size="8.5" text-anchor="middle">e.g. NumberFormat</text>
+
+          <path d="M 145 47 L 185 47" stroke="#94A3B8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <rect x="190" y="25" width="150" height="45" rx="6" fill="#3B0764" stroke="#A855F7" stroke-width="1.2"/>
+          <text x="265" y="44" fill="#F3E8FF" font-size="10" font-weight="700" text-anchor="middle">catch (e: NumberFormat)</text>
+          <text x="265" y="58" fill="#D8B4FE" font-size="8.5" text-anchor="middle">1st: Match specific type</text>
+
+          <path d="M 340 47 L 380 47" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="385" y="25" width="150" height="45" rx="6" fill="#0C4A6E" stroke="#0284C7" stroke-width="1.2"/>
+          <text x="460" y="44" fill="#E0F2FE" font-size="10" font-weight="700" text-anchor="middle">catch (e: Arithmetic)</text>
+          <text x="460" y="58" fill="#7DD3FC" font-size="8.5" text-anchor="middle">2nd: Math errors</text>
+
+          <path d="M 535 47 L 575 47" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="580" y="25" width="130" height="45" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.2"/>
+          <text x="645" y="44" fill="#F1F5F9" font-size="10" font-weight="700" text-anchor="middle">catch (e: Exception)</text>
+          <text x="645" y="58" fill="#94A3B8" font-size="8.5" text-anchor="middle">Last: Catch-all fallback</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 3 & 4 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 3 &amp; 4: Multiple Catch Blocks &amp; Manual Throwing</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 3: Multiple catch blocks with specific exception order</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">safeCalculate</span><span class="hljs-params">(list: <span class="hljs-type">List</span>, index: <span class="hljs-type">Int</span>)</span></span> {
+    <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">val</span> raw = list[index]
+        <span class="hljs-keyword">val</span> num = raw.toInt()
+        <span class="hljs-keyword">val</span> result = <span class="hljs-number">100</span> / num
+        println(<span class="hljs-string">&quot;Calculation result: <span class="hljs-variable">$result</span>&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: IndexOutOfBoundsException) {
+        println(<span class="hljs-string">&quot;Error: Position <span class="hljs-variable">$index</span> does not exist in the list!&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: NumberFormatException) {
+        println(<span class="hljs-string">&quot;Error: The value at index <span class="hljs-variable">$index</span> is not a valid integer!&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: ArithmeticException) {
+        println(<span class="hljs-string">&quot;Error: Division by zero is prohibited!&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: Exception) {
+        println(<span class="hljs-string">&quot;Generic unexpected error: <span class="hljs-subst">${e.message}</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Example 4: Throwing an exception manually for student marks validation</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">verifyMarks</span><span class="hljs-params">(score: <span class="hljs-type">Int</span>)</span></span> {
+    <span class="hljs-keyword">if</span> (score  <span class="hljs-number">100</span>) {
+        <span class="hljs-keyword">throw</span> IllegalArgumentException(<span class="hljs-string">&quot;Marks must be between 0 and 100. Received: <span class="hljs-variable">$score</span>&quot;</span>)
+    }
+    println(<span class="hljs-string">&quot;Valid marks recorded: <span class="hljs-variable">$score</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> <span class="hljs-keyword">data</span> = listOf(<span class="hljs-string">&quot;10&quot;</span>, <span class="hljs-string">&quot;abc&quot;</span>, <span class="hljs-string">&quot;0&quot;</span>)
+    safeCalculate(<span class="hljs-keyword">data</span>, <span class="hljs-number">0</span>)
+    safeCalculate(<span class="hljs-keyword">data</span>, <span class="hljs-number">1</span>)
+    safeCalculate(<span class="hljs-keyword">data</span>, <span class="hljs-number">2</span>)
+    safeCalculate(<span class="hljs-keyword">data</span>, <span class="hljs-number">5</span>)
+
+    <span class="hljs-keyword">try</span> {
+        verifyMarks(<span class="hljs-number">120</span>)
+    } <span class="hljs-keyword">catch</span> (e: IllegalArgumentException) {
+        println(<span class="hljs-string">&quot;Validation failure: <span class="hljs-subst">${e.message}</span>&quot;</span>)
+    }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Calculation result: 10<br>
+Error: The value at index 1 is not a valid integer!<br>
+Error: Division by zero is prohibited!<br>
+Error: Position 5 does not exist in the list!<br>
+Validation failure: Marks must be between 0 and 100. Received: 120
+      </div>
+
+      <!-- DIAGRAM 4: THROW STATEMENT FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.4: Throw Statement and Stack Unwinding</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="22" width="170" height="45" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="105" y="41" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">Validation Condition</text>
+          <text x="105" y="55" fill="#94A3B8" font-size="8.5" text-anchor="middle">if (score &lt; 0 || score &gt; 100)</text>
+
+          <path d="M 190 44 L 250 44" stroke="#EF4444" stroke-width="2"/>
+
+          <rect x="250" y="22" width="200" height="45" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.5"/>
+          <text x="350" y="41" fill="#FEE2E2" font-size="10.5" font-weight="700" text-anchor="middle">throw IllegalArgumentException</text>
+          <text x="350" y="55" fill="#FCA5A5" font-size="8.5" text-anchor="middle">Interrupts normal control immediately</text>
+
+          <path d="M 450 44 L 510 44" stroke="#EF4444" stroke-width="2"/>
+
+          <rect x="510" y="22" width="190" height="45" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="605" y="41" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">Caller try-catch Intercepts</text>
+          <text x="605" y="55" fill="#6EE7B7" font-size="8.5" text-anchor="middle">Safe error messaging / display</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Custom Exceptions: Domain-Specific Error Handling</h3>
+      <p>A <strong>custom exception</strong> is a user-defined class inheriting from <code>Exception</code>. They give domain-specific names to business rule violations (such as <code>InsufficientBalanceException</code> or <code>InvalidCredentialsException</code>) rather than relying on generic strings.</p>
+
+      <!-- DIAGRAM 5 & 6: CUSTOM EXCEPTION & BANK WITHDRAWAL FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.5: Custom Exception Class Hierarchy &amp; Diagram 1.6: Bank Withdrawal Flow</div>
+        <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Class hierarchy left -->
+          <rect x="20" y="15" width="160" height="35" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1"/>
+          <text x="100" y="37" fill="#E2E8F0" font-size="10" font-weight="700" text-anchor="middle">open class Exception</text>
+
+          <path d="M 100 50 L 100 70" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="10" y="70" width="180" height="40" rx="6" fill="#4C1D95" stroke="#A78BFA" stroke-width="1.5"/>
+          <text x="100" y="88" fill="#EDE9FE" font-size="10" font-weight="700" text-anchor="middle">InsufficientBalanceException</text>
+          <text x="100" y="101" fill="#DDD6FE" font-size="8" text-anchor="middle">: Exception(message)</text>
+
+          <!-- Divider -->
+          <line x1="210" y1="10" x2="210" y2="110" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- Bank flow right -->
+          <rect x="230" y="40" width="120" height="45" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+          <text x="290" y="58" fill="#F8FAFC" font-size="9.5" font-weight="700" text-anchor="middle">Withdraw $500</text>
+          <text x="290" y="72" fill="#94A3B8" font-size="8" text-anchor="middle">Balance = $300</text>
+
+          <path d="M 350 62 L 390 62" stroke="#EF4444" stroke-width="1.5"/>
+
+          <rect x="390" y="40" width="140" height="45" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="460" y="58" fill="#FEE2E2" font-size="9.5" font-weight="700" text-anchor="middle">Throw Custom Error</text>
+          <text x="460" y="72" fill="#FCA5A5" font-size="8" text-anchor="middle">Insufficient balance!</text>
+
+          <path d="M 530 62 L 570 62" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="570" y="40" width="135" height="45" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="637" y="58" fill="#D1FAE5" font-size="9.5" font-weight="700" text-anchor="middle">Catch &amp; Notify UI</text>
+          <text x="637" y="72" fill="#6EE7B7" font-size="8" text-anchor="middle">"Please deposit funds"</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 5 & 6 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 5 &amp; 6: Bank Withdrawal &amp; Login Custom Exceptions</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 5: Custom exception for banking balance rules</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InsufficientBalanceException</span></span>(message: String) : Exception(message)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BankAccount</span></span>(<span class="hljs-keyword">val</span> accountNumber: String, <span class="hljs-keyword">var</span> balance: <span class="hljs-built_in">Double</span>) {
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">withdraw</span><span class="hljs-params">(amount: <span class="hljs-type">Double</span>)</span></span> {
+        <span class="hljs-keyword">if</span> (amount &gt; balance) {
+            <span class="hljs-keyword">throw</span> InsufficientBalanceException(<span class="hljs-string">&quot;Cannot withdraw \$<span class="hljs-variable">$amount</span>. Available balance: \$<span class="hljs-variable">$balance</span>&quot;</span>)
+        }
+        balance -= amount
+        println(<span class="hljs-string">&quot;Successfully withdrew \$<span class="hljs-variable">$amount</span>. Remaining: \$<span class="hljs-variable">$balance</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Example 6: Custom exception for User Authentication</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InvalidCredentialsException</span></span>(message: String) : Exception(message)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">loginUser</span><span class="hljs-params">(username: <span class="hljs-type">String</span>, password: <span class="hljs-type">String</span>)</span></span> {
+    <span class="hljs-keyword">if</span> (username != <span class="hljs-string">&quot;admin&quot;</span> || password != <span class="hljs-string">&quot;secret123&quot;</span>) {
+        <span class="hljs-keyword">throw</span> InvalidCredentialsException(<span class="hljs-string">&quot;Incorrect credentials for username: <span class="hljs-variable">$username</span>&quot;</span>)
+    }
+    println(<span class="hljs-string">&quot;Welcome, <span class="hljs-variable">$username</span>! Authentication successful.&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> myAccount = BankAccount(<span class="hljs-string">&quot;ACC-9812&quot;</span>, <span class="hljs-number">350.0</span>)
+    <span class="hljs-keyword">try</span> {
+        myAccount.withdraw(<span class="hljs-number">100.0</span>)
+        myAccount.withdraw(<span class="hljs-number">500.0</span>)
+    } <span class="hljs-keyword">catch</span> (e: InsufficientBalanceException) {
+        println(<span class="hljs-string">&quot;Bank Alert: <span class="hljs-subst">${e.message}</span>&quot;</span>)
+    }
+
+    <span class="hljs-keyword">try</span> {
+        loginUser(<span class="hljs-string">&quot;admin&quot;</span>, <span class="hljs-string">&quot;wrongPassword&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: InvalidCredentialsException) {
+        println(<span class="hljs-string">&quot;Security Warning: <span class="hljs-subst">${e.message}</span>&quot;</span>)
+    }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Successfully withdrew $100.0. Remaining: $250.0<br>
+Bank Alert: Cannot withdraw $500.0. Available balance: $250.0<br>
+Security Warning: Incorrect credentials for username: admin
+      </div>
+    </section>
+
+    <!-- SECTION B: SCOPE FUNCTIONS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">B</span>
+        Section B: Scope Functions
+      </h2>
+
+      <p>Kotlin's standard library provides five specialized functions &mdash; <code>let</code>, <code>run</code>, <code>with</code>, <code>apply</code>, and <code>also</code> &mdash; whose sole purpose is to execute a block of code within the <em>context</em> of an object. Inside the lambda, you can access the object without repeating its variable name over and over.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Crafting Workbench</strong><br>
+          Imagine you have a smartphone in your hand. Instead of repeatedly announcing <em>"Take phone out of pocket, press phone power button, enter phone passcode, swipe phone screen"</em>, you place the phone directly onto your workbench. Within that workbench workspace (scope), every action refers directly to that phone without repeating its name!
+        </div>
+      </div>
+
+      <!-- DIAGRAM 7: SCOPE FUNCTIONS OVERVIEW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.1: The 5 Scope Functions Matrix</div>
+        <svg viewBox="0 0 720 145" xmlns="http://www.w3.org/2000/svg">
+          <!-- Headers -->
+          <rect x="180" y="10" width="240" height="28" rx="5" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+          <text x="300" y="28" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle">Context Object: this</text>
+
+          <rect x="450" y="10" width="240" height="28" rx="5" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+          <text x="570" y="28" fill="#F43F5E" font-size="11" font-weight="700" text-anchor="middle">Context Object: it</text>
+
+          <!-- Left labels -->
+          <rect x="10" y="45" width="150" height="42" rx="5" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+          <text x="85" y="64" fill="#A78BFA" font-size="10.5" font-weight="700" text-anchor="middle">Returns Lambda Result</text>
+          <text x="85" y="77" fill="#94A3B8" font-size="8.5" text-anchor="middle">Transformed output</text>
+
+          <rect x="10" y="95" width="150" height="42" rx="5" fill="#1E293B" stroke="#334155" stroke-width="1"/>
+          <text x="85" y="114" fill="#10B981" font-size="10.5" font-weight="700" text-anchor="middle">Returns Context Object</text>
+          <text x="85" y="127" fill="#94A3B8" font-size="8.5" text-anchor="middle">Original instance</text>
+
+          <!-- Matrix cells -->
+          <!-- Row 1: Lambda result -->
+          <rect x="180" y="45" width="240" height="42" rx="6" fill="#312E81" stroke="#818CF8" stroke-width="1.2"/>
+          <text x="300" y="66" fill="#EEF2FF" font-size="12" font-weight="800" text-anchor="middle">run { }  &amp;  with(obj) { }</text>
+          <text x="300" y="80" fill="#C7D2FE" font-size="9" text-anchor="middle">Compute values using 'this' directly</text>
+
+          <rect x="450" y="45" width="240" height="42" rx="6" fill="#0C4A6E" stroke="#0284C7" stroke-width="1.2"/>
+          <text x="570" y="66" fill="#E0F2FE" font-size="12" font-weight="800" text-anchor="middle">let { }</text>
+          <text x="570" y="80" fill="#BAE6FD" font-size="9" text-anchor="middle">Transform or execute on nullable 'it'</text>
+
+          <!-- Row 2: Object return -->
+          <rect x="180" y="95" width="240" height="42" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="300" y="116" fill="#ECFDF5" font-size="12" font-weight="800" text-anchor="middle">apply { }</text>
+          <text x="300" y="130" fill="#A7F3D0" font-size="9" text-anchor="middle">Object configuration builder with 'this'</text>
+
+          <rect x="450" y="95" width="240" height="42" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1.2"/>
+          <text x="570" y="116" fill="#FFFBEB" font-size="12" font-weight="800" text-anchor="middle">also { }</text>
+          <text x="570" y="130" fill="#FDE68A" font-size="9" text-anchor="middle">Side effects, logging, auditing with 'it'</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">1. The 'let' Function: Transformation &amp; Null-Safety</h3>
+      <p><code>let</code> refers to the context object as <code>it</code> and returns the <strong>result of the lambda</strong>. Its most common use case is executing code only when an object is not null via safe call <code>?.let { ... }</code>.</p>
+
+      <!-- DIAGRAM 8: LET FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.2: Safe Null-Check Flow with ?.let</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="22" width="170" height="46" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="105" y="42" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">username: String?</text>
+          <text x="105" y="56" fill="#94A3B8" font-size="8.5" text-anchor="middle">Nullable variable</text>
+
+          <path d="M 190 45 L 260 45" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="260" y="22" width="200" height="46" rx="6" fill="#0C4A6E" stroke="#0284C7" stroke-width="1.2"/>
+          <text x="360" y="42" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">username?.let { it -&gt; }</text>
+          <text x="360" y="56" fill="#BAE6FD" font-size="8.5" text-anchor="middle">If null &rarr; skips! If non-null &rarr; runs</text>
+
+          <path d="M 460 45 L 530 45" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="530" y="22" width="170" height="46" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="615" y="42" fill="#ECFDF5" font-size="10.5" font-weight="700" text-anchor="middle">Non-Null Guaranteed</text>
+          <text x="615" y="56" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Safe access to all methods</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 7 & 8 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 7 &amp; 8: 'let' for Null Safety &amp; Transformation</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 7: Null-safe username check using ?.let</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">printGreeting</span><span class="hljs-params">(username: <span class="hljs-type">String</span>?)</span></span> {
+    username?.let {
+        <span class="hljs-comment">// &#x27;it&#x27; is guaranteed to be non-null String inside this block</span>
+        println(<span class="hljs-string">&quot;Hello, <span class="hljs-subst">${it.uppercase()}</span>! Profile length: <span class="hljs-subst">${it.length}</span>&quot;</span>)
+    } ?: println(<span class="hljs-string">&quot;Guest visitor detected.&quot;</span>)
+}
+
+<span class="hljs-comment">// Example 8: Transforming values using let</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">transformNumbers</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> numbers = listOf(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>)
+    <span class="hljs-keyword">val</span> squaredSum = numbers.let { list -&gt;
+        <span class="hljs-comment">// Can rename &#x27;it&#x27; to meaningful name &#x27;list&#x27;</span>
+        list.map { it * it }.sum()
+    }
+    println(<span class="hljs-string">&quot;Sum of squares: <span class="hljs-variable">$squaredSum</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    printGreeting(<span class="hljs-string">&quot;alex_kotlin&quot;</span>)
+    printGreeting(<span class="hljs-literal">null</span>)
+    transformNumbers()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Hello, ALEX_KOTLIN! Profile length: 11<br>
+Guest visitor detected.<br>
+Sum of squares: 55
+      </div>
+
+      <h3 class="sub-heading">2. The 'run' Function: Scoped Computation with 'this'</h3>
+      <p><code>run</code> accesses the receiver object via <code>this</code> (which can be omitted) and returns the <strong>result of the lambda</strong>. It is ideal when you need to configure an object and compute a returned value in one step.</p>
+
+      <!-- CODE EXAMPLE 9 & 10 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 9 &amp; 10: 'run' for Object Execution &amp; Standalone Block</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span></span>(<span class="hljs-keyword">val</span> width: <span class="hljs-built_in">Double</span>, <span class="hljs-keyword">val</span> height: <span class="hljs-built_in">Double</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> box = Rectangle(<span class="hljs-number">12.0</span>, <span class="hljs-number">5.0</span>)
+
+    <span class="hljs-comment">// Example 9: run on an object instance (uses &#x27;this&#x27; implicitly)</span>
+    <span class="hljs-keyword">val</span> perimeterDescription = box.run {
+        <span class="hljs-keyword">val</span> p = <span class="hljs-number">2</span> * (width + height) <span class="hljs-comment">// &#x27;this.width&#x27; and &#x27;this.height&#x27;</span>
+        <span class="hljs-string">&quot;Box (<span class="hljs-subst">${width}</span>x<span class="hljs-subst">${height}</span>) has perimeter: <span class="hljs-variable">$p</span>&quot;</span>
+    }
+    println(perimeterDescription)
+
+    <span class="hljs-comment">// Example 10: Non-extension run block (for limiting temporary variable scope)</span>
+    <span class="hljs-keyword">val</span> discountCode = run {
+        <span class="hljs-keyword">val</span> rawPrefix = <span class="hljs-string">&quot;WINTER&quot;</span>
+        <span class="hljs-keyword">val</span> year = <span class="hljs-number">2026</span>
+        <span class="hljs-string">&quot;<span class="hljs-subst">${rawPrefix}</span>_<span class="hljs-variable">$year</span>&quot;</span>
+    }
+    println(<span class="hljs-string">&quot;Generated promo: <span class="hljs-variable">$discountCode</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Box (12.0x5.0) has perimeter: 34.0<br>
+Generated promo: WINTER_2026
+      </div>
+
+      <h3 class="sub-heading">3. The 'with' Function: Non-Extension Object Grouping</h3>
+      <p><code>with</code> is NOT an extension function. It takes the context object as an explicit argument: <code>with(target) { ... }</code>. Inside the block, it uses <code>this</code> and returns the <strong>lambda result</strong>. It reads naturally: <em>"With this object, do the following operations."</em></p>
+
+      <!-- DIAGRAM 9: RUN VS WITH COMPARISON -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.3: Syntax Structure: run vs with</div>
+        <svg viewBox="0 0 720 85" xmlns="http://www.w3.org/2000/svg">
+          <!-- run syntax -->
+          <rect x="20" y="20" width="320" height="48" rx="6" fill="#1E293B" stroke="#818CF8" stroke-width="1.2"/>
+          <text x="180" y="40" fill="#EEF2FF" font-size="11" font-weight="700" text-anchor="middle">receiver.run { this.doWork() }</text>
+          <text x="180" y="55" fill="#94A3B8" font-size="9" text-anchor="middle">Extension call: supports null safety 'receiver?.run'</text>
+
+          <line x1="360" y1="10" x2="360" y2="75" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- with syntax -->
+          <rect x="380" y="20" width="320" height="48" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="540" y="40" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">with(receiver) { this.doWork() }</text>
+          <text x="540" y="55" fill="#94A3B8" font-size="9" text-anchor="middle">Regular function call: takes non-null receiver parameter</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 11 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Example 11: Grouping operations with 'with'</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StringBuilderHelper</span> </span>{
+    <span class="hljs-keyword">val</span> sb = StringBuilder()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> helper = StringBuilderHelper()
+
+    <span class="hljs-comment">// Example 11: with(helper.sb) groups multiple appends cleanly</span>
+    <span class="hljs-keyword">val</span> report = with(helper.sb) {
+        append(<span class="hljs-string">&quot;--- Monthly Report ---\n&quot;</span>)
+        append(<span class="hljs-string">&quot;Active Users: 12,450\n&quot;</span>)
+        append(<span class="hljs-string">&quot;Uptime: 99.98%\n&quot;</span>)
+        toString() <span class="hljs-comment">// Lambda result returned</span>
+    }
+    print(report)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+--- Monthly Report ---<br>
+Active Users: 12,450<br>
+Uptime: 99.98%
+      </div>
+
+      <h3 class="sub-heading">4. The 'apply' Function: Object Configuration Builder</h3>
+      <p><code>apply</code> refers to the context object as <code>this</code> and returns the <strong>original object itself</strong>. It is the gold standard in Kotlin for configuring properties on newly created objects (Builder pattern without boilerplate).</p>
+
+      <!-- DIAGRAM 10: APPLY FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.4: Object Configuration Flow with apply</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="160" height="50" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="100" y="41" fill="#F8FAFC" font-size="11" font-weight="700" text-anchor="middle">1. Instantiate</text>
+          <text x="100" y="56" fill="#94A3B8" font-size="8.5" text-anchor="middle">UserProfile()</text>
+
+          <path d="M 180 45 L 230 45" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="230" y="15" width="260" height="60" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.5"/>
+          <text x="360" y="36" fill="#ECFDF5" font-size="11.5" font-weight="800" text-anchor="middle">2. apply { mutate properties with 'this' }</text>
+          <text x="360" y="52" fill="#A7F3D0" font-size="9" text-anchor="middle">name = "Sophia"; role = "Engineer"; status = "Active"</text>
+          <text x="360" y="65" fill="#6EE7B7" font-size="8" text-anchor="middle">No 'it.' or 'user.' repetitions needed</text>
+
+          <path d="M 490 45 L 540 45" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="540" y="20" width="160" height="50" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+          <text x="620" y="41" fill="#D1FAE5" font-size="11" font-weight="700" text-anchor="middle">3. Returns Same Object</text>
+          <text x="620" y="56" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Ready configured instance!</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 12 & 13 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 12 &amp; 13: User Profile Configuration using 'apply'</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserProfile</span> </span>{
+    <span class="hljs-keyword">var</span> username: String = <span class="hljs-string">&quot;&quot;</span>
+    <span class="hljs-keyword">var</span> email: String = <span class="hljs-string">&quot;&quot;</span>
+    <span class="hljs-keyword">var</span> isEmailVerified: <span class="hljs-built_in">Boolean</span> = <span class="hljs-literal">false</span>
+    <span class="hljs-keyword">var</span> theme: String = <span class="hljs-string">&quot;Light&quot;</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">summary</span><span class="hljs-params">()</span></span> = <span class="hljs-string">&quot;User(<span class="hljs-variable">$username</span>, <span class="hljs-variable">$email</span>, verified=<span class="hljs-variable">$isEmailVerified</span>, theme=<span class="hljs-variable">$theme</span>)&quot;</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// Example 12: Creating and configuring UserProfile with apply</span>
+    <span class="hljs-keyword">val</span> user = UserProfile().apply {
+        username = <span class="hljs-string">&quot;sophia_codes&quot;</span>
+        email = <span class="hljs-string">&quot;sophia@codeverse.io&quot;</span>
+        isEmailVerified = <span class="hljs-literal">true</span>
+        theme = <span class="hljs-string">&quot;Dark AMOLED&quot;</span>
+    }
+    println(user.summary())
+
+    <span class="hljs-comment">// Example 13: Configuring existing UI-like component</span>
+    <span class="hljs-keyword">val</span> items = ArrayList().apply {
+        add(<span class="hljs-string">&quot;Kotlin&quot;</span>)
+        add(<span class="hljs-string">&quot;Android&quot;</span>)
+        add(<span class="hljs-string">&quot;Compose&quot;</span>)
+    }
+    println(<span class="hljs-string">&quot;Configured list: <span class="hljs-variable">$items</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+User(sophia_codes, sophia@codeverse.io, verified=true, theme=Dark AMOLED)<br>
+Configured list: [Kotlin, Android, Compose]
+      </div>
+
+      <h3 class="sub-heading">5. The 'also' Function: Side Effects, Auditing &amp; Logging</h3>
+      <p><code>also</code> refers to the context object as <code>it</code> and returns the <strong>original object itself</strong>. It reads: <em>"Do this main work, and ALSO do this logging/validation side-effect."</em></p>
+
+      <!-- DIAGRAM 11: ALSO FLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.5: Side Effect &amp; Logging Pipeline with also</div>
+        <svg viewBox="0 0 720 85" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="160" height="48" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="100" y="41" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">Generate Result</text>
+          <text x="100" y="55" fill="#94A3B8" font-size="8.5" text-anchor="middle">calculateSum(): 450</text>
+
+          <path d="M 180 44 L 240 44" stroke="#F59E0B" stroke-width="1.5"/>
+
+          <rect x="240" y="15" width="240" height="58" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1.5"/>
+          <text x="360" y="36" fill="#FFFBEB" font-size="11" font-weight="700" text-anchor="middle">.also { it -&gt; Log to console }</text>
+          <text x="360" y="50" fill="#FDE68A" font-size="8.5" text-anchor="middle">Audit trail / analytics triggered</text>
+          <text x="360" y="63" fill="#FCD34D" font-size="8" text-anchor="middle">Does not alter original value</text>
+
+          <path d="M 480 44 L 540 44" stroke="#F59E0B" stroke-width="1.5"/>
+
+          <rect x="540" y="20" width="160" height="48" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="620" y="41" fill="#ECFDF5" font-size="10.5" font-weight="700" text-anchor="middle">Returns Original 450</text>
+          <text x="620" y="55" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Pipeline flow uninterrupted</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 14 & 15 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 14 &amp; 15: Logging &amp; Value Swapping using 'also'</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 14: Auditing object creation without breaking fluent method chaining</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">createOrder</span><span class="hljs-params">(orderId: <span class="hljs-type">String</span>, total: <span class="hljs-type">Double</span>)</span></span>: Map {
+    <span class="hljs-keyword">return</span> mapOf(<span class="hljs-string">&quot;id&quot;</span> to orderId, <span class="hljs-string">&quot;total&quot;</span> to total).also {
+        println(<span class="hljs-string">&quot;[AUDIT LOG] Order <span class="hljs-subst">${it[<span class="hljs-string">&quot;id&quot;</span>]}</span> created with total: \$<span class="hljs-subst">${it[<span class="hljs-string">&quot;total&quot;</span>]}</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Example 15: Idiomatic variable value swap using also</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">swapValues</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">var</span> a = <span class="hljs-number">10</span>
+    <span class="hljs-keyword">var</span> b = <span class="hljs-number">20</span>
+    println(<span class="hljs-string">&quot;Before swap: a = <span class="hljs-variable">$a</span>, b = <span class="hljs-variable">$b</span>&quot;</span>)
+
+    a = b.also { b = a }
+    println(<span class="hljs-string">&quot;After swap: a = <span class="hljs-variable">$a</span>, b = <span class="hljs-variable">$b</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> order = createOrder(<span class="hljs-string">&quot;ORD-771&quot;</span>, <span class="hljs-number">89.99</span>)
+    println(<span class="hljs-string">&quot;Processing order in main: <span class="hljs-subst">${order[<span class="hljs-string">&quot;id&quot;</span>]}</span>&quot;</span>)
+    swapValues()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+[AUDIT LOG] Order ORD-771 created with total: $89.99<br>
+Processing order in main: ORD-771<br>
+Before swap: a = 10, b = 20<br>
+After swap: a = 20, b = 10
+      </div>
+
+      <h3 class="sub-heading">Master Comparison &amp; Decision Guide</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>Object Reference</th>
+              <th>Return Value</th>
+              <th>Is Extension?</th>
+              <th>Primary Practical Use</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>let</code></td>
+              <td><code>it</code> (can rename)</td>
+              <td>Lambda Result</td>
+              <td>Yes</td>
+              <td>Null-check execution (<code>?.let</code>) and object transformation</td>
+            </tr>
+            <tr>
+              <td><code>run</code></td>
+              <td><code>this</code> (implicit)</td>
+              <td>Lambda Result</td>
+              <td>Yes (or standalone)</td>
+              <td>Object configuration AND calculating a computed output</td>
+            </tr>
+            <tr>
+              <td><code>with</code></td>
+              <td><code>this</code> (implicit)</td>
+              <td>Lambda Result</td>
+              <td>No: <code>with(obj) { }</code></td>
+              <td>Grouping multiple calls on a known non-null receiver</td>
+            </tr>
+            <tr>
+              <td><code>apply</code></td>
+              <td><code>this</code> (implicit)</td>
+              <td>Original Object</td>
+              <td>Yes</td>
+              <td>Initializing and configuring object fields (Builder pattern)</td>
+            </tr>
+            <tr>
+              <td><code>also</code></td>
+              <td><code>it</code> (can rename)</td>
+              <td>Original Object</td>
+              <td>Yes</td>
+              <td>Side effects, debugging, logging, and inspection</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- DIAGRAM 12: SCOPE FUNCTION DECISION GUIDE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.6: Scope Function Quick Decision Guide</div>
+        <svg viewBox="0 0 720 110" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="30" width="140" height="50" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+          <text x="80" y="52" fill="#F8FAFC" font-size="11" font-weight="700" text-anchor="middle">What to Return?</text>
+          <text x="80" y="68" fill="#94A3B8" font-size="9" text-anchor="middle">Object vs Calculation</text>
+
+          <!-- Branch Object -->
+          <path d="M 150 45 L 210 30" stroke="#10B981" stroke-width="1.5"/>
+          <text x="180" y="30" fill="#10B981" font-size="8.5" font-weight="700">Same Object</text>
+
+          <rect x="220" y="10" width="220" height="40" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="330" y="28" fill="#ECFDF5" font-size="10.5" font-weight="700" text-anchor="middle">Configure fields? &rarr; apply</text>
+          <text x="330" y="42" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Logging / side effects? &rarr; also</text>
+
+          <!-- Branch Lambda Result -->
+          <path d="M 150 65 L 210 80" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="180" y="85" fill="#818CF8" font-size="8.5" font-weight="700">Result</text>
+
+          <rect x="220" y="60" width="220" height="40" rx="6" fill="#312E81" stroke="#818CF8" stroke-width="1.2"/>
+          <text x="330" y="78" fill="#EEF2FF" font-size="10.5" font-weight="700" text-anchor="middle">Nullable check? &rarr; ?.let</text>
+          <text x="330" y="92" fill="#C7D2FE" font-size="8.5" text-anchor="middle">Compute with 'this'? &rarr; run / with</text>
+
+          <!-- Summary card -->
+          <rect x="470" y="20" width="240" height="70" rx="8" fill="#1E293B" stroke="#64748B" stroke-width="1"/>
+          <text x="590" y="40" fill="#F1F5F9" font-size="10.5" font-weight="700" text-anchor="middle">Golden Beginner Rule</text>
+          <text x="590" y="58" fill="#94A3B8" font-size="9" text-anchor="middle">Avoid nesting scope functions inside</text>
+          <text x="590" y="72" fill="#FCA5A5" font-size="9" text-anchor="middle">other scope functions (it inside it!)</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- SECTION C: DELEGATION IN KOTLIN -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">C</span>
+        Section C: Delegation in Kotlin
+      </h2>
+
+      <p><strong>Delegation</strong> is an object-oriented design pattern where an object passes responsibility for a task to another helper/specialist object. Kotlin provides first-class language support for delegation using the concise <code>by</code> keyword &mdash; eliminating dozens of repetitive forwarding methods.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Business Owner &amp; The Accountant</strong><br>
+          A bakery owner doesn't personally calculate quarterly corporate income taxes. When tax season arrives, the owner <strong>delegates</strong> tax preparation to a certified accountant. To the tax authority, the bakery submitted its taxes; under the hood, the specialist accountant did the heavy lifting!
+        </div>
+      </div>
+
+      <!-- DIAGRAM 13: INTERFACE DELEGATION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 3.1: Interface Delegation Architecture with 'by'</div>
+        <svg viewBox="0 0 720 115" xmlns="http://www.w3.org/2000/svg">
+          <!-- Interface Contract -->
+          <rect x="20" y="30" width="160" height="55" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="100" y="52" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">&laquo;interface&raquo;</text>
+          <text x="100" y="68" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle">PaymentProcessor</text>
+
+          <path d="M 180 57 L 230 57" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <!-- Real Implementation -->
+          <rect x="230" y="20" width="180" height="75" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="320" y="42" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">StripeProcessor</text>
+          <text x="320" y="58" fill="#A7F3D0" font-size="8.5" text-anchor="middle">: PaymentProcessor</text>
+          <text x="320" y="74" fill="#6EE7B7" font-size="8" text-anchor="middle">Actual bank API calls</text>
+
+          <path d="M 410 57 L 460 57" stroke="#10B981" stroke-width="2"/>
+
+          <!-- Delegator Class -->
+          <rect x="460" y="15" width="240" height="85" rx="8" fill="#312E81" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="580" y="38" fill="#EEF2FF" font-size="11" font-weight="800" text-anchor="middle">CheckoutService(processor)</text>
+          <text x="580" y="54" fill="#A78BFA" font-size="10" font-weight="700" text-anchor="middle">: PaymentProcessor by processor</text>
+          <text x="580" y="72" fill="#C7D2FE" font-size="8.5" text-anchor="middle">Kotlin auto-generates all forwarding code!</text>
+          <text x="580" y="86" fill="#93C5FD" font-size="8" text-anchor="middle">Can optionally override specific methods</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Interface Delegation: Replacing Rigid Inheritance</h3>
+      <p>Traditional inheritance locks classes into rigid parent-child relationships. Kotlin's <code>class Manager(worker: Worker) : Worker by worker</code> implements the interface by forwarding every call to <code>worker</code> automatically.</p>
+
+      <!-- CODE EXAMPLE 16 & 17 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 16 &amp; 17: Payment &amp; Notification Interface Delegation</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 16: Payment Gateway Interface Delegation</span>
+<span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">PaymentGateway</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">processPayment</span><span class="hljs-params">(amount: <span class="hljs-type">Double</span>)</span></span>
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">refundPayment</span><span class="hljs-params">(transactionId: <span class="hljs-type">String</span>)</span></span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StripeGateway</span> : <span class="hljs-type">PaymentGateway {</span></span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">processPayment</span><span class="hljs-params">(amount: <span class="hljs-type">Double</span>)</span></span> = println(<span class="hljs-string">&quot;Stripe: Charged \$<span class="hljs-variable">$amount</span> to customer.&quot;</span>)
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">refundPayment</span><span class="hljs-params">(transactionId: <span class="hljs-type">String</span>)</span></span> = println(<span class="hljs-string">&quot;Stripe: Refunded transaction <span class="hljs-variable">$transactionId</span>.&quot;</span>)
+}
+
+<span class="hljs-comment">// CheckoutManager delegates all PaymentGateway calls to &#x27;gateway&#x27;</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CheckoutManager</span></span>(gateway: PaymentGateway) : PaymentGateway <span class="hljs-keyword">by</span> gateway {
+    <span class="hljs-comment">// Can optionally override specific methods to add business logic</span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">processPayment</span><span class="hljs-params">(amount: <span class="hljs-type">Double</span>)</span></span> {
+        println(<span class="hljs-string">&quot;[Checkout Security Check] Verifying fraud risk before charging...&quot;</span>)
+        gateway.processPayment(amount) <span class="hljs-comment">// Delegates to actual gateway</span>
+    }
+}
+
+<span class="hljs-comment">// Example 17: Notification Service Delegation</span>
+<span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Notifier</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sendNotification</span><span class="hljs-params">(message: <span class="hljs-type">String</span>)</span></span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">EmailNotifier</span> : <span class="hljs-type">Notifier {</span></span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sendNotification</span><span class="hljs-params">(message: <span class="hljs-type">String</span>)</span></span> = println(<span class="hljs-string">&quot;Sending Email: <span class="hljs-variable">$message</span>&quot;</span>)
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CustomerSupport</span></span>(notifier: Notifier) : Notifier <span class="hljs-keyword">by</span> notifier
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> checkout = CheckoutManager(StripeGateway())
+    checkout.processPayment(<span class="hljs-number">149.99</span>)
+    checkout.refundPayment(<span class="hljs-string">&quot;TX-9901&quot;</span>) <span class="hljs-comment">// Handled automatically by StripeGateway!</span>
+
+    <span class="hljs-keyword">val</span> support = CustomerSupport(EmailNotifier())
+    support.sendNotification(<span class="hljs-string">&quot;Your ticket #402 has been resolved.&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+[Checkout Security Check] Verifying fraud risk before charging...<br>
+Stripe: Charged $149.99 to customer.<br>
+Stripe: Refunded transaction TX-9901.<br>
+Sending Email: Your ticket #402 has been resolved.
+      </div>
+
+      <h3 class="sub-heading">Property Delegation &amp; Built-In Delegates</h3>
+      <p>Instead of manually storing a value in a backing field and writing custom getters and setters, <strong>property delegation</strong> delegates <code>get()</code> and <code>set()</code> calls to an external object using <code>by</code>.</p>
+
+      <!-- DIAGRAM 14: PROPERTY DELEGATION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 3.2: Property Delegation Flow</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="220" height="50" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="130" y="42" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">val config: String by lazy { }</text>
+          <text x="130" y="56" fill="#94A3B8" font-size="8.5" text-anchor="middle">Property access: print(config)</text>
+
+          <path d="M 240 45 L 310 45" stroke="#38BDF8" stroke-width="1.5"/>
+
+          <rect x="310" y="15" width="230" height="60" rx="6" fill="#312E81" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="425" y="36" fill="#EEF2FF" font-size="11" font-weight="700" text-anchor="middle">Delegate.getValue(thisRef, prop)</text>
+          <text x="425" y="52" fill="#C7D2FE" font-size="8.5" text-anchor="middle">Intercepts read; computes or returns cache</text>
+          <text x="425" y="65" fill="#93C5FD" font-size="8" text-anchor="middle">Delegate controls retrieval logic</text>
+
+          <path d="M 540 45 L 610 45" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="610" y="20" width="95" height="50" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="657" y="42" fill="#D1FAE5" font-size="11" font-weight="700" text-anchor="middle">Value</text>
+          <text x="657" y="56" fill="#6EE7B7" font-size="8.5" text-anchor="middle">Delivered</text>
+        </svg>
+      </div>
+
+      <!-- DIAGRAM 15, 16, 17: LAZY, OBSERVABLE, VETOABLE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 3.3: Built-In Delegates: lazy, observable, and vetoable</div>
+        <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- lazy column -->
+          <rect x="15" y="15" width="215" height="90" rx="6" fill="#1E293B" stroke="#A78BFA" stroke-width="1.2"/>
+          <text x="122" y="36" fill="#EDE9FE" font-size="11" font-weight="700" text-anchor="middle">1. by lazy { ... }</text>
+          <text x="122" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Calculated ONLY on 1st read</text>
+          <text x="122" y="67" fill="#6EE7B7" font-size="8.5" text-anchor="middle">&bull; Cached for future calls</text>
+          <text x="122" y="82" fill="#6EE7B7" font-size="8.5" text-anchor="middle">&bull; Thread-safe by default</text>
+          <text x="122" y="96" fill="#C4B5FD" font-size="8" text-anchor="middle">Use: Heavy DB / expensive setup</text>
+
+          <!-- observable column -->
+          <rect x="250" y="15" width="220" height="90" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="360" y="36" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">2. Delegates.observable()</text>
+          <text x="360" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Notifies callback on change</text>
+          <text x="360" y="67" fill="#38BDF8" font-size="8.5" text-anchor="middle">&bull; Receives (prop, oldVal, newVal)</text>
+          <text x="360" y="82" fill="#38BDF8" font-size="8.5" text-anchor="middle">&bull; Change is always accepted</text>
+          <text x="360" y="96" fill="#7DD3FC" font-size="8" text-anchor="middle">Use: UI sync, state tracking</text>
+
+          <!-- vetoable column -->
+          <rect x="490" y="15" width="215" height="90" rx="6" fill="#1E293B" stroke="#F59E0B" stroke-width="1.2"/>
+          <text x="597" y="36" fill="#FFFBEB" font-size="11" font-weight="700" text-anchor="middle">3. Delegates.vetoable()</text>
+          <text x="597" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Validates before accepting</text>
+          <text x="597" y="67" fill="#F59E0B" font-size="8.5" text-anchor="middle">&bull; Lambda returns Boolean</text>
+          <text x="597" y="82" fill="#EF4444" font-size="8.5" text-anchor="middle">&bull; false rejects assignment!</text>
+          <text x="597" y="96" fill="#FDE68A" font-size="8.5" text-anchor="middle">Use: Age &gt;= 0, min order limits</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 18, 19, 20 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 18, 19 &amp; 20: Built-in Delegates (lazy, observable, vetoable)</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlin.properties.Delegates
+
+<span class="hljs-comment">// Example 18: Lazy initialization</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DatabaseConnector</span> </span>{
+    <span class="hljs-keyword">val</span> connectionString: String <span class="hljs-keyword">by</span> lazy {
+        println(<span class="hljs-string">&quot;&gt;&gt; [Heavy Operation] Connecting to database server...&quot;</span>)
+        <span class="hljs-string">&quot;jdbc:postgresql://db.codeverse.internal:5432/production&quot;</span>
+    }
+}
+
+<span class="hljs-comment">// Example 19: Tracking property assignments with observable</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StockTracker</span> </span>{
+    <span class="hljs-keyword">var</span> sharePrice: <span class="hljs-built_in">Double</span> <span class="hljs-keyword">by</span> Delegates.observable(<span class="hljs-number">150.0</span>) { prop, oldValue, newValue -&gt;
+        println(<span class="hljs-string">&quot;Stock ticker update: <span class="hljs-subst">${prop.name}</span> changed from \$<span class="hljs-variable">$oldValue</span> to \$<span class="hljs-variable">$newValue</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Example 20: Rejecting invalid values with vetoable</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Thermostat</span> </span>{
+    <span class="hljs-keyword">var</span> temperatureCelsius: <span class="hljs-built_in">Int</span> <span class="hljs-keyword">by</span> Delegates.vetoable(<span class="hljs-number">20</span>) { prop, oldValue, newValue -&gt;
+        <span class="hljs-keyword">val</span> isValid = newValue <span class="hljs-keyword">in</span> <span class="hljs-number">15.</span><span class="hljs-number">.30</span>
+        <span class="hljs-keyword">if</span> (!isValid) {
+            println(<span class="hljs-string">&quot;VETOED! Temperature <span class="hljs-variable">$newValue</span>&amp;deg;C is outside safe range (15 - 30&amp;deg;C). Keeping <span class="hljs-variable">$oldValue</span>&amp;deg;C&quot;</span>)
+        }
+        isValid <span class="hljs-comment">// If false, new value is rejected and property keeps oldValue</span>
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// Test Lazy</span>
+    <span class="hljs-keyword">val</span> db = DatabaseConnector()
+    println(<span class="hljs-string">&quot;DatabaseConnector instance created (notice no connection yet).&quot;</span>)
+    println(<span class="hljs-string">&quot;First access: <span class="hljs-subst">${db.connectionString}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Second access: <span class="hljs-subst">${db.connectionString}</span> (cached, no connection print!)&quot;</span>)
+
+    <span class="hljs-comment">// Test Observable</span>
+    <span class="hljs-keyword">val</span> stock = StockTracker()
+    stock.sharePrice = <span class="hljs-number">154.5</span>
+    stock.sharePrice = <span class="hljs-number">162.0</span>
+
+    <span class="hljs-comment">// Test Vetoable</span>
+    <span class="hljs-keyword">val</span> ac = Thermostat()
+    ac.temperatureCelsius = <span class="hljs-number">24</span>
+    println(<span class="hljs-string">&quot;Current AC temp: <span class="hljs-subst">${ac.temperatureCelsius}</span>&amp;deg;C&quot;</span>)
+    ac.temperatureCelsius = <span class="hljs-number">45</span> <span class="hljs-comment">// Attempt invalid value</span>
+    println(<span class="hljs-string">&quot;Current AC temp: <span class="hljs-subst">${ac.temperatureCelsius}</span>&amp;deg;C&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+DatabaseConnector instance created (notice no connection yet).<br>
+&gt;&gt; [Heavy Operation] Connecting to database server...<br>
+First access: jdbc:postgresql://db.codeverse.internal:5432/production<br>
+Second access: jdbc:postgresql://db.codeverse.internal:5432/production (cached, no connection print!)<br>
+Stock ticker update: sharePrice changed from $150.0 to $154.5<br>
+Stock ticker update: sharePrice changed from $154.5 to $162.0<br>
+Current AC temp: 24&deg;C<br>
+VETOED! Temperature 45&deg;C is outside safe range (15 - 30&deg;C). Keeping 24&deg;C<br>
+Current AC temp: 24&deg;C
+      </div>
+
+      <h3 class="sub-heading">Custom Property Delegates</h3>
+      <p>You can create custom delegates by implementing operator functions <code>operator fun getValue(...)</code> and <code>operator fun setValue(...)</code> (or implementing <code>ReadOnlyProperty</code> / <code>ReadWriteProperty</code> interfaces).</p>
+
+      <!-- CODE EXAMPLE 21, 22, 23, 24, 25 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 21 &ndash; 25: Custom Delegates &amp; Real-World Scenarios</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlin.reflect.KProperty
+
+<span class="hljs-comment">// Example 21: Custom TrimmedString Delegate that auto-trims whitespace on assignment</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TrimmedString</span></span>(<span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> value: String = <span class="hljs-string">&quot;&quot;</span>) {
+    <span class="hljs-keyword">operator</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getValue</span><span class="hljs-params">(thisRef: <span class="hljs-type">Any</span>?, property: <span class="hljs-type">KProperty</span>)</span></span>: String {
+        <span class="hljs-keyword">return</span> value
+    }
+
+    <span class="hljs-keyword">operator</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">setValue</span><span class="hljs-params">(thisRef: <span class="hljs-type">Any</span>?, property: <span class="hljs-type">KProperty</span>, newValue: <span class="hljs-type">String</span>)</span></span> {
+        value = newValue.trim() <span class="hljs-comment">// Automatically strips whitespace</span>
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">RegistrationForm</span> </span>{
+    <span class="hljs-keyword">var</span> fullName: String <span class="hljs-keyword">by</span> TrimmedString()
+    <span class="hljs-keyword">var</span> couponCode: String <span class="hljs-keyword">by</span> TrimmedString()
+}
+
+<span class="hljs-comment">// Example 22: Media Player Interface Delegation</span>
+<span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">AudioPlayer</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">playSong</span><span class="hljs-params">(title: <span class="hljs-type">String</span>)</span></span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">DefaultAudioEngine</span> : <span class="hljs-type">AudioPlayer {</span></span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">playSong</span><span class="hljs-params">(title: <span class="hljs-type">String</span>)</span></span> = println(<span class="hljs-string">&quot;AudioEngine: Playing track &#x27;<span class="hljs-variable">$title</span>&#x27;&quot;</span>)
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CarDashboard</span></span>(engine: AudioPlayer) : AudioPlayer <span class="hljs-keyword">by</span> engine
+
+<span class="hljs-comment">// Examples 23 - 25: Combined Scope Functions and Exception Handling Pipeline</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">processCustomerOrder</span><span class="hljs-params">(rawId: <span class="hljs-type">String</span>?, rawQuantity: <span class="hljs-type">String</span>?)</span></span> {
+    <span class="hljs-keyword">try</span> {
+        <span class="hljs-keyword">val</span> orderSummary = rawId?.let { validId -&gt; <span class="hljs-comment">// Example 23: let for null check</span>
+            <span class="hljs-keyword">val</span> qty = rawQuantity?.toInt() ?: <span class="hljs-number">1</span>   <span class="hljs-comment">// NumberFormatException if invalid</span>
+            require(qty &gt; <span class="hljs-number">0</span>) { <span class="hljs-string">&quot;Quantity must be positive&quot;</span> }
+
+            <span class="hljs-comment">// Example 24: apply to build configured receipt map</span>
+            mutableMapOf().apply {
+                put(<span class="hljs-string">&quot;orderId&quot;</span>, validId)
+                put(<span class="hljs-string">&quot;quantity&quot;</span>, qty)
+                put(<span class="hljs-string">&quot;timestamp&quot;</span>, System.currentTimeMillis())
+            }
+        } ?: <span class="hljs-keyword">throw</span> IllegalArgumentException(<span class="hljs-string">&quot;Order ID cannot be null&quot;</span>)
+
+        <span class="hljs-comment">// Example 25: also for audit logging</span>
+        orderSummary.also {
+            println(<span class="hljs-string">&quot;Order processed successfully: ID=<span class="hljs-subst">${it[<span class="hljs-string">&quot;orderId&quot;</span>]}</span>, Qty=<span class="hljs-subst">${it[<span class="hljs-string">&quot;quantity&quot;</span>]}</span>&quot;</span>)
+        }
+    } <span class="hljs-keyword">catch</span> (e: Exception) {
+        println(<span class="hljs-string">&quot;Order Processing Failure: <span class="hljs-subst">${e.message}</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> form = RegistrationForm()
+    form.fullName = <span class="hljs-string">&quot;   Arthur Dent   &quot;</span>
+    form.couponCode = <span class="hljs-string">&quot;  DISCOUNT50  &quot;</span>
+    println(<span class="hljs-string">&quot;Trimmed name: &#x27;<span class="hljs-subst">${form.fullName}</span>&#x27;, code: &#x27;<span class="hljs-subst">${form.couponCode}</span>&#x27;&quot;</span>)
+
+    <span class="hljs-keyword">val</span> car = CarDashboard(DefaultAudioEngine())
+    car.playSong(<span class="hljs-string">&quot;Bohemian Rhapsody&quot;</span>)
+
+    processCustomerOrder(<span class="hljs-string">&quot;ORD-101&quot;</span>, <span class="hljs-string">&quot;3&quot;</span>)
+    processCustomerOrder(<span class="hljs-string">&quot;ORD-102&quot;</span>, <span class="hljs-string">&quot;-5&quot;</span>)
+    processCustomerOrder(<span class="hljs-literal">null</span>, <span class="hljs-string">&quot;2&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Trimmed name: 'Arthur Dent', code: 'DISCOUNT50'<br>
+AudioEngine: Playing track 'Bohemian Rhapsody'<br>
+Order processed successfully: ID=ORD-101, Qty=3<br>
+Order Processing Failure: Quantity must be positive<br>
+Order Processing Failure: Order ID cannot be null
+      </div>
+    </section>
+
+    <!-- SECTION D: COMPARISON TABLES & DECISION MATRICES -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&equiv;</span>
+        Architectural Comparison Reference Tables
+      </h2>
+
+      <h3 class="sub-heading">Table 1: Error vs Exception</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>Error</th>
+              <th>Exception</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Origin</strong></td>
+              <td>JVM/system level catastrophic failure (e.g. <code>OutOfMemoryError</code>).</td>
+              <td>Application-level recoverable error (e.g. <code>NumberFormatException</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Recovery Possibility</strong></td>
+              <td>Cannot recover. App process must terminate.</td>
+              <td>Fully recoverable using <code>try-catch</code> blocks.</td>
+            </tr>
+            <tr>
+              <td><strong>Target Audience</strong></td>
+              <td>JVM infrastructure engineers and OS managers.</td>
+              <td>Application developers and end users.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 2: try-catch vs throw</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>try-catch Block</th>
+              <th>throw Statement</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Purpose</strong></td>
+              <td>Catches and handles an exception that has already occurred.</td>
+              <td>Explicitly triggers a new exception to signal a violation.</td>
+            </tr>
+            <tr>
+              <td><strong>Control Flow</strong></td>
+              <td>Resumes program flow in the catch/finally blocks safely.</td>
+              <td>Interrupts current function execution immediately (unwinds stack).</td>
+            </tr>
+            <tr>
+              <td><strong>Expression Usage</strong></td>
+              <td>Can return a value: <code>val n = try { ... } catch { ... }</code></td>
+              <td>Returns <code>Nothing</code> (terminates flow).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 3: let vs run vs with vs apply vs also</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>Reference</th>
+              <th>Return Value</th>
+              <th>Can Call on Nullable?</th>
+              <th>Ideal Scenario</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>let</code></td>
+              <td><code>it</code></td>
+              <td>Lambda Result</td>
+              <td>Yes: <code>obj?.let { }</code></td>
+              <td>Null-checks and mapping an object to a new type.</td>
+            </tr>
+            <tr>
+              <td><code>run</code></td>
+              <td><code>this</code></td>
+              <td>Lambda Result</td>
+              <td>Yes: <code>obj?.run { }</code></td>
+              <td>Configuring an object and calculating a final result.</td>
+            </tr>
+            <tr>
+              <td><code>with</code></td>
+              <td><code>this</code></td>
+              <td>Lambda Result</td>
+              <td>No: <code>with(obj) { }</code></td>
+              <td>Calling multiple methods on a known non-null receiver.</td>
+            </tr>
+            <tr>
+              <td><code>apply</code></td>
+              <td><code>this</code></td>
+              <td>Original Object</td>
+              <td>Yes: <code>obj?.apply { }</code></td>
+              <td>Setting properties on an object during initialization.</td>
+            </tr>
+            <tr>
+              <td><code>also</code></td>
+              <td><code>it</code></td>
+              <td>Original Object</td>
+              <td>Yes: <code>obj?.also { }</code></td>
+              <td>Side effects such as logging, debugging, or validation.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 4: this vs it Object References</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Object Reference</th>
+              <th>Used By Functions</th>
+              <th>Access Syntax</th>
+              <th>Key Advantage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>this</code></td>
+              <td><code>run</code>, <code>with</code>, <code>apply</code></td>
+              <td>Direct: <code>name</code> or <code>this.name</code></td>
+              <td>Extremely clean syntax when setting many properties.</td>
+            </tr>
+            <tr>
+              <td><code>it</code></td>
+              <td><code>let</code>, <code>also</code></td>
+              <td>Explicit: <code>it.name</code> (or custom rename)</td>
+              <td>Explicit naming prevents shadowing outer <code>this</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 5: Interface Delegation vs Manual Implementation</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Interface Delegation with <code>by</code></th>
+              <th>Manual Forwarding Implementation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Boilerplate Code</strong></td>
+              <td>Zero boilerplate: single <code>by delegate</code> line.</td>
+              <td>Must write individual forwarding methods for every interface signature.</td>
+            </tr>
+            <tr>
+              <td><strong>Maintenance</strong></td>
+              <td>Adding new methods to interface requires no changes in wrapper class.</td>
+              <td>Must manually update every forwarding class whenever interface adds a method.</td>
+            </tr>
+            <tr>
+              <td><strong>Customization</strong></td>
+              <td>Override only the 1 or 2 methods you care to customize.</td>
+              <td>Must maintain every single method signature manually.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 6: Built-in Delegates: lazy vs observable vs vetoable</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Delegate</th>
+              <th>Evaluation Timing</th>
+              <th>Mutability</th>
+              <th>Special Ability</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>lazy</code></td>
+              <td>On first property access</td>
+              <td>Read-only (<code>val</code>)</td>
+              <td>Caches result permanently; skips execution if never accessed.</td>
+            </tr>
+            <tr>
+              <td><code>observable</code></td>
+              <td>Immediately upon assignment</td>
+              <td>Read-write (<code>var</code>)</td>
+              <td>Provides <code>oldValue</code> and <code>newValue</code> in callback for UI sync.</td>
+            </tr>
+            <tr>
+              <td><code>vetoable</code></td>
+              <td>Before assignment takes effect</td>
+              <td>Read-write (<code>var</code>)</td>
+              <td>Can return <code>false</code> to reject the change and retain previous value.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION E: QUICK REVISION -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&#9889;</span>
+        Quick Revision: 15 Key Takeaways
+      </h2>
+      <ol>
+        <li><strong>Exceptions</strong> are runtime events that disrupt normal instruction execution; handling them prevents sudden application crashes.</li>
+        <li><strong>Kotlin has NO checked exceptions</strong> &mdash; unlike Java, functions never require <code>throws</code> declarations and try-catch is optional.</li>
+        <li><strong>Error vs Exception</strong>: Errors (e.g. <code>OutOfMemoryError</code>) are fatal JVM issues; Exceptions are recoverable application scenarios.</li>
+        <li><strong>try-catch as an expression</strong>: Kotlin's <code>try</code> block can return a value directly into a variable or function return.</li>
+        <li><strong>finally block</strong> always executes for cleanup (closing files, releasing locks), regardless of whether an exception was thrown.</li>
+        <li><strong>throw statement</strong> explicitly creates and triggers an exception, interrupting execution and unwinding the call stack.</li>
+        <li><strong>Custom exceptions</strong> inherit from <code>Exception</code> to represent clear domain-specific business rule violations.</li>
+        <li><strong>Scope functions</strong> (<code>let</code>, <code>run</code>, <code>with</code>, <code>apply</code>, <code>also</code>) execute code blocks within an object's context.</li>
+        <li><strong>apply</strong> returns the <em>original object</em> and uses <code>this</code> &mdash; best for object initialization and builder configuration.</li>
+        <li><strong>also</strong> returns the <em>original object</em> and uses <code>it</code> &mdash; best for logging, auditing, and side effects.</li>
+        <li><strong>let</strong> returns the <em>lambda result</em> and uses <code>it</code> &mdash; best for null safety (<code>?.let</code>) and value transformation.</li>
+        <li><strong>run and with</strong> return the <em>lambda result</em> and use <code>this</code> &mdash; best for computing values from an object.</li>
+        <li><strong>Interface delegation</strong> (<code>by delegate</code>) automatically forwards all interface methods to a helper object without boilerplate.</li>
+        <li><strong>by lazy</strong> initializes a <code>val</code> property only upon its first read, caching the result thread-safely for all subsequent reads.</li>
+        <li><strong>Delegates.observable</strong> tracks property updates, while <strong>Delegates.vetoable</strong> can reject invalid property assignments.</li>
+      </ol>
+    </section>
+
+    <!-- SECTION F: PRACTICE & ASSESSMENT -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&check;</span>
+        Practice &amp; Assessment: Test Your Knowledge
+      </h2>
+
+      <!-- MCQ 1 -->
+      <div class="quiz-card">
+        <div class="quiz-question">1. How does Kotlin handle checked exceptions compared to Java?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Kotlin has no checked exceptions; all exceptions are unchecked and do not require mandatory throws declarations.</div>
+          <div class="quiz-opt incorrect">&cross; B) Kotlin requires every function that throws an exception to declare it with the throws keyword.</div>
+          <div class="quiz-opt incorrect">&cross; C) Kotlin automatically terminates the JVM whenever any exception occurs.</div>
+          <div class="quiz-opt incorrect">&cross; D) Kotlin converts all exceptions into null values automatically at compile time.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> Kotlin eliminated checked exceptions to avoid verbose boilerplate. Developers can choose when and where to catch exceptions without compiler mandates.</div>
+      </div>
+
+      <!-- MCQ 2 -->
+      <div class="quiz-card">
+        <div class="quiz-question">2. What is the return value of a try-catch expression in Kotlin?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) The value of the last expression in the try block, or the last expression in the executed catch block.</div>
+          <div class="quiz-opt incorrect">&cross; B) Always Unit, because try-catch cannot return values.</div>
+          <div class="quiz-opt incorrect">&cross; C) The value of the finally block.</div>
+          <div class="quiz-opt incorrect">&cross; D) A Boolean indicating whether an error occurred.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> In Kotlin, try is an expression. The returned value is the last statement of the try block (on success) or the catch block (on exception). Notice the finally block does NOT affect the return value!</div>
+      </div>
+
+      <!-- MCQ 3 -->
+      <div class="quiz-card">
+        <div class="quiz-question">3. Which scope function is best suited for configuring properties on a newly instantiated object?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) apply (uses 'this' for direct property assignment and returns the original object).</div>
+          <div class="quiz-opt incorrect">&cross; B) let (transforms the object into an integer).</div>
+          <div class="quiz-opt incorrect">&cross; C) also (cannot mutate properties).</div>
+          <div class="quiz-opt incorrect">&cross; D) with (cannot be called as an extension function on constructors).</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>apply</code> provides <code>this</code> context to mutate properties and automatically returns the configured receiver object, making it the idiomatic Kotlin builder.</div>
+      </div>
+
+      <!-- MCQ 4 -->
+      <div class="quiz-card">
+        <div class="quiz-question">4. What is the primary difference between 'apply' and 'also'?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Both return the original object, but 'apply' accesses the object as 'this' while 'also' accesses it as 'it'.</div>
+          <div class="quiz-opt incorrect">&cross; B) 'apply' returns the lambda result while 'also' returns the original object.</div>
+          <div class="quiz-opt incorrect">&cross; C) 'apply' only works with numbers while 'also' works with strings.</div>
+          <div class="quiz-opt incorrect">&cross; D) 'also' terminates execution if an exception is thrown.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> Both return the original context object; <code>apply</code> references it as <code>this</code> (great for field setup), while <code>also</code> references it as <code>it</code> (great for logging/inspection).</div>
+      </div>
+
+      <!-- MCQ 5 -->
+      <div class="quiz-card">
+        <div class="quiz-question">5. When is the lambda block inside 'by lazy { ... }' executed?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Exactly once, upon the very first time the property is read/accessed at runtime.</div>
+          <div class="quiz-opt incorrect">&cross; B) When the enclosing class is compiled.</div>
+          <div class="quiz-opt incorrect">&cross; C) Every single time the property is accessed.</div>
+          <div class="quiz-opt incorrect">&cross; D) When the application process terminates.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>by lazy</code> performs lazy initialization: it defers computation until the first read, and caches that result for all subsequent calls.</div>
+      </div>
+
+      <!-- OUTPUT PREDICTION PRACTICE -->
+      <h3 class="sub-heading">&#128269; Output Prediction Practice (8 Questions)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">Q1: try-catch Return</div>
+          <p><code>val x = try { 10 / 0 } catch(e: Exception) { 99 } finally { 50 }</code><br>
+          <strong>Output:</strong> <code>99</code> (finally executes but does not alter returned value).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q2: ?.let on Null</div>
+          <p><code>val str: String? = null; str?.let { print("A") } ?: print("B")</code><br>
+          <strong>Output:</strong> <code>B</code> (Safe call skips let block; Elvis operator executes).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q3: apply Return Value</div>
+          <p><code>val num = 10.apply { this + 5 }</code><br>
+          <strong>Output:</strong> <code>10</code> (apply returns the original receiver, not the lambda calculation).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q4: also Side Effect</div>
+          <p><code>val res = "kotlin".also { it.uppercase() }</code><br>
+          <strong>Output:</strong> <code>kotlin</code> (Strings are immutable; also returns the original unmodified string).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q5: run Computation</div>
+          <p><code>val res = "code".run { length * 2 }</code><br>
+          <strong>Output:</strong> <code>8</code> (run returns the lambda result: 4 * 2 = 8).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q6: lazy Execution Count</div>
+          <p><code>val v by lazy { print("X"); 42 }; print(v); print(v)</code><br>
+          <strong>Output:</strong> <code>X4242</code> (Initialization block runs only once; second read returns cached 42).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q7: vetoable Rejection</div>
+          <p><code>var p by Delegates.vetoable(10) { _, _, new -> new > 0 }; p = -5; print(p)</code><br>
+          <strong>Output:</strong> <code>10</code> (Condition evaluated to false; assignment was vetoed).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q8: Interface Delegation Override</div>
+          <p><code>class B : A by a { override fun f() = print("Custom") }</code><br>
+          <strong>Output:</strong> <code>Custom</code> (Explicit method overrides supersede the delegated implementation).</p>
+        </div>
+      </div>
+
+      <!-- CODING EXERCISES -->
+      <h3 class="sub-heading">&#128187; Hands-On Coding Challenges (6 Exercises)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">1. Safe Input Parser</div>
+          <p>Write a function <code>safeParseDouble(input: String?): Double</code> that returns <code>0.0</code> if input is null or not a valid decimal number.<br>
+          <em>Hint: Use <code>input?.let { try { it.toDouble() } catch(e: Exception) { 0.0 } } ?: 0.0</code></em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">2. Custom Age Validator</div>
+          <p>Create a custom exception <code>UnderageException</code>. Write <code>verifyDrivingAge(age: Int)</code> that throws it when <code>age &lt; 18</code>.<br>
+          <em>Hint: Inherit your class from <code>Exception(message)</code> and throw with a helpful message.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">3. Http Request Builder</div>
+          <p>Create a class <code>HttpRequest(var url: String, var method: String, var timeoutMs: Int)</code> and initialize it using <code>apply</code>.<br>
+          <em>Hint: Instantiate with default empty values and set fields inside <code>.apply { ... }</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">4. Audited List Processor</div>
+          <p>Take a list of strings, filter out words shorter than 4 letters, and use <code>also</code> to log the filtered count before returning.<br>
+          <em>Hint: Chain <code>.filter { ... }.also { println("Filtered count: ${it.size}") }</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">5. Lazy Database Loader</div>
+          <p>Create a class <code>HeavyResourceLoader</code> that lazily loads a list of 10,000 integers using <code>by lazy</code>.<br>
+          <em>Hint: Verify with print statements that the list is generated only once on first read.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">6. Vetoable Volume Controller</div>
+          <p>Create a <code>Speaker</code> class whose <code>volume</code> property (initial <code>10</code>) only accepts changes between <code>0</code> and <code>100</code>.<br>
+          <em>Hint: Use <code>Delegates.vetoable(10) { _, _, new -> new in 0..100 }</code>.</em></p>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

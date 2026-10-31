@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 18: Extension Functions &amp; Properties in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 18</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-badge">Stage 4 &bull; Object-Oriented Kotlin &bull; Topic 18</div>
+    <h1 class="hero-title">Extension Functions &amp; Properties in Kotlin</h1>
+    <p class="hero-subtitle">
+      Extend existing classes without touching their source code or using complex inheritance. Learn how Kotlin's <strong>Extension Functions</strong> and <strong>Extension Properties</strong> add clean, fluent functionality to built-in and third-party types safely.
+    </p>
+  </header>
+
+  <!-- 1. INTRODUCTION -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">1</span> Introduction: What Are Extensions?</h2>
+    <p>
+      In everyday programming, you often wish an existing class had just one more convenient function. For example, wouldn't it be nice if Kotlin's built-in <code>String</code> class had a method named <code>greet()</code>, or if <code>Int</code> had a method named <code>square()</code>?
+    </p>
+    <p>
+      In older languages, adding methods to a class you don't own (like standard library classes) required creating awkward utility classes like <code>StringUtils.greet(str)</code> or complex inheritance hierarchies. Kotlin solves this elegantly with <strong>Extension Functions</strong>.
+    </p>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">📱</div>
+      <div class="alert-content">
+        <strong>Real-Life Analogy: The Phone Stand Accessory.</strong><br>
+        Imagine you have a smartphone. You want it to stand upright on your desk. You don't dismantle the phone's internal processor or alter its factory design; you simply attach an <strong>external phone stand</strong>.
+        Similarly, an Extension Function adds a handy new way to use an existing class <strong>without modifying its original source code or bytecode</strong>!
+      </div>
+    </div>
+
+    <!-- Diagram 1: Phone Stand Analogy -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 1.1: Extension Analogy (External Phone Accessory)</div>
+      <svg viewBox="0 0 620 85" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="12" width="230" height="60" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.6"/>
+        <text x="145" y="32" fill="#F8FAFC" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Standard Phone (Original Class)</text>
+        <text x="145" y="48" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">Unmodified original bytecode</text>
+        <text x="145" y="62" fill="#38BDF8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Factory sealed &bull; Cannot edit</text>
+
+        <!-- Plus Connector -->
+        <path d="M 270 42 L 310 42" fill="none" stroke="#7F52FF" stroke-width="2"/>
+        <text x="290" y="38" fill="#A78BFA" font-size="14" font-weight="800" text-anchor="middle" font-family="sans-serif">+</text>
+
+        <rect x="320" y="12" width="270" height="60" rx="6" fill="#0F172A" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="455" y="32" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Snap-on Accessory (Extension)</text>
+        <text x="455" y="48" fill="#34D399" font-size="9.5" font-weight="700" text-anchor="middle" font-family="monospace">fun String.greet()</text>
+        <text x="455" y="62" fill="#FBBF24" font-size="8.5" text-anchor="middle" font-family="sans-serif">Clean dot-call: "Kotlin".greet()</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2. SYNTAX BREAKDOWN -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">2</span> Extension Function Syntax &amp; The Receiver</h2>
+    <p>
+      Declaring an extension function is identical to declaring a standard function, except you prefix the function name with the <strong>Receiver Type</strong> (the class you want to extend) separated by a dot:
+    </p>
+
+    <!-- Diagram 2: Syntax Anatomy -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 2.1: Extension Function Syntax Breakdown</div>
+      <svg viewBox="0 0 620 85" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="70" height="35" rx="4" fill="#1E293B" stroke="#F43F5E" stroke-width="1.5"/>
+        <text x="55" y="32" fill="#F43F5E" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">fun</text>
+
+        <rect x="100" y="10" width="120" height="35" rx="4" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="160" y="32" fill="#38BDF8" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">String</text>
+
+        <text x="226" y="33" fill="#FB7185" font-size="16" font-weight="800" text-anchor="middle" font-family="monospace">.</text>
+
+        <rect x="235" y="10" width="130" height="35" rx="4" fill="#1E293B" stroke="#A78BFA" stroke-width="1.5"/>
+        <text x="300" y="32" fill="#A78BFA" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">greet()</text>
+
+        <rect x="375" y="10" width="225" height="35" rx="4" fill="#1E293B" stroke="#34D399" stroke-width="1.5"/>
+        <text x="487" y="32" fill="#34D399" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">{ println("Hi $this") }</text>
+
+        <!-- Explanatory Subtext -->
+        <text x="55" y="60" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Keyword</text>
+        <text x="160" y="60" fill="#38BDF8" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Receiver Type</text>
+        <text x="300" y="60" fill="#A78BFA" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Extension Name</text>
+        <text x="487" y="60" fill="#34D399" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Body (this = receiver object)</text>
+      </svg>
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-content">
+        <strong>The <code>this</code> Keyword in Extensions:</strong><br>
+        Inside an extension function body, the keyword <span class="pill pill-purple">this</span> refers directly to the <strong>Receiver Object</strong> (the specific instance that called the extension). If you write <code>"Alice".greet()</code>, inside <code>greet()</code> the value of <code>this</code> is <code>"Alice"</code>!
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. PRACTICAL EXAMPLES: EXTENSION FUNCTIONS (1 to 9) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">3</span> Practical Extension Functions (Examples 1 – 9)</h2>
+
+    <!-- Example 1 -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Example 1: Basic String Extension Function</h3>
+    <p style="font-size: 12px;">Adding a simple greeting method to all <code>String</code> objects in your project.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example1_BasicStringExtension.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// String is the receiver type, &#x27;this&#x27; refers to the string value</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> String.<span class="hljs-title">greet</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Hello, <span class="hljs-variable">$this</span>! Welcome to Kotlin.&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> user = <span class="hljs-string">&quot;Aman&quot;</span>
+    user.greet() <span class="hljs-comment">// Called just like a native member function!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Hello, Aman! Welcome to Kotlin.
+    </div>
+
+    <!-- Example 2 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 2: Extension Function for <code>Int</code></h3>
+    <p style="font-size: 12px;">Extending primitive integer numbers to calculate their square directly.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example2_IntExtension.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-built_in">Int</span>.<span class="hljs-title">square</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Int</span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span> * <span class="hljs-keyword">this</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> number = <span class="hljs-number">7</span>
+    println(<span class="hljs-string">&quot;The square of <span class="hljs-variable">$number</span> is <span class="hljs-subst">${number.square()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      The square of 7 is 49
+    </div>
+
+    <!-- Example 3 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 3: Extension Function for <code>List</code></h3>
+    <p style="font-size: 12px;">Adding convenient collection utilities to double and sum elements.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example3_ListExtension.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> List.<span class="hljs-title">sumDoubled</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Int</span> {
+    <span class="hljs-keyword">var</span> total = <span class="hljs-number">0</span>
+    <span class="hljs-keyword">for</span> (num <span class="hljs-keyword">in</span> <span class="hljs-keyword">this</span>) {
+        total += (num * <span class="hljs-number">2</span>)
+    }
+    <span class="hljs-keyword">return</span> total
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> scores = listOf(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>)
+    println(<span class="hljs-string">&quot;Doubled sum: <span class="hljs-subst">${scores.sumDoubled()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Doubled sum: 120
+    </div>
+
+    <!-- Example 4 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 4: Extension for a Custom <code>Student</code> Class</h3>
+    <p style="font-size: 12px;">Extending custom domain classes to keep core model files lightweight.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example4_CustomClassExtension.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> marks: <span class="hljs-built_in">Double</span>)
+
+<span class="hljs-comment">// External extension without touching Student class body</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> Student.<span class="hljs-title">isHonorRoll</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Boolean</span> {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.marks &gt;= <span class="hljs-number">90.0</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> s1 = Student(<span class="hljs-string">&quot;Priya&quot;</span>, <span class="hljs-number">94.5</span>)
+    println(<span class="hljs-string">&quot;<span class="hljs-subst">${s1.name}</span> honor status: <span class="hljs-subst">${s1.isHonorRoll()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Priya honor status: true
+    </div>
+
+    <!-- Example 5 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 5: Extension Function with Parameters</h3>
+    <p style="font-size: 12px;">Passing arguments into extension functions just like standard functions.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example5_ExtensionWithParams.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> String.<span class="hljs-title">repeatWithSeparator</span><span class="hljs-params">(times: <span class="hljs-type">Int</span>, separator: <span class="hljs-type">String</span>)</span></span>: String {
+    <span class="hljs-keyword">val</span> items = MutableList(times) { <span class="hljs-keyword">this</span> }
+    <span class="hljs-keyword">return</span> items.joinToString(separator)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> cheer = <span class="hljs-string">&quot;Go!&quot;</span>
+    println(cheer.repeatWithSeparator(<span class="hljs-number">3</span>, <span class="hljs-string">&quot; ~ &quot;</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Go! ~ Go! ~ Go!
+    </div>
+
+    <!-- Example 6 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 6: Extension Function Returning a Boolean</h3>
+    <p style="font-size: 12px;">Creating expressive conditional checks on integers.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example6_ReturnBoolean.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-built_in">Int</span>.<span class="hljs-title">isEven</span><span class="hljs-params">()</span></span>: <span class="hljs-built_in">Boolean</span> = <span class="hljs-keyword">this</span> % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Is 14 even? <span class="hljs-subst">${<span class="hljs-number">14.</span>isEven()}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Is 21 even? <span class="hljs-subst">${<span class="hljs-number">21.</span>isEven()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Is 14 even? true<br>
+      Is 21 even? false
+    </div>
+
+    <!-- Example 7 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 7: Multiple Extensions on One Class</h3>
+    <p style="font-size: 12px;">Chaining multiple custom extension methods cleanly.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example7_MultipleExtensions.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> String.<span class="hljs-title">addPrefix</span><span class="hljs-params">(prefix: <span class="hljs-type">String</span>)</span></span>: String = <span class="hljs-string">&quot;<span class="hljs-variable">$prefix</span><span class="hljs-variable">$this</span>&quot;</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> String.<span class="hljs-title">addSuffix</span><span class="hljs-params">(suffix: <span class="hljs-type">String</span>)</span></span>: String = <span class="hljs-string">&quot;<span class="hljs-variable">$this</span><span class="hljs-variable">$suffix</span>&quot;</span>
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> formatted = <span class="hljs-string">&quot;CodeVerse&quot;</span>
+        .addPrefix(<span class="hljs-string">&quot;&gt;&quot;</span>)
+    println(formatted)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      &lt;&lt; CodeVerse &gt;&gt;
+    </div>
+
+    <!-- Example 8 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 8: Extension for a Calculator Class</h3>
+    <p style="font-size: 12px;">Adding scientific operations to a third-party Calculator object.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example8_CalculatorExtension.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SimpleCalc</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">add</span><span class="hljs-params">(a: <span class="hljs-type">Int</span>, b: <span class="hljs-type">Int</span>)</span></span>: <span class="hljs-built_in">Int</span> = a + b
+}
+
+<span class="hljs-comment">// Extension adding cube calculation</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> SimpleCalc.<span class="hljs-title">cube</span><span class="hljs-params">(n: <span class="hljs-type">Int</span>)</span></span>: <span class="hljs-built_in">Int</span> = n * n * n
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> calc = SimpleCalc()
+    println(<span class="hljs-string">&quot;Sum: <span class="hljs-subst">${calc.add(<span class="hljs-number">5</span>, <span class="hljs-number">3</span>)}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Cube: <span class="hljs-subst">${calc.cube(<span class="hljs-number">4</span>)}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Sum: 8<br>
+      Cube: 64
+    </div>
+
+    <!-- Example 9 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 9: Percentage Calculation on <code>Double</code></h3>
+    <p style="font-size: 12px;">Natural financial percentage math on numbers.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example9_PercentageCalc.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-built_in">Double</span>.<span class="hljs-title">percentageOf</span><span class="hljs-params">(total: <span class="hljs-type">Double</span>)</span></span>: <span class="hljs-built_in">Double</span> {
+    <span class="hljs-keyword">return</span> (<span class="hljs-keyword">this</span> / total) * <span class="hljs-number">100.0</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> score = <span class="hljs-number">45.0</span>
+    <span class="hljs-keyword">val</span> maxScore = <span class="hljs-number">50.0</span>
+    println(<span class="hljs-string">&quot;Percentage: <span class="hljs-subst">${score.percentageOf(maxScore)}</span>%&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Percentage: 90.0%
+    </div>
+  </section>
+
+  <!-- 4. EXTENSION PROPERTIES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">4</span> Extension Properties</h2>
+    <p>
+      Just like functions, Kotlin allows you to define <strong>Extension Properties</strong>. They look and act like properties of a class, but they <strong>do not store state</strong>.
+    </p>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">📊</div>
+      <div class="alert-content">
+        <strong>Real-Life Analogy: The Calculated Report Grade.</strong><br>
+        Imagine a student report card. You have the total marks. You don't store a separate physical column for "Pass/Fail" in the database; you simply <strong>compute</strong> whether marks &ge; 50 whenever someone asks for it.
+        An Extension Property acts as a <strong>computed getter</strong>!
+      </div>
+    </div>
+
+    <!-- Diagram 3: Computed Getter Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 4.1: Extension Property Computed Getter Flow</div>
+      <svg viewBox="0 0 620 85" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="15" width="220" height="55" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="135" y="35" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">val s = "Kotlin"</text>
+        <text x="135" y="52" fill="#94A3B8" font-size="9" text-anchor="middle" font-family="monospace">s.firstCharSafe</text>
+
+        <path d="M 255 42 L 335 42" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <defs>
+          <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#7F52FF"/>
+          </marker>
+        </defs>
+
+        <rect x="340" y="15" width="255" height="55" rx="6" fill="#0F172A" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="467" y="35" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">get() = this.firstOrNull()</text>
+        <text x="467" y="52" fill="#34D399" font-size="9" text-anchor="middle" font-family="monospace">Returns 'K' dynamically without storing it!</text>
+      </svg>
+    </div>
+
+    <div class="alert alert-danger">
+      <div class="alert-icon">🚫</div>
+      <div class="alert-content">
+        <strong>Vital Limitation: No Backing Fields Allowed!</strong><br>
+        Because extension properties are not actually inserted into the receiver class, they <strong>cannot store values</strong> or have backing fields (<code>field</code>). Writing <code>val String.count = 0</code> causes a compile error: <em>"Extension property cannot be initialized because it has no backing field"</em>. You <strong>must</strong> provide a custom <code>get()</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. PRACTICAL EXAMPLES: EXTENSION PROPERTIES (10 to 14) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">5</span> Practical Extension Properties (Examples 10 – 14)</h2>
+
+    <!-- Example 10 -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Example 10: Safe First Character for <code>String</code></h3>
+    <p style="font-size: 12px;">Returning the first character or null safely without risking index out of bounds exceptions.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example10_FirstCharProperty.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Extension property with safe getter</span>
+<span class="hljs-keyword">val</span> String.firstCharSafe: <span class="hljs-built_in">Char</span>?
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">this</span>.firstOrNull()
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> word = <span class="hljs-string">&quot;Android&quot;</span>
+    <span class="hljs-keyword">val</span> empty = <span class="hljs-string">&quot;&quot;</span>
+    println(<span class="hljs-string">&quot;First char of &#x27;<span class="hljs-variable">$word</span>&#x27;: <span class="hljs-subst">${word.firstCharSafe}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;First char of empty: <span class="hljs-subst">${empty.firstCharSafe}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      First char of 'Android': A<br>
+      First char of empty: null
+    </div>
+
+    <!-- Example 11 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 11: Word Count Property on <code>String</code></h3>
+    <p style="font-size: 12px;">Computing the number of words in a sentence on demand.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example11_WordCountProperty.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">val</span> String.wordCount: <span class="hljs-built_in">Int</span>
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>.isBlank()) <span class="hljs-number">0</span> <span class="hljs-keyword">else</span> <span class="hljs-keyword">this</span>.trim().split(<span class="hljs-string">&quot;\\s+&quot;</span>.toRegex()).size
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> sentence = <span class="hljs-string">&quot;Kotlin extension properties are amazing&quot;</span>
+    println(<span class="hljs-string">&quot;Total words: <span class="hljs-subst">${sentence.wordCount}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Total words: 5
+    </div>
+
+    <!-- Example 12 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 12: Extension Property for Custom <code>Student</code> Class</h3>
+    <p style="font-size: 12px;">Determining letter grades dynamically without polluting the Student class model.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example12_StudentGradeProperty.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">StudentGrade</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> marks: <span class="hljs-built_in">Int</span>)
+
+<span class="hljs-keyword">val</span> StudentGrade.letterGrade: String
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">when</span> {
+        marks &gt;= <span class="hljs-number">90</span> -&gt; <span class="hljs-string">&quot;A&quot;</span>
+        marks &gt;= <span class="hljs-number">75</span> -&gt; <span class="hljs-string">&quot;B&quot;</span>
+        marks &gt;= <span class="hljs-number">50</span> -&gt; <span class="hljs-string">&quot;C&quot;</span>
+        <span class="hljs-keyword">else</span> -&gt; <span class="hljs-string">&quot;F&quot;</span>
+    }
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> s = StudentGrade(<span class="hljs-string">&quot;Rohan&quot;</span>, <span class="hljs-number">82</span>)
+    println(<span class="hljs-string">&quot;<span class="hljs-subst">${s.name}</span> Grade: <span class="hljs-subst">${s.letterGrade}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Rohan Grade: B
+    </div>
+
+    <!-- Example 13 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 13: Positive Check on <code>Int</code></h3>
+    <p style="font-size: 12px;">Read-only property evaluating numerical sign.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example13_IntSignProperty.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">val</span> <span class="hljs-built_in">Int</span>.isPositive: <span class="hljs-built_in">Boolean</span>
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">this</span> &gt; <span class="hljs-number">0</span>
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Is 42 positive? <span class="hljs-subst">${<span class="hljs-number">42.</span>isPositive}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Is -8 positive? <span class="hljs-subst">${(<span class="hljs-number">-8</span>).isPositive}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Is 42 positive? true<br>
+      Is -8 positive? false
+    </div>
+
+    <!-- Example 14 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 14: Multiple Extension Properties on <code>String</code></h3>
+    <p style="font-size: 12px;">Validating email syntax and digit presence through clear property names.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example14_ValidationProperties.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">val</span> String.hasDigits: <span class="hljs-built_in">Boolean</span>
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">this</span>.any { it.isDigit() }
+
+<span class="hljs-keyword">val</span> String.isEmail: <span class="hljs-built_in">Boolean</span>
+    <span class="hljs-keyword">get</span>() = <span class="hljs-keyword">this</span>.contains(<span class="hljs-string">&quot;@&quot;</span>) &amp;&amp; <span class="hljs-keyword">this</span>.contains(<span class="hljs-string">&quot;.&quot;</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> pass = <span class="hljs-string">&quot;Secret123&quot;</span>
+    <span class="hljs-keyword">val</span> mail = <span class="hljs-string">&quot;dev@codeverse.com&quot;</span>
+
+    println(<span class="hljs-string">&quot;&#x27;<span class="hljs-variable">$pass</span>&#x27; contains numbers: <span class="hljs-subst">${pass.hasDigits}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;&#x27;<span class="hljs-variable">$mail</span>&#x27; is valid email format: <span class="hljs-subst">${mail.isEmail}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      'Secret123' contains numbers: true<br>
+      'dev@codeverse.com' is valid email format: true
+    </div>
+  </section>
+
+  <!-- 6. IMPORTANT LIMITATIONS & RULES (15 to 18) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">6</span> Essential Limitations &amp; Dispatch Rules (Examples 15 – 18)</h2>
+    <p>
+      Extensions are syntactic sugar over static utility methods. Beginners must understand three crucial architectural rules:
+    </p>
+
+    <!-- Rule 1: Member Wins -->
+    <div class="alert alert-warning">
+      <div class="alert-icon">⚡</div>
+      <div class="alert-content">
+        <strong>Rule 1: Member Functions Always Win!</strong><br>
+        If an extension function has the exact same name and parameter signature as a member function of the class, the <strong>member function always takes priority</strong>. The extension is completely ignored!
+      </div>
+    </div>
+
+    <!-- Example 15 & 16 -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Examples 15 &amp; 16: Member Function Priority</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example16_MemberPriority.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Printer</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">print</span><span class="hljs-params">()</span></span> {
+        println(<span class="hljs-string">&quot;Member Function: High quality native print.&quot;</span>)
+    }
+}
+
+<span class="hljs-comment">// Identical signature extension function</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> Printer.<span class="hljs-title">print</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Extension Function: Ignored!&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> p = Printer()
+    p.print() <span class="hljs-comment">// Member function executes!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Member Function: High quality native print.
+    </div>
+
+    <!-- Rule 2: Static Resolution -->
+    <div class="alert alert-note">
+      <div class="alert-icon">📌</div>
+      <div class="alert-content">
+        <strong>Rule 2: Extensions are Resolved Statically (Compile-Time Type)!</strong><br>
+        Unlike virtual member functions that dispatch polymorphically based on the runtime object in heap memory, extension functions are resolved at compile time based on the <strong>declared reference type</strong> of the variable.
+      </div>
+    </div>
+
+    <!-- Diagram 4: Static Resolution -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 6.1: Static Resolution Based on Declared Reference Type</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="15" width="220" height="60" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="140" y="36" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">val s: Shape = Circle()</text>
+        <text x="140" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="monospace">Declared type: Shape</text>
+        <text x="140" y="65" fill="#E2E8F0" font-size="8.5" text-anchor="middle" font-family="sans-serif">Runtime object: Circle</text>
+
+        <path d="M 255 45 L 345 45" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+        <rect x="350" y="15" width="240" height="60" rx="6" fill="#0F172A" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="470" y="36" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Calls Shape.info()</text>
+        <text x="470" y="52" fill="#FBBF24" font-size="9" text-anchor="middle" font-family="monospace">Resolved at compile-time!</text>
+        <text x="470" y="65" fill="#34D399" font-size="8.5" text-anchor="middle" font-family="sans-serif">Circle.info() is NOT called</text>
+      </svg>
+    </div>
+
+    <!-- Example 17 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 17: Static Resolution in Inheritance</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example17_StaticResolution.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span></span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span> : <span class="hljs-type">Shape</span></span>()
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> Shape.<span class="hljs-title">info</span><span class="hljs-params">()</span></span> = println(<span class="hljs-string">&quot;Generic Shape&quot;</span>)
+<span class="hljs-function"><span class="hljs-keyword">fun</span> Circle.<span class="hljs-title">info</span><span class="hljs-params">()</span></span> = println(<span class="hljs-string">&quot;Round Circle&quot;</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> shape: Shape = Circle() <span class="hljs-comment">// Declared type is Shape</span>
+    shape.info() <span class="hljs-comment">// Statically calls Shape.info()</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Generic Shape
+    </div>
+
+    <!-- Example 18 -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 18: Practical System Combining Functions &amp; Properties</h3>
+    <p style="font-size: 12px;">Building a complete e-commerce receipt formatter using extensions.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example18_ReceiptSystem.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OrderItem</span></span>(<span class="hljs-keyword">val</span> title: String, <span class="hljs-keyword">val</span> unitPrice: <span class="hljs-built_in">Double</span>, <span class="hljs-keyword">val</span> quantity: <span class="hljs-built_in">Int</span>)
+
+<span class="hljs-comment">// Extension Property: Total price</span>
+<span class="hljs-keyword">val</span> OrderItem.totalPrice: <span class="hljs-built_in">Double</span>
+    <span class="hljs-keyword">get</span>() = unitPrice * quantity
+
+<span class="hljs-comment">// Extension Function: Receipt line</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> OrderItem.<span class="hljs-title">receiptLine</span><span class="hljs-params">()</span></span>: String {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;- <span class="hljs-variable">$title</span> (x<span class="hljs-variable">$quantity</span>) = \$<span class="hljs-variable">$totalPrice</span>&quot;</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> cart = listOf(
+        OrderItem(<span class="hljs-string">&quot;USB-C Cable&quot;</span>, <span class="hljs-number">9.99</span>, <span class="hljs-number">2</span>),
+        OrderItem(<span class="hljs-string">&quot;Laptop Stand&quot;</span>, <span class="hljs-number">29.50</span>, <span class="hljs-number">1</span>)
+    )
+
+    <span class="hljs-keyword">var</span> grandTotal = <span class="hljs-number">0.0</span>
+    println(<span class="hljs-string">&quot;=== ORDER RECEIPT ===&quot;</span>)
+    <span class="hljs-keyword">for</span> (item <span class="hljs-keyword">in</span> cart) {
+        println(item.receiptLine())
+        grandTotal += item.totalPrice
+    }
+    println(<span class="hljs-string">&quot;Grand Total: \$<span class="hljs-variable">$grandTotal</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      === ORDER RECEIPT ===<br>
+      - USB-C Cable (x2) = $19.98<br>
+      - Laptop Stand (x1) = $29.5<br>
+      Grand Total: $49.48
+    </div>
+  </section>
+
+  <!-- 7. EXTENSIONS VS MEMBER FUNCTIONS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">7</span> Extensions vs Member Functions: Comparison Table</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Characteristic</th>
+            <th>Member Function</th>
+            <th>Extension Function</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Declaration Location</strong></td>
+            <td>Inside the class body</td>
+            <td>Outside the class (in any file/package)</td>
+          </tr>
+          <tr>
+            <td><strong>Modify Original Class?</strong></td>
+            <td>Yes, requires source code access</td>
+            <td>No, extends classes without touching them</td>
+          </tr>
+          <tr>
+            <td><strong>Private / Protected Access</strong></td>
+            <td>✅ Can access private/protected fields</td>
+            <td>❌ Can only access public members</td>
+          </tr>
+          <tr>
+            <td><strong>Resolution Mechanism</strong></td>
+            <td>Dynamic (Virtual dispatch by runtime object)</td>
+            <td>Static (Resolved by compile-time type)</td>
+          </tr>
+          <tr>
+            <td><strong>Name Collision Priority</strong></td>
+            <td>Highest Priority (Always wins)</td>
+            <td>Ignored if member has identical signature</td>
+          </tr>
+          <tr>
+            <td><strong>State Storage (Properties)</strong></td>
+            <td>Can store backing fields (<code>var x = 0</code>)</td>
+            <td>No backing fields; computed getter only</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8. COMMON BEGINNER MISTAKES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">8</span> Common Beginner Mistakes &amp; How to Fix Them</h2>
+
+    <div class="grid-2">
+      <!-- Mistake 1 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 1. Forgetting Receiver Type prefix</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>fun greet() { println("Hi $this") } // Error: 'this' is unresolved</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Prefix the class name: <code>fun String.greet() { ... }</code>.</p>
+      </div>
+
+      <!-- Mistake 2 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 2. Storing state in Extension Property</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val String.count: Int = 10 // Error: Property initializers not allowed</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Use a getter: <code>val String.count: Int get() = this.length</code>.</p>
+      </div>
+
+      <!-- Mistake 3 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 3. Attempting to access private members</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>fun User.hack() { this.privatePassword } // Error: Cannot access private</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Extensions are external static methods; they can only access public members.</p>
+      </div>
+
+      <!-- Mistake 4 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 4. Expecting extension to override member</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;">Declaring <code>fun List.size()</code> expecting to replace <code>list.size</code>.</p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Member functions always take priority over matching extensions.</p>
+      </div>
+
+      <!-- Mistake 5 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 5. Expecting dynamic polymorphism</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val animal: Animal = Dog(); animal.sound() // Calls Animal extension!</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Extensions resolve based on the compile-time type (Animal), not runtime (Dog).</p>
+      </div>
+
+      <!-- Mistake 6 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 6. Unhandled empty string crashes</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val String.firstChar get() = this[0] // Crashes on "" with IndexOutOfBounds</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Use safe operators: <code>get() = this.firstOrNull()</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. QUICK REVISION -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">9</span> Quick Revision: 10 Key Takeaways</h2>
+    <ul style="font-size: 12.5px; line-height: 1.55;">
+      <li><strong>1. Extension Function:</strong> Adds new methods to an existing class without altering its original source code.</li>
+      <li><strong>2. Syntax:</strong> <code>fun ReceiverClass.functionName() { }</code>.</li>
+      <li><strong>3. Receiver Object:</strong> Inside the extension body, <code>this</code> refers to the instance calling the function.</li>
+      <li><strong>4. Bytecode Reality:</strong> Extensions are compiled to static utility methods taking the receiver as the first parameter.</li>
+      <li><strong>5. Extension Properties:</strong> Declared with <code>val ReceiverClass.propertyName: Type get() = ...</code>.</li>
+      <li><strong>6. No Backing Fields:</strong> Extension properties cannot store values; they are purely computed getters.</li>
+      <li><strong>7. Visibility Boundary:</strong> Extensions cannot access <code>private</code> or <code>protected</code> members of the receiver class.</li>
+      <li><strong>8. Member Function Supremacy:</strong> If a member function and an extension function share the same signature, the member function always wins.</li>
+      <li><strong>9. Static Resolution:</strong> Extension calls are resolved at compile-time by the variable's declared type, not at runtime.</li>
+      <li><strong>10. Stage 4 Completion:</strong> Extensions complete Stage 4 (Object-Oriented Kotlin), uniting classes, inheritance, interfaces, and expressive APIs!</li>
+    </ul>
+  </section>
+
+  <!-- 10. PRACTICE QUESTIONS & ASSESSMENT -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">10</span> Practice &amp; Assessment: Test Your Knowledge</h2>
+
+    <!-- MCQs -->
+    <div class="quiz-card">
+      <div class="quiz-question">1. What does the `this` keyword refer to inside an extension function body?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) The receiver object instance that called the extension function</div>
+        <div class="quiz-opt incorrect">&#x2716; B) The enclosing package namespace</div>
+        <div class="quiz-opt incorrect">&#x2716; C) The parent superclass of the receiver</div>
+        <div class="quiz-opt incorrect">&#x2716; D) The compiler's global thread dispatcher</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Inside an extension function, <code>this</code> corresponds to the receiver object (the instance before the dot).
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">2. Can an extension property in Kotlin have a backing field or direct initializer (e.g. `val String.count = 5`)?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) No, extension properties cannot have backing fields and must use explicit getters</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Yes, as long as the property is declared as `var`</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Yes, but only for primitive data types like Int and Double</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Yes, provided the class is marked with `open`</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Extension properties do not modify the physical memory layout of the receiver class. Thus, they cannot store fields and require custom getters.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">3. What happens if a class defines a member `fun save()` and an extension `fun save()` with the same signature?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) The member function always takes priority, and the extension function is ignored</div>
+        <div class="quiz-opt incorrect">&#x2716; B) The extension function always overrides the member function</div>
+        <div class="quiz-opt incorrect">&#x2716; C) The Kotlin compiler raises an ambiguous call error</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Both functions execute concurrently in separate threads</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Kotlin's resolution rule states that member functions always win over matching extension functions.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">4. Given `open class Animal` and `class Dog : Animal()`. If both define an extension `info()`, what does `val a: Animal = Dog(); a.info()` print?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) The Animal extension, because extensions are statically resolved by the declared type</div>
+        <div class="quiz-opt incorrect">&#x2716; B) The Dog extension, because dynamic dispatch checks the heap object</div>
+        <div class="quiz-opt incorrect">&#x2716; C) It causes a runtime ClassCastException</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Both extensions print one after another</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Extensions are resolved statically at compile time based on the declared type of the reference (`Animal`), not dynamically.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">5. Can an extension function access `private` properties of the receiver class?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) No, extension functions can only access visible public/internal members</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Yes, extensions have privileged root access to all private variables</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Only if declared inside the same function scope</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Yes, if marked with the `inline` keyword</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Extensions are compiled as external static methods outside the class, so they respect standard encapsulation boundaries.
+      </div>
+    </div>
+
+    <!-- Output Prediction Exercises -->
+    <div class="grid-card" style="margin-top: 10px; background: #F8FAFC;">
+      <div class="grid-card-title">🔍 Output Prediction Practice</div>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q1:</strong> Given <code>fun Int.triple() = this * 3</code>. What does <code>4.triple()</code> output?<br>
+      <em>Answer:</em> <code>12</code>.</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q2:</strong> Given <code>val String.lastChar get() = this.last()</code>. What does <code>"Kotlin".lastChar</code> return?<br>
+      <em>Answer:</em> <code>'n'</code>.</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q3:</strong> Does <code>"Hello".greet()</code> modify the source code of <code>java.lang.String</code>?<br>
+      <em>Answer:</em> No, it compiles to a static utility function call <code>greet("Hello")</code>.</p>
+    </div>
+
+    <!-- Hands-On Coding Challenges -->
+    <div class="grid-card" style="margin-top: 8px; background: #F8FAFC;">
+      <div class="grid-card-title">💻 Hands-On Coding Exercises</div>
+      <ol style="margin-left: 18px; font-size: 11.8px; line-height: 1.5;">
+        <li><strong>Vowel Counter:</strong> Write an extension function <code>String.countVowels(): Int</code> that returns the number of vowels (a, e, i, o, u) in any string.</li>
+        <li><strong>Temperature Converter:</strong> Write an extension property <code>Double.toFahrenheit: Double</code> that converts a Celsius value to Fahrenheit using <code>(this * 9/5) + 32</code>.</li>
+        <li><strong>List Second Element:</strong> Write an extension function <code>&lt;T&gt; List&lt;T&gt;.secondOrNull(): T?</code> that safely returns the second element or null if the list has fewer than 2 items.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

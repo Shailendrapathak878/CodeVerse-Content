@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 10: Lambdas &amp; Higher-Order Functions | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 10</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+      <div class="hero-badge">Stage 2 &bull; Control Flow &amp; Functions</div>
+      <h1 class="hero-title">Kotlin Lambdas &amp; Higher-Order Functions</h1>
+      <p class="hero-subtitle">
+        Unlock modern functional programming in Kotlin. Master anonymous lambdas, function types, implicit <code>it</code>, higher-order functions, trailing lambda syntax, and collection pipelines (<code>map</code>, <code>filter</code>, <code>forEach</code>).
+      </p>
+      <div class="meta-bar">
+        <span class="meta-item">&bull; Reading: 18 mins</span>
+        <span class="meta-item">&bull; Beginner Friendly</span>
+        <span class="meta-item">&bull; 18 Practical Code Examples</span>
+        <span class="meta-item">&bull; 14 Visual Flowcharts</span>
+      </div>
+    </header>
+
+    <!-- SECTION 1: Introduction to Lambda Expressions -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">1</span>
+        Introduction to Lambda Expressions
+      </h2>
+
+      <p>
+        A <strong>lambda expression</strong> (or simply a <em>lambda</em>) is an anonymous function—a concise block of code that is not declared with a formal function name. Lambdas can be stored in variables, passed directly into other functions as arguments, or returned from functions.
+      </p>
+
+      <div class="callout callout-analogy">
+        <div class="callout-title">&#128221; Real-Life Analogy: The Sticky Note Instruction</div>
+        <p>A normal function is like a heavy recipe book with an index. A lambda is like a quick <strong>sticky note</strong> with a single instruction written on it: <em>"Double this number"</em>. You can hand this note to anyone to execute!</p>
+      </div>
+
+      <!-- VISUAL 1: Normal Function vs Lambda -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 500 70" width="100%" height="70" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="10" width="220" height="50" rx="6" fill="#F8FAFC" stroke="#94A3B8"/>
+          <text x="125" y="28" font-family="monospace" font-size="9.5" font-weight="bold" fill="#0F172A" text-anchor="middle">fun add(a: Int, b: Int): Int</text>
+          <text x="125" y="44" font-family="system-ui" font-size="8.5" fill="#64748B" text-anchor="middle">Formal function declaration (Heavy)</text>
+
+          <text x="250" y="38" font-family="system-ui" font-size="16" fill="#64748B" text-anchor="middle">&hArr;</text>
+
+          <rect x="265" y="10" width="220" height="50" rx="6" fill="#F5F3FF" stroke="#7F52FF"/>
+          <text x="375" y="28" font-family="monospace" font-size="9.5" font-weight="bold" fill="#6336DF" text-anchor="middle">{ a: Int, b: Int -&gt; a + b }</text>
+          <text x="375" y="44" font-family="system-ui" font-size="8.5" fill="#6336DF" text-anchor="middle">Anonymous Lambda Expression (Concise)</text>
+        </svg>
+        <div class="diagram-caption">Visual 1: Formal Function vs. Lightweight Lambda Equivalent</div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header">
+          <div class="code-dots"><span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span></div>
+          <span>LambdaIntro.kt</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// 1. A lambda stored in a variable</span>
+    <span class="hljs-keyword">val</span> sum = { a: <span class="hljs-built_in">Int</span>, b: <span class="hljs-built_in">Int</span> -&gt; a + b }
+
+    <span class="hljs-comment">// 2. Calling the lambda</span>
+    <span class="hljs-keyword">val</span> result = sum(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>)
+    println(<span class="hljs-string">&quot;Result of lambda: <span class="hljs-variable">$result</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Result of lambda: 30</div>
+    </section>
+
+    <!-- SECTION 2: Lambda Expression Syntax -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">2</span>
+        Lambda Expression Syntax
+      </h2>
+
+      <p>Every lambda in Kotlin follows a standardized syntax enclosed in curly braces <code>{ }</code>:</p>
+
+      <!-- VISUAL 2: Lambda syntax breakdown -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 520 60" width="100%" height="60" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="15" width="25" height="30" rx="4" fill="#FEE2E2" stroke="#EF4444"/><text x="32" y="34" font-family="monospace" font-size="12" font-weight="bold" fill="#991B1B" text-anchor="middle">{</text>
+          <rect x="50" y="15" width="130" height="30" rx="4" fill="#FEF3C7" stroke="#F59E0B"/><text x="115" y="34" font-family="monospace" font-size="10" font-weight="bold" fill="#92400E" text-anchor="middle">name: String</text>
+          <rect x="185" y="15" width="30" height="30" rx="4" fill="#DBEAFE" stroke="#3B82F6"/><text x="200" y="34" font-family="monospace" font-size="11" font-weight="bold" fill="#1E40AF" text-anchor="middle">-&gt;</text>
+          <rect x="220" y="15" width="255" height="30" rx="4" fill="#ECFDF5" stroke="#10B981"/><text x="347" y="34" font-family="monospace" font-size="10" font-weight="bold" fill="#065F46" text-anchor="middle">"Hello, $name" (Last expr returned)</text>
+          <rect x="480" y="15" width="25" height="30" rx="4" fill="#FEE2E2" stroke="#EF4444"/><text x="492" y="34" font-family="monospace" font-size="12" font-weight="bold" fill="#991B1B" text-anchor="middle">}</text>
+        </svg>
+        <div class="diagram-caption">Visual 2: Anatomical Breakdown of a Kotlin Lambda</div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">&#128161; Implicit Return Value</div>
+        Notice there is no <code>return</code> keyword inside a lambda! In Kotlin, the <strong>last expression</strong> inside the lambda body is automatically returned as its result.
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">val</span> greet = { name: String -&gt;
+    <span class="hljs-string">&quot;Hello, <span class="hljs-variable">$name</span>!&quot;</span> <span class="hljs-comment">// Automatically returned</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(greet(<span class="hljs-string">&quot;Aman&quot;</span>))
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Hello, Aman!</div>
+    </section>
+
+    <!-- SECTION 3: Lambda Stored in a Variable -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">3</span>
+        Lambda Stored in a Variable
+      </h2>
+
+      <p>
+        In Kotlin, functions are <strong>first-class citizens</strong>. This means you can assign a lambda to a variable, pass it around, and execute it later by appending parentheses <code>()</code>.
+      </p>
+
+      <!-- VISUAL 3: Storing and Calling Lambda -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 65" width="100%" height="65" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="12" width="180" height="40" rx="5" fill="#F0F9FF" stroke="#0284C7"/>
+          <text x="105" y="28" font-family="monospace" font-size="10" font-weight="bold" fill="#0369A1" text-anchor="middle">val task = { println() }</text>
+          <text x="105" y="42" font-family="system-ui" font-size="8.5" fill="#64748B" text-anchor="middle">Stored in Memory (Idle)</text>
+
+          <line x1="195" y1="32" x2="255" y2="32" stroke="#7F52FF" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+          <rect x="255" y="12" width="190" height="40" rx="5" fill="#ECFDF5" stroke="#10B981"/>
+          <text x="350" y="28" font-family="monospace" font-size="10" font-weight="bold" fill="#065F46" text-anchor="middle">task() &rarr; Call-Site</text>
+          <text x="350" y="42" font-family="system-ui" font-size="8.5" fill="#065F46" text-anchor="middle">Executes Lambda Body!</text>
+
+          <defs>
+            <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#64748B"/></marker>
+            <marker id="arrowhead-green" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><polygon points="0 0, 6 3, 0 6" fill="#059669"/></marker>
+          </defs>
+        </svg>
+        <div class="diagram-caption">Visual 3: Variable Assignment vs. Delayed Invocation</div>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">val</span> welcome = {
+    println(<span class="hljs-string">&quot;Welcome to CodeVerse Kotlin Academy!&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    welcome() <span class="hljs-comment">// Invokes the lambda</span>
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Welcome to CodeVerse Kotlin Academy!</div>
+    </section>
+
+    <!-- SECTION 4: Function Types -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">4</span>
+        Function Types
+      </h2>
+
+      <p>
+        Just like a variable can have a type like <code>Int</code> or <code>String</code>, variables holding lambdas have a <strong>Function Type</strong>. It defines the parameters in parentheses and the return type after an arrow:
+      </p>
+
+      <!-- VISUAL 4: Function Type Anatomy -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 60" width="100%" height="60" xmlns="http://www.w3.org/2000/svg">
+          <rect x="30" y="12" width="140" height="36" rx="5" fill="#FEF3C7" stroke="#F59E0B"/>
+          <text x="100" y="32" font-family="monospace" font-size="10.5" font-weight="bold" fill="#92400E" text-anchor="middle">(Int, Int)</text>
+          <text x="100" y="44" font-family="system-ui" font-size="7.5" fill="#92400E" text-anchor="middle">Input Types</text>
+
+          <text x="195" y="34" font-family="monospace" font-size="14" font-weight="bold" fill="#64748B" text-anchor="middle">-&gt;</text>
+
+          <rect x="220" y="12" width="100" height="36" rx="5" fill="#DBEAFE" stroke="#3B82F6"/>
+          <text x="270" y="32" font-family="monospace" font-size="10.5" font-weight="bold" fill="#1E40AF" text-anchor="middle">Int</text>
+          <text x="270" y="44" font-family="system-ui" font-size="7.5" fill="#1E40AF" text-anchor="middle">Return Type</text>
+
+          <text x="390" y="34" font-family="system-ui" font-size="9" font-weight="bold" fill="#7F52FF" text-anchor="middle">Function Type</text>
+        </svg>
+        <div class="diagram-caption">Visual 4: Kotlin Function Type Signature Structure</div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr><th>Function Type</th><th>Inputs</th><th>Output</th><th>Meaning</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>() -&gt; Unit</code></td><td>None</td><td>Unit</td><td>Takes nothing, returns no value</td></tr>
+            <tr><td><code>(String) -&gt; String</code></td><td>1 String</td><td>String</td><td>Transforms input text into output text</td></tr>
+            <tr><td><code>(Int, Int) -&gt; Int</code></td><td>2 Integers</td><td>Int</td><td>Combines two numbers into one</td></tr>
+            <tr><td><code>(Int) -&gt; Boolean</code></td><td>1 Integer</td><td>Boolean</td><td>Predicate test (e.g., isEven)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 5: Lambda with One Parameter — it -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">5</span>
+        Lambda with One Parameter: The <code>it</code> Keyword
+      </h2>
+
+      <p>
+        If a lambda has <strong>exactly one parameter</strong>, Kotlin lets you omit the parameter declaration entirely! Kotlin supplies the implicit name <strong><code>it</code></strong> to refer to that parameter:
+      </p>
+
+      <!-- VISUAL 5: it parameter -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 65" width="100%" height="65" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="10" width="205" height="45" rx="5" fill="#F8FAFC" stroke="#94A3B8"/>
+          <text x="117" y="27" font-family="monospace" font-size="9.5" font-weight="bold" fill="#0F172A" text-anchor="middle">{ x -&gt; x * x }</text>
+          <text x="117" y="42" font-family="system-ui" font-size="8.5" fill="#64748B" text-anchor="middle">Explicit single parameter</text>
+
+          <rect x="240" y="10" width="205" height="45" rx="5" fill="#ECFDF5" stroke="#10B981"/>
+          <text x="342" y="27" font-family="monospace" font-size="9.5" font-weight="bold" fill="#065F46" text-anchor="middle">{ it * it }</text>
+          <text x="342" y="42" font-family="system-ui" font-size="8.5" fill="#065F46" text-anchor="middle">Implicit 'it' shorthand (Clean!)</text>
+        </svg>
+        <div class="diagram-caption">Visual 5: Explicit Parameter vs. Implicit `it` Shorthand</div>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Function type specifies (Int) -&gt; Int</span>
+<span class="hljs-keyword">val</span> square: (<span class="hljs-built_in">Int</span>) -&gt; <span class="hljs-built_in">Int</span> = { it * it }
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Square of 5 = <span class="hljs-subst">${square(<span class="hljs-number">5</span>)}</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Square of 5 = 25</div>
+    </section>
+
+    <!-- SECTION 6 & 7: Higher-Order Functions & Trailing Lambdas -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">6</span>
+        Higher-Order Functions &amp; Trailing Lambdas
+      </h2>
+
+      <p>
+        A <strong>higher-order function</strong> is a function that does at least one of the following:
+      </p>
+      <ul>
+        <li>Takes another function/lambda as a <strong>parameter</strong>, OR</li>
+        <li><strong>Returns</strong> another function as its result.</li>
+      </ul>
+
+      <div class="callout callout-analogy">
+        <div class="callout-title">&#127860; Restaurant Manager Analogy</div>
+        <p>A restaurant kitchen manager receives an order along with preparation instructions. The manager provides the kitchen station and ingredients, while the supplied instruction decides whether the dish is grilled or fried!</p>
+      </div>
+
+      <!-- VISUAL 6: Passing lambda -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 65" width="100%" height="65" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="12" width="170" height="40" rx="5" fill="#F0F9FF" stroke="#0284C7"/>
+          <text x="100" y="28" font-family="monospace" font-size="9.5" font-weight="bold" fill="#0369A1" text-anchor="middle">calculate(10, 5, ...)</text>
+          <text x="100" y="42" font-family="system-ui" font-size="8" fill="#64748B" text-anchor="middle">Passes data + operation</text>
+
+          <line x1="185" y1="32" x2="245" y2="32" stroke="#7F52FF" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+
+          <rect x="245" y="12" width="200" height="40" rx="5" fill="#F5F3FF" stroke="#7F52FF"/>
+          <text x="345" y="28" font-family="monospace" font-size="9.5" font-weight="bold" fill="#6336DF" text-anchor="middle">{ x, y -&gt; x + y }</text>
+          <text x="345" y="42" font-family="system-ui" font-size="8" fill="#6336DF" text-anchor="middle">Lambda acts as custom behavior</text>
+        </svg>
+        <div class="diagram-caption">Visual 6: Injecting Behavior via Function Parameters</div>
+      </div>
+
+      <!-- VISUAL 8: Trailing lambda syntax -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 65" width="100%" height="65" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="10" width="205" height="45" rx="5" fill="#F8FAFC" stroke="#94A3B8"/>
+          <text x="117" y="27" font-family="monospace" font-size="9" font-weight="bold" fill="#0F172A" text-anchor="middle">calculate(10, 5, { a, b -&gt; ... })</text>
+          <text x="117" y="42" font-family="system-ui" font-size="8" fill="#64748B" text-anchor="middle">Standard argument syntax</text>
+
+          <rect x="240" y="10" width="205" height="45" rx="5" fill="#ECFDF5" stroke="#10B981"/>
+          <text x="342" y="27" font-family="monospace" font-size="9" font-weight="bold" fill="#065F46" text-anchor="middle">calculate(10, 5) { a, b -&gt; ... }</text>
+          <text x="342" y="42" font-family="system-ui" font-size="8" fill="#065F46" text-anchor="middle">Trailing Lambda Syntax (Kotlin Idiomatic)</text>
+        </svg>
+        <div class="diagram-caption">Visual 8: Kotlin's Signature Trailing Lambda Syntax</div>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">compute</span><span class="hljs-params">(a: <span class="hljs-type">Int</span>, b: <span class="hljs-type">Int</span>, op: (<span class="hljs-type">Int</span>, <span class="hljs-type">Int</span>) -&gt; <span class="hljs-type">Int</span>)</span></span>: <span class="hljs-built_in">Int</span> {
+    <span class="hljs-keyword">return</span> op(a, b)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// Passing addition lambda</span>
+    <span class="hljs-keyword">val</span> sum = compute(<span class="hljs-number">10</span>, <span class="hljs-number">5</span>) { x, y -&gt; x + y }
+
+    <span class="hljs-comment">// Passing multiplication lambda to same function!</span>
+    <span class="hljs-keyword">val</span> product = compute(<span class="hljs-number">10</span>, <span class="hljs-number">5</span>) { x, y -&gt; x * y }
+
+    println(<span class="hljs-string">&quot;Sum: <span class="hljs-variable">$sum</span> | Product: <span class="hljs-variable">$product</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Sum: 15 | Product: 50</div>
+    </section>
+
+    <!-- SECTION 8: Standard Collection Functions -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">7</span>
+        Standard Higher-Order Collection Functions
+      </h2>
+
+      <p>
+        Kotlin's collection standard library is built entirely on higher-order functions:
+      </p>
+
+      <!-- VISUAL 9, 10, 11: map, filter, forEach -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 70" width="100%" height="70" xmlns="http://www.w3.org/2000/svg">
+          <rect x="10" y="10" width="135" height="50" rx="5" fill="#F0F9FF" stroke="#0284C7"/>
+          <text x="77" y="28" font-family="system-ui" font-size="10.5" font-weight="bold" fill="#0369A1" text-anchor="middle">map { }</text>
+          <text x="77" y="44" font-family="system-ui" font-size="8.5" fill="#334155" text-anchor="middle">Transforms values</text>
+
+          <rect x="160" y="10" width="135" height="50" rx="5" fill="#ECFDF5" stroke="#10B981"/>
+          <text x="227" y="28" font-family="system-ui" font-size="10.5" font-weight="bold" fill="#065F46" text-anchor="middle">filter { }</text>
+          <text x="227" y="44" font-family="system-ui" font-size="8.5" fill="#334155" text-anchor="middle">Selects matching</text>
+
+          <rect x="310" y="10" width="140" height="50" rx="5" fill="#F5F3FF" stroke="#7F52FF"/>
+          <text x="380" y="28" font-family="system-ui" font-size="10.5" font-weight="bold" fill="#6336DF" text-anchor="middle">forEach { }</text>
+          <text x="380" y="44" font-family="system-ui" font-size="8.5" fill="#334155" text-anchor="middle">Iterates &amp; acts</text>
+        </svg>
+        <div class="diagram-caption">Visual 7: Collection Pipeline Triad: map vs. filter vs. forEach</div>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> numbers = listOf(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>)
+
+    <span class="hljs-comment">// A. filter: select even numbers</span>
+    <span class="hljs-keyword">val</span> evens = numbers.filter { it % <span class="hljs-number">2</span> == <span class="hljs-number">0</span> }
+    println(<span class="hljs-string">&quot;Evens: <span class="hljs-variable">$evens</span>&quot;</span>)
+
+    <span class="hljs-comment">// B. map: double each number</span>
+    <span class="hljs-keyword">val</span> doubled = numbers.map { it * <span class="hljs-number">2</span> }
+    println(<span class="hljs-string">&quot;Doubled: <span class="hljs-variable">$doubled</span>&quot;</span>)
+
+    <span class="hljs-comment">// C. sumOf: calculate total</span>
+    <span class="hljs-keyword">val</span> total = numbers.sumOf { it }
+    println(<span class="hljs-string">&quot;Sum: <span class="hljs-variable">$total</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card">
+        <div class="output-card-title">Output:</div>
+        Evens: [2, 4]<br>
+        Doubled: [2, 4, 6, 8, 10]<br>
+        Sum: 15
+      </div>
+    </section>
+
+    <!-- SECTION 9: Function Returning a Function -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">8</span>
+        Function Returning Another Function
+      </h2>
+
+      <!-- VISUAL 12: Function returning function -->
+      <div class="diagram-container">
+        <svg viewBox="0 0 460 55" width="100%" height="55" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="10" width="130" height="35" rx="5" fill="#F1F5F9" stroke="#94A3B8"/>
+          <text x="85" y="27" font-family="monospace" font-size="9.5" font-weight="bold" fill="#0F172A" text-anchor="middle">getMultiplier(3)</text>
+          <text x="85" y="39" font-family="system-ui" font-size="8" fill="#64748B" text-anchor="middle">Factory Call</text>
+
+          <line x1="150" y1="27" x2="220" y2="27" stroke="#059669" stroke-width="1.5" marker-end="url(#arrowhead-green)"/>
+          <text x="185" y="20" font-family="system-ui" font-size="8" font-weight="bold" fill="#059669">returns</text>
+
+          <rect x="220" y="10" width="220" height="35" rx="5" fill="#ECFDF5" stroke="#059669"/>
+          <text x="330" y="27" font-family="monospace" font-size="9.5" font-weight="bold" fill="#065F46" text-anchor="middle">{ n -&gt; n * 3 } : (Int) -&gt; Int</text>
+          <text x="330" y="39" font-family="system-ui" font-size="8" fill="#065F46" text-anchor="middle">Ready-to-use multiplier function!</text>
+        </svg>
+        <div class="diagram-caption">Visual 8: Factory Pattern: Function Generating a Specialized Function</div>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getMultiplier</span><span class="hljs-params">(factor: <span class="hljs-type">Int</span>)</span></span>: (<span class="hljs-built_in">Int</span>) -&gt; <span class="hljs-built_in">Int</span> {
+    <span class="hljs-keyword">return</span> { number -&gt; number * factor }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> triple = getMultiplier(<span class="hljs-number">3</span>)
+    println(<span class="hljs-string">&quot;Triple of 7 = <span class="hljs-subst">${triple(<span class="hljs-number">7</span>)}</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Triple of 7 = 21</div>
+    </section>
+
+    <!-- SECTION 10: Real-World Practical Programs -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">9</span>
+        Real-World Practical Programs
+      </h2>
+
+      <!-- Program A -->
+      <h3>Program A &bull; Universal Operation Engine</h3><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">executeOp</span><span class="hljs-params">(x: <span class="hljs-type">Double</span>, y: <span class="hljs-type">Double</span>, op: (<span class="hljs-type">Double</span>, <span class="hljs-type">Double</span>) -&gt; <span class="hljs-type">Double</span>)</span></span>: <span class="hljs-built_in">Double</span> = op(x, y)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> power = executeOp(<span class="hljs-number">2.0</span>, <span class="hljs-number">3.0</span>) { a, b -&gt; Math.pow(a, b) }
+    println(<span class="hljs-string">&quot;2.0 ^ 3.0 = <span class="hljs-variable">$power</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>2.0 ^ 3.0 = 8.0</div>
+
+      <!-- Program B -->
+      <h3>Program B &bull; Student Marks Filtering Pipeline</h3><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> marks: <span class="hljs-built_in">Int</span>)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> roster = listOf(
+        Student(<span class="hljs-string">&quot;Aman&quot;</span>, <span class="hljs-number">88</span>),
+        Student(<span class="hljs-string">&quot;Pooja&quot;</span>, <span class="hljs-number">35</span>),
+        Student(<span class="hljs-string">&quot;Rohan&quot;</span>, <span class="hljs-number">72</span>)
+    )
+
+    <span class="hljs-keyword">val</span> passedStudents = roster.filter { it.marks &gt;= <span class="hljs-number">40</span> }
+    println(<span class="hljs-string">&quot;Passed Students: <span class="hljs-subst">${passedStudents.map { it.name }</span>}&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Passed Students: [Aman, Rohan]</div>
+
+      <!-- Program C -->
+      <h3>Program C &bull; Shopping Cart Price Transformation</h3><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> originalPrices = listOf(<span class="hljs-number">100.0</span>, <span class="hljs-number">250.0</span>, <span class="hljs-number">500.0</span>)
+    <span class="hljs-keyword">val</span> discountedPrices = originalPrices.map { it * <span class="hljs-number">0.9</span> } <span class="hljs-comment">// 10% off</span>
+    println(<span class="hljs-string">&quot;Discounted Prices: <span class="hljs-variable">$discountedPrices</span>&quot;</span>)
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Discounted Prices: [90.0, 225.0, 450.0]</div>
+
+      <!-- Program D -->
+      <h3>Program D &bull; Roster Display with <code>forEach</code></h3><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> attendees = listOf(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Sara&quot;</span>, <span class="hljs-string">&quot;Karan&quot;</span>)
+    attendees.forEach { println(<span class="hljs-string">&quot;Attendee: <span class="hljs-variable">$it</span> is checked in&quot;</span>) }
+}</code></pre>
+</div>
+      <div class="output-card"><div class="output-card-title">Output:</div>Attendee: Rahul is checked in<br>Attendee: Sara is checked in<br>Attendee: Karan is checked in</div>
+    </section>
+
+    <!-- SECTION 11: Common Mistakes -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">10</span>
+        Common Beginner Mistakes &amp; Fixes
+      </h2>
+
+      <div class="grid-2">
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 1. Missing Arrow -&gt;</div>
+          <p style="font-size: 12.8px;">Writing <code>{ a: Int, b: Int a + b }</code> fails to separate params from body.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Separate params with <code>-&gt;</code>.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 2. Using it in Multi-Param Lambdas</div>
+          <p style="font-size: 12.8px;"><code>it</code> is valid <strong>only</strong> for single-parameter lambdas.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Use explicit names <code>{ a, b -&gt; ... }</code>.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 3. Confusing map &amp; filter</div>
+          <p style="font-size: 12.8px;"><code>filter</code> tests conditions; <code>map</code> transforms items.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Use <code>filter</code> to keep items, <code>map</code> to change values.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 4. Using return Inside Lambda</div>
+          <p style="font-size: 12.8px;">Writing bare <code>return</code> inside a lambda attempts to return from enclosing fun.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Let the last expression be the returned value.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 5. Forgetting to Invoke Stored Lambda</div>
+          <p style="font-size: 12.8px;">Writing <code>val fn = { ... }; fn</code> without <code>()</code> does not execute.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Add parentheses: <code>fn()</code>.</p>
+        </div>
+
+        <div class="sub-card">
+          <div class="sub-card-title" style="color: var(--red);">&#10060; 6. Using forEach to Transform List</div>
+          <p style="font-size: 12.8px;"><code>forEach</code> returns <code>Unit</code> and cannot construct a new list.</p>
+          <p style="font-size: 12.5px; color: var(--green);"><strong>Fix:</strong> Use <code>map</code> when you need the transformed list.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 12: Quick Revision -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">11</span>
+        Quick Revision
+      </h2>
+
+      <ul>
+        <li><strong>Lambda:</strong> Anonymous function literal enclosed in <code>{ p1, p2 -&gt; body }</code>.</li>
+        <li><strong>Function Type:</strong> Signature written as <code>(ParamTypes) -&gt; ReturnType</code>.</li>
+        <li><strong><code>it</code>:</strong> Automatic implicit parameter name for single-parameter lambdas.</li>
+        <li><strong>Higher-Order Function:</strong> Function that takes functions as parameters or returns functions.</li>
+        <li><strong>Trailing Lambda:</strong> When the last argument is a lambda, it can be written outside <code>()</code>.</li>
+        <li><strong><code>filter</code> vs <code>map</code>:</strong> <code>filter</code> selects items by predicate; <code>map</code> transforms items into new values.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 13: Practice Questions & Assessment -->
+    <section class="section">
+      <h2 class="section-title">
+        <span class="section-title-icon">12</span>
+        Practice &amp; Assessment
+      </h2>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-mcq">MCQ 1</span>
+        <div class="qa-question">1. In Kotlin, how is the return value of a lambda expression determined?</div>
+        <div class="qa-answer"><strong>Answer:</strong> The value of the last expression in the lambda body is automatically returned.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-mcq">MCQ 2</span>
+        <div class="qa-question">2. When can the implicit parameter name `it` be used in a lambda?</div>
+        <div class="qa-answer"><strong>Answer:</strong> Only when the lambda has exactly one parameter and its type can be inferred.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-mcq">MCQ 3</span>
+        <div class="qa-question">3. What is a higher-order function?</div>
+        <div class="qa-answer"><strong>Answer:</strong> A function that takes another function as an argument, returns a function, or both.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-mcq">MCQ 4</span>
+        <div class="qa-question">4. What is trailing lambda syntax in Kotlin?</div>
+        <div class="qa-answer"><strong>Answer:</strong> Placing a lambda outside the function call parentheses if it is the last parameter.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-mcq">MCQ 5</span>
+        <div class="qa-question">5. What does the collection function `map` do?</div>
+        <div class="qa-answer"><strong>Answer:</strong> Transforms each element of a collection using the provided lambda, returning a new list.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-output">Output Prediction 1</span>
+        <div class="qa-question">What is printed? <code>val nums = listOf(1, 2, 3); println(nums.map { it * 3 })</code></div>
+        <div class="qa-answer"><strong>Output:</strong> <code>[3, 6, 9]</code>.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-output">Output Prediction 2</span>
+        <div class="qa-question">What is printed? <code>val check: (Int) -> Boolean = { it > 10 }; println(check(15))</code></div>
+        <div class="qa-answer"><strong>Output:</strong> <code>true</code> (15 > 10 is true).</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-output">Output Prediction 3</span>
+        <div class="qa-question">What is printed? <code>val f = listOf(5, 12, 8).filter { it > 6 }; println(f)</code></div>
+        <div class="qa-answer"><strong>Output:</strong> <code>[12, 8]</code>.</div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-code">Exercise 1</span>
+        <div class="qa-question">Write a lambda stored in a variable that multiplies two Double values:</div>
+        <div class="qa-answer">
+          <code>val multiply = { a: Double, b: Double -> a * b }</code>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <span class="qa-badge qa-badge-code">Exercise 2</span>
+        <div class="qa-question">Filter a list of names to find those starting with 'A':</div>
+        <div class="qa-answer">
+          <code>val aNames = names.filter { it.startsWith("A") }</code>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

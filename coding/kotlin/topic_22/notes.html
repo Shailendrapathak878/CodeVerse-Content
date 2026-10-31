@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 22: Coroutines &amp; Structured Concurrency in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 22</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+      <div class="hero-badge">STAGE 6 &bull; MODERN KOTLIN &amp; CONCURRENCY &bull; TOPIC 22</div>
+      <h1 class="hero-title">Coroutines &amp; Structured Concurrency in Kotlin</h1>
+      <p class="hero-subtitle">Master lightweight asynchronous execution, non-blocking <code>suspend</code> functions, builders (<code>launch</code>, <code>async</code>), dispatchers, and leak-free hierarchical lifecycle management.</p>
+    </header>
+
+    <!-- SECTION A: INTRODUCTION TO COROUTINES -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">A</span>
+        Section A: Introduction to Coroutines
+      </h2>
+
+      <p>A <strong>coroutine</strong> is a lightweight, non-blocking unit of asynchronous execution. The word <em>coroutine</em> comes from <em>cooperative routine</em> &mdash; tasks that can pause (suspend) their execution and resume later without blocking the operating system thread they run on.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Restaurant Kitchen</strong><br>
+          Imagine a chef in a restaurant kitchen:
+          <ul>
+            <li><strong>Thread Blocking Approach:</strong> The chef places soup on the stove to boil for 10 minutes and stands completely frozen, refusing to chop vegetables or cook pasta until the soup boils. The kitchen grinds to a halt!</li>
+            <li><strong>Coroutine (Non-Blocking) Approach:</strong> The chef places soup on the stove, sets a timer (suspends waiting for soup), immediately chops onions and preheats the oven, and returns to the soup when the timer rings. One chef accomplishes multiple tasks smoothly!</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DIAGRAM 1.1: SEQUENTIAL VS CONCURRENT EXECUTION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.1: Sequential Blocking vs Coroutine Concurrency</div>
+        <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sequential Flow -->
+          <rect x="15" y="15" width="335" height="90" rx="8" fill="#1E293B" stroke="#64748B" stroke-width="1.2"/>
+          <text x="182" y="34" fill="#F8FAFC" font-size="11" font-weight="700" text-anchor="middle">Sequential Blocking (Total: 4 seconds)</text>
+          
+          <rect x="30" y="45" width="135" height="42" rx="5" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+          <text x="97" y="64" fill="#FEE2E2" font-size="10" font-weight="700" text-anchor="middle">Task A (Fetch User)</text>
+          <text x="97" y="78" fill="#FCA5A5" font-size="8.5" text-anchor="middle">Thread frozen: 2 sec</text>
+
+          <path d="M 165 66 L 195 66" stroke="#94A3B8" stroke-width="2"/>
+
+          <rect x="195" y="45" width="135" height="42" rx="5" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+          <text x="262" y="64" fill="#FEE2E2" font-size="10" font-weight="700" text-anchor="middle">Task B (Fetch Posts)</text>
+          <text x="262" y="78" fill="#FCA5A5" font-size="8.5" text-anchor="middle">Waits for A: 2 sec</text>
+
+          <!-- Concurrent Coroutine Flow -->
+          <rect x="370" y="15" width="335" height="90" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="537" y="34" fill="#ECFDF5" font-size="11" font-weight="700" text-anchor="middle">Concurrent Coroutines (Total: 2 seconds!)</text>
+
+          <rect x="385" y="42" width="300" height="26" rx="5" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+          <text x="535" y="59" fill="#D1FAE5" font-size="9.5" font-weight="700" text-anchor="middle">Coroutine A: Fetch User (runs concurrently)</text>
+
+          <rect x="385" y="72" width="300" height="26" rx="5" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+          <text x="535" y="89" fill="#A7F3D0" font-size="9.5" font-weight="700" text-anchor="middle">Coroutine B: Fetch Posts (runs concurrently)</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Thread vs Coroutine: Why Coroutines are Lightweight</h3>
+      <p>Operating system threads are expensive &mdash; allocating a thread requires ~1 MB of RAM and a costly kernel context switch. Running 100,000 OS threads will crash your JVM with an <code>OutOfMemoryError</code>. In contrast, you can easily run <strong>100,000 coroutines on a single thread</strong> because coroutines are user-space state machines managed entirely by the Kotlin runtime!</p>
+
+      <!-- DIAGRAM 1.2: THREAD VS COROUTINE COMPARISON -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.2: Memory &amp; Multiplexing: OS Thread vs Coroutine</div>
+        <svg viewBox="0 0 720 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- OS Thread -->
+          <rect x="20" y="15" width="320" height="70" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="180" y="36" fill="#FEE2E2" font-size="11" font-weight="700" text-anchor="middle">Heavy OS Thread (~1 MB memory each)</text>
+          <text x="180" y="52" fill="#FCA5A5" font-size="9" text-anchor="middle">Managed by OS Kernel &bull; Expensive context switches</text>
+          <text x="180" y="68" fill="#94A3B8" font-size="8.5" text-anchor="middle">Max ~5,000 threads before JVM crashes with OutOfMemory</text>
+
+          <line x1="360" y1="10" x2="360" y2="90" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- Coroutine -->
+          <rect x="380" y="15" width="320" height="70" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="540" y="36" fill="#D1FAE5" font-size="11" font-weight="700" text-anchor="middle">Lightweight Coroutines (~few KB memory each)</text>
+          <text x="540" y="52" fill="#6EE7B7" font-size="9" text-anchor="middle">Managed in User-Space by Kotlin runtime</text>
+          <text x="540" y="68" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Can launch 100,000+ coroutines on a single OS thread!</text>
+        </svg>
+      </div>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">&check;</span>
+        <div class="alert-content">
+          <strong>Technical Dependency Note: kotlinx.coroutines</strong><br>
+          Coroutines are part of the official Kotlin ecosystem, but core builders live in the external library <code>org.jetbrains.kotlinx:kotlinx-coroutines-core</code>. In modern Gradle builds, you add:<br>
+          <code>implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")</code>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION B: SUSPEND FUNCTIONS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">B</span>
+        Section B: Suspend Functions
+      </h2>
+
+      <p>A <strong>suspend function</strong> is a function marked with the <code>suspend</code> keyword. It represents a function that can be paused at a suspension point and resumed later when its asynchronous work finishes &mdash; <em>without blocking the underlying thread</em>.</p>
+
+      <!-- DIAGRAM 2.1: NORMAL VS SUSPEND FUNCTION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.1: Normal Function vs Suspend Function Execution</div>
+        <svg viewBox="0 0 720 105" xmlns="http://www.w3.org/2000/svg">
+          <!-- Normal Function -->
+          <rect x="20" y="15" width="320" height="75" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="180" y="36" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">fun normalFunction(): String</text>
+          <text x="180" y="52" fill="#94A3B8" font-size="9" text-anchor="middle">Run-to-completion: cannot pause execution</text>
+          <text x="180" y="68" fill="#FCA5A5" font-size="8.5" text-anchor="middle">If it blocks (e.g. Thread.sleep), the whole thread freezes!</text>
+
+          <line x1="360" y1="10" x2="360" y2="95" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- Suspend Function -->
+          <rect x="380" y="15" width="320" height="75" rx="6" fill="#1E293B" stroke="#A78BFA" stroke-width="1.2"/>
+          <text x="540" y="36" fill="#EDE9FE" font-size="11" font-weight="700" text-anchor="middle">suspend fun loadData(): String</text>
+          <text x="540" y="52" fill="#C4B5FD" font-size="9" text-anchor="middle">Can pause with delay() or network I/O</text>
+          <text x="540" y="68" fill="#6EE7B7" font-size="8.5" text-anchor="middle">Frees underlying thread to execute other coroutines!</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">delay() vs Thread.sleep(): The Crucial Difference</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th><code>delay(timeMs)</code></th>
+              <th><code>Thread.sleep(timeMs)</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Behavior</strong></td>
+              <td><strong>Suspends</strong> the coroutine; releases the thread for other tasks.</td>
+              <td><strong>Blocks</strong> the physical operating system thread entirely.</td>
+            </tr>
+            <tr>
+              <td><strong>Context Required</strong></td>
+              <td>Can only be called inside coroutines or suspend functions.</td>
+              <td>Can be called anywhere in Java/Kotlin.</td>
+            </tr>
+            <tr>
+              <td><strong>UI Performance</strong></td>
+              <td>Zero UI freezing &mdash; UI animations continue smoothly.</td>
+              <td>Freezes the entire application UI (causes ANR in Android).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="alert alert-warning">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Important Truth: Does <code>suspend</code> automatically switch threads? NO!</strong><br>
+          Writing <code>suspend fun doWork()</code> does NOT automatically run your code on a background worker thread. By itself, <code>suspend</code> simply grants the function the ability to pause and resume. It executes on whatever thread called it until a suspension point or dispatcher switch occurs.
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 1 & 2 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 1 &amp; 2: Suspend Function &amp; Non-blocking delay()</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Example 1: Defining and calling a basic suspend function</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetchUserProfile</span><span class="hljs-params">(userId: <span class="hljs-type">Int</span>)</span></span>: String {
+    println(<span class="hljs-string">&quot;Fetching user #<span class="hljs-variable">$userId</span> on thread: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+    delay(<span class="hljs-number">1000L</span>) <span class="hljs-comment">// Suspends execution for 1 second without blocking the thread</span>
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;User(id=<span class="hljs-variable">$userId</span>, name=&#x27;Elena Rostova&#x27;)&quot;</span>
+}
+
+<span class="hljs-comment">// Example 2: Proving that delay() does NOT block other coroutines on the same thread</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Start program on: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+
+    <span class="hljs-comment">// Coroutine 1 pauses with delay</span>
+    launch {
+        println(<span class="hljs-string">&quot;Task 1: Started. Pausing for 500ms...&quot;</span>)
+        delay(<span class="hljs-number">500L</span>)
+        println(<span class="hljs-string">&quot;Task 1: Resumed and finished!&quot;</span>)
+    }
+
+    <span class="hljs-comment">// Coroutine 2 runs immediately while Task 1 is suspended</span>
+    launch {
+        println(<span class="hljs-string">&quot;Task 2: Executing immediately while Task 1 is suspended!&quot;</span>)
+    }
+
+    <span class="hljs-keyword">val</span> user = fetchUserProfile(<span class="hljs-number">42</span>)
+    println(<span class="hljs-string">&quot;Profile loaded: <span class="hljs-variable">$user</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Start program on: main<br>
+Fetching user #42 on thread: main<br>
+Task 1: Started. Pausing for 500ms...<br>
+Task 2: Executing immediately while Task 1 is suspended!<br>
+Task 1: Resumed and finished!<br>
+Profile loaded: User(id=42, name='Elena Rostova')
+      </div>
+    </section>
+
+    <!-- SECTION C: COROUTINE BUILDERS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">C</span>
+        Section C: Coroutine Builders: runBlocking, launch &amp; async
+      </h2>
+
+      <p>A <strong>coroutine builder</strong> is a function that takes a suspending lambda block and starts a new coroutine. Kotlin provides three primary builders:</p>
+
+      <!-- DIAGRAM 3.1: BUILDERS COMPARISON -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 3.1: The Three Primary Coroutine Builders</div>
+        <svg viewBox="0 0 720 110" xmlns="http://www.w3.org/2000/svg">
+          <!-- runBlocking -->
+          <rect x="15" y="15" width="220" height="80" rx="6" fill="#1E293B" stroke="#F59E0B" stroke-width="1.2"/>
+          <text x="125" y="36" fill="#FEF3C7" font-size="11" font-weight="700" text-anchor="middle">runBlocking { ... }</text>
+          <text x="125" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Bridges non-coroutine to coroutine world</text>
+          <text x="125" y="66" fill="#FCA5A5" font-size="8.5" text-anchor="middle">BLOCKS the calling thread</text>
+          <text x="125" y="80" fill="#94A3B8" font-size="8" text-anchor="middle">Use ONLY in main() and unit tests!</text>
+
+          <!-- launch -->
+          <rect x="250" y="15" width="220" height="80" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="360" y="36" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">launch { ... } &rarr; Job</text>
+          <text x="360" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Fire-and-forget background task</text>
+          <text x="360" y="66" fill="#38BDF8" font-size="8.5" text-anchor="middle">Returns a Job control handle</text>
+          <text x="360" y="80" fill="#94A3B8" font-size="8" text-anchor="middle">Does not return a direct computed result</text>
+
+          <!-- async -->
+          <rect x="485" y="15" width="220" height="80" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="595" y="36" fill="#D1FAE5" font-size="11" font-weight="700" text-anchor="middle">async { ... } &rarr; Deferred&lt;T&gt;</text>
+          <text x="595" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">Asynchronous computation with result</text>
+          <text x="595" y="66" fill="#10B981" font-size="8.5" text-anchor="middle">Returns a Deferred&lt;T&gt; promise</text>
+          <text x="595" y="80" fill="#94A3B8" font-size="8" text-anchor="middle">Call .await() to obtain the output value</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 3, 4, 5 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 3, 4 &amp; 5: launch with Job.join() and async with Deferred.await()</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Example 3 &amp; 4: launch returns a Job; call join() to wait for completion</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testLaunchWithJob</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Starting background download...&quot;</span>)
+    <span class="hljs-keyword">val</span> downloadJob: Job = launch {
+        delay(<span class="hljs-number">600L</span>)
+        println(<span class="hljs-string">&quot;Download complete! (Saved to storage)&quot;</span>)
+    }
+
+    println(<span class="hljs-string">&quot;Doing other work in main thread...&quot;</span>)
+    downloadJob.join() <span class="hljs-comment">// Suspends until downloadJob finishes</span>
+    println(<span class="hljs-string">&quot;Ready to open downloaded file.&quot;</span>)
+}
+
+<span class="hljs-comment">// Example 5: async returns a Deferred; call await() to fetch result</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetchPrice</span><span class="hljs-params">(item: <span class="hljs-type">String</span>)</span></span>: <span class="hljs-built_in">Int</span> {
+    delay(<span class="hljs-number">500L</span>)
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> (item == <span class="hljs-string">&quot;Laptop&quot;</span>) <span class="hljs-number">1200</span> <span class="hljs-keyword">else</span> <span class="hljs-number">80</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testAsyncWithAwait</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Fetching prices in parallel...&quot;</span>)
+    <span class="hljs-keyword">val</span> laptopDeferred: Deferred = async { fetchPrice(<span class="hljs-string">&quot;Laptop&quot;</span>) }
+    <span class="hljs-keyword">val</span> mouseDeferred: Deferred = async { fetchPrice(<span class="hljs-string">&quot;Mouse&quot;</span>) }
+
+    <span class="hljs-comment">// Both requests ran concurrently! Awaiting results:</span>
+    <span class="hljs-keyword">val</span> total = laptopDeferred.await() + mouseDeferred.await()
+    println(<span class="hljs-string">&quot;Total cart value: \$<span class="hljs-variable">$total</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    testLaunchWithJob()
+    testAsyncWithAwait()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Starting background download...<br>
+Doing other work in main thread...<br>
+Download complete! (Saved to storage)<br>
+Ready to open downloaded file.<br>
+Fetching prices in parallel...<br>
+Total cart value: $1280
+      </div>
+    </section>
+
+    <!-- SECTION D: COROUTINE SCOPE & STRUCTURED CONCURRENCY -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">D</span>
+        Section D: Coroutine Scope &amp; Structured Concurrency
+      </h2>
+
+      <p>In older asynchronous programming (e.g. raw threads), background tasks could outlive the screen that started them, causing severe memory leaks and zombie crashes. <strong>Structured concurrency</strong> is Kotlin's core architectural guarantee: <em>new coroutines can only be launched inside a specific CoroutineScope, and parent scopes manage the lifetime of all their children</em>.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Project Manager &amp; Team</strong><br>
+          A Project Manager assigns sub-tasks to 3 team members.
+          <ul>
+            <li>The Manager cannot leave the office until all 3 team members finish their work.</li>
+            <li>If the company cancels the whole project, the Manager automatically signals all 3 members to stop working immediately. No orphaned work is left behind!</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DIAGRAM 4.1: STRUCTURED CONCURRENCY HIERARCHY -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 4.1: Parent-Child Coroutine Hierarchy Tree</div>
+        <svg viewBox="0 0 720 120" xmlns="http://www.w3.org/2000/svg">
+          <!-- Parent Scope -->
+          <rect x="250" y="10" width="220" height="40" rx="8" fill="#312E81" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="360" y="27" fill="#EEF2FF" font-size="11.5" font-weight="800" text-anchor="middle">Parent CoroutineScope</text>
+          <text x="360" y="41" fill="#C7D2FE" font-size="8.5" text-anchor="middle">Controls total lifecycle &bull; Automatically awaits children</text>
+
+          <!-- Branch lines -->
+          <path d="M 360 50 L 140 75" stroke="#818CF8" stroke-width="1.5"/>
+          <path d="M 360 50 L 360 75" stroke="#818CF8" stroke-width="1.5"/>
+          <path d="M 360 50 L 580 75" stroke="#818CF8" stroke-width="1.5"/>
+
+          <!-- Child 1 -->
+          <rect x="40" y="75" width="200" height="35" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="140" y="92" fill="#D1FAE5" font-size="10" font-weight="700" text-anchor="middle">Child Coroutine 1 (Fetch DB)</text>
+          <text x="140" y="104" fill="#6EE7B7" font-size="8" text-anchor="middle">Bound to parent lifetime</text>
+
+          <!-- Child 2 -->
+          <rect x="260" y="75" width="200" height="35" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="360" y="92" fill="#D1FAE5" font-size="10" font-weight="700" text-anchor="middle">Child Coroutine 2 (API Call)</text>
+          <text x="360" y="104" fill="#6EE7B7" font-size="8" text-anchor="middle">Cancels if parent cancels</text>
+
+          <!-- Child 3 -->
+          <rect x="480" y="75" width="200" height="35" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="580" y="92" fill="#D1FAE5" font-size="10" font-weight="700" text-anchor="middle">Child Coroutine 3 (Image Cache)</text>
+          <text x="580" y="104" fill="#6EE7B7" font-size="8" text-anchor="middle">Cancels if parent cancels</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 6 & 7 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 6 &amp; 7: Creating Custom Scope &amp; Parent Cancellation</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Example 6: Custom CoroutineScope waiting for child completion</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testStructuredHierarchy</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Parent scope started.&quot;</span>)
+
+    <span class="hljs-comment">// CoroutineScope manages child lifetimes</span>
+    coroutineScope {
+        launch {
+            delay(<span class="hljs-number">300L</span>)
+            println(<span class="hljs-string">&quot;&gt;&gt; Child 1 finished database sync&quot;</span>)
+        }
+        launch {
+            delay(<span class="hljs-number">500L</span>)
+            println(<span class="hljs-string">&quot;&gt;&gt; Child 2 finished network upload&quot;</span>)
+        }
+    }
+
+    println(<span class="hljs-string">&quot;coroutineScope block exited (waited for both children!).&quot;</span>)
+}
+
+<span class="hljs-comment">// Example 7: Cancelling parent scope cancels all child tasks instantly</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testParentCancellation</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-keyword">val</span> customScope = CoroutineScope(Dispatchers.Default + Job())
+
+    customScope.launch {
+        delay(<span class="hljs-number">1000L</span>)
+        println(<span class="hljs-string">&quot;This will NEVER print because parent cancelled!&quot;</span>)
+    }
+
+    delay(<span class="hljs-number">100L</span>)
+    println(<span class="hljs-string">&quot;Cancelling custom parent scope...&quot;</span>)
+    customScope.cancel() <span class="hljs-comment">// Cancels all children inside</span>
+    delay(<span class="hljs-number">200L</span>)
+    println(<span class="hljs-string">&quot;Parent scope cancelled cleanly.&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    testStructuredHierarchy()
+    testParentCancellation()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Parent scope started.<br>
+&gt;&gt; Child 1 finished database sync<br>
+&gt;&gt; Child 2 finished network upload<br>
+coroutineScope block exited (waited for both children!).<br>
+Cancelling custom parent scope...<br>
+Parent scope cancelled cleanly.
+      </div>
+    </section>
+
+    <!-- SECTION E: COROUTINE DISPATCHERS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">E</span>
+        Section E: Coroutine Dispatchers &amp; withContext
+      </h2>
+
+      <p>A <strong>CoroutineDispatcher</strong> determines which underlying thread or thread pool will execute the coroutine's instructions. You can dynamically switch dispatchers using <code>withContext()</code>.</p>
+
+      <!-- DIAGRAM 5.1: DISPATCHERS ARCHITECTURE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 5.1: The Four Standard Coroutine Dispatchers</div>
+        <svg viewBox="0 0 720 115" xmlns="http://www.w3.org/2000/svg">
+          <!-- Dispatchers.Main -->
+          <rect x="15" y="15" width="165" height="85" rx="6" fill="#1E293B" stroke="#F43F5E" stroke-width="1.2"/>
+          <text x="97" y="36" fill="#FFE4E6" font-size="10.5" font-weight="700" text-anchor="middle">Dispatchers.Main</text>
+          <text x="97" y="52" fill="#FDA4AF" font-size="8.5" text-anchor="middle">Main / UI Thread</text>
+          <text x="97" y="67" fill="#94A3B8" font-size="8" text-anchor="middle">UI rendering, click events</text>
+          <text x="97" y="81" fill="#FCA5A5" font-size="7.5" text-anchor="middle">Platform dependent (Android/Swing)</text>
+
+          <!-- Dispatchers.IO -->
+          <rect x="190" y="15" width="165" height="85" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.2"/>
+          <text x="272" y="36" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">Dispatchers.IO</text>
+          <text x="272" y="52" fill="#7DD3FC" font-size="8.5" text-anchor="middle">Shared On-Demand Pool</text>
+          <text x="272" y="67" fill="#94A3B8" font-size="8" text-anchor="middle">Network API, File disk, SQLite</text>
+          <text x="272" y="81" fill="#BAE6FD" font-size="7.5" text-anchor="middle">Elastic thread pool (up to 64)</text>
+
+          <!-- Dispatchers.Default -->
+          <rect x="365" y="15" width="165" height="85" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="447" y="36" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">Dispatchers.Default</text>
+          <text x="447" y="52" fill="#6EE7B7" font-size="8.5" text-anchor="middle">CPU Thread Pool</text>
+          <text x="447" y="67" fill="#94A3B8" font-size="8" text-anchor="middle">Math, JSON parsing, sorting</text>
+          <text x="447" y="81" fill="#A7F3D0" font-size="7.5" text-anchor="middle">Sized to CPU core count</text>
+
+          <!-- Dispatchers.Unconfined -->
+          <rect x="540" y="15" width="165" height="85" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.2"/>
+          <text x="622" y="36" fill="#F1F5F9" font-size="10.5" font-weight="700" text-anchor="middle">Dispatchers.Unconfined</text>
+          <text x="622" y="52" fill="#94A3B8" font-size="8.5" text-anchor="middle">No Specific Thread</text>
+          <text x="622" y="67" fill="#FCA5A5" font-size="8" text-anchor="middle">Resumes on whatever thread</text>
+          <text x="622" y="81" fill="#FECACA" font-size="7.5" text-anchor="middle">Avoid in beginner code!</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">withContext(): Seamless Thread Switching</h3>
+      <p><code>withContext(dispatcher)</code> switches the execution context for a specific block and returns the result, restoring the original dispatcher automatically once finished.</p>
+
+      <!-- CODE EXAMPLE 8, 9, 10 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 8, 9 &amp; 10: Dispatchers.IO, Default &amp; withContext()</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Simulated heavy network call</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">downloadRawJson</span><span class="hljs-params">()</span></span>: String = withContext(Dispatchers.IO) {
+    println(<span class="hljs-string">&quot;1. Downloading JSON on IO thread: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+    delay(<span class="hljs-number">300L</span>) <span class="hljs-comment">// Simulated network latency</span>
+    <span class="hljs-string">&quot;{\&quot;userId\&quot;: 101, \&quot;score\&quot;: 980}&quot;</span>
+}
+
+<span class="hljs-comment">// Simulated heavy CPU computation</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">parseAndCalculateBonus</span><span class="hljs-params">(json: <span class="hljs-type">String</span>)</span></span>: <span class="hljs-built_in">Int</span> = withContext(Dispatchers.Default) {
+    println(<span class="hljs-string">&quot;2. Parsing on CPU Default thread: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+    delay(<span class="hljs-number">200L</span>) <span class="hljs-comment">// Simulated CPU processing</span>
+    <span class="hljs-number">980</span> * <span class="hljs-number">2</span> <span class="hljs-comment">// Returns calculated bonus</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Caller starts on: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+    
+    <span class="hljs-keyword">val</span> rawData = downloadRawJson()
+    <span class="hljs-keyword">val</span> finalScore = parseAndCalculateBonus(rawData)
+
+    println(<span class="hljs-string">&quot;3. Back on caller thread: <span class="hljs-subst">${Thread.currentThread().name}</span> with result: <span class="hljs-variable">$finalScore</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Caller starts on: main<br>
+1. Downloading JSON on IO thread: DefaultDispatcher-worker-1<br>
+2. Parsing on CPU Default thread: DefaultDispatcher-worker-2<br>
+3. Back on caller thread: main with result: 1960
+      </div>
+    </section>
+
+    <!-- SECTION F: CANCELLATION & EXCEPTION HANDLING -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">F</span>
+        Section F: Coroutine Cancellation &amp; Exception Handling
+      </h2>
+
+      <p>In mobile and server applications, tasks must often be cancelled &mdash; for example, when a user navigates away from a screen or types a new search query. In Kotlin, <strong>cancellation is cooperative</strong>. A running coroutine must periodically check whether it has been cancelled!</p>
+
+      <!-- DIAGRAM 6.1: COOPERATIVE CANCELLATION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 6.1: Cooperative Cancellation Flow (isActive &amp; ensureActive)</div>
+        <svg viewBox="0 0 720 85" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="20" width="160" height="46" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="100" y="41" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">job.cancel() Called</text>
+          <text x="100" y="55" fill="#94A3B8" font-size="8.5" text-anchor="middle">State set to Cancelling</text>
+
+          <path d="M 180 43 L 240 43" stroke="#EF4444" stroke-width="1.5"/>
+
+          <rect x="240" y="15" width="240" height="56" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.5"/>
+          <text x="360" y="36" fill="#FEE2E2" font-size="11" font-weight="700" text-anchor="middle">Coroutine Cooperates</text>
+          <text x="360" y="50" fill="#FCA5A5" font-size="8.5" text-anchor="middle">Checks 'isActive' or calls delay()</text>
+          <text x="360" y="62" fill="#FECACA" font-size="8" text-anchor="middle">Throws CancellationException</text>
+
+          <path d="M 480 43 L 540 43" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="540" y="20" width="160" height="46" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="620" y="41" fill="#ECFDF5" font-size="10.5" font-weight="700" text-anchor="middle">Resources Released</text>
+          <text x="620" y="55" fill="#A7F3D0" font-size="8.5" text-anchor="middle">Clean termination (No leaks!)</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Failure Propagation: Normal Job vs supervisorScope</h3>
+      <p>By default, if one child coroutine fails with an unhandled exception, it cancels the parent, which in turn cancels all other sibling coroutines. When you need independent siblings where one failure does NOT cancel the others, use <strong><code>supervisorScope</code></strong> (or <code>SupervisorJob</code>).</p>
+
+      <!-- DIAGRAM 6.2: SUPERVISORSCOPE SIBLING ISOLATION -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 6.2: Failure Isolation: Standard Scope vs supervisorScope</div>
+        <svg viewBox="0 0 720 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Standard failure -->
+          <rect x="15" y="15" width="335" height="75" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="182" y="34" fill="#FEE2E2" font-size="10.5" font-weight="700" text-anchor="middle">Standard Scope (Cascading Failure)</text>
+          <text x="182" y="50" fill="#FCA5A5" font-size="8.5" text-anchor="middle">Child A throws Exception &rarr; Parent Cancels!</text>
+          <text x="182" y="68" fill="#EF4444" font-size="8.5" font-weight="700" text-anchor="middle">&cross; Sibling Child B is forcefully cancelled</text>
+
+          <line x1="360" y1="10" x2="360" y2="90" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- supervisorScope failure -->
+          <rect x="370" y="15" width="335" height="75" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="537" y="34" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">supervisorScope (Isolated Sibling Failure)</text>
+          <text x="537" y="50" fill="#6EE7B7" font-size="8.5" text-anchor="middle">Child A throws Exception &rarr; Handled locally</text>
+          <text x="537" y="68" fill="#10B981" font-size="8.5" font-weight="700" text-anchor="middle">&check; Sibling Child B continues running successfully!</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 11, 12, 13 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 11, 12 &amp; 13: Cooperative Cancellation &amp; supervisorScope</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Example 11: Cooperative cancellation with isActive</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testCooperativeCancellation</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-keyword">val</span> computationJob = launch(Dispatchers.Default) {
+        <span class="hljs-keyword">var</span> counter = <span class="hljs-number">0</span>
+        <span class="hljs-keyword">while</span> (isActive) { <span class="hljs-comment">// Cooperative check!</span>
+            counter++
+            <span class="hljs-keyword">if</span> (counter % <span class="hljs-number">1_000_000</span> == <span class="hljs-number">0</span>) {
+                println(<span class="hljs-string">&quot;Computing: counter = <span class="hljs-variable">$counter</span>&quot;</span>)
+            }
+        }
+        println(<span class="hljs-string">&quot;Coroutine noticed isActive == false and exited loop!&quot;</span>)
+    }
+
+    delay(<span class="hljs-number">15L</span>)
+    println(<span class="hljs-string">&quot;Cancelling computation...&quot;</span>)
+    computationJob.cancelAndJoin()
+}
+
+<span class="hljs-comment">// Example 12 &amp; 13: supervisorScope keeps siblings alive during one failure</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">testSupervisor</span><span class="hljs-params">()</span></span> = runBlocking {
+    supervisorScope {
+        <span class="hljs-comment">// Child 1 fails</span>
+        launch {
+            println(<span class="hljs-string">&quot;Child 1: Crashing with error...&quot;</span>)
+            <span class="hljs-keyword">throw</span> RuntimeException(<span class="hljs-string">&quot;Child 1 API failed!&quot;</span>)
+        }
+
+        <span class="hljs-comment">// Child 2 survives because supervisorScope isolates failures!</span>
+        launch {
+            delay(<span class="hljs-number">100L</span>)
+            println(<span class="hljs-string">&quot;Child 2: Completed successfully despite Child 1 failure!&quot;</span>)
+        }
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    testCooperativeCancellation()
+    <span class="hljs-keyword">try</span> { testSupervisor() } <span class="hljs-keyword">catch</span> (e: Exception) { }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Computing: counter = 1000000<br>
+Cancelling computation...<br>
+Coroutine noticed isActive == false and exited loop!<br>
+Child 1: Crashing with error...<br>
+Child 2: Completed successfully despite Child 1 failure!
+      </div>
+    </section>
+
+    <!-- SECTION G: JOB & DEFERRED LIFECYCLE -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">G</span>
+        Section G: Job &amp; Deferred Lifecycle
+      </h2>
+
+      <p>Every coroutine started by <code>launch</code> returns a <strong><code>Job</code></strong>, while <code>async</code> returns a <strong><code>Deferred&lt;T&gt;</code></strong> (which is a <code>Job</code> with an associated result value). Both follow an explicit state machine lifecycle:</p>
+
+      <!-- DIAGRAM 7.1: JOB LIFECYCLE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 7.1: Coroutine Job State Machine Lifecycle</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="25" width="100" height="42" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.2"/>
+          <text x="65" y="44" fill="#E2E8F0" font-size="10.5" font-weight="700" text-anchor="middle">1. New</text>
+          <text x="65" y="58" fill="#94A3B8" font-size="8" text-anchor="middle">Lazy start</text>
+
+          <path d="M 115 46 L 160 46" stroke="#38BDF8" stroke-width="1.5"/>
+
+          <rect x="160" y="25" width="115" height="42" rx="6" fill="#0C4A6E" stroke="#0284C7" stroke-width="1.2"/>
+          <text x="217" y="44" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">2. Active</text>
+          <text x="217" y="58" fill="#BAE6FD" font-size="8" text-anchor="middle">isActive = true</text>
+
+          <path d="M 275 46 L 320 46" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="320" y="25" width="125" height="42" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="382" y="44" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">3. Completing</text>
+          <text x="382" y="58" fill="#A7F3D0" font-size="8" text-anchor="middle">Awaiting children</text>
+
+          <path d="M 445 46 L 490 46" stroke="#10B981" stroke-width="1.5"/>
+
+          <rect x="490" y="25" width="105" height="42" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="542" y="44" fill="#ECFDF5" font-size="10.5" font-weight="700" text-anchor="middle">4. Completed</text>
+          <text x="542" y="58" fill="#6EE7B7" font-size="8" text-anchor="middle">isCompleted = true</text>
+
+          <!-- Cancelled branch below -->
+          <path d="M 217 67 L 217 80 L 650 80 L 650 67" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3"/>
+          <rect x="605" y="25" width="105" height="42" rx="6" fill="#7F1D1D" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="657" y="44" fill="#FEE2E2" font-size="10.5" font-weight="700" text-anchor="middle">Cancelled</text>
+          <text x="657" y="58" fill="#FCA5A5" font-size="8" text-anchor="middle">isCancelled = true</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Job vs Deferred Comparison</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th><code>Job</code></th>
+              <th><code>Deferred&lt;T&gt;</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Returned By</strong></td>
+              <td><code>launch { ... }</code></td>
+              <td><code>async { ... }</code></td>
+            </tr>
+            <tr>
+              <td><strong>Produces Value?</strong></td>
+              <td>No &mdash; pure side-effect worker.</td>
+              <td>Yes &mdash; produces value of type <code>T</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Waiting Function</strong></td>
+              <td><code>job.join()</code> (suspends until complete).</td>
+              <td><code>deferred.await()</code> (suspends and returns <code>T</code>).</td>
+            </tr>
+            <tr>
+              <td><strong>Relationship</strong></td>
+              <td>Base interface for all coroutine handles.</td>
+              <td>Sub-interface: <code>interface Deferred&lt;out T&gt; : Job</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION H: PRACTICAL REAL-WORLD SCENARIOS (EXAMPLES 14 - 25) -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">H</span>
+        Section H: Practical Real-Life Scenarios (Examples 14 &ndash; 25)
+      </h2>
+
+      <p>Let's combine all coroutine principles into production-ready architectures: parallel dashboard aggregation, query cancellation, safe fallback handling, and thread context safety.</p>
+
+      <!-- CODE CONTAINER FOR EXAMPLES 14 - 25 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 14 &ndash; 25: Dashboard Aggregator, Search Cancellation &amp; Safe API</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+
+<span class="hljs-comment">// Data models</span>
+<span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserProfile</span></span>(<span class="hljs-keyword">val</span> name: String, <span class="hljs-keyword">val</span> email: String)
+<span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OrderSummary</span></span>(<span class="hljs-keyword">val</span> count: <span class="hljs-built_in">Int</span>, <span class="hljs-keyword">val</span> totalSpent: <span class="hljs-built_in">Double</span>)
+<span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dashboard</span></span>(<span class="hljs-keyword">val</span> user: UserProfile, <span class="hljs-keyword">val</span> orders: OrderSummary)
+
+<span class="hljs-comment">// Simulated Network Services (Examples 14 - 17)</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetchUser</span><span class="hljs-params">()</span></span>: UserProfile = withContext(Dispatchers.IO) {
+    delay(<span class="hljs-number">250L</span>) <span class="hljs-comment">// Simulating network latency</span>
+    UserProfile(<span class="hljs-string">&quot;Nadia Petrova&quot;</span>, <span class="hljs-string">&quot;nadia@codeverse.io&quot;</span>)
+}
+
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetchOrders</span><span class="hljs-params">()</span></span>: OrderSummary = withContext(Dispatchers.IO) {
+    delay(<span class="hljs-number">300L</span>) <span class="hljs-comment">// Simulating orders microservice call</span>
+    OrderSummary(<span class="hljs-number">14</span>, <span class="hljs-number">1249.50</span>)
+}
+
+<span class="hljs-comment">// Example 18: Parallel Dashboard Aggregator</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">loadDashboardConcurrently</span><span class="hljs-params">()</span></span>: Dashboard = coroutineScope {
+    println(<span class="hljs-string">&quot;Starting parallel dashboard load...&quot;</span>)
+    <span class="hljs-keyword">val</span> userDeferred = async { fetchUser() }
+    <span class="hljs-keyword">val</span> ordersDeferred = async { fetchOrders() }
+
+    <span class="hljs-comment">// Both run concurrently; await() gathers results</span>
+    Dashboard(userDeferred.await(), ordersDeferred.await())
+}
+
+<span class="hljs-comment">// Example 19 - 22: Cancelling an outdated Search Query when new key is typed</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchController</span></span>(<span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> scope: CoroutineScope) {
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">var</span> searchJob: Job? = <span class="hljs-literal">null</span>
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">onQueryChanged</span><span class="hljs-params">(query: <span class="hljs-type">String</span>)</span></span> {
+        searchJob?.cancel() <span class="hljs-comment">// Cancel previous query if still running</span>
+        searchJob = scope.launch {
+            delay(<span class="hljs-number">150L</span>) <span class="hljs-comment">// Debounce delay</span>
+            println(<span class="hljs-string">&quot;Search executed for query: &#x27;<span class="hljs-variable">$query</span>&#x27;&quot;</span>)
+        }
+    }
+}
+
+<span class="hljs-comment">// Examples 23 - 25: Safe Fallback with try-catch</span>
+<span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetchWeatherSafe</span><span class="hljs-params">()</span></span>: String = withContext(Dispatchers.IO) {
+    <span class="hljs-keyword">try</span> {
+        delay(<span class="hljs-number">100L</span>)
+        <span class="hljs-keyword">throw</span> RuntimeException(<span class="hljs-string">&quot;Weather satellite offline&quot;</span>)
+    } <span class="hljs-keyword">catch</span> (e: Exception) {
+        println(<span class="hljs-string">&quot;Warning: <span class="hljs-subst">${e.message}</span>. Using cached 22&amp;deg;C.&quot;</span>)
+        <span class="hljs-string">&quot;22&amp;deg;C (Cached)&quot;</span>
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-comment">// Run Parallel Dashboard</span>
+    <span class="hljs-keyword">val</span> dashboard = loadDashboardConcurrently()
+    println(<span class="hljs-string">&quot;Dashboard loaded: <span class="hljs-subst">${dashboard.user.name}</span>, Total Orders: <span class="hljs-subst">${dashboard.orders.count}</span>&quot;</span>)
+
+    <span class="hljs-comment">// Run Search Cancellation</span>
+    <span class="hljs-keyword">val</span> search = SearchController(<span class="hljs-keyword">this</span>)
+    search.onQueryChanged(<span class="hljs-string">&quot;k&quot;</span>)
+    search.onQueryChanged(<span class="hljs-string">&quot;kot&quot;</span>)
+    search.onQueryChanged(<span class="hljs-string">&quot;kotlin coroutines&quot;</span>)
+    delay(<span class="hljs-number">300L</span>) <span class="hljs-comment">// Wait for final debounce</span>
+
+    <span class="hljs-comment">// Safe Fallback</span>
+    <span class="hljs-keyword">val</span> weather = fetchWeatherSafe()
+    println(<span class="hljs-string">&quot;Weather display: <span class="hljs-variable">$weather</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Starting parallel dashboard load...<br>
+Dashboard loaded: Nadia Petrova, Total Orders: 14<br>
+Search executed for query: 'kotlin coroutines'<br>
+Warning: Weather satellite offline. Using cached 22&deg;C.<br>
+Weather display: 22&deg;C (Cached)
+      </div>
+    </section>
+
+    <!-- SECTION I: ARCHITECTURAL COMPARISONS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&equiv;</span>
+        Architectural Comparison Reference Tables
+      </h2>
+
+      <h3 class="sub-heading">Table 1: Coroutine vs Thread vs Normal Function</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>Normal Function</th>
+              <th>OS Thread</th>
+              <th>Kotlin Coroutine</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Execution</strong></td>
+              <td>Sequential run-to-completion.</td>
+              <td>OS scheduled concurrency.</td>
+              <td>Cooperative non-blocking concurrency.</td>
+            </tr>
+            <tr>
+              <td><strong>Memory Footprint</strong></td>
+              <td>Negligible (call frame).</td>
+              <td>Heavy (~1 MB per thread).</td>
+              <td>Lightweight (~few KB per coroutine).</td>
+            </tr>
+            <tr>
+              <td><strong>Can Pause &amp; Resume?</strong></td>
+              <td>No &mdash; must return.</td>
+              <td>Can only block thread.</td>
+              <td>Yes &mdash; via <code>suspend</code> and <code>delay</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Scale</strong></td>
+              <td>Local to single thread.</td>
+              <td>Max ~2,000&ndash;5,000 threads.</td>
+              <td>Millions of concurrent coroutines.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 2: launch vs async</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th><code>launch</code></th>
+              <th><code>async</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Return Type</strong></td>
+              <td><code>Job</code> (lifecycle handle).</td>
+              <td><code>Deferred&lt;T&gt;</code> (promise of value).</td>
+            </tr>
+            <tr>
+              <td><strong>Result Output</strong></td>
+              <td>No direct result value.</td>
+              <td>Returns <code>T</code> via <code>.await()</code>.</td>
+            </tr>
+            <tr>
+              <td><strong>Awaiting Mechanism</strong></td>
+              <td><code>job.join()</code></td>
+              <td><code>deferred.await()</code></td>
+            </tr>
+            <tr>
+              <td><strong>Typical Usage</strong></td>
+              <td>Fire-and-forget logging, cache writes.</td>
+              <td>Parallel network requests, math computations.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 3: Coroutine Dispatchers</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Dispatcher</th>
+              <th>Target Workload</th>
+              <th>Thread Pool Characteristics</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Dispatchers.Main</code></td>
+              <td>UI interaction, animations, clicks.</td>
+              <td>Single UI main thread (Android/JavaFX).</td>
+            </tr>
+            <tr>
+              <td><code>Dispatchers.IO</code></td>
+              <td>Blocking I/O: files, network calls, databases.</td>
+              <td>Elastic pool, up to 64 threads.</td>
+            </tr>
+            <tr>
+              <td><code>Dispatchers.Default</code></td>
+              <td>CPU-intensive: JSON parsing, sorting, math.</td>
+              <td>Fixed size matching CPU core count.</td>
+            </tr>
+            <tr>
+              <td><code>Dispatchers.Unconfined</code></td>
+              <td>Non-thread-specific operations (advanced).</td>
+              <td>Starts in caller thread, resumes anywhere.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION J: QUICK REVISION: 15 KEY TAKEAWAYS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&#9889;</span>
+        Quick Revision: 15 Key Takeaways
+      </h2>
+      <ol>
+        <li><strong>Coroutines</strong> are lightweight, cooperative tasks that can suspend and resume without blocking threads.</li>
+        <li><strong>Threads vs Coroutines</strong>: OS threads cost ~1 MB each and context-switch in kernel; coroutines cost ~few KB and multiplex in user-space.</li>
+        <li><strong>suspend keyword</strong> marks functions that can pause execution; it does <em>not</em> automatically switch threads!</li>
+        <li><strong>delay()</strong> suspends a coroutine without blocking the underlying thread; <strong>Thread.sleep()</strong> blocks the thread completely.</li>
+        <li><strong>runBlocking</strong> blocks the current thread until its coroutines finish; use it only in <code>main()</code> and unit tests.</li>
+        <li><strong>launch</strong> starts a fire-and-forget coroutine and returns a <code>Job</code> handle.</li>
+        <li><strong>async</strong> starts a concurrent task and returns a <code>Deferred&lt;T&gt;</code>; call <code>.await()</code> to obtain the result.</li>
+        <li><strong>Structured Concurrency</strong> ensures child coroutines are scoped to a parent; the parent waits for all children before completing.</li>
+        <li><strong>Parent Cancellation</strong> automatically cascades downward and cancels all active child coroutines.</li>
+        <li><strong>Dispatchers.IO</strong> is optimized for network, file, and database operations.</li>
+        <li><strong>Dispatchers.Default</strong> is optimized for CPU-heavy calculations, filtering, and JSON parsing.</li>
+        <li><strong>withContext</strong> switches dispatcher for a code block and restores the caller dispatcher automatically upon return.</li>
+        <li><strong>Cancellation is cooperative</strong> &mdash; coroutines must periodically check <code>isActive</code> or hit a suspension point.</li>
+        <li><strong>supervisorScope / SupervisorJob</strong> isolates child failures so one failing child does not cancel its siblings.</li>
+        <li><strong>Job lifecycle</strong> progresses through: <em>New &rarr; Active &rarr; Completing &rarr; Completed / Cancelled</em>.</li>
+      </ol>
+    </section>
+
+    <!-- SECTION K: PRACTICE & ASSESSMENT -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&check;</span>
+        Practice &amp; Assessment: Test Your Knowledge
+      </h2>
+
+      <!-- MCQ 1 -->
+      <div class="quiz-card">
+        <div class="quiz-question">1. What is the fundamental difference between delay() and Thread.sleep()?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) delay() suspends the coroutine and frees the thread for other work; Thread.sleep() blocks the OS thread entirely.</div>
+          <div class="quiz-opt incorrect">&cross; B) delay() blocks the thread while Thread.sleep() pauses the JVM.</div>
+          <div class="quiz-opt incorrect">&cross; C) Both function identically; delay() is merely an alias for Thread.sleep().</div>
+          <div class="quiz-opt incorrect">&cross; D) delay() can only be called from background threads.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>delay()</code> is a non-blocking suspension point. The thread is released to run other coroutines while the timer counts down.</div>
+      </div>
+
+      <!-- MCQ 2 -->
+      <div class="quiz-card">
+        <div class="quiz-question">2. What does marking a function with the 'suspend' keyword do?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) It allows the function to call other suspend functions and pause execution, but does not automatically switch threads.</div>
+          <div class="quiz-opt incorrect">&cross; B) It forces the function to execute on a background IO worker thread automatically.</div>
+          <div class="quiz-opt incorrect">&cross; C) It turns the function into a singleton object.</div>
+          <div class="quiz-opt incorrect">&cross; D) It makes the function execute faster by compiling it into native assembly.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>suspend</code> simply marks a function as capable of pausing and resuming. It does NOT automatically switch threads or dispatchers!</div>
+      </div>
+
+      <!-- MCQ 3 -->
+      <div class="quiz-card">
+        <div class="quiz-question">3. When should 'runBlocking' generally be used in Kotlin development?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) In main() entry points and unit tests to bridge non-coroutine blocking code with coroutines.</div>
+          <div class="quiz-opt incorrect">&cross; B) Inside UI click listeners on Android smartphones.</div>
+          <div class="quiz-opt incorrect">&cross; C) Inside server endpoints handling 10,000 simultaneous web requests.</div>
+          <div class="quiz-opt incorrect">&cross; D) Inside every suspend function.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>runBlocking</code> blocks the current thread until all child coroutines finish. Using it in production UI code freezes the interface and causes ANR crashes.</div>
+      </div>
+
+      <!-- MCQ 4 -->
+      <div class="quiz-card">
+        <div class="quiz-question">4. How do 'launch' and 'async' differ?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) 'launch' returns a Job without a direct result; 'async' returns a Deferred&lt;T&gt; whose result is retrieved via .await().</div>
+          <div class="quiz-opt incorrect">&cross; B) 'launch' runs on the main thread; 'async' runs on background threads.</div>
+          <div class="quiz-opt incorrect">&cross; C) 'launch' can be cancelled; 'async' cannot be cancelled.</div>
+          <div class="quiz-opt incorrect">&cross; D) 'launch' blocks the thread; 'async' is non-blocking.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>launch</code> is fire-and-forget returning <code>Job</code>, whereas <code>async</code> represents an asynchronous computation returning <code>Deferred&lt;T&gt;</code>.</div>
+      </div>
+
+      <!-- MCQ 5 -->
+      <div class="quiz-card">
+        <div class="quiz-question">5. Why is cancellation in Kotlin described as 'cooperative'?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Because running code must explicitly check for cancellation (e.g. via isActive or suspension points) to stop executing.</div>
+          <div class="quiz-opt incorrect">&cross; B) Because the OS forcibly kills the underlying thread instantly.</div>
+          <div class="quiz-opt incorrect">&cross; C) Because only one coroutine can be cancelled per application.</div>
+          <div class="quiz-opt incorrect">&cross; D) Because cancellation requires confirmation from the garbage collector.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> Calling <code>job.cancel()</code> only sets state to Cancelling. Active CPU loops that never check <code>isActive</code> or call suspending functions will continue running until they cooperate.</div>
+      </div>
+
+      <!-- OUTPUT PREDICTION -->
+      <h3 class="sub-heading">&#128269; Output Prediction Practice (8 Questions)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">Q1: Sequential vs Parallel Delay</div>
+          <p><code>async { delay(1000); 10 }; async { delay(1000); 20 }</code><br>
+          <strong>Total Time:</strong> ~1000 ms (both delay concurrently, not sequentially).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q2: Parent Cancellation</div>
+          <p><code>parent.launch { delay(500); print("A") }; parent.cancel()</code><br>
+          <strong>Output:</strong> Nothing is printed (child cancelled before delay finished).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q3: Job.join() Ordering</div>
+          <p><code>val j = launch { delay(100); print("1") }; j.join(); print("2")</code><br>
+          <strong>Output:</strong> <code>12</code> (join guarantees child finishes before 2 is printed).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q4: Uncooperative Loop</div>
+          <p><code>val j = launch { while(true) {} }; j.cancel(); print("Done")</code><br>
+          <strong>Output:</strong> <code>Done</code> prints, but background coroutine spins forever because it never checks <code>isActive</code>!</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q5: supervisorScope Sibling</div>
+          <p><code>supervisorScope { launch { throw Exception() }; launch { print("Alive") } }</code><br>
+          <strong>Output:</strong> <code>Alive</code> (supervisorScope isolates sibling failures).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q6: withContext Return</div>
+          <p><code>val res = withContext(Dispatchers.Default) { 5 * 10 }</code><br>
+          <strong>Output:</strong> <code>50</code> (withContext returns the block's last expression).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q7: Deferred.await() Count</div>
+          <p><code>val d = async { print("X"); 42 }; d.await(); d.await()</code><br>
+          <strong>Output:</strong> <code>X</code> prints only once; second await returns cached 42.</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q8: Coroutine Scope Completion</div>
+          <p><code>coroutineScope { launch { delay(50); print("A") } }; print("B")</code><br>
+          <strong>Output:</strong> <code>AB</code> (coroutineScope automatically waits for child A before proceeding).</p>
+        </div>
+      </div>
+
+      <!-- HANDS-ON CODING CHALLENGES -->
+      <h3 class="sub-heading">&#128187; Hands-On Coding Challenges (6 Exercises)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">1. Parallel Image Downloader</div>
+          <p>Write a suspend function <code>downloadAll(urls: List&lt;String&gt;): List&lt;ByteArray&gt;</code> that downloads images concurrently using <code>async</code>.<br>
+          <em>Hint: Map each URL to <code>async { download(it) }</code> and call <code>awaitAll()</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">2. Resilient Stock Poller</div>
+          <p>Create a poller that fetches stock prices every 1 second inside a <code>while(isActive)</code> loop and cancels cleanly.<br>
+          <em>Hint: Check <code>isActive</code> and use <code>delay(1000L)</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">3. Safe Network Gateway with Fallback</div>
+          <p>Write <code>fetchConfigWithTimeout()</code> that uses <code>withTimeoutOrNull(500L)</code> to return default settings if the network lags.<br>
+          <em>Hint: <code>withTimeoutOrNull</code> returns null on timeout without throwing an exception.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">4. Heavy CPU Worker Switch</div>
+          <p>Write a function that accepts an image bitmap, switches to <code>Dispatchers.Default</code> to apply a blur filter, and returns the blurred image.<br>
+          <em>Hint: Wrap filter logic inside <code>withContext(Dispatchers.Default) { ... }</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">5. Independent Analytics Tracker</div>
+          <p>Create a service using <code>supervisorScope</code> where 3 analytics events are tracked in parallel so failure of one does not cancel the others.<br>
+          <em>Hint: Launch 3 children inside a <code>supervisorScope</code> block.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">6. Graceful Cleanup Handler</div>
+          <p>Write a coroutine that opens a database transaction and guarantees it is closed upon cancellation using <code>try-finally</code> and <code>withContext(NonCancellable)</code>.<br>
+          <em>Hint: In the <code>finally</code> block, wrap cleanup in <code>withContext(NonCancellable)</code>.</em></p>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

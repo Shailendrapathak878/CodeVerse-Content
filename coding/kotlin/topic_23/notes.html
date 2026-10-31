@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 23: Flow, Channels &amp; Asynchronous Programming in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 23</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+    <!-- HERO HEADER -->
+    <header class="hero">
+      <div class="hero-badge">STAGE 6 &bull; MODERN KOTLIN &bull; TOPIC 23 (FINAL TOPIC)</div>
+      <h1 class="hero-title">Flow, Channels &amp; Asynchronous Programming in Kotlin</h1>
+      <p class="hero-subtitle">Master asynchronous data streams, cold vs hot flows, reactive operators, <code>StateFlow</code>, <code>SharedFlow</code>, and inter-coroutine communication using <code>Channel</code>.</p>
+    </header>
+
+    <!-- SECTION A: INTRODUCTION TO ASYNCHRONOUS PROGRAMMING -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">A</span>
+        Section A: Introduction to Asynchronous Programming
+      </h2>
+
+      <p>In standard synchronous programming, tasks execute strictly one after another &mdash; if a network request takes 3 seconds, the entire application freezes until that request returns. <strong>Asynchronous programming</strong> allows long-running operations (like downloading files, loading databases, or receiving chat messages) to execute in the background without blocking the caller or user interface.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Coffee Shop Order Pager</strong><br>
+          Imagine ordering at a coffee shop:
+          <ul>
+            <li><strong>Synchronous / Blocking:</strong> You place your order, stand frozen at the cash register for 5 minutes while the barista brews your espresso, preventing anyone behind you from ordering.</li>
+            <li><strong>Asynchronous / Non-Blocking:</strong> You place your order, the barista hands you a buzzing buzzer (pager), and you sit down to read. The cashier serves other customers immediately. When your espresso is ready, your buzzer vibrates to notify you!</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- DIAGRAM 1.1: SYNC VS ASYNC -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 1.1: Synchronous Blocking vs Asynchronous Non-Blocking</div>
+        <svg viewBox="0 0 720 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sync Flow -->
+          <rect x="15" y="15" width="335" height="75" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.2"/>
+          <text x="182" y="34" fill="#FEE2E2" font-size="10.5" font-weight="700" text-anchor="middle">Synchronous Execution (Thread Frozen)</text>
+          <rect x="30" y="44" width="135" height="34" rx="4" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+          <text x="97" y="62" fill="#FEE2E2" font-size="9.5" font-weight="700" text-anchor="middle">Task 1 (Blocking Call)</text>
+          <path d="M 165 61 L 195 61" stroke="#94A3B8" stroke-width="2"/>
+          <rect x="195" y="44" width="135" height="34" rx="4" fill="#7F1D1D" stroke="#EF4444" stroke-width="1"/>
+          <text x="262" y="62" fill="#FEE2E2" font-size="9.5" font-weight="700" text-anchor="middle">Task 2 (Waited 3s)</text>
+
+          <!-- Async Flow -->
+          <rect x="370" y="15" width="335" height="75" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="537" y="34" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">Asynchronous Execution (Non-Blocking)</text>
+          <rect x="385" y="44" width="300" height="18" rx="4" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+          <text x="535" y="57" fill="#D1FAE5" font-size="9" font-weight="700" text-anchor="middle">Caller: Continues immediately (UI responsive!)</text>
+          <rect x="385" y="66" width="300" height="18" rx="4" fill="#312E81" stroke="#818CF8" stroke-width="1"/>
+          <text x="535" y="79" fill="#EEF2FF" font-size="9" font-weight="700" text-anchor="middle">Background Task: Downloads data &amp; delivers asynchronously</text>
+        </svg>
+      </div>
+
+      <div class="alert alert-warning">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Key Rule: Asynchronous does NOT always mean Parallel!</strong><br>
+          Asynchronous means <em>non-blocking</em> (progressing without freezing the caller). Multiple asynchronous tasks can cooperate smoothly on a single thread by suspending and resuming. Parallelism requires multiple physical CPU cores.
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION B: INTRODUCTION TO KOTLIN FLOW -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">B</span>
+        Section B: Introduction to Kotlin Flow: Asynchronous Data Streams
+      </h2>
+
+      <p>In Topic 22, we learned that a <code>suspend</code> function returns a <strong>single value</strong> asynchronously (e.g. <code>suspend fun fetchUser(): User</code>). But real-world applications frequently handle <strong>streams of multiple values over time</strong>: live GPS coordinates, WebSocket chat messages, sensor ticks, or stock tickers. <strong>Kotlin Flow</strong> is the reactive stream component built directly on top of coroutines to emit multiple values over time asynchronously.</p>
+
+      <!-- DIAGRAM 2.1: FLOW ARCHITECTURE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 2.1: Flow Stream Architecture (Producer &rarr; Flow &rarr; Collector)</div>
+        <svg viewBox="0 0 720 95" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="25" width="170" height="50" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="105" y="46" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">1. Producer</text>
+          <text x="105" y="61" fill="#94A3B8" font-size="9" text-anchor="middle">flow { emit(value) }</text>
+
+          <path d="M 190 50 L 260 50" stroke="#38BDF8" stroke-width="2"/>
+
+          <rect x="260" y="20" width="200" height="60" rx="6" fill="#312E81" stroke="#818CF8" stroke-width="1.5"/>
+          <text x="360" y="42" fill="#EEF2FF" font-size="11.5" font-weight="800" text-anchor="middle">2. Flow Pipeline</text>
+          <text x="360" y="58" fill="#C7D2FE" font-size="9" text-anchor="middle">Streams values asynchronously</text>
+          <text x="360" y="70" fill="#93C5FD" font-size="8" text-anchor="middle">Supports operators: map, filter</text>
+
+          <path d="M 460 50 L 530 50" stroke="#10B981" stroke-width="2"/>
+
+          <rect x="530" y="25" width="170" height="50" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="615" y="46" fill="#D1FAE5" font-size="11" font-weight="700" text-anchor="middle">3. Collector</text>
+          <text x="615" y="61" fill="#A7F3D0" font-size="9" text-anchor="middle">flow.collect { value -&gt; }</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 1 & 2 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 1 &amp; 2: Basic Flow &amp; Live Tracking Stream</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-comment">// Example 1: Basic Flow emitting 3 values over time</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">numberStream</span><span class="hljs-params">()</span></span>: Flow = flow {
+    println(<span class="hljs-string">&quot;Flow started emitting numbers...&quot;</span>)
+    <span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1.</span><span class="hljs-number">.3</span>) {
+        delay(<span class="hljs-number">200L</span>) <span class="hljs-comment">// Non-blocking pause between emissions</span>
+        emit(i)     <span class="hljs-comment">// Emitting value downstream</span>
+    }
+}
+
+<span class="hljs-comment">// Example 2: Live Delivery Tracking Stream</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">trackDelivery</span><span class="hljs-params">()</span></span>: Flow = flow {
+    emit(<span class="hljs-string">&quot;Order Placed (Kitchen preparing meal)&quot;</span>)
+    delay(<span class="hljs-number">300L</span>)
+    emit(<span class="hljs-string">&quot;Driver Picked Up (On the way)&quot;</span>)
+    delay(<span class="hljs-number">300L</span>)
+    emit(<span class="hljs-string">&quot;Delivered (Enjoy your meal!)&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;--- Collecting Numbers ---&quot;</span>)
+    numberStream().collect { value -&gt;
+        println(<span class="hljs-string">&quot;Received: <span class="hljs-variable">$value</span>&quot;</span>)
+    }
+
+    println(<span class="hljs-string">&quot;\n--- Tracking Delivery ---&quot;</span>)
+    trackDelivery().collect { status -&gt;
+        println(<span class="hljs-string">&quot;Delivery Status: <span class="hljs-variable">$status</span>&quot;</span>)
+    }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+--- Collecting Numbers ---<br>
+Flow started emitting numbers...<br>
+Received: 1<br>
+Received: 2<br>
+Received: 3<br>
+<br>
+--- Tracking Delivery ---<br>
+Delivery Status: Order Placed (Kitchen preparing meal)<br>
+Delivery Status: Driver Picked Up (On the way)<br>
+Delivery Status: Delivered (Enjoy your meal!)
+      </div>
+    </section>
+
+    <!-- SECTION C: COLD FLOW -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">C</span>
+        Section C: Cold Flow: On-Demand Execution
+      </h2>
+
+      <p>A standard Flow created with <code>flow { ... }</code> is <strong>Cold</strong>. This means the code inside the <code>flow { }</code> builder <strong>does NOT run at all</strong> until a collector calls <code>.collect()</code>. Furthermore, if two collectors collect the same cold flow, the flow executes completely fresh from the beginning for each collector!</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: Movie on Demand vs Live Radio</strong><br>
+          A Cold Flow is like streaming a movie on Netflix. The movie doesn't play to an empty room. When you press "Play" (call <code>collect()</code>), the movie starts from 00:00. When your friend presses "Play" 20 minutes later, their movie also starts fresh from 00:00!
+        </div>
+      </div>
+
+      <!-- DIAGRAM 3.1: COLD FLOW MULTIPLE COLLECTORS -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 3.1: Cold Flow Restarts Fresh for Every Collector</div>
+        <svg viewBox="0 0 720 100" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="30" width="180" height="45" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.2"/>
+          <text x="110" y="50" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">Cold Flow Definition</text>
+          <text x="110" y="64" fill="#94A3B8" font-size="8.5" text-anchor="middle">Dormant (0 CPU usage)</text>
+
+          <!-- Branch 1 -->
+          <path d="M 200 45 L 280 25" stroke="#38BDF8" stroke-width="1.5"/>
+          <text x="240" y="27" fill="#38BDF8" font-size="8.5" font-weight="700">collect() #1</text>
+          <rect x="290" y="10" width="410" height="32" rx="5" fill="#0C4A6E" stroke="#0284C7" stroke-width="1"/>
+          <text x="495" y="30" fill="#E0F2FE" font-size="9.5" font-weight="700" text-anchor="middle">Collector 1: Flow runs from start &rarr; emits 1, 2, 3</text>
+
+          <!-- Branch 2 -->
+          <path d="M 200 60 L 280 80" stroke="#10B981" stroke-width="1.5"/>
+          <text x="240" y="85" fill="#10B981" font-size="8.5" font-weight="700">collect() #2</text>
+          <rect x="290" y="60" width="410" height="32" rx="5" fill="#064E3B" stroke="#10B981" stroke-width="1"/>
+          <text x="495" y="80" fill="#D1FAE5" font-size="9.5" font-weight="700" text-anchor="middle">Collector 2: Runs independently fresh &rarr; emits 1, 2, 3</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 3, 4, 5 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 3, 4 &amp; 5: Cold Flow Proof &amp; Flow Builders</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-comment">// Example 3: Cold Flow proof - does not run without collect()</span>
+<span class="hljs-keyword">val</span> coldFlow = flow {
+    println(<span class="hljs-string">&quot;&gt;&gt; [Flow Execution Triggered] &lt;&lt;&quot;</span>)
+    emit(<span class="hljs-string">&quot;Alpha&quot;</span>)
+    emit(<span class="hljs-string">&quot;Beta&quot;</span>)
+}
+
+<span class="hljs-comment">// Example 4: Convenience builders flowOf() and asFlow()</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">convenienceBuilders</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-keyword">val</span> fixedFlow = flowOf(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>)
+    <span class="hljs-keyword">val</span> listFlow = listOf(<span class="hljs-string">&quot;Red&quot;</span>, <span class="hljs-string">&quot;Green&quot;</span>, <span class="hljs-string">&quot;Blue&quot;</span>).asFlow()
+
+    fixedFlow.collect { print(<span class="hljs-string">&quot;<span class="hljs-variable">$it</span> &quot;</span>) }
+    println()
+    listFlow.collect { print(<span class="hljs-string">&quot;<span class="hljs-variable">$it</span> &quot;</span>) }
+    println()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    println(<span class="hljs-string">&quot;Creating coldFlow reference (notice nothing prints yet)...&quot;</span>)
+    delay(<span class="hljs-number">200L</span>)
+
+    println(<span class="hljs-string">&quot;Collector 1 starts:&quot;</span>)
+    coldFlow.collect { println(<span class="hljs-string">&quot;C1 got: <span class="hljs-variable">$it</span>&quot;</span>) }
+
+    println(<span class="hljs-string">&quot;\nCollector 2 starts:&quot;</span>)
+    coldFlow.collect { println(<span class="hljs-string">&quot;C2 got: <span class="hljs-variable">$it</span>&quot;</span>) }
+
+    println(<span class="hljs-string">&quot;\nTesting convenience builders:&quot;</span>)
+    convenienceBuilders()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Creating coldFlow reference (notice nothing prints yet)...<br>
+Collector 1 starts:<br>
+&gt;&gt; [Flow Execution Triggered] &lt;&lt;<br>
+C1 got: Alpha<br>
+C1 got: Beta<br>
+<br>
+Collector 2 starts:<br>
+&gt;&gt; [Flow Execution Triggered] &lt;&lt;<br>
+C2 got: Alpha<br>
+C2 got: Beta<br>
+<br>
+Testing convenience builders:<br>
+10 20 30 <br>
+Red Green Blue 
+      </div>
+    </section>
+
+    <!-- SECTION D: FLOW OPERATORS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">D</span>
+        Section D: Flow Operators: Intermediate &amp; Terminal
+      </h2>
+
+      <p>Flow operators transform and shape data streams cleanly. They are divided into two distinct families:</p>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title"><span class="pill pill-blue">Intermediate Operators</span></div>
+          <p>Transform the upstream flow and return a <strong>new Flow</strong>. They are <em>lazy</em> &mdash; they do not trigger collection (e.g. <code>map</code>, <code>filter</code>, <code>take</code>, <code>distinctUntilChanged</code>).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title"><span class="pill pill-green">Terminal Operators</span></div>
+          <p><strong>Suspending functions</strong> that actually trigger collection of the flow and produce a final value or list (e.g. <code>collect</code>, <code>toList</code>, <code>first</code>, <code>reduce</code>, <code>count</code>).</p>
+        </div>
+      </div>
+
+      <!-- DIAGRAM 4.1: OPERATOR PIPELINE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 4.1: Flow Reactive Operator Pipeline</div>
+        <svg viewBox="0 0 720 85" xmlns="http://www.w3.org/2000/svg">
+          <rect x="15" y="22" width="130" height="42" rx="5" fill="#1E293B" stroke="#64748B" stroke-width="1"/>
+          <text x="80" y="42" fill="#F8FAFC" font-size="10.5" font-weight="700" text-anchor="middle">flowOf(1, 2, 3, 4)</text>
+          <text x="80" y="55" fill="#94A3B8" font-size="8" text-anchor="middle">Data Source</text>
+
+          <path d="M 145 43 L 180 43" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="180" y="22" width="140" height="42" rx="5" fill="#0C4A6E" stroke="#0284C7" stroke-width="1"/>
+          <text x="250" y="42" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">.filter { it % 2 == 0 }</text>
+          <text x="250" y="55" fill="#BAE6FD" font-size="8" text-anchor="middle">Keeps: 2, 4</text>
+
+          <path d="M 320 43 L 355 43" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="355" y="22" width="140" height="42" rx="5" fill="#312E81" stroke="#818CF8" stroke-width="1"/>
+          <text x="425" y="42" fill="#EEF2FF" font-size="10.5" font-weight="700" text-anchor="middle">.map { it * 10 }</text>
+          <text x="425" y="55" fill="#C7D2FE" font-size="8" text-anchor="middle">Transforms: 20, 40</text>
+
+          <path d="M 495 43 L 530 43" stroke="#94A3B8" stroke-width="1.5"/>
+
+          <rect x="530" y="22" width="175" height="42" rx="5" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="617" y="42" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">.collect { print(it) }</text>
+          <text x="617" y="55" fill="#A7F3D0" font-size="8" text-anchor="middle">Terminal Consumer</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 6 - 12: INTERMEDIATE OPERATORS -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 6 &ndash; 12: Intermediate Operators (map, filter, take, distinctUntilChanged)</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-comment">// Example 6 &amp; 7: filter and map pipeline</span>
+    println(<span class="hljs-string">&quot;--- Filter &amp; Map ---&quot;</span>)
+    (<span class="hljs-number">1.</span><span class="hljs-number">.5</span>).asFlow()
+        .filter { it % <span class="hljs-number">2</span> == <span class="hljs-number">0</span> } <span class="hljs-comment">// 2, 4</span>
+        .map { <span class="hljs-string">&quot;Score: <span class="hljs-subst">${it * <span class="hljs-number">10</span>}</span>&quot;</span> }
+        .collect { println(it) }
+
+    <span class="hljs-comment">// Example 8: take(n) limits emissions and cancels upstream automatically</span>
+    println(<span class="hljs-string">&quot;\n--- take(2) ---&quot;</span>)
+    (<span class="hljs-number">1.</span><span class="hljs-number">.100</span>).asFlow()
+        .take(<span class="hljs-number">2</span>)
+        .collect { println(<span class="hljs-string">&quot;Taken: <span class="hljs-variable">$it</span>&quot;</span>) }
+
+    <span class="hljs-comment">// Example 9: distinctUntilChanged skips duplicate consecutive values</span>
+    println(<span class="hljs-string">&quot;\n--- distinctUntilChanged ---&quot;</span>)
+    flowOf(<span class="hljs-number">1</span>, <span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">1</span>)
+        .distinctUntilChanged()
+        .collect { print(<span class="hljs-string">&quot;<span class="hljs-variable">$it</span> &quot;</span>) } <span class="hljs-comment">// prints 1 2 3 1 (notice last 1 is kept because not consecutive)</span>
+    println()
+
+    <span class="hljs-comment">// Example 10: transform allows emitting arbitrary custom values</span>
+    println(<span class="hljs-string">&quot;\n--- transform ---&quot;</span>)
+    flowOf(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>).transform {
+        emit(<span class="hljs-string">&quot;[<span class="hljs-variable">$it</span>-Start]&quot;</span>)
+        emit(<span class="hljs-string">&quot;[<span class="hljs-variable">$it</span>-End]&quot;</span>)
+    }.collect { print(<span class="hljs-string">&quot;<span class="hljs-variable">$it</span> &quot;</span>) }
+    println()
+
+    <span class="hljs-comment">// Examples 11 &amp; 12: Terminal operators toList() and count()</span>
+    <span class="hljs-keyword">val</span> list = (<span class="hljs-number">1.</span><span class="hljs-number">.4</span>).asFlow().toList()
+    <span class="hljs-keyword">val</span> count = (<span class="hljs-number">1.</span><span class="hljs-number">.4</span>).asFlow().count { it &gt; <span class="hljs-number">2</span> }
+    println(<span class="hljs-string">&quot;\nTerminal toList: <span class="hljs-variable">$list</span>, count(&gt;2): <span class="hljs-variable">$count</span>&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+--- Filter &amp; Map ---<br>
+Score: 20<br>
+Score: 40<br>
+<br>
+--- take(2) ---<br>
+Taken: 1<br>
+Taken: 2<br>
+<br>
+--- distinctUntilChanged ---<br>
+1 2 3 1 <br>
+<br>
+--- transform ---<br>
+[A-Start] [A-End] [B-Start] [B-End] <br>
+<br>
+Terminal toList: [1, 2, 3, 4], count(&gt;2): 2
+      </div>
+
+      <h3 class="sub-heading">Flattening Operators: flatMapConcat vs flatMapMerge vs flatMapLatest</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Operator</th>
+              <th>Execution Strategy</th>
+              <th>Behavior on New Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>flatMapConcat</code></td>
+              <td>Sequential / Synchronous</td>
+              <td>Waits for current inner flow to complete before starting next inner flow.</td>
+            </tr>
+            <tr>
+              <td><code>flatMapMerge</code></td>
+              <td>Concurrent</td>
+              <td>Runs multiple inner flows in parallel, interleaving results.</td>
+            </tr>
+            <tr>
+              <td><code>flatMapLatest</code></td>
+              <td>Cancelling / Latest Only</td>
+              <td><strong>Cancels</strong> previous inner flow immediately when a new value arrives (search-as-you-type).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION E: BUILDERS, ERROR HANDLING & CONTEXT -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">E</span>
+        Section E: Flow Builders, Error Handling &amp; Context Preservation
+      </h2>
+
+      <p>Kotlin Flow provides operators for lifecycle management, thread switching, and graceful error recovery:</p>
+
+      <div class="alert alert-tip">
+        <span class="alert-icon">&check;</span>
+        <div class="alert-content">
+          <strong>Key Rule 1: <code>catch</code> handles UPSTREAM exceptions only!</strong><br>
+          The <code>catch</code> operator intercepts exceptions thrown in the operators <em>above</em> it. It does NOT catch exceptions thrown inside the downstream <code>collect { }</code> block.
+        </div>
+      </div>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Key Rule 2: <code>flowOn</code> changes UPSTREAM context!</strong><br>
+          Flow follows the <em>Context Preservation Rule</em>. <code>flowOn(Dispatchers.IO)</code> shifts execution of the upstream emissions to the background I/O dispatcher, while the collector remains safely on its calling thread.
+        </div>
+      </div>
+
+      <!-- CODE EXAMPLE 13 - 17: CATCH, FLOWON, BUFFER -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 13 &ndash; 17: catch, onStart, flowOn &amp; buffer</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">safeDataFlow</span><span class="hljs-params">()</span></span>: Flow = flow {
+    emit(<span class="hljs-string">&quot;Record #1 (Loaded)&quot;</span>)
+    delay(<span class="hljs-number">100L</span>)
+    <span class="hljs-keyword">throw</span> RuntimeException(<span class="hljs-string">&quot;Database connection timed out!&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-comment">// Example 13 &amp; 14: onStart, catch fallback, and onCompletion</span>
+    println(<span class="hljs-string">&quot;--- Exception Handling &amp; Lifecycle ---&quot;</span>)
+    safeDataFlow()
+        .onStart { println(<span class="hljs-string">&quot;[Lifecycle] Flow starting...&quot;</span>) }
+        .<span class="hljs-keyword">catch</span> { e -&gt;
+            println(<span class="hljs-string">&quot;[Caught Error] <span class="hljs-subst">${e.message}</span>&quot;</span>)
+            emit(<span class="hljs-string">&quot;Fallback: Loaded from offline cache&quot;</span>) <span class="hljs-comment">// Recover with fallback!</span>
+        }
+        .onCompletion { println(<span class="hljs-string">&quot;[Lifecycle] Flow stream completed.&quot;</span>) }
+        .collect { println(<span class="hljs-string">&quot;Output: <span class="hljs-variable">$it</span>&quot;</span>) }
+
+    <span class="hljs-comment">// Example 15: flowOn for upstream background thread execution</span>
+    println(<span class="hljs-string">&quot;\n--- flowOn Thread Switching ---&quot;</span>)
+    flow {
+        println(<span class="hljs-string">&quot;Emitting on thread: <span class="hljs-subst">${Thread.currentThread().name}</span>&quot;</span>)
+        emit(<span class="hljs-number">42</span>)
+    }.flowOn(Dispatchers.IO) <span class="hljs-comment">// Upstream runs on IO worker thread</span>
+     .collect {
+        println(<span class="hljs-string">&quot;Collected on thread: <span class="hljs-subst">${Thread.currentThread().name}</span> with value: <span class="hljs-variable">$it</span>&quot;</span>)
+     }
+
+    <span class="hljs-comment">// Examples 16 &amp; 17: buffer() prevents fast emitter from waiting for slow collector</span>
+    println(<span class="hljs-string">&quot;\n--- buffer() Benchmark ---&quot;</span>)
+    <span class="hljs-keyword">val</span> time = System.currentTimeMillis()
+    flow {
+        <span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> <span class="hljs-number">1.</span><span class="hljs-number">.3</span>) {
+            delay(<span class="hljs-number">100L</span>) <span class="hljs-comment">// Fast emitter</span>
+            emit(i)
+        }
+    }.buffer() <span class="hljs-comment">// Runs emitter concurrently with collector!</span>
+     .collect {
+        delay(<span class="hljs-number">300L</span>) <span class="hljs-comment">// Slow collector</span>
+        println(<span class="hljs-string">&quot;Processed item <span class="hljs-variable">$it</span>&quot;</span>)
+     }
+    println(<span class="hljs-string">&quot;Total time with buffer: ~<span class="hljs-subst">${System.currentTimeMillis() - time}</span>ms&quot;</span>)
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+--- Exception Handling &amp; Lifecycle ---<br>
+[Lifecycle] Flow starting...<br>
+Output: Record #1 (Loaded)<br>
+[Caught Error] Database connection timed out!<br>
+Output: Fallback: Loaded from offline cache<br>
+[Lifecycle] Flow stream completed.<br>
+<br>
+--- flowOn Thread Switching ---<br>
+Emitting on thread: DefaultDispatcher-worker-1<br>
+Collected on thread: main with value: 42<br>
+<br>
+--- buffer() Benchmark ---<br>
+Processed item 1<br>
+Processed item 2<br>
+Processed item 3<br>
+Total time with buffer: ~1000ms
+      </div>
+    </section>
+
+    <!-- SECTION F: HOT FLOW (STATEFLOW & SHAREDFLOW) -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">F</span>
+        Section F: Hot Flow: StateFlow &amp; SharedFlow
+      </h2>
+
+      <p>Unlike Cold Flows (which only start on <code>collect()</code>), a <strong>Hot Flow</strong> exists and produces data continuously <em>regardless of whether anyone is listening</em>. It is active in memory and broadcasts values to multiple collectors simultaneously.</p>
+
+      <h3 class="sub-heading">1. StateFlow: Observable UI State Holder</h3>
+      <p><code>StateFlow</code> is a state-holder hot stream designed for modern UI architecture (such as Jetpack Compose and Flutter state). It <strong>always holds a current value</strong> accessible via <code>.value</code>, and conflates updates (if you assign the same value twice, duplicate notifications are not emitted).</p>
+
+      <h3 class="sub-heading">2. SharedFlow: Broadcast Event Bus</h3>
+      <p><code>SharedFlow</code> is a highly configurable hot stream designed for <strong>one-time events</strong> (like displaying an alert snackbar, showing a toast, or navigation actions) sent to zero, one, or multiple active subscribers.</p>
+
+      <!-- DIAGRAM 6.1: STATEFLOW VS SHAREDFLOW -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 6.1: StateFlow vs SharedFlow Architectural Comparison</div>
+        <svg viewBox="0 0 720 105" xmlns="http://www.w3.org/2000/svg">
+          <!-- StateFlow -->
+          <rect x="20" y="15" width="320" height="75" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="180" y="36" fill="#E0F2FE" font-size="11" font-weight="700" text-anchor="middle">StateFlow (UI State Holder)</text>
+          <text x="180" y="52" fill="#BAE6FD" font-size="9" text-anchor="middle">&bull; Always holds a current value: stateFlow.value</text>
+          <text x="180" y="66" fill="#94A3B8" font-size="8.5" text-anchor="middle">&bull; Replay = 1 (new collectors receive latest state immediately)</text>
+          <text x="180" y="80" fill="#6EE7B7" font-size="8" text-anchor="middle">Use: User profile, Counter, Dark mode toggle</text>
+
+          <line x1="360" y1="10" x2="360" y2="95" stroke="#334155" stroke-dasharray="3"/>
+
+          <!-- SharedFlow -->
+          <rect x="380" y="15" width="320" height="75" rx="6" fill="#1E293B" stroke="#A78BFA" stroke-width="1.2"/>
+          <text x="540" y="36" fill="#EDE9FE" font-size="11" font-weight="700" text-anchor="middle">SharedFlow (Event Broadcaster)</text>
+          <text x="540" y="52" fill="#C4B5FD" font-size="9" text-anchor="middle">&bull; Configurable replay: replay = 0 by default</text>
+          <text x="540" y="66" fill="#94A3B8" font-size="8.5" text-anchor="middle">&bull; Multiple collectors receive fire-and-forget events</text>
+          <text x="540" y="80" fill="#FDE68A" font-size="8" text-anchor="middle">Use: Show toast, navigation trigger, play sound</text>
+        </svg>
+      </div>
+
+      <!-- CODE EXAMPLE 18 - 22: STATEFLOW & SHAREDFLOW -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 18 &ndash; 22: MutableStateFlow &amp; MutableSharedFlow in Action</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-comment">// Example 18 &amp; 19: StateFlow for managing counter state</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">CounterViewModel</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> _counter = MutableStateFlow(<span class="hljs-number">0</span>) <span class="hljs-comment">// Initial state = 0</span>
+    <span class="hljs-keyword">val</span> counter: StateFlow = _counter.asStateFlow()
+
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">increment</span><span class="hljs-params">()</span></span> { _counter.value++ }
+}
+
+<span class="hljs-comment">// Example 20 &amp; 21: SharedFlow for broadcasting notifications</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">NotificationCenter</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> _events = MutableSharedFlow() <span class="hljs-comment">// replay = 0 by default</span>
+    <span class="hljs-keyword">val</span> events: SharedFlow = _events.asSharedFlow()
+
+    <span class="hljs-keyword">suspend</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">broadcastNotification</span><span class="hljs-params">(message: <span class="hljs-type">String</span>)</span></span> {
+        _events.emit(message)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-comment">// Test StateFlow</span>
+    <span class="hljs-keyword">val</span> vm = CounterViewModel()
+    println(<span class="hljs-string">&quot;Direct value read: <span class="hljs-subst">${vm.counter.value}</span>&quot;</span>)
+    vm.increment()
+    println(<span class="hljs-string">&quot;Updated value read: <span class="hljs-subst">${vm.counter.value}</span>&quot;</span>)
+
+    <span class="hljs-comment">// Test SharedFlow event broadcasting</span>
+    <span class="hljs-keyword">val</span> center = NotificationCenter()
+
+    <span class="hljs-keyword">val</span> subscriber1 = launch {
+        center.events.collect { println(<span class="hljs-string">&quot;Subscriber 1 alert: <span class="hljs-variable">$it</span>&quot;</span>) }
+    }
+    <span class="hljs-keyword">val</span> subscriber2 = launch {
+        center.events.collect { println(<span class="hljs-string">&quot;Subscriber 2 alert: <span class="hljs-variable">$it</span>&quot;</span>) }
+    }
+
+    delay(<span class="hljs-number">50L</span>) <span class="hljs-comment">// Allow collectors to subscribe</span>
+    center.broadcastNotification(<span class="hljs-string">&quot;Flash Sale 50% Off!&quot;</span>)
+    center.broadcastNotification(<span class="hljs-string">&quot;Maintenance in 10 minutes&quot;</span>)
+    delay(<span class="hljs-number">50L</span>)
+
+    subscriber1.cancel()
+    subscriber2.cancel()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Direct value read: 0<br>
+Updated value read: 1<br>
+Subscriber 1 alert: Flash Sale 50% Off!<br>
+Subscriber 2 alert: Flash Sale 50% Off!<br>
+Subscriber 1 alert: Maintenance in 10 minutes<br>
+Subscriber 2 alert: Maintenance in 10 minutes
+      </div>
+    </section>
+
+    <!-- SECTION G: CHANNELS IN KOTLIN -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">G</span>
+        Section G: Channels in Kotlin: Inter-Coroutine Communication
+      </h2>
+
+      <p>While Flow represents a <em>stream of values</em>, a <strong>Channel</strong> is a concurrency primitive for <strong>communication and transfer between coroutines</strong>. Think of a Channel as a thread-safe pipe: one coroutine puts items in, and another coroutine takes items out. Each item sent is consumed by <strong>exactly one receiver</strong>.</p>
+
+      <div class="alert alert-note">
+        <span class="alert-icon">&iexcl;</span>
+        <div class="alert-content">
+          <strong>Real-Life Analogy: The Fast Food Order Pass Counter</strong><br>
+          A Channel is like the metal pass-counter between the cooks and the cashiers in a restaurant:
+          The cook places a prepared burger onto the pass-counter (calls <code>send()</code>). One cashier picks up that burger and hands it to a customer (calls <code>receive()</code>). Once picked up, that specific burger is gone &mdash; other cashiers cannot pick up the same burger!
+        </div>
+      </div>
+
+      <!-- DIAGRAM 7.1: CHANNEL ARCHITECTURE -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Diagram 7.1: Channel Pipe: Producer &rarr; Channel &rarr; Consumer</div>
+        <svg viewBox="0 0 720 90" xmlns="http://www.w3.org/2000/svg">
+          <rect x="20" y="25" width="180" height="45" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.2"/>
+          <text x="110" y="44" fill="#E0F2FE" font-size="10.5" font-weight="700" text-anchor="middle">Producer Coroutine</text>
+          <text x="110" y="58" fill="#94A3B8" font-size="8.5" text-anchor="middle">channel.send(item)</text>
+
+          <path d="M 200 47 L 270 47" stroke="#38BDF8" stroke-width="2"/>
+
+          <rect x="270" y="18" width="180" height="58" rx="6" fill="#78350F" stroke="#F59E0B" stroke-width="1.5"/>
+          <text x="360" y="38" fill="#FFFBEB" font-size="11" font-weight="700" text-anchor="middle">Channel Buffer Pipe</text>
+          <text x="360" y="52" fill="#FDE68A" font-size="8.5" text-anchor="middle">Queue transfer</text>
+          <text x="360" y="65" fill="#FCD34D" font-size="8" text-anchor="middle">Rendezvous / Buffered</text>
+
+          <path d="M 450 47 L 520 47" stroke="#10B981" stroke-width="2"/>
+
+          <rect x="520" y="25" width="180" height="45" rx="6" fill="#064E3B" stroke="#10B981" stroke-width="1.2"/>
+          <text x="610" y="44" fill="#D1FAE5" font-size="10.5" font-weight="700" text-anchor="middle">Consumer Coroutine</text>
+          <text x="610" y="58" fill="#A7F3D0" font-size="8.5" text-anchor="middle">channel.receive()</text>
+        </svg>
+      </div>
+
+      <h3 class="sub-heading">Channel Capacities</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Channel Capacity</th>
+              <th>Buffer Size</th>
+              <th>Sender Behavior When Full</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Channel.RENDEZVOUS</code> (Default)</td>
+              <td>0 elements</td>
+              <td>Sender suspends until receiver is ready to take the item (handshake).</td>
+            </tr>
+            <tr>
+              <td><code>Channel.BUFFERED</code></td>
+              <td>Default ~64 elements</td>
+              <td>Sender continues without suspending until buffer capacity is reached.</td>
+            </tr>
+            <tr>
+              <td><code>Channel.UNLIMITED</code></td>
+              <td>Linked list (unlimited)</td>
+              <td>Sender never suspends (consumes heap memory).</td>
+            </tr>
+            <tr>
+              <td><code>Channel.CONFLATED</code></td>
+              <td>1 element buffer</td>
+              <td>Overwrites old item; sender never suspends and receiver gets latest.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- CODE EXAMPLE 23 - 26: CHANNELS -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 23 &ndash; 26: Channel Communication, Closing &amp; Iteration</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.channels.Channel
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-comment">// Example 23 &amp; 24: Buffered Channel producer and consumer</span>
+    <span class="hljs-keyword">val</span> channel = Channel(Channel.BUFFERED)
+
+    <span class="hljs-comment">// Producer Coroutine</span>
+    launch {
+        println(<span class="hljs-string">&quot;Producer: Sending 3 tasks...&quot;</span>)
+        <span class="hljs-keyword">for</span> (task <span class="hljs-keyword">in</span> listOf(<span class="hljs-string">&quot;Compile&quot;</span>, <span class="hljs-string">&quot;Lint&quot;</span>, <span class="hljs-string">&quot;Test&quot;</span>)) {
+            channel.send(task)
+            println(<span class="hljs-string">&quot;Producer sent: <span class="hljs-variable">$task</span>&quot;</span>)
+        }
+        channel.close() <span class="hljs-comment">// Signals that no more items will be sent!</span>
+    }
+
+    <span class="hljs-comment">// Consumer Coroutine (iterating with for loop)</span>
+    launch {
+        println(<span class="hljs-string">&quot;Consumer: Waiting for tasks...&quot;</span>)
+        <span class="hljs-keyword">for</span> (item <span class="hljs-keyword">in</span> channel) {
+            println(<span class="hljs-string">&quot;Consumer received and executed: <span class="hljs-variable">$item</span>&quot;</span>)
+        }
+        println(<span class="hljs-string">&quot;Consumer: Channel closed, all tasks finished!&quot;</span>)
+    }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+Producer: Sending 3 tasks...<br>
+Producer sent: Compile<br>
+Producer sent: Lint<br>
+Producer sent: Test<br>
+Consumer: Waiting for tasks...<br>
+Consumer received and executed: Compile<br>
+Consumer received and executed: Lint<br>
+Consumer received and executed: Test<br>
+Consumer: Channel closed, all tasks finished!
+      </div>
+
+      <h3 class="sub-heading">Channel vs Flow: Key Architectural Differences</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>Kotlin Flow</th>
+              <th>Kotlin Channel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Primary Concept</strong></td>
+              <td>Stream of data over time (data stream).</td>
+              <td>Communication pipeline between coroutines.</td>
+            </tr>
+            <tr>
+              <td><strong>Cold vs Hot</strong></td>
+              <td>Cold by default (starts upon collection).</td>
+              <td>Hot (exists and holds data independently).</td>
+            </tr>
+            <tr>
+              <td><strong>Consumption Model</strong></td>
+              <td><strong>Unicast/Broadcast:</strong> Every collector receives the stream.</td>
+              <td><strong>Queue:</strong> Each item is consumed by exactly one receiver.</td>
+            </tr>
+            <tr>
+              <td><strong>Typical Usage</strong></td>
+              <td>Live UI state, database queries, sensor streams.</td>
+              <td>Worker task distribution, inter-coroutine messaging.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION H: PRACTICAL REAL-WORLD SCENARIO (SEARCH-AS-YOU-TYPE) -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">H</span>
+        Section H: Real-World Scenario: Live Search-As-You-Type Pipeline
+      </h2>
+
+      <p>Let's combine <code>MutableStateFlow</code>, <code>debounce</code>, <code>distinctUntilChanged</code>, and <code>flatMapLatest</code> to build the industry-standard reactive search pipeline used in modern Android and web clients:</p>
+
+      <!-- CODE EXAMPLE 27 - 30 -->
+      <div class="code-container">
+        <div class="code-header">
+          <span class="code-lang-badge">Kotlin</span>
+          <span class="code-filename">Examples 27 &ndash; 30: Industry Reactive Search Architecture</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> kotlinx.coroutines.*
+<span class="hljs-keyword">import</span> kotlinx.coroutines.flow.*
+
+<span class="hljs-comment">// Simulated Backend API search function</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">searchBackendApi</span><span class="hljs-params">(query: <span class="hljs-type">String</span>)</span></span>: Flow&gt; = flow {
+    println(<span class="hljs-string">&quot;&gt;&gt; [API Call] Searching server for: &#x27;<span class="hljs-variable">$query</span>&#x27;...&quot;</span>)
+    delay(<span class="hljs-number">150L</span>) <span class="hljs-comment">// Simulated network delay</span>
+    <span class="hljs-keyword">val</span> results = listOf(<span class="hljs-string">&quot;<span class="hljs-variable">$query</span> tutorial&quot;</span>, <span class="hljs-string">&quot;<span class="hljs-variable">$query</span> documentation&quot;</span>, <span class="hljs-string">&quot;<span class="hljs-variable">$query</span> examples&quot;</span>)
+    emit(results)
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SearchViewModel</span></span>(scope: CoroutineScope) {
+    <span class="hljs-keyword">val</span> queryFlow = MutableStateFlow(<span class="hljs-string">&quot;&quot;</span>)
+
+    <span class="hljs-comment">// Reactive Pipeline</span>
+    <span class="hljs-keyword">val</span> searchResults: StateFlow&gt; = queryFlow
+        .debounce(<span class="hljs-number">200L</span>)              <span class="hljs-comment">// Wait for 200ms pause in user typing</span>
+        .filter { it.trim().length &gt;= <span class="hljs-number">2</span> } <span class="hljs-comment">// Don&#x27;t search 1-character queries</span>
+        .distinctUntilChanged()      <span class="hljs-comment">// Skip if user typed and erased back to same word</span>
+        .flatMapLatest { query -&gt;   <span class="hljs-comment">// Cancel previous search if new one starts!</span>
+            searchBackendApi(query)
+        }
+        .stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(<span class="hljs-number">5000L</span>),
+            initialValue = emptyList()
+        )
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> = runBlocking {
+    <span class="hljs-keyword">val</span> vm = SearchViewModel(<span class="hljs-keyword">this</span>)
+
+    <span class="hljs-keyword">val</span> searchJob = launch {
+        vm.searchResults.collect { results -&gt;
+            <span class="hljs-keyword">if</span> (results.isNotEmpty()) {
+                println(<span class="hljs-string">&quot;UI Updated with: <span class="hljs-variable">$results</span>&quot;</span>)
+            }
+        }
+    }
+
+    <span class="hljs-comment">// Simulating user rapid typing</span>
+    println(<span class="hljs-string">&quot;User types: &#x27;k&#x27;...&quot;</span>)
+    vm.queryFlow.value = <span class="hljs-string">&quot;k&quot;</span>
+    delay(<span class="hljs-number">50L</span>) <span class="hljs-comment">// Fast</span>
+
+    println(<span class="hljs-string">&quot;User types: &#x27;ko&#x27;...&quot;</span>)
+    vm.queryFlow.value = <span class="hljs-string">&quot;ko&quot;</span>
+    delay(<span class="hljs-number">50L</span>) <span class="hljs-comment">// Fast</span>
+
+    println(<span class="hljs-string">&quot;User types: &#x27;kotlin&#x27; and pauses...&quot;</span>)
+    vm.queryFlow.value = <span class="hljs-string">&quot;kotlin&quot;</span>
+    delay(<span class="hljs-number">500L</span>) <span class="hljs-comment">// Pause triggers debounce and search!</span>
+
+    searchJob.cancel()
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <span class="output-label">Expected Output</span>
+User types: 'k'...<br>
+User types: 'ko'...<br>
+User types: 'kotlin' and pauses...<br>
+&gt;&gt; [API Call] Searching server for: 'kotlin'...<br>
+UI Updated with: [kotlin tutorial, kotlin documentation, kotlin examples]
+      </div>
+    </section>
+
+    <!-- SECTION I: ARCHITECTURAL COMPARISONS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&equiv;</span>
+        Architectural Comparison Reference Tables
+      </h2>
+
+      <h3 class="sub-heading">Table 1: Cold Flow vs Hot Flow</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Criteria</th>
+              <th>Cold Flow (e.g. <code>flow { }</code>)</th>
+              <th>Hot Flow (<code>StateFlow</code> / <code>SharedFlow</code>)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Producer Lifetime</strong></td>
+              <td>Starts only when <code>collect()</code> is called.</td>
+              <td>Runs and holds data continuously in memory.</td>
+            </tr>
+            <tr>
+              <td><strong>Number of Collectors</strong></td>
+              <td>Unicast per collector (runs fresh stream).</td>
+              <td>Multicast (shared broadcast across all collectors).</td>
+            </tr>
+            <tr>
+              <td><strong>Resource Usage</strong></td>
+              <td>Zero memory when not collected.</td>
+              <td>Holds state/buffer in memory actively.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub-heading">Table 2: StateFlow vs SharedFlow</h3>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th><code>StateFlow</code></th>
+              <th><code>SharedFlow</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Current Value</strong></td>
+              <td>Always available: <code>.value</code> property.</td>
+              <td>No direct value property (event stream).</td>
+            </tr>
+            <tr>
+              <td><strong>Default Replay</strong></td>
+              <td>Replay = 1 (new subscriber gets latest state).</td>
+              <td>Replay = 0 by default (configurable).</td>
+            </tr>
+            <tr>
+              <td><strong>Conflation</strong></td>
+              <td>Conflates identical consecutive values.</td>
+              <td>Emits every event (unless configured).</td>
+            </tr>
+            <tr>
+              <td><strong>Primary Purpose</strong></td>
+              <td>UI state representation (loading, data, error).</td>
+              <td>Event broadcasting (snackbars, navigation, alerts).</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION J: QUICK REVISION: 20 KEY TAKEAWAYS -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&#9889;</span>
+        Quick Revision: 20 Key Takeaways (Kotlin Syllabus Finale)
+      </h2>
+      <ol>
+        <li><strong>Asynchronous programming</strong> prevents freezing user interfaces by delegating work non-blockingly.</li>
+        <li><strong>Kotlin Flow</strong> is a reactive asynchronous stream built on coroutines that emits multiple values over time.</li>
+        <li><strong>emit()</strong> sends values downstream; <strong>collect()</strong> receives values as a terminal consumer.</li>
+        <li><strong>Cold Flows</strong> do not execute code until a collector calls <code>collect()</code>.</li>
+        <li><strong>Intermediate operators</strong> (e.g. <code>map</code>, <code>filter</code>) are lazy and return a new Flow without executing it.</li>
+        <li><strong>Terminal operators</strong> (e.g. <code>collect</code>, <code>toList</code>, <code>first</code>) are suspending functions that trigger flow execution.</li>
+        <li><strong>take(n)</strong> cancels upstream flow execution once the desired count is reached.</li>
+        <li><strong>distinctUntilChanged()</strong> filters out consecutive duplicate emissions.</li>
+        <li><strong>catch { }</strong> catches upstream exceptions only &mdash; it never catches downstream collector errors!</li>
+        <li><strong>flowOn(Dispatchers.IO)</strong> shifts upstream emissions to a background thread while preserving collector context.</li>
+        <li><strong>buffer()</strong> decouples emitter speed from collector speed by introducing an asynchronous queue.</li>
+        <li><strong>Hot Flows</strong> (<code>StateFlow</code>, <code>SharedFlow</code>) exist independently of collectors and broadcast to multiple listeners.</li>
+        <li><strong>StateFlow</strong> always holds a current value accessible via <code>.value</code> and is ideal for UI state.</li>
+        <li><strong>SharedFlow</strong> broadcasts one-time events (toasts, alerts, navigation) to active subscribers.</li>
+        <li><strong>Channels</strong> are concurrency pipes for transfer between coroutines where each item is consumed by exactly one receiver.</li>
+        <li><strong>Channel capacities</strong>: <code>RENDEZVOUS</code> (0 buffer), <code>BUFFERED</code> (~64), <code>UNLIMITED</code>, and <code>CONFLATED</code> (keeps latest).</li>
+        <li><strong>flatMapLatest</strong> cancels previous ongoing operations whenever a new emission arrives (ideal for live search).</li>
+        <li><strong>debounce(timeMs)</strong> waits for a quiet pause in emissions before processing (ideal for user typing).</li>
+        <li><strong>Flow is part of kotlinx.coroutines</strong> and requires the <code>kotlinx-coroutines-core</code> dependency.</li>
+        <li><strong>Complete Mastery</strong>: Combining Sealed Classes (Topic 20), Exceptions/Delegation (Topic 21), Coroutines (Topic 22), and Flow (Topic 23) forms the foundation of modern production Kotlin and Android development!</li>
+      </ol>
+    </section>
+
+    <!-- SECTION K: PRACTICE & ASSESSMENT -->
+    <section class="section-card">
+      <h2 class="section-title">
+        <span class="section-title-icon">&check;</span>
+        Practice &amp; Assessment: Test Your Knowledge
+      </h2>
+
+      <!-- MCQ 1 -->
+      <div class="quiz-card">
+        <div class="quiz-question">1. When does a cold Kotlin Flow start executing?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Only when a terminal operator (such as collect) is invoked by a subscriber.</div>
+          <div class="quiz-opt incorrect">&cross; B) Immediately when the flow { ... } builder block is declared.</div>
+          <div class="quiz-opt incorrect">&cross; C) When the application process boots up.</div>
+          <div class="quiz-opt incorrect">&cross; D) When intermediate operators like map or filter are chained.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> Cold flows are completely lazy and do not allocate or run background code until a terminal operator like <code>collect()</code> is called.</div>
+      </div>
+
+      <!-- MCQ 2 -->
+      <div class="quiz-card">
+        <div class="quiz-question">2. What is the key distinction between StateFlow and SharedFlow?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) StateFlow always maintains a current state (.value) with replay=1, while SharedFlow is an event stream with replay=0 by default.</div>
+          <div class="quiz-opt incorrect">&cross; B) StateFlow is cold while SharedFlow is hot.</div>
+          <div class="quiz-opt incorrect">&cross; C) StateFlow only works on the UI thread while SharedFlow works in background.</div>
+          <div class="quiz-opt incorrect">&cross; D) StateFlow can only emit integers.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>StateFlow</code> is an observable state container with a mandatory initial value. <code>SharedFlow</code> is a general-purpose event broadcaster without a mandatory current state.</div>
+      </div>
+
+      <!-- MCQ 3 -->
+      <div class="quiz-card">
+        <div class="quiz-question">3. What does the flowOn(Dispatchers.IO) operator affect?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) It changes the dispatcher context for all upstream operators and the flow { } emitter preceding it.</div>
+          <div class="quiz-opt incorrect">&cross; B) It changes the dispatcher for the downstream collector.</div>
+          <div class="quiz-opt incorrect">&cross; C) It changes the dispatcher of the entire JVM globally.</div>
+          <div class="quiz-opt incorrect">&cross; D) It converts a cold flow into a hot flow.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> Per Kotlin's Context Preservation rule, <code>flowOn</code> only modifies the execution context of upstream emissions, leaving the downstream collector untouched.</div>
+      </div>
+
+      <!-- MCQ 4 -->
+      <div class="quiz-card">
+        <div class="quiz-question">4. How does a Channel differ from a Flow in terms of value consumption?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) Each value sent through a Channel is received by exactly one consumer, while each collector of a cold Flow gets the full stream.</div>
+          <div class="quiz-opt incorrect">&cross; B) Channels cannot send numbers.</div>
+          <div class="quiz-opt incorrect">&cross; C) Flows cannot be collected more than once.</div>
+          <div class="quiz-opt incorrect">&cross; D) Channels run synchronously on the UI thread only.</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> A Channel is a point-to-point or queue communication pipe. Once a consumer receives an item, that item is removed from the channel.</div>
+      </div>
+
+      <!-- MCQ 5 -->
+      <div class="quiz-card">
+        <div class="quiz-question">5. Which operator should be used to cancel a previous ongoing inner request when a new item arrives?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt correct">&check; A) flatMapLatest</div>
+          <div class="quiz-opt incorrect">&cross; B) flatMapConcat</div>
+          <div class="quiz-opt incorrect">&cross; C) flatMapMerge</div>
+          <div class="quiz-opt incorrect">&cross; D) toList</div>
+        </div>
+        <div class="quiz-explanation"><strong>Explanation:</strong> <code>flatMapLatest</code> cancels the currently active inner transformation flow whenever a new value is emitted by the parent flow (the gold standard for live search).</div>
+      </div>
+
+      <!-- OUTPUT PREDICTION -->
+      <h3 class="sub-heading">&#128269; Output Prediction Practice (8 Questions)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">Q1: Cold Flow Lazy Start</div>
+          <p><code>val f = flow { print("A"); emit(1) }; print("B")</code><br>
+          <strong>Output:</strong> <code>B</code> (A never prints because collect was never called!).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q2: distinctUntilChanged Filter</div>
+          <p><code>flowOf(2, 2, 3, 2).distinctUntilChanged().collect { print(it) }</code><br>
+          <strong>Output:</strong> <code>232</code> (The second 2 is skipped; the third 2 is kept as it is non-consecutive).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q3: take(2) Cancellation</div>
+          <p><code>flow { emit(1); emit(2); emit(3) }.take(2).collect { print(it) }</code><br>
+          <strong>Output:</strong> <code>12</code> (Upstream execution is cancelled after 2 items).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q4: catch Operator Fallback</div>
+          <p><code>flow { emit("X"); throw Exception() }.catch { emit("Y") }.collect { print(it) }</code><br>
+          <strong>Output:</strong> <code>XY</code> (Emits X, catches exception, then emits fallback Y).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q5: StateFlow Conflation</div>
+          <p><code>val s = MutableStateFlow(1); s.value = 1; print(s.value)</code><br>
+          <strong>Output:</strong> <code>1</code> (Identical value assignment is conflated cleanly).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q6: Channel Queue Consumption</div>
+          <p><code>val c = Channel&lt;Int&gt;(2); c.send(10); print(c.receive())</code><br>
+          <strong>Output:</strong> <code>10</code> (Value is received and removed from channel buffer).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q7: onStart and onCompletion</div>
+          <p><code>flowOf(5).onStart { print("S") }.onCompletion { print("E") }.collect { print(it) }</code><br>
+          <strong>Output:</strong> <code>S5E</code> (onStart runs first, emission second, onCompletion last).</p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">Q8: Terminal reduce Operator</div>
+          <p><code>val sum = flowOf(1, 2, 3).reduce { a, b -> a + b }; print(sum)</code><br>
+          <strong>Output:</strong> <code>6</code> (Accumulates 1 + 2 + 3 = 6).</p>
+        </div>
+      </div>
+
+      <!-- HANDS-ON CHALLENGES -->
+      <h3 class="sub-heading">&#128187; Hands-On Coding Challenges (6 Exercises)</h3>
+      <div class="grid-2">
+        <div class="grid-card">
+          <div class="grid-card-title">1. Ticking Stopwatch Stream</div>
+          <p>Create a cold flow <code>timerFlow()</code> that emits an integer counter every 1 second indefinitely.<br>
+          <em>Hint: Use a <code>while(true)</code> loop with <code>delay(1000L)</code> and <code>emit(counter++)</code>.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">2. Resilient Stock Ticker with Retry</div>
+          <p>Write a flow that fetches stock prices and retries up to 3 times on network failure using <code>retryWhen</code>.<br>
+          <em>Hint: Inspect attempt number and return true if attempt &lt; 3.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">3. User Authentication StateFlow</div>
+          <p>Model an authentication state holder (LoggedOut, Loading, LoggedIn) using <code>MutableStateFlow</code>.<br>
+          <em>Hint: Use a sealed class <code>AuthState</code> as the state type.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">4. One-Time Notification Bus</div>
+          <p>Create an in-app toast event bus using <code>MutableSharedFlow&lt;String&gt;</code> with zero replay.<br>
+          <em>Hint: Call <code>emit()</code> inside a coroutine to broadcast to active subscribers.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">5. Producer-Consumer Image Pipeline</div>
+          <p>Create a worker pipeline where 1 producer coroutine sends image URLs to a Channel, and 2 worker coroutines download them concurrently.<br>
+          <em>Hint: Launch 2 consumer coroutines both reading from the same channel instance.</em></p>
+        </div>
+        <div class="grid-card">
+          <div class="grid-card-title">6. Debounced Search Autocomplete</div>
+          <p>Implement an autocomplete search pipeline that debounces user keystrokes by 300ms, skips duplicates, and cancels outdated requests.<br>
+          <em>Hint: Chain <code>debounce(300L)</code>, <code>distinctUntilChanged()</code>, and <code>flatMapLatest</code>.</em></p>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

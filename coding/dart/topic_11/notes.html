@@ -1,0 +1,2400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 11: Null Safety — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 11</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+    <!-- Header -->
+    <header>
+      <div class="header-badge">
+        <span>Dart Learning Track &bull; Topic 11</span>
+      </div>
+      <h1>Null Safety in Dart</h1>
+      <p class="subtitle">Eliminate billion-dollar null-pointer mistakes! Master Dart's Sound Null Safety system, learn to safely handle optional data using <code>?</code>, <code>!</code>, <code>?.</code>, <code>??</code>, <code>??=</code>, and write robust code with the <code>late</code> keyword.</p>
+    </header>
+
+    <!-- SECTION 1: Introduction to Null -->
+    <section id="section-1">
+      <h2>1. Introduction to Null</h2>
+      <p>In computer programming, <strong><code>null</code></strong> represents the complete absence or unavailability of a value. It means a variable currently points to nothing in memory.</p>
+      <p>Why might a variable contain no value? In the real world, data is often optional or unavailable at a particular point in time. For example:</p>
+      <ul>
+        <li>A student registers on an online portal, but has not yet entered their optional landline phone number.</li>
+        <li>A customer adds items to a shopping cart, but has not selected a coupon code.</li>
+        <li>A weather app attempts to query the user's GPS coordinates while inside a tunnel.</li>
+      </ul>
+
+      <div class="callout tip">
+        <div class="callout-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Real-Life Analogy: The Student Registration Form
+        </div>
+        <p>Imagine filling out a college registration paper form. If the box labeled "Middle Name" is left blank, the student's middle name is not the word <em>"zero"</em>, nor is it <em>false</em>, nor is it an invisible sheet of paper. Its value is simply <strong>absent / not provided</strong>. That absence is what <code>null</code> represents in programming.</p>
+      </div>
+
+      <p>Crucially, <code>null</code> is <strong>not</strong> equal to <code>0</code>, <strong>not</strong> equal to <code>false</code>, and <strong>not</strong> equal to an empty string <code>""</code>. Each represents a distinct concept:</p>
+
+      <!-- VISUAL 2: Null vs Zero vs False vs Empty String vs Real Value -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 2: Null vs 0 vs false vs Empty String vs Value</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="160" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- 1. Value -->
+            <rect x="15" y="25" width="130" height="110" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="80" y="48" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#02569B" text-anchor="middle">'Rahul'</text>
+            <rect x="30" y="60" width="100" height="30" rx="4" fill="#E1F5FE"/>
+            <text x="80" y="80" font-family="monospace" font-size="12" font-weight="700" fill="#02569B" text-anchor="middle">"Rahul"</text>
+            <text x="80" y="115" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748B" text-anchor="middle">Valid text value</text>
+
+            <!-- 2. Zero -->
+            <rect x="158" y="25" width="130" height="110" rx="6" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.5"/>
+            <text x="223" y="48" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#00796B" text-anchor="middle">0 (Zero)</text>
+            <rect x="173" y="60" width="100" height="30" rx="4" fill="#E0F2F1"/>
+            <text x="223" y="80" font-family="monospace" font-size="14" font-weight="700" fill="#00796B" text-anchor="middle">0</text>
+            <text x="223" y="115" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748B" text-anchor="middle">Valid number count</text>
+
+            <!-- 3. False -->
+            <rect x="301" y="25" width="130" height="110" rx="6" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+            <text x="366" y="48" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6D28D9" text-anchor="middle">false</text>
+            <rect x="316" y="60" width="100" height="30" rx="4" fill="#EDE9FE"/>
+            <text x="366" y="80" font-family="monospace" font-size="12" font-weight="700" fill="#6D28D9" text-anchor="middle">false</text>
+            <text x="366" y="115" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748B" text-anchor="middle">Valid boolean state</text>
+
+            <!-- 4. Empty String -->
+            <rect x="444" y="25" width="130" height="110" rx="6" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+            <text x="509" y="48" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#B45309" text-anchor="middle">"" (Empty)</text>
+            <rect x="459" y="60" width="100" height="30" rx="4" fill="#FEF3C7"/>
+            <text x="509" y="80" font-family="monospace" font-size="12" font-weight="700" fill="#B45309" text-anchor="middle">""</text>
+            <text x="509" y="115" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748B" text-anchor="middle">Text with 0 chars</text>
+
+            <!-- 5. Null -->
+            <rect x="587" y="25" width="138" height="110" rx="6" fill="#FFFFFF" stroke="#EF4444" stroke-width="2"/>
+            <text x="656" y="48" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#DC2626" text-anchor="middle">null</text>
+            <rect x="602" y="60" width="108" height="30" rx="4" fill="#FEE2E2" stroke="#EF4444" stroke-dasharray="2,2"/>
+            <text x="656" y="80" font-family="monospace" font-size="12" font-weight="700" fill="#DC2626" text-anchor="middle">&empty; (Nothing)</text>
+            <text x="656" y="115" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" fill="#DC2626" text-anchor="middle">Absence of value</text>
+          </svg>
+        </div>
+      </div>
+
+      <p>Let's look at a basic nullable variable holding <code>null</code>:</p>
+      <div class="code-container">
+        <div class="code-header">
+          <span>intro_null.dart</span>
+          <span>Dart 3.x</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// String? indicates this variable can hold text OR null</span>
+  <span class="hljs-built_in">String?</span> studentName = <span class="hljs-keyword">null</span>;
+
+  <span class="hljs-built_in">print</span>(studentName);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+null
+      </div>
+      <p><strong>Code line explanation:</strong></p>
+      <ul>
+        <li><code>String? studentName = null;</code> declares a variable named <code>studentName</code> that is allowed to hold text or <code>null</code>, and sets its starting value to <code>null</code>.</li>
+        <li><code>print(studentName);</code> outputs <code>null</code> to the console safely without errors.</li>
+      </ul>
+    </section>
+
+    <!-- SECTION 2: What Is Null Safety? -->
+    <section id="section-2">
+      <h2>2. What Is Null Safety?</h2>
+      <p>In older programming languages (and pre-2.12 versions of Dart), any variable could silently hold <code>null</code>. If a developer attempted to call a method like <code>studentName.toUpperCase()</code> when <code>studentName</code> happened to be <code>null</code>, the entire app would crash with a fatal runtime error (infamously called a <em>NullPointerException</em> or <em>NoSuchMethodError</em>).</p>
+      <p><strong>Null Safety</strong> is a modern language feature that stops null errors <strong>at compile-time</strong> before your program ever runs in front of users.</p>
+
+      <!-- VISUAL 3: Null Safety Concept — Compile-Time Shield vs Runtime Crash -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 3: Compile-Time Shield vs Runtime Crash</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 170" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="170" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- Without Null Safety -->
+            <rect x="25" y="20" width="330" height="130" rx="6" fill="#FFFFFF" stroke="#EF4444" stroke-width="1.5"/>
+            <rect x="25" y="20" width="330" height="28" rx="6" fill="#FEE2E2"/>
+            <text x="40" y="39" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#991B1B">Without Null Safety (Old Languages)</text>
+            <text x="40" y="70" font-family="monospace" font-size="11" fill="#0F172A">String name = null;</text>
+            <text x="40" y="88" font-family="monospace" font-size="11" fill="#0F172A">print(name.length);</text>
+            <path d="M40 102 L320 102" stroke="#EF4444" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="40" y="122" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#DC2626">&times; Compiles fine &rarr; Crashes on user's phone!</text>
+            <text x="40" y="138" font-family="system-ui, sans-serif" font-size="10" fill="#7F1D1D">(NoSuchMethodError: 'length' called on null)</text>
+
+            <!-- With Dart Sound Null Safety -->
+            <rect x="385" y="20" width="330" height="130" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+            <rect x="385" y="20" width="330" height="28" rx="6" fill="#DCFCE7"/>
+            <text x="400" y="39" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#065F46">With Dart Sound Null Safety</text>
+            <text x="400" y="70" font-family="monospace" font-size="11" fill="#0F172A"><tspan fill="#EF4444">String name = null;</tspan> // ❌ COMPILE ERROR!</text>
+            <text x="400" y="88" font-family="monospace" font-size="11" fill="#0F172A">print(name.length);</text>
+            <path d="M400 102 L680 102" stroke="#10B981" stroke-width="1" stroke-dasharray="2,2"/>
+            <text x="400" y="122" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#059669">&check; Caught instantly while you type!</text>
+            <text x="400" y="138" font-family="system-ui, sans-serif" font-size="10" fill="#065F46">App never crashes in production.</text>
+          </svg>
+        </div>
+      </div>
+
+      <p>Dart’s null safety is <strong>sound</strong>. This means if the type system says a variable is non-nullable (like <code>int</code> or <code>String</code>), it can <em>never</em> be <code>null</code> under any circumstances. You never need to write defensive checks for variables declared without <code>?</code>.</p>
+    </section>
+
+    <!-- SECTION 3: Nullable vs Non-Nullable Variables -->
+    <section id="section-3">
+      <h2>3. Nullable vs Non-Nullable Variables</h2>
+      <p>In Dart, all types are <strong>non-nullable by default</strong>. If you want a variable to be able to hold <code>null</code>, you must explicitly opt in by adding a question mark (<code>?</code>) after the type name.</p>
+
+      <!-- VISUAL 4: Nullable vs Non-Nullable Variable Box -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 4: Non-Nullable Type vs Nullable Type Guarantee</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <!-- Non-nullable -->
+            <rect x="30" y="25" width="320" height="90" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="2"/>
+            <text x="45" y="52" font-family="monospace" font-size="14" font-weight="700" fill="#0175C2">String name = 'Rahul';</text>
+            <text x="45" y="80" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#0F172A">NON-NULLABLE</text>
+            <text x="45" y="100" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Guaranteed to hold a valid String. NEVER null.</text>
+
+            <!-- Nullable -->
+            <rect x="390" y="25" width="320" height="90" rx="6" fill="#FFFFFF" stroke="#F59E0B" stroke-width="2"/>
+            <text x="405" y="52" font-family="monospace" font-size="14" font-weight="700" fill="#B45309">String? name = null;</text>
+            <text x="405" y="80" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#0F172A">NULLABLE</text>
+            <text x="405" y="100" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Can hold either a valid String OR null.</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Non-Nullable (<code>Type</code>)</th>
+              <th>Nullable (<code>Type?</code>)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Declaration</strong></td>
+              <td><code>String name;</code></td>
+              <td><code>String? name;</code></td>
+            </tr>
+            <tr>
+              <td><strong>Can store null?</strong></td>
+              <td><strong>No</strong> (compiler error if assigned null)</td>
+              <td><strong>Yes</strong> (can hold valid value or null)</td>
+            </tr>
+            <tr>
+              <td><strong>Default value if unassigned</strong></td>
+              <td>Must be initialized before use</td>
+              <td>Defaults to <code>null</code></td>
+            </tr>
+            <tr>
+              <td><strong>Direct member access</strong></td>
+              <td>Directly allowed: <code>name.length</code></td>
+              <td>Requires safe access (<code>name?.length</code> or <code>if</code> check)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 4: Understanding the Null Type -->
+    <section id="section-4">
+      <h2>4. Understanding the Null Type</h2>
+      <p>In Dart's type hierarchy, <code>Null</code> is an actual class type whose only possible instance is the value <code>null</code>.</p>
+      <p>When you write <code>String? city</code>, you are creating a union type: the variable can store any valid <code>String</code> instance <em>or</em> the <code>Null</code> object. A nullable variable can change freely between holding <code>null</code> and holding a concrete value during program execution:</p>
+
+      <div class="code-container">
+        <div class="code-header">
+          <span>null_type_demo.dart</span>
+          <span>Dart 3.x</span>
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> city = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Initial city: <span class="hljs-subst">$city</span>&#x27;</span>);
+
+  <span class="hljs-comment">// Now assign a concrete string</span>
+  city = <span class="hljs-string">&#x27;Lucknow&#x27;</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Updated city: <span class="hljs-subst">$city</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Initial city: null<br>
+Updated city: Lucknow
+      </div>
+    </section>
+
+    <!-- SECTION 5: Understanding the Question Mark ? -->
+    <section id="section-5">
+      <h2>5. Understanding the Question Mark <code>?</code></h2>
+      <p>The question mark <code>?</code> placed immediately after any type transforms it into a nullable type. You can use it with all Dart data types:</p>
+
+      <div class="code-container">
+        <div class="code-header"><span>nullable_primitives.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">int?</span> age;            <span class="hljs-comment">// Can be integer or null (defaults to null)</span>
+<span class="hljs-built_in">String?</span> name;        <span class="hljs-comment">// Can be string or null</span>
+<span class="hljs-built_in">double?</span> price;       <span class="hljs-comment">// Can be double or null</span>
+<span class="hljs-built_in">bool?</span> isAvailable;   <span class="hljs-comment">// Can be true, false, or null (three states!)</span>
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">int?</span> age = <span class="hljs-keyword">null</span>;
+  age = <span class="hljs-number">20</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Age: <span class="hljs-subst">$age</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Age: 20
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          Compiler Error: Assigning null to a Non-Nullable Variable
+        </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// ❌ Intentionally Incorrect Code:</span>
+<span class="hljs-built_in">int</span> score = <span class="hljs-keyword">null</span>; <span class="hljs-comment">// Error: A value of type &#x27;Null&#x27; can&#x27;t be assigned to a variable of type &#x27;int&#x27;.</span></code></pre>
+</div>
+        <p>Because <code>score</code> is declared as <code>int</code> (without <code>?</code>), Dart refuses to compile if you try to assign <code>null</code>. This compile-time protection prevents bugs before they occur.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 6: Checking Null with if and else -->
+    <section id="section-6">
+      <h2>6. Checking Null with <code>if</code> and <code>else</code></h2>
+      <p>The simplest and most transparent way to handle a nullable variable is using an <code>if (variable != null)</code> statement. Inside the <code>if</code> block, the variable is guaranteed to have a value; inside the <code>else</code> block, you handle the missing data gracefully.</p>
+
+      <!-- VISUAL 5: Null Checking Decision Flowchart -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 5: Null Check Decision Flowchart</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 160" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="160" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- Start -->
+            <rect x="30" y="60" width="120" height="40" rx="6" fill="#E1F5FE" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="90" y="85" font-family="monospace" font-size="12" fill="#02569B" text-anchor="middle">String? name</text>
+
+            <path d="M150 80 L220 80" stroke="#0175C2" stroke-width="2"/>
+
+            <!-- Diamond Decision -->
+            <polygon points="300,40 370,80 300,120 230,80" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2"/>
+            <text x="300" y="84" font-family="monospace" font-size="11" font-weight="700" fill="#92400E" text-anchor="middle">name != null?</text>
+
+            <!-- Yes Branch -->
+            <path d="M370 80 L440 50" stroke="#10B981" stroke-width="2"/>
+            <text x="400" y="60" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#10B981">YES</text>
+            <rect x="440" y="25" width="270" height="50" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="455" y="47" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#065F46">Safe to use string methods!</text>
+            <text x="455" y="65" font-family="monospace" font-size="11" fill="#047857">print(name.toUpperCase());</text>
+
+            <!-- No Branch -->
+            <path d="M370 80 L440 110" stroke="#EF4444" stroke-width="2"/>
+            <text x="400" y="105" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#EF4444">NO</text>
+            <rect x="440" y="90" width="270" height="50" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+            <text x="455" y="112" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#991B1B">Handle missing value fallback</text>
+            <text x="455" y="130" font-family="monospace" font-size="11" fill="#DC2626">print('Name is not available');</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>null_check_if.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> checkStudent(<span class="hljs-built_in">String?</span> name) {
+  <span class="hljs-keyword">if</span> (name != <span class="hljs-keyword">null</span>) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Uppercase: <span class="hljs-subst">${name.toUpperCase()}</span>&#x27;</span>);
+  } <span class="hljs-keyword">else</span> {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Name is not available&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  checkStudent(<span class="hljs-string">&#x27;Rahul&#x27;</span>); <span class="hljs-comment">// Has value</span>
+  checkStudent(<span class="hljs-keyword">null</span>);    <span class="hljs-comment">// Is null</span>
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Uppercase: RAHUL<br>
+Name is not available
+      </div>
+    </section>
+
+    <!-- SECTION 7: Null Check and Type Promotion -->
+    <section id="section-7">
+      <h2>7. Null Check and Type Promotion</h2>
+      <p>Dart's compiler features smart <strong>Flow Analysis</strong>. When you test a local variable with <code>if (variable != null)</code>, Dart automatically <strong>promotes</strong> the variable from its nullable type (e.g., <code>String?</code>) to its non-nullable equivalent (<code>String</code>) inside that safe scope.</p>
+
+      <!-- VISUAL 6: Type Promotion Flow -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 6: Dart Smart Flow Analysis &amp; Type Promotion</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <rect x="25" y="25" width="200" height="90" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+            <text x="40" y="50" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#92400E">1. Declared Nullable</text>
+            <text x="40" y="75" font-family="monospace" font-size="12" fill="#0F172A">String? name = 'Aman';</text>
+            <text x="40" y="98" font-family="system-ui, sans-serif" font-size="10.5" fill="#78350F">Type is String? (nullable)</text>
+
+            <path d="M225 70 L275 70" stroke="#0175C2" stroke-width="2"/>
+
+            <rect x="275" y="25" width="200" height="90" rx="6" fill="#E1F5FE" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="290" y="50" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#02569B">2. Check Condition</text>
+            <text x="290" y="75" font-family="monospace" font-size="12" fill="#0F172A">if (name != null)</text>
+            <text x="290" y="98" font-family="system-ui, sans-serif" font-size="10.5" fill="#02569B">Guarantees non-null inside</text>
+
+            <path d="M475 70 L525 70" stroke="#10B981" stroke-width="2"/>
+
+            <rect x="525" y="25" width="190" height="90" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
+            <text x="540" y="50" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#065F46">3. PROMOTED to String</text>
+            <text x="540" y="75" font-family="monospace" font-size="12" fill="#047857">print(name.length);</text>
+            <text x="540" y="98" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" fill="#10B981">&check; No ?. or ! needed!</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>type_promotion.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> name = <span class="hljs-string">&#x27;Aman&#x27;</span>;
+
+  <span class="hljs-keyword">if</span> (name != <span class="hljs-keyword">null</span>) {
+    <span class="hljs-comment">// Here, Dart promotes &#x27;name&#x27; from String? to non-nullable String!</span>
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Promoted length: <span class="hljs-subst">${name.length}</span>&#x27;</span>); <span class="hljs-comment">// 4</span>
+  }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Promoted length: 4
+      </div>
+    </section>
+
+    <!-- SECTION 8: Null Assertion Operator ! -->
+    <section id="section-8">
+      <h2>8. Null Assertion Operator <code>!</code></h2>
+      <p>The <strong>null assertion operator (<code>!</code>)</strong> (often called the <em>bang operator</em>) tells the Dart compiler: <em>"Trust me, I know this variable is nullable, but I guarantee it is NOT null at this exact line. Treat it as non-nullable!"</em></p>
+
+      <!-- VISUAL 7: Null Assertion Operator ! Warning -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 7: Null Assertion Operator ! — High Risk Operation</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <rect x="25" y="25" width="330" height="90" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="40" y="50" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#065F46">Case 1: When Value IS NOT Null</text>
+            <text x="40" y="75" font-family="monospace" font-size="12" fill="#0F172A">String? name = 'Rahul';</text>
+            <text x="40" y="98" font-family="monospace" font-size="12" font-weight="700" fill="#047857">print(name!.length); // &check; Prints 5</text>
+
+            <rect x="385" y="25" width="330" height="90" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="2"/>
+            <text x="400" y="50" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#991B1B">Case 2: When Value IS Null (CRASH!)</text>
+            <text x="400" y="75" font-family="monospace" font-size="12" fill="#0F172A">String? name = null;</text>
+            <text x="400" y="98" font-family="monospace" font-size="12" font-weight="700" fill="#DC2626">print(name!.length); // ❌ RUNTIME CRASH!</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          Important: ! Is an Assertion, NOT a Safe Fix
+        </div>
+        <p>Never sprinkle <code>!</code> just to silence a compiler error. If you are wrong and the value is actually <code>null</code>, Dart throws an unhandled <code>Null check operator used on a null value</code> exception and crashes your app. Prefer safe operators like <code>?.</code> and <code>??</code> instead.</p>
+      </div>
+    </section>
+
+    <!-- SECTION 9: Null-Aware Operator ?. -->
+    <section id="section-9">
+      <h2>9. Null-Aware Operator <code>?.</code></h2>
+      <p>The <strong>null-aware access operator (<code>?.</code>)</strong> lets you read properties or call methods on an object safely. If the receiver is not null, it performs the access; if the receiver <em>is</em> null, it skips the operation entirely and returns <code>null</code> without crashing.</p>
+
+      <!-- VISUAL 8: Null-Aware Access Comparison -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 8: Normal Access (.) vs Null-Aware Access (?.)</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 150" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="150" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <rect x="25" y="25" width="330" height="100" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="40" y="50" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#02569B">Normal Property Access: name.length</text>
+            <text x="40" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Requires receiver to be strictly non-nullable.</text>
+            <text x="40" y="100" font-family="system-ui, sans-serif" font-size="11" fill="#475569">If receiver could be null &rarr; compile error!</text>
+
+            <rect x="385" y="25" width="330" height="100" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="400" y="50" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#065F46">Null-Aware Access: name?.length</text>
+            <text x="400" y="75" font-family="system-ui, sans-serif" font-size="11" fill="#047857">If name is 'Rahul' &rarr; evaluates to 5</text>
+            <text x="400" y="95" font-family="system-ui, sans-serif" font-size="11" fill="#047857">If name is null &rarr; safely evaluates to null</text>
+            <text x="400" y="112" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" fill="#059669">&check; Completely crash-proof!</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>null_aware_demo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> activeUser = <span class="hljs-string">&#x27;Rahul&#x27;</span>;
+  <span class="hljs-built_in">String?</span> absentUser = <span class="hljs-keyword">null</span>;
+
+  <span class="hljs-built_in">print</span>(activeUser?.length);         <span class="hljs-comment">// 5</span>
+  <span class="hljs-built_in">print</span>(absentUser?.length);         <span class="hljs-comment">// null (safe!)</span>
+  <span class="hljs-built_in">print</span>(absentUser?.toUpperCase());  <span class="hljs-comment">// null (safe!)</span>
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+5<br>
+null<br>
+null
+      </div>
+    </section>
+
+    <!-- SECTION 10: Null Coalescing Operator ?? -->
+    <section id="section-10">
+      <h2>10. Null Coalescing Operator <code>??</code></h2>
+      <p>The <strong>null coalescing operator (<code>??</code>)</strong> provides a fallback default value whenever the expression on the left is null: <code>left ?? right</code>.</p>
+      <ul>
+        <li>If <code>left</code> is <strong>not null</strong>, its value is used.</li>
+        <li>If <code>left</code> <strong>is null</strong>, the <code>right</code> fallback expression is evaluated and used.</li>
+      </ul>
+
+      <!-- VISUAL 9: Null Coalescing ?? Diagram -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 9: Null Coalescing ?? Fallback Mechanism</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <text x="35" y="30" font-family="monospace" font-size="13" font-weight="700" fill="#02569B">String displayName = name ?? 'Guest';</text>
+
+            <rect x="25" y="45" width="330" height="80" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="40" y="68" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#065F46">Case 1: When name = 'Rahul'</text>
+            <text x="40" y="90" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Left side has value &rarr; uses 'Rahul'</text>
+            <text x="40" y="108" font-family="monospace" font-size="11" font-weight="700" fill="#10B981">&rarr; Result: 'Rahul'</text>
+
+            <rect x="385" y="45" width="330" height="80" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+            <text x="400" y="68" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#1E40AF">Case 2: When name = null</text>
+            <text x="400" y="90" font-family="system-ui, sans-serif" font-size="11" fill="#475569">Left side is null &rarr; falls back to 'Guest'</text>
+            <text x="400" y="108" font-family="monospace" font-size="11" font-weight="700" fill="#2563EB">&rarr; Result: 'Guest'</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>null_coalescing.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> name1 = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">String</span> displayName1 = name1 ?? <span class="hljs-string">&#x27;Guest&#x27;</span>;
+  <span class="hljs-built_in">print</span>(displayName1); <span class="hljs-comment">// Guest</span>
+
+  <span class="hljs-built_in">String?</span> name2 = <span class="hljs-string">&#x27;Rahul&#x27;</span>;
+  <span class="hljs-built_in">String</span> displayName2 = name2 ?? <span class="hljs-string">&#x27;Guest&#x27;</span>;
+  <span class="hljs-built_in">print</span>(displayName2); <span class="hljs-comment">// Rahul</span>
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Guest<br>
+Rahul
+      </div>
+    </section>
+
+    <!-- SECTION 11: Null-Aware Assignment Operator ??= -->
+    <section id="section-11">
+      <h2>11. Null-Aware Assignment Operator <code>??=</code></h2>
+      <p>The <strong>null-aware assignment operator (<code>??=</code>)</strong> assigns a value to a variable <strong>only if that variable currently contains <code>null</code></strong>. If the variable already holds a non-null value, the assignment is skipped.</p>
+
+      <!-- VISUAL 10: Null-Aware Assignment ??= Diagram -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 10: ??= Conditional Assignment Mechanism</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- Step 1 -->
+            <rect x="25" y="25" width="210" height="90" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+            <text x="35" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#92400E">1. Initially Null</text>
+            <text x="35" y="70" font-family="monospace" font-size="11.5" fill="#0F172A">String? title;</text>
+            <text x="35" y="90" font-family="monospace" font-size="11.5" fill="#B45309">title ??= 'Guest';</text>
+            <text x="35" y="105" font-family="system-ui, sans-serif" font-size="10" fill="#78350F">&check; Assigned 'Guest'!</text>
+
+            <path d="M235 70 L285 70" stroke="#0175C2" stroke-width="2"/>
+
+            <!-- Step 2 -->
+            <rect x="285" y="25" width="220" height="90" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="295" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#065F46">2. Second ??= Call</text>
+            <text x="295" y="70" font-family="monospace" font-size="11.5" fill="#0F172A">title ??= 'Admin';</text>
+            <text x="295" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#047857">title is NOT null ('Guest')</text>
+            <text x="295" y="105" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#10B981">&check; Skipped! Stays 'Guest'</text>
+
+            <path d="M505 70 L555 70" stroke="#10B981" stroke-width="2"/>
+
+            <!-- Result -->
+            <rect x="555" y="25" width="160" height="90" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="2"/>
+            <text x="570" y="52" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#02569B">Final Value</text>
+            <text x="570" y="80" font-family="monospace" font-size="16" font-weight="700" fill="#0175C2">'Guest'</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Operator</th>
+              <th>Type of Operation</th>
+              <th>Behavior</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>??</code></td>
+              <td>Expression Fallback</td>
+              <td>Evaluates and returns right-hand side if left is null. <strong>Does not reassign variable.</strong></td>
+            </tr>
+            <tr>
+              <td><code>??=</code></td>
+              <td>Assignment</td>
+              <td><strong>Assigns</strong> right-hand value to variable only if variable is currently null.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>null_assignment.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> role;
+
+  <span class="hljs-comment">// role is null -&gt; &#x27;Learner&#x27; is assigned</span>
+  role ??= <span class="hljs-string">&#x27;Learner&#x27;</span>;
+  <span class="hljs-built_in">print</span>(role); <span class="hljs-comment">// Learner</span>
+
+  <span class="hljs-comment">// role is NOT null -&gt; assignment ignored!</span>
+  role ??= <span class="hljs-string">&#x27;Mentor&#x27;</span>;
+  <span class="hljs-built_in">print</span>(role); <span class="hljs-comment">// Still Learner!</span>
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Learner<br>
+Learner
+      </div>
+    </section>
+
+    <!-- SECTION 12: Understanding the late Keyword -->
+    <section id="section-12">
+      <h2>12. Understanding the <code>late</code> Keyword</h2>
+      <p>The <strong><code>late</code></strong> keyword tells Dart that a <strong>non-nullable</strong> variable will be initialized <em>later</em> in execution, but before it is read for the first time.</p>
+
+      <div class="callout tip">
+        <div class="callout-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Real-Life Analogy: The Reserved Classroom
+        </div>
+        <p>A university schedule declares: <em>"Math lecture will be in room X."</em> The room number hasn't been posted at 8:00 AM, but the university guarantees it will be assigned before students enter at 10:00 AM. That is <code>late</code>: non-nullable, guaranteed to have a value by class time!</p>
+      </div>
+
+      <!-- VISUAL 11: late Initialization Flow -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 11: late Initialization Flow Lifecycle</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <!-- 1. Declare -->
+            <rect x="25" y="25" width="200" height="90" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="35" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#02569B">1. Declare with late</text>
+            <text x="35" y="70" font-family="monospace" font-size="11" fill="#0F172A">late String studentName;</text>
+            <text x="35" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">Non-nullable, not set yet</text>
+
+            <path d="M225 70 L275 70" stroke="#0175C2" stroke-width="2"/>
+
+            <!-- 2. Initialize -->
+            <rect x="275" y="25" width="210" height="90" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="285" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#065F46">2. Initialize Before Read</text>
+            <text x="285" y="70" font-family="monospace" font-size="11" fill="#0F172A">studentName = 'Rahul';</text>
+            <text x="285" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#047857">&check; Satisfies non-null contract</text>
+
+            <path d="M485 70 L535 70" stroke="#10B981" stroke-width="2"/>
+
+            <!-- 3. Read -->
+            <rect x="535" y="25" width="180" height="90" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+            <text x="545" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#1E40AF">3. Safe Access</text>
+            <text x="545" y="70" font-family="monospace" font-size="11" fill="#0F172A">print(studentName);</text>
+            <text x="545" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#2563EB">&rarr; Outputs 'Rahul'</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>late_demo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">late</span> <span class="hljs-built_in">String</span> studentName;
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// Initialize before accessing</span>
+  studentName = <span class="hljs-string">&#x27;Rahul&#x27;</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Student: <span class="hljs-subst">$studentName</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Student: Rahul
+      </div>
+
+      <div class="callout danger">
+        <div class="callout-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          Runtime Crash: Reading an Uninitialized late Variable
+        </div>
+        <p>If you read a <code>late</code> variable before assigning a value, Dart throws a runtime error:</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>LateInitializationError: Field <span class="hljs-string">&#x27;studentName&#x27;</span> has not been initialized.</code></pre>
+</div>
+      </div>
+    </section>
+
+    <!-- SECTION 13: Understanding late final -->
+    <section id="section-13">
+      <h2>13. Understanding <code>late final</code></h2>
+      <p>Combining <strong><code>late final</code></strong> allows a variable to be initialized later, but <strong>only assigned exactly once</strong>. Once set, it becomes read-only and immutable for the rest of the application lifecycle.</p>
+
+      <!-- VISUAL 12: late final Lock Mechanism -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 12: late final Single-Assignment Lock</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <rect x="25" y="25" width="220" height="90" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="35" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#02569B">1. Declare late final</text>
+            <text x="35" y="70" font-family="monospace" font-size="11" fill="#0F172A">late final String appName;</text>
+            <text x="35" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#64748B">Deferred, single-assignment</text>
+
+            <path d="M245 70 L295 70" stroke="#0175C2" stroke-width="2"/>
+
+            <rect x="295" y="25" width="220" height="90" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="305" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#065F46">2. 1st Assignment &check;</text>
+            <text x="305" y="70" font-family="monospace" font-size="11" fill="#0F172A">appName = 'CodeVerse';</text>
+            <text x="305" y="90" font-family="system-ui, sans-serif" font-size="10.5" font-weight="700" fill="#10B981">&check; LOCKED PERMANENTLY</text>
+
+            <path d="M515 70 L565 70" stroke="#EF4444" stroke-width="2"/>
+
+            <rect x="565" y="25" width="150" height="90" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+            <text x="575" y="48" font-family="system-ui, sans-serif" font-size="11.5" font-weight="700" fill="#991B1B">3. Reassignment ❌</text>
+            <text x="575" y="70" font-family="monospace" font-size="11" fill="#DC2626">appName = 'Other';</text>
+            <text x="575" y="90" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#B91C1C">CRASH: Already init!</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Declaration Style</th>
+              <th>Can be initialized later?</th>
+              <th>Can be reassigned?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>String</code></td>
+              <td>Yes (if local or within constructor)</td>
+              <td>Yes (mutable)</td>
+            </tr>
+            <tr>
+              <td><code>final String</code></td>
+              <td>Must be set at declaration/constructor</td>
+              <td>No (immutable)</td>
+            </tr>
+            <tr>
+              <td><code>late String</code></td>
+              <td>Yes (deferred to runtime)</td>
+              <td>Yes (mutable)</td>
+            </tr>
+            <tr>
+              <td><code>late final String</code></td>
+              <td><strong>Yes (deferred to runtime)</strong></td>
+              <td><strong>No (locked after 1st assignment)</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>late_final_demo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">late</span> <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> appName;
+
+<span class="hljs-keyword">void</span> main() {
+  appName = <span class="hljs-string">&#x27;CodeVerse&#x27;</span>; <span class="hljs-comment">// First initialization succeeds</span>
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;App: <span class="hljs-subst">$appName</span>&#x27;</span>);
+
+  <span class="hljs-comment">// appName = &#x27;Other&#x27;; // ❌ Throws LateInitializationError: Field has already been initialized.</span>
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+App: CodeVerse
+      </div>
+    </section>
+
+    <!-- SECTION 14: Nullable Lists and Nullable Elements -->
+    <section id="section-14">
+      <h2>14. Nullable Lists and Nullable Elements</h2>
+      <p>Where you place the question mark <code>?</code> completely changes what can be null in a collection:</p>
+
+      <!-- VISUAL 13: Nullable List vs Nullable Elements -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 13: List Nullability vs Element Nullability</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 170" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="170" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- 1. List<String>? -->
+            <rect x="20" y="20" width="220" height="130" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="35" y="44" font-family="monospace" font-size="12" font-weight="700" fill="#02569B">List&lt;String&gt;? names;</text>
+            <text x="35" y="68" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#0F172A">The List itself may be null</text>
+            <text x="35" y="88" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">If list exists, its items can NEVER be null.</text>
+            <text x="35" y="112" font-family="monospace" font-size="10.5" fill="#0175C2">names = null; // OK</text>
+            <text x="35" y="128" font-family="monospace" font-size="10.5" fill="#EF4444">names = [null]; // ❌ Error</text>
+
+            <!-- 2. List<String?> -->
+            <rect x="260" y="20" width="220" height="130" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+            <text x="275" y="44" font-family="monospace" font-size="12" font-weight="700" fill="#065F46">List&lt;String?&gt; names;</text>
+            <text x="275" y="68" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#0F172A">The List items may be null</text>
+            <text x="275" y="88" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">List always exists, items can be null.</text>
+            <text x="275" y="112" font-family="monospace" font-size="10.5" fill="#EF4444">names = null; // ❌ Error</text>
+            <text x="275" y="128" font-family="monospace" font-size="10.5" fill="#10B981">names = ['A', null]; // OK</text>
+
+            <!-- 3. List<String?>? -->
+            <rect x="500" y="20" width="220" height="130" rx="6" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+            <text x="515" y="44" font-family="monospace" font-size="12" font-weight="700" fill="#6D28D9">List&lt;String?&gt;? names;</text>
+            <text x="515" y="68" font-family="system-ui, sans-serif" font-size="11" font-weight="700" fill="#0F172A">Both may be null</text>
+            <text x="515" y="88" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">The list itself can be null, and items can be null.</text>
+            <text x="515" y="112" font-family="monospace" font-size="10.5" fill="#6D28D9">names = null; // OK</text>
+            <text x="515" y="128" font-family="monospace" font-size="10.5" fill="#6D28D9">names = ['A', null]; // OK</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>nullable_lists.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> students = [<span class="hljs-string">&#x27;Rahul&#x27;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-string">&#x27;Aman&#x27;</span>];
+  <span class="hljs-built_in">print</span>(students); <span class="hljs-comment">// [Rahul, null, Aman]</span>
+
+  <span class="hljs-comment">// Safe processing of nullable elements</span>
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> s <span class="hljs-keyword">in</span> students) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Name: <span class="hljs-subst">${s ?? <span class="hljs-string">&quot;Unknown&quot;</span>}</span>&#x27;</span>);
+  }
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+[Rahul, null, Aman]<br>
+Name: Rahul<br>
+Name: Unknown<br>
+Name: Aman
+      </div>
+    </section>
+
+    <!-- SECTION 15: Null Safety with Functions and Parameters -->
+    <section id="section-15">
+      <h2>15. Null Safety with Functions and Parameters</h2>
+      <p>Dart strictly enforces null safety across function signatures, including positional, optional, and named parameters.</p>
+
+      <!-- VISUAL 14: Function Parameters Null Safety -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 14: Function Parameter Null Safety Matrix</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#E2E8F0"/>
+            <rect x="25" y="20" width="220" height="100" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.5"/>
+            <text x="35" y="44" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#02569B">Required Non-Nullable</text>
+            <text x="35" y="68" font-family="monospace" font-size="11" fill="#0F172A">void greet(String name)</text>
+            <text x="35" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">Caller MUST pass valid string.</text>
+            <text x="35" y="106" font-family="system-ui, sans-serif" font-size="10" fill="#EF4444">greet(null) is a compile error!</text>
+
+            <rect x="260" y="20" width="220" height="100" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.5"/>
+            <text x="275" y="44" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#065F46">Nullable Parameter</text>
+            <text x="275" y="68" font-family="monospace" font-size="11" fill="#0F172A">void greet(String? name)</text>
+            <text x="275" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">Caller CAN pass null or text.</text>
+            <text x="275" y="106" font-family="system-ui, sans-serif" font-size="10" fill="#047857">Function handles null safely.</text>
+
+            <rect x="495" y="20" width="225" height="100" rx="6" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+            <text x="505" y="44" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#6D28D9">Optional Named Parameter</text>
+            <text x="505" y="68" font-family="monospace" font-size="10.5" fill="#0F172A">void info({String? city})</text>
+            <text x="505" y="90" font-family="system-ui, sans-serif" font-size="10.5" fill="#475569">Can be omitted when called.</text>
+            <text x="505" y="106" font-family="system-ui, sans-serif" font-size="10" fill="#6D28D9">Defaults to null if omitted.</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="code-container">
+        <div class="code-header"><span>function_null_safety.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// 1. Non-nullable parameter</span>
+<span class="hljs-keyword">void</span> greetRequired(<span class="hljs-built_in">String</span> name) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Hello, <span class="hljs-subst">$name</span>&#x27;</span>);
+
+<span class="hljs-comment">// 2. Nullable parameter with fallback</span>
+<span class="hljs-keyword">void</span> greetNullable(<span class="hljs-built_in">String?</span> name) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Hello, <span class="hljs-subst">${name ?? <span class="hljs-string">&quot;Guest&quot;</span>}</span>&#x27;</span>);
+
+<span class="hljs-comment">// 3. Optional named nullable parameter</span>
+<span class="hljs-keyword">void</span> showProfile({<span class="hljs-built_in">String?</span> userCity}) =&gt;
+    <span class="hljs-built_in">print</span>(userCity ?? <span class="hljs-string">&#x27;City not provided&#x27;</span>);
+
+<span class="hljs-keyword">void</span> main() {
+  greetRequired(<span class="hljs-string">&#x27;Rahul&#x27;</span>);
+  greetNullable(<span class="hljs-keyword">null</span>);
+  showProfile();
+  showProfile(userCity: <span class="hljs-string">&#x27;Lucknow&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Hello, Rahul<br>
+Hello, Guest<br>
+City not provided<br>
+Lucknow
+      </div>
+    </section>
+
+    <!-- SECTION 16: Practical Real-Life Mini Programs -->
+    <section id="section-16">
+      <h2>16. Practical Real-Life Mini Programs</h2>
+      <p>Here are 6 beginner-friendly, real-world Dart programs showing null safety in production scenarios.</p>
+
+      <!-- Program 1 -->
+      <h3>Program 1: Student Name Display</h3>
+      <p><strong>Situation:</strong> An online classroom dashboard receives student data from an API where unregistered accounts have null names.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog1_student.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> studentName = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">String</span> displayName = studentName ?? <span class="hljs-string">&#x27;Guest&#x27;</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Welcome, <span class="hljs-subst">$displayName</span>!&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Welcome, Guest!
+      </div>
+
+      <!-- Program 2 -->
+      <h3>Program 2: Profile Information Card</h3>
+      <p><strong>Situation:</strong> An app user profile allows optional age and city. Safely display whatever is available.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog2_profile.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> profName = <span class="hljs-string">&#x27;Neha&#x27;</span>;
+  <span class="hljs-built_in">int?</span> profAge = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">String?</span> profCity = <span class="hljs-string">&#x27;Delhi&#x27;</span>;
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Profile Summary:&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;  Name: <span class="hljs-subst">${profName ?? <span class="hljs-string">&quot;Not provided&quot;</span>}</span>&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;  Age: <span class="hljs-subst">${profAge != <span class="hljs-keyword">null</span> ? <span class="hljs-string">&quot;<span class="hljs-subst">$profAge</span> years&quot;</span> : <span class="hljs-string">&quot;Not specified&quot;</span>}</span>&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;  City: <span class="hljs-subst">${profCity ?? <span class="hljs-string">&quot;Unknown location&quot;</span>}</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Profile Summary:<br>
+  Name: Neha<br>
+  Age: Not specified<br>
+  City: Delhi
+      </div>
+
+      <!-- Program 3 -->
+      <h3>Program 3: Product Price Fallback</h3>
+      <p><strong>Situation:</strong> An e-commerce store checks if a promotional discount price is set; if null, it defaults to the standard \$99.99 catalogue price.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog3_price.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">double?</span> promoPrice = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">double</span> effectivePrice = promoPrice ?? <span class="hljs-number">99.99</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Final Checkout Price: \$<span class="hljs-subst">$effectivePrice</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Final Checkout Price: $99.99
+      </div>
+
+      <!-- Program 4 -->
+      <h3>Program 4: Optional Phone Number Length</h3>
+      <p><strong>Situation:</strong> Validate an optional phone number. Using <code>?.length</code> avoids crashing if the user skipped entering phone number.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog4_phone.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String?</span> phone = <span class="hljs-keyword">null</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Phone digit count: <span class="hljs-subst">${phone?.length ?? <span class="hljs-number">0</span>}</span>&#x27;</span>);
+
+  phone = <span class="hljs-string">&#x27;9876543210&#x27;</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Phone digit count: <span class="hljs-subst">${phone?.length ?? <span class="hljs-number">0</span>}</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Phone digit count: 0<br>
+Phone digit count: 10
+      </div>
+
+      <!-- Program 5 -->
+      <h3>Program 5: App Configuration with <code>late final</code></h3>
+      <p><strong>Situation:</strong> The API backend URL is fetched during app startup and must be locked against changes for security.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog5_config.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">late</span> <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> serverEndpoint;
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// Configured once at boot</span>
+  serverEndpoint = <span class="hljs-string">&#x27;https://api.codeverse.dev&#x27;</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Connected to: <span class="hljs-subst">$serverEndpoint</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Connected to: https://api.codeverse.dev
+      </div>
+
+      <!-- Program 6 -->
+      <h3>Program 6: Student List Filter</h3>
+      <p><strong>Situation:</strong> Filter out missing/null student entries from an API response without crashing on null items.</p>
+      <div class="code-container">
+        <div class="code-header"><span>prog6_list.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">List</span> rawStudents = [<span class="hljs-string">&#x27;Aman&#x27;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-string">&#x27;Priya&#x27;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-string">&#x27;Rohan&#x27;</span>];
+  <span class="hljs-built_in">List</span> validStudents = [];
+
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> s <span class="hljs-keyword">in</span> rawStudents) {
+    <span class="hljs-keyword">if</span> (s != <span class="hljs-keyword">null</span>) {
+      validStudents.add(s); <span class="hljs-comment">// s promoted to String</span>
+    }
+  }
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Valid Students: <span class="hljs-subst">$validStudents</span>&#x27;</span>);
+}</code></pre>
+</div>
+      </div>
+      <div class="output-box">
+        <div class="output-title">Console Output</div>
+Valid Students: [Aman, Priya, Rohan]
+      </div>
+    </section>
+
+    <!-- SECTION 17: Common Null Safety Mistakes -->
+    <section id="section-17">
+      <h2>17. Common Null Safety Mistakes</h2>
+      <p>Watch out for these 12 frequent mistakes made by beginners learning Dart null safety.</p>
+
+      <!-- Mistake 1 -->
+      <div class="mistake-card">
+        <div class="mistake-title">1. Assigning null to a Non-Nullable Variable</div>
+        <p><strong>Why it fails:</strong> By default in Dart, types like <code>String</code> or <code>int</code> strictly forbid null.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>String name = null; // Compile error</code></div>
+          <div><code>// ✅ Fixed Code<br>String? name = null; // Use ? for nullable</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 2 -->
+      <div class="mistake-card">
+        <div class="mistake-title">2. Accessing a Nullable Variable Directly</div>
+        <p><strong>Why it fails:</strong> Dart prevents calling methods directly on nullable variables because the receiver might be null.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>String? name; print(name.length);</code></div>
+          <div><code>// ✅ Fixed Code<br>print(name?.length ?? 0);</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 3 -->
+      <div class="mistake-card">
+        <div class="mistake-title">3. Using <code>!</code> When the Value is Null</div>
+        <p><strong>Why it fails:</strong> <code>!</code> forces the compiler to treat the value as non-null. If it is null at runtime, it crashes.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>String? name = null; print(name!.length);</code></div>
+          <div><code>// ✅ Fixed Code<br>if (name != null) print(name.length);</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 4 -->
+      <div class="mistake-card">
+        <div class="mistake-title">4. Confusing <code>?</code> (Type Declaration) with <code>!</code> (Assertion)</div>
+        <p><strong>Why it fails:</strong> <code>?</code> defines a type as nullable; <code>!</code> forces an assertion. Putting <code>!</code> in a type declaration is invalid syntax.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>String! name = 'Rahul'; // Syntax error</code></div>
+          <div><code>// ✅ Fixed Code<br>String name = 'Rahul';</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 5 -->
+      <div class="mistake-card">
+        <div class="mistake-title">5. Confusing <code>??</code> with <code>??=</code></div>
+        <p><strong>Why it fails:</strong> <code>??</code> only provides a fallback in an expression; it does not change the variable. <code>??=</code> reassigns the variable.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad (variable remains null!)<br>name ?? 'Guest';</code></div>
+          <div><code>// ✅ Fixed (variable is assigned)<br>name ??= 'Guest';</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 6 -->
+      <div class="mistake-card">
+        <div class="mistake-title">6. Reading a <code>late</code> Variable Before Initializing It</div>
+        <p><strong>Why it fails:</strong> Dart throws a <code>LateInitializationError</code> at runtime if a late variable is read before assignment.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>late String title; print(title); // Crash!</code></div>
+          <div><code>// ✅ Fixed Code<br>late String title; title = 'Home'; print(title);</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 7 -->
+      <div class="mistake-card">
+        <div class="mistake-title">7. Reassigning a <code>late final</code> Variable</div>
+        <p><strong>Why it fails:</strong> <code>late final</code> allows only a single assignment. Subsequent writes trigger a runtime error.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>late final id = 1; id = 2; // Crash!</code></div>
+          <div><code>// ✅ Fixed Code<br>late final id = 1; // Assign once only</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 8 -->
+      <div class="mistake-card">
+        <div class="mistake-title">8. Confusing <code>List&lt;String&gt;?</code> with <code>List&lt;String?&gt;</code></div>
+        <p><strong>Why it fails:</strong> <code>List&lt;String&gt;?</code> cannot contain null items. <code>List&lt;String?&gt;</code> cannot be null itself.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>List&lt;String&gt;? list = ['A', null]; // Error</code></div>
+          <div><code>// ✅ Fixed Code<br>List&lt;String?&gt; list = ['A', null];</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 9 -->
+      <div class="mistake-card">
+        <div class="mistake-title">9. Calling String Methods on Nullable Elements Without Checking</div>
+        <p><strong>Why it fails:</strong> When iterating over <code>List&lt;String?&gt;</code>, individual items can be null.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>for (var s in list) print(s.toUpperCase());</code></div>
+          <div><code>// ✅ Fixed Code<br>for (var s in list) print(s?.toUpperCase());</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 10 -->
+      <div class="mistake-card">
+        <div class="mistake-title">10. Assuming Empty String <code>""</code> is the Same as <code>null</code></div>
+        <p><strong>Why it fails:</strong> <code>""</code> is a valid String object with length 0. <code>null</code> is no object at all.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Check<br>if (text == null) // Misses empty string ""</code></div>
+          <div><code>// ✅ Complete Check<br>if (text == null || text.isEmpty)</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 11 -->
+      <div class="mistake-card">
+        <div class="mistake-title">11. Forgetting to Handle Null in Function Parameters</div>
+        <p><strong>Why it fails:</strong> Declaring a parameter as <code>String?</code> without fallback causes null to propagate into string operations.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>void printLen(String? s) => print(s!.length);</code></div>
+          <div><code>// ✅ Fixed Code<br>void printLen(String? s) => print(s?.length ?? 0);</code></div>
+        </div>
+      </div>
+
+      <!-- Mistake 12 -->
+      <div class="mistake-card">
+        <div class="mistake-title">12. Assuming <code>late</code> Makes a Variable Nullable</div>
+        <p><strong>Why it fails:</strong> <code>late String x;</code> is 100% non-nullable! It cannot be assigned <code>null</code>.</p>
+        <div class="grid-2">
+          <div><code>// ❌ Bad Code<br>late String x; x = null; // Compile error!</code></div>
+          <div><code>// ✅ Fixed Code<br>late String? x; x = null; // Explicit ? needed</code></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 18: Quick Revision -->
+    <section id="section-18">
+      <h2>18. Quick Revision</h2>
+
+      <!-- VISUAL 15: Safe vs Unsafe Null Handling Comparison -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 15: Safe vs Unsafe Null Handling Patterns</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 140" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="140" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <rect x="25" y="20" width="330" height="100" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+            <text x="40" y="44" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#991B1B">Unsafe Patterns ❌</text>
+            <text x="40" y="68" font-family="monospace" font-size="11" fill="#DC2626">name!.toUpperCase() // Crashes if null</text>
+            <text x="40" y="88" font-family="monospace" font-size="11" fill="#DC2626">late String x; print(x); // Crash if unset</text>
+            <text x="40" y="108" font-family="system-ui, sans-serif" font-size="10.5" fill="#7F1D1D">Assumes data is present without handling missing case.</text>
+
+            <rect x="385" y="20" width="330" height="100" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+            <text x="400" y="44" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#065F46">Safe Idiomatic Patterns &check;</text>
+            <text x="400" y="68" font-family="monospace" font-size="11" fill="#047857">name?.toUpperCase() ?? 'N/A'</text>
+            <text x="400" y="88" font-family="monospace" font-size="11" fill="#047857">if (name != null) print(name.length);</text>
+            <text x="400" y="108" font-family="system-ui, sans-serif" font-size="10.5" fill="#065F46">Smart fallback, flow analysis &amp; safe navigation.</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- VISUAL 16: Summary of All Null Safety Operators -->
+      <div class="diagram-wrapper">
+        <div class="diagram-title">Visual 16: Comprehensive Null Safety Operators Cheatsheet</div>
+        <div class="svg-container">
+          <svg viewBox="0 0 740 180" xmlns="http://www.w3.org/2000/svg">
+            <rect width="740" height="180" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+            <!-- 1. ? -->
+            <rect x="15" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.2"/>
+            <text x="67" y="44" font-family="monospace" font-size="16" font-weight="700" fill="#0175C2" text-anchor="middle">?</text>
+            <text x="67" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Nullable Type</text>
+            <text x="67" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">String?</text>
+            <text x="67" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">Can hold value</text>
+            <text x="67" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#475569" text-anchor="middle">or null</text>
+
+            <!-- 2. ! -->
+            <rect x="135" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#EF4444" stroke-width="1.2"/>
+            <text x="187" y="44" font-family="monospace" font-size="16" font-weight="700" fill="#EF4444" text-anchor="middle">!</text>
+            <text x="187" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Null Assertion</text>
+            <text x="187" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">name!</text>
+            <text x="187" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#DC2626" text-anchor="middle">Forces non-null.</text>
+            <text x="187" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#DC2626" text-anchor="middle">Crashes if null!</text>
+
+            <!-- 3. ?. -->
+            <rect x="255" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#00B4AB" stroke-width="1.2"/>
+            <text x="307" y="44" font-family="monospace" font-size="16" font-weight="700" fill="#00B4AB" text-anchor="middle">?.</text>
+            <text x="307" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Null-Aware</text>
+            <text x="307" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">user?.name</text>
+            <text x="307" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#00796B" text-anchor="middle">Skips if null,</text>
+            <text x="307" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#00796B" text-anchor="middle">never crashes</text>
+
+            <!-- 4. ?? -->
+            <rect x="375" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.2"/>
+            <text x="427" y="44" font-family="monospace" font-size="16" font-weight="700" fill="#8B5CF6" text-anchor="middle">??</text>
+            <text x="427" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Coalescing</text>
+            <text x="427" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">a ?? b</text>
+            <text x="427" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#6D28D9" text-anchor="middle">Returns fallback</text>
+            <text x="427" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#6D28D9" text-anchor="middle">if left is null</text>
+
+            <!-- 5. ??= -->
+            <rect x="495" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.2"/>
+            <text x="547" y="44" font-family="monospace" font-size="16" font-weight="700" fill="#F59E0B" text-anchor="middle">??=</text>
+            <text x="547" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Null Assign</text>
+            <text x="547" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">x ??= 5</text>
+            <text x="547" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#B45309" text-anchor="middle">Assigns ONLY</text>
+            <text x="547" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#B45309" text-anchor="middle">if x is null</text>
+
+            <!-- 6. late -->
+            <rect x="615" y="20" width="105" height="140" rx="6" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+            <text x="667" y="44" font-family="monospace" font-size="14" font-weight="700" fill="#10B981" text-anchor="middle">late</text>
+            <text x="667" y="66" font-family="system-ui, sans-serif" font-size="10" font-weight="700" fill="#0F172A" text-anchor="middle">Delayed Init</text>
+            <text x="667" y="90" font-family="monospace" font-size="10" fill="#64748B" text-anchor="middle">late String x</text>
+            <text x="667" y="115" font-family="system-ui, sans-serif" font-size="9" fill="#065F46" text-anchor="middle">Non-null init</text>
+            <text x="667" y="130" font-family="system-ui, sans-serif" font-size="9" fill="#065F46">later in code</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Operator / Keyword</th>
+              <th>Quick Definition</th>
+              <th>Example Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>Type?</code></td>
+              <td>Declares a variable that can hold a concrete value or <code>null</code>.</td>
+              <td><code>String? city = null;</code></td>
+            </tr>
+            <tr>
+              <td><code>!.</code></td>
+              <td>Asserts that a nullable variable is non-null. Crashes if null!</td>
+              <td><code>print(city!.length);</code></td>
+            </tr>
+            <tr>
+              <td><code>?.</code></td>
+              <td>Safe navigation: accesses member only if receiver is not null.</td>
+              <td><code>print(city?.length);</code></td>
+            </tr>
+            <tr>
+              <td><code>??</code></td>
+              <td>Null coalescing: returns right-side expression if left is null.</td>
+              <td><code>String current = city ?? 'Delhi';</code></td>
+            </tr>
+            <tr>
+              <td><code>??=</code></td>
+              <td>Null-aware assignment: assigns value only if variable is currently null.</td>
+              <td><code>city ??= 'Lucknow';</code></td>
+            </tr>
+            <tr>
+              <td><code>late</code></td>
+              <td>Defers initialization of a non-nullable variable to runtime.</td>
+              <td><code>late String student;</code></td>
+            </tr>
+            <tr>
+              <td><code>late final</code></td>
+              <td>Defers initialization, but allows assignment exactly once.</td>
+              <td><code>late final String apiKey;</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECTION 19: Knowledge Check -->
+    <section id="section-19">
+      <h2>19. Knowledge Check</h2>
+
+      <!-- Quiz 1 -->
+      <div class="quiz-card">
+        <div class="quiz-question">1. What does `null` mean in Dart?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">A) The number zero</div>
+          <div class="quiz-option">B) The intentional absence or unavailability of any value</div>
+          <div class="quiz-option">C) An empty string ""</div>
+          <div class="quiz-option">D) A boolean false</div>
+        </div>
+        <details>
+          <summary>Show Answer</summary>
+          <div class="explanation"><strong>Correct Answer: B.</strong> <code>null</code> represents the absence of a value. It is completely distinct from 0, false, or <code>""</code>.</div>
+        </details>
+      </div>
+
+      <!-- Quiz 2 -->
+      <div class="quiz-card">
+        <div class="quiz-question">2. How do you declare a variable named `score` that can hold an integer or null?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">A) int? score;</div>
+          <div class="quiz-option">B) nullable int score;</div>
+          <div class="quiz-option">C) int score = null?;</div>
+          <div class="quiz-option">D) ?int score;</div>
+        </div>
+        <details>
+          <summary>Show Answer</summary>
+          <div class="explanation"><strong>Correct Answer: A.</strong> Appending <code>?</code> to a type name (e.g. <code>int?</code>) makes it a nullable type in Dart.</div>
+        </details>
+      </div>
+
+      <!-- Quiz 3 -->
+      <div class="quiz-card">
+        <div class="quiz-question">3. What is the result of `String? name = null; print(name?.length);`?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">A) Prints 0</div>
+          <div class="quiz-option">B) Prints null safely without crashing</div>
+          <div class="quiz-option">C) Throws a NullPointerException</div>
+          <div class="quiz-option">D) Causes a compilation error</div>
+        </div>
+        <details>
+          <summary>Show Answer</summary>
+          <div class="explanation"><strong>Correct Answer: B.</strong> The null-aware operator <code>?.</code> sees that <code>name</code> is null, skips <code>.length</code>, and safely returns <code>null</code>.</div>
+        </details>
+      </div>
+
+      <!-- Quiz 4 -->
+      <div class="quiz-card">
+        <div class="quiz-question">4. What is the fundamental difference between `??` and `??=`?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">A) `??` is for numbers, while `??=` is for strings</div>
+          <div class="quiz-option">B) `??` provides a fallback value in an expression; `??=` assigns a value to a variable if that variable is null</div>
+          <div class="quiz-option">C) They are identical in behavior</div>
+          <div class="quiz-option">D) `??=` throws an error if the variable is null</div>
+        </div>
+        <details>
+          <summary>Show Answer</summary>
+          <div class="explanation"><strong>Correct Answer: B.</strong> <code>??</code> returns a fallback expression without altering variables. <code>??=</code> mutates and assigns to the variable only when it is null.</div>
+        </details>
+      </div>
+
+      <!-- Quiz 5 -->
+      <div class="quiz-card">
+        <div class="quiz-question">5. What happens if you read a `late` variable that was never initialized?</div>
+        <div class="quiz-options">
+          <div class="quiz-option">A) It automatically returns null</div>
+          <div class="quiz-option">B) Dart throws a runtime `LateInitializationError`</div>
+          <div class="quiz-option">C) It defaults to 0</div>
+          <div class="quiz-option">D) The program sleeps for 1 second</div>
+        </div>
+        <details>
+          <summary>Show Answer</summary>
+          <div class="explanation"><strong>Correct Answer: B.</strong> <code>late</code> variables are non-nullable. Accessing them before initialization triggers a runtime <code>LateInitializationError</code>.</div>
+        </details>
+      </div>
+
+      <!-- Prediction Challenges -->
+      <h3>Output Prediction Challenges</h3>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Prediction 1: Fallback vs Null Assignment</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">String?</span> val1;
+<span class="hljs-built_in">String</span> val2 = val1 ?? <span class="hljs-string">&#x27;Default&#x27;</span>;
+val1 ??= <span class="hljs-string">&#x27;Assigned&#x27;</span>;
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;val2=<span class="hljs-subst">$val2</span>, val1=<span class="hljs-subst">$val1</span>&#x27;</span>);</code></pre>
+</div>
+        <details>
+          <summary>Show Predicted Output</summary>
+          <div class="explanation"><strong>Output: val2=Default, val1=Assigned</strong><br>Initially <code>val1</code> is null, so <code>val1 ?? 'Default'</code> gives 'Default' to <code>val2</code>. Then <code>val1 ??= 'Assigned'</code> assigns 'Assigned' to <code>val1</code>.</div>
+        </details>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Prediction 2: Safe Length with Fallback</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">String?</span> word = <span class="hljs-keyword">null</span>;
+<span class="hljs-built_in">int</span> lengthOutput = word?.length ?? <span class="hljs-number">-1</span>;
+<span class="hljs-built_in">print</span>(lengthOutput);</code></pre>
+</div>
+        <details>
+          <summary>Show Predicted Output</summary>
+          <div class="explanation"><strong>Output: -1</strong><br><code>word?.length</code> evaluates to <code>null</code>. The <code>?? -1</code> operator catches the null and provides <code>-1</code>.</div>
+        </details>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Prediction 3: Nullable List Mapping</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">List</span> pList = [<span class="hljs-string">&#x27;Dart&#x27;</span>, <span class="hljs-keyword">null</span>, <span class="hljs-string">&#x27;Flutter&#x27;</span>];
+<span class="hljs-keyword">var</span> counts = pList.map((item) =&gt; item?.length ?? <span class="hljs-number">0</span>).toList();
+<span class="hljs-built_in">print</span>(counts);</code></pre>
+</div>
+        <details>
+          <summary>Show Predicted Output</summary>
+          <div class="explanation"><strong>Output: [4, 0, 7]</strong><br>'Dart' has length 4; null yields 0 via <code>?? 0</code>; 'Flutter' has length 7.</div>
+        </details>
+      </div>
+
+      <!-- Practice Exercises -->
+      <h3>Practice Exercises</h3>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Exercise 1: Safe Profile Display</div>
+        <p>Declare a nullable variable <code>String? userBio = null;</code>. Write code using <code>??</code> to print <code>'Bio: Not available yet'</code> when null, or the bio text when present.</p>
+        <details>
+          <summary>Show Solution</summary>
+          <div class="explanation"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">String?</span> userBio = <span class="hljs-keyword">null</span>;
+<span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Bio: <span class="hljs-subst">${userBio ?? <span class="hljs-string">&quot;Not available yet&quot;</span>}</span>&#x27;</span>);</code></pre>
+</div>
+          </div>
+        </details>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Exercise 2: City Uppercase Formatter</div>
+        <p>Given <code>String? city = 'mumbai';</code>, safely print the uppercase city name using null-aware access <code>?.</code>, falling back to <code>'NO CITY'</code> if it is null.</p>
+        <details>
+          <summary>Show Solution</summary>
+          <div class="explanation"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">String?</span> city = <span class="hljs-string">&#x27;mumbai&#x27;</span>;
+<span class="hljs-built_in">print</span>(city?.toUpperCase() ?? <span class="hljs-string">&#x27;NO CITY&#x27;</span>); <span class="hljs-comment">// MUMBAI</span></code></pre>
+</div>
+          </div>
+        </details>
+      </div>
+
+      <div class="quiz-card">
+        <div class="quiz-question">Exercise 3: Configuration Lock</div>
+        <p>Declare a top-level or class-level <code>late final</code> integer variable named <code>maxConnections</code>. Inside <code>main()</code>, assign it the value <code>50</code> and print it. Explain why trying to assign <code>100</code> on the next line will fail.</p>
+        <details>
+          <summary>Show Solution</summary>
+          <div class="explanation"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">late</span> <span class="hljs-keyword">final</span> <span class="hljs-built_in">int</span> maxConnections;
+
+<span class="hljs-keyword">void</span> main() {
+  maxConnections = <span class="hljs-number">50</span>;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Max Connections: <span class="hljs-subst">$maxConnections</span>&#x27;</span>);
+  <span class="hljs-comment">// maxConnections = 100; // Fails! late final can only be set once.</span>
+}</code></pre>
+</div>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <footer style="margin-top: 1rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); text-align: center; color: var(--text-secondary); font-size: 0.78rem;">
+      CodeVerse Educational Content &bull; Dart Stage 3: Null Safety &amp; Core Dart &bull; Topic 11
+    </footer>
+  </div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

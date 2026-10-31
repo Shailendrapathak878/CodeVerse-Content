@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 19: Generics &amp; Variance in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 19</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-badge">Stage 5 &bull; Advanced Kotlin &bull; Topic 19</div>
+    <h1 class="hero-title">Generics &amp; Variance in Kotlin</h1>
+    <p class="hero-subtitle">
+      Write flexible, type-safe code that eliminates duplication. Master <strong>Generic Classes</strong> and <strong>Generic Functions</strong> with <code>&lt;T&gt;</code>, enforce safety with <strong>Type Constraints</strong>, and conquer subtyping rules with <strong>Invariance</strong>, <strong>Covariance (<code>out</code>)</strong>, and <strong>Contravariance (<code>in</code>)</strong>.
+    </p>
+  </header>
+
+  <!-- 1. INTRODUCTION TO GENERICS -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">1</span> Introduction: Why Do We Need Generics?</h2>
+    <p>
+      In beginner code, if you want a box to hold a <code>String</code>, you write <code>StringBox</code>. If you then want to hold an <code>Int</code>, you write <code>IntBox</code>. If you want a <code>Double</code>, you write <code>DoubleBox</code>.
+    </p>
+    <p>
+      This causes massive, frustrating code duplication! <strong>Generics</strong> allow you to write a single, reusable class or function that works safely with <em>any</em> data type using a <strong>Type Parameter</strong> (usually written as <span class="pill pill-purple">&lt;T&gt;</span> for "Type").
+    </p>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">📦</div>
+      <div class="alert-content">
+        <strong>Real-Life Analogy: The Universal Storage Box.</strong><br>
+        Imagine a factory making cardboard boxes. The factory doesn't design a "shoe-only box" that cannot hold books. It manufactures a <strong>universal box</strong>. You can put shoes in it, books in it, or laptops in it.
+        In Kotlin, <code>Box&lt;T&gt;</code> is that universal box design, where <code>T</code> is whatever item you place inside!
+      </div>
+    </div>
+
+    <!-- Diagram 1: Universal Storage Box -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 1.1: Universal Generic Box Concept</div>
+      <svg viewBox="0 0 620 85" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#1E293B" stroke="#64748B" stroke-width="1.6"/>
+        <text x="135" y="32" fill="#F8FAFC" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Without Generics (Duplication)</text>
+        <text x="135" y="48" fill="#EF4444" font-size="9" text-anchor="middle" font-family="monospace">class StringBox(val item: String)</text>
+        <text x="135" y="62" fill="#EF4444" font-size="9" text-anchor="middle" font-family="monospace">class IntBox(val item: Int)</text>
+
+        <path d="M 255 42 L 315 42" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <defs>
+          <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#7F52FF"/>
+          </marker>
+        </defs>
+
+        <rect x="325" y="12" width="270" height="60" rx="6" fill="#0F172A" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="460" y="32" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">With Generics (Clean &amp; Reusable)</text>
+        <text x="460" y="48" fill="#34D399" font-size="10" font-weight="700" text-anchor="middle" font-family="monospace">class Box&lt;T&gt;(val item: T)</text>
+        <text x="460" y="62" fill="#38BDF8" font-size="8.5" text-anchor="middle" font-family="sans-serif">One single class handles ANY type safely!</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2. GENERIC CLASSES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">2</span> Generic Classes: Syntax &amp; Usage</h2>
+    <p>
+      To make a class generic, place angle brackets <code>&lt;T&gt;</code> immediately after the class name. Inside the class, you can use <code>T</code> as a property type, parameter type, or return type:
+    </p>
+
+    <!-- Diagram 2: Generic Class Syntax -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 2.1: Generic Class Syntax Breakdown</div>
+      <svg viewBox="0 0 620 75" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="10" width="80" height="34" rx="4" fill="#1E293B" stroke="#F43F5E" stroke-width="1.4"/>
+        <text x="70" y="31" fill="#F43F5E" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">class</text>
+
+        <rect x="120" y="10" width="70" height="34" rx="4" fill="#1E293B" stroke="#38BDF8" stroke-width="1.4"/>
+        <text x="155" y="31" fill="#38BDF8" font-size="12" font-weight="700" text-anchor="middle" font-family="monospace">Box</text>
+
+        <rect x="200" y="10" width="60" height="34" rx="4" fill="#1E293B" stroke="#7F52FF" stroke-width="1.6"/>
+        <text x="230" y="31" fill="#DDD6FE" font-size="13" font-weight="800" text-anchor="middle" font-family="monospace">&lt;T&gt;</text>
+
+        <rect x="270" y="10" width="320" height="34" rx="4" fill="#1E293B" stroke="#34D399" stroke-width="1.4"/>
+        <text x="430" y="31" fill="#34D399" font-size="11" font-weight="700" text-anchor="middle" font-family="monospace">(val item: T) { fun get(): T = item }</text>
+
+        <text x="70" y="58" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="sans-serif">Keyword</text>
+        <text x="155" y="58" fill="#38BDF8" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Class Name</text>
+        <text x="230" y="58" fill="#A78BFA" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Type Param</text>
+        <text x="430" y="58" fill="#34D399" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">Constructor &amp; Member usage of T</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 3. PRACTICAL EXAMPLES: GENERICS (Examples 1 to 14) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">3</span> Generics in Action (Examples 1 – 14)</h2>
+
+    <!-- Examples 1-4 -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Examples 1 – 4: Generic Box Storing Different Types</h3>
+    <p style="font-size: 12px;">The same single class storing String, Int, and Double safely with zero casting.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">GenericBoxDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Box</span></span>(<span class="hljs-keyword">val</span> item: T) {
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">open</span><span class="hljs-params">()</span></span>: T = item
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> strBox = Box(<span class="hljs-string">&quot;Kotlin Book&quot;</span>)
+    <span class="hljs-keyword">val</span> intBox = Box(<span class="hljs-number">101</span>)
+    <span class="hljs-keyword">val</span> dblBox = Box(<span class="hljs-number">99.5</span>) <span class="hljs-comment">// Type inference automatically knows Box!</span>
+
+    println(<span class="hljs-string">&quot;String box: <span class="hljs-subst">${strBox.open()}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Int box: <span class="hljs-subst">${intBox.open()}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Double box: <span class="hljs-subst">${dblBox.open()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      String box: Kotlin Book<br>
+      Int box: 101<br>
+      Double box: 99.5
+    </div>
+
+    <!-- Examples 5-8: Generic Functions -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 5 – 8: Generic Functions</h3>
+    <p style="font-size: 12px;">Functions can declare their own type parameter before the function name: <code>fun &lt;T&gt; name(...)</code>.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">GenericFunctionsDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 5: Generic function printing any type</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">printItem</span><span class="hljs-params">(item: <span class="hljs-type">T</span>)</span></span> {
+    println(<span class="hljs-string">&quot;Item: <span class="hljs-variable">$item</span> (Type: <span class="hljs-subst">${item!!::class.simpleName}</span>)&quot;</span>)
+}
+
+<span class="hljs-comment">// Example 6: Returning the passed value</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">echo</span><span class="hljs-params">(value: <span class="hljs-type">T</span>)</span></span>: T = value
+
+<span class="hljs-comment">// Example 7: Swapping two elements in a list</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">swapFirstTwo</span><span class="hljs-params">(list: <span class="hljs-type">MutableList</span>)</span></span> {
+    <span class="hljs-keyword">if</span> (list.size &gt;= <span class="hljs-number">2</span>) {
+        <span class="hljs-keyword">val</span> temp = list[<span class="hljs-number">0</span>]
+        list[<span class="hljs-number">0</span>] = list[<span class="hljs-number">1</span>]
+        list[<span class="hljs-number">1</span>] = temp
+    }
+}
+
+<span class="hljs-comment">// Example 8: Finding first item matching a predicate</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">findFirst</span><span class="hljs-params">(items: <span class="hljs-type">List</span>, match: (<span class="hljs-type">T</span>) -&gt; <span class="hljs-type">Boolean</span>)</span></span>: T? {
+    <span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> items) <span class="hljs-keyword">if</span> (match(i)) <span class="hljs-keyword">return</span> i
+    <span class="hljs-keyword">return</span> <span class="hljs-literal">null</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    printItem(<span class="hljs-string">&quot;Android&quot;</span>)
+    printItem(<span class="hljs-number">42</span>)
+
+    <span class="hljs-keyword">val</span> nums = mutableListOf(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>)
+    swapFirstTwo(nums)
+    println(<span class="hljs-string">&quot;Swapped nums: <span class="hljs-variable">$nums</span>&quot;</span>)
+
+    <span class="hljs-keyword">val</span> found = findFirst(listOf(<span class="hljs-number">10</span>, <span class="hljs-number">25</span>, <span class="hljs-number">30</span>)) { it &gt; <span class="hljs-number">20</span> }
+    println(<span class="hljs-string">&quot;First &gt; 20: <span class="hljs-variable">$found</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Item: Android (Type: String)<br>
+      Item: 42 (Type: Int)<br>
+      Swapped nums: [2, 1, 3]<br>
+      First &gt; 20: 25
+    </div>
+
+    <!-- Examples 9 & 10: Multiple Type Parameters -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 9 &amp; 10: Multiple Type Parameters <code>&lt;K, V&gt;</code></h3>
+    <p style="font-size: 12px;">Classes and functions can accept two or more distinct type parameters.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">KeyValuePairDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PairEntry</span></span>(<span class="hljs-keyword">val</span> key: K, <span class="hljs-keyword">val</span> value: V) {
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">display</span><span class="hljs-params">()</span></span> = println(<span class="hljs-string">&quot;[<span class="hljs-variable">$key</span> =&gt; <span class="hljs-variable">$value</span>]&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">combineText</span><span class="hljs-params">(first: <span class="hljs-type">A</span>, second: <span class="hljs-type">B</span>)</span></span>: String = <span class="hljs-string">&quot;<span class="hljs-variable">$first</span> - <span class="hljs-variable">$second</span>&quot;</span>
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> studentGrade = PairEntry(<span class="hljs-string">&quot;Aman&quot;</span>, <span class="hljs-number">95</span>) <span class="hljs-comment">// PairEntry</span>
+    studentGrade.display()
+    println(combineText(<span class="hljs-string">&quot;Rank&quot;</span>, <span class="hljs-number">1</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      [Aman =&gt; 95]<br>
+      Rank - 1
+    </div>
+
+    <!-- Examples 11 & 12: Generic Type Constraints -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 11 &amp; 12: Generic Type Constraints (Upper Bounds)</h3>
+    <p style="font-size: 12px;">Sometimes you only want a generic function to accept numbers or comparable items. Use <code>&lt;T : Number&gt;</code> to set an upper bound constraint.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">TypeConstraintsDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Example 11: Only subclasses of Number (Int, Double, Float) are permitted!</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">sumToDouble</span><span class="hljs-params">(a: <span class="hljs-type">T</span>, b: <span class="hljs-type">T</span>)</span></span>: <span class="hljs-built_in">Double</span> {
+    <span class="hljs-keyword">return</span> a.toDouble() + b.toDouble()
+}
+
+<span class="hljs-comment">// Example 12: Constraint using Comparable for ordering</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span> &gt; <span class="hljs-title">findMax</span><span class="hljs-params">(a: <span class="hljs-type">T</span>, b: <span class="hljs-type">T</span>)</span></span>: T {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">if</span> (a &gt; b) a <span class="hljs-keyword">else</span> b
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(<span class="hljs-string">&quot;Sum: <span class="hljs-subst">${sumToDouble(<span class="hljs-number">10</span>, <span class="hljs-number">20.5</span>)}</span>&quot;</span>) <span class="hljs-comment">// Allowed: Int &amp; Double are Numbers</span>
+    println(<span class="hljs-string">&quot;Max: <span class="hljs-subst">${findMax(<span class="hljs-string">&quot;Apple&quot;</span>, <span class="hljs-string">&quot;Zebra&quot;</span>)}</span>&quot;</span>)
+    <span class="hljs-comment">// sumToDouble(&quot;A&quot;, &quot;B&quot;) -&gt; Compile Error: String is not a Number!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Sum: 30.5<br>
+      Max: Zebra
+    </div>
+
+    <!-- Examples 13 & 14: Practical Domain Repository -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 13 &amp; 14: Practical In-Memory Generic Repository</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">GenericRepositoryDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(<span class="hljs-keyword">val</span> id: <span class="hljs-built_in">Int</span>, <span class="hljs-keyword">val</span> name: String)
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Repository</span> </span>{
+    <span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> items = mutableListOf()
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">add</span><span class="hljs-params">(item: <span class="hljs-type">T</span>)</span></span> = items.add(item)
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">getAll</span><span class="hljs-params">()</span></span>: List = items
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> studentRepo = Repository()
+    studentRepo.add(Student(<span class="hljs-number">1</span>, <span class="hljs-string">&quot;Priya&quot;</span>))
+    studentRepo.add(Student(<span class="hljs-number">2</span>, <span class="hljs-string">&quot;Vikram&quot;</span>))
+
+    <span class="hljs-keyword">for</span> (s <span class="hljs-keyword">in</span> studentRepo.getAll()) {
+        println(<span class="hljs-string">&quot;Enrolled: <span class="hljs-subst">${s.name}</span> (ID: <span class="hljs-subst">${s.id}</span>)&quot;</span>)
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Enrolled: Priya (ID: 1)<br>
+      Enrolled: Vikram (ID: 2)
+    </div>
+  </section>
+
+  <!-- 4. UNDERSTANDING VARIANCE -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">4</span> Introduction to Variance: Subtyping Safety</h2>
+    <p>
+      In Kotlin, a <code>Dog</code> is a subtype of <code>Animal</code>. This means you can assign a <code>Dog</code> to an <code>Animal</code> variable:
+      <code>val a: Animal = Dog()</code>.
+    </p>
+    <p>
+      <strong>The Big Question:</strong> Can you assign a <code>Box&lt;Dog&gt;</code> to a variable of type <code>Box&lt;Animal&gt;</code>?
+      In Kotlin, the default answer is <strong>NO!</strong>
+    </p>
+
+    <!-- Diagram 3: Invariance Trap -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 4.1: The Invariance Rule by Default</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="15" width="220" height="60" rx="6" fill="#1E293B" stroke="#059669" stroke-width="1.6"/>
+        <text x="135" y="36" fill="#34D399" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Normal Polymorphism</text>
+        <text x="135" y="52" fill="#E2E8F0" font-size="9.5" text-anchor="middle" font-family="monospace">Dog is a subtype of Animal</text>
+        <text x="135" y="65" fill="#10B981" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">✅ val a: Animal = Dog() is VALID</text>
+
+        <rect x="375" y="15" width="220" height="60" rx="6" fill="#1E293B" stroke="#DC2626" stroke-width="1.6"/>
+        <text x="485" y="36" fill="#F87171" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Generic Invariance</text>
+        <text x="485" y="52" fill="#E2E8F0" font-size="9.5" text-anchor="middle" font-family="monospace">Box&lt;Dog&gt; is NOT Box&lt;Animal&gt;</text>
+        <text x="485" y="65" fill="#EF4444" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">❌ val b: Box&lt;Animal&gt; = Box&lt;Dog&gt; FAILS</text>
+      </svg>
+    </div>
+
+    <p>
+      Why does it fail by default? Because if <code>Box&lt;Animal&gt;</code> allowed you to insert a <code>Cat</code> into it, you would accidentally put a Cat into a Box that someone else expects to only hold Dogs! That would crash your app at runtime.
+    </p>
+
+    <!-- Producer vs Consumer Rule -->
+    <div class="alert alert-note">
+      <div class="alert-icon">⚖️</div>
+      <div class="alert-content">
+        <strong>The Golden Rule of Variance: Producer vs. Consumer</strong><br>
+        &bull; <strong>Covariance (<span class="pill pill-green">out</span>):</strong> If your class only <strong>PRODUCES</strong> (returns) values of type <code>T</code> and never takes them in, it is safe to assign <code>Producer&lt;Dog&gt;</code> to <code>Producer&lt;Animal&gt;</code>.<br>
+        &bull; <strong>Contravariance (<span class="pill pill-blue">in</span>):</strong> If your class only <strong>CONSUMES</strong> (takes as parameter) values of type <code>T</code> and never outputs them, it is safe to assign <code>Consumer&lt;Animal&gt;</code> to <code>Consumer&lt;Dog&gt;</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. VARIANCE EXAMPLES: COVARIANCE, CONTRAVARIANCE, INVARIANCE (15 to 23) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">5</span> Variance in Action (Examples 15 – 23)</h2>
+
+    <!-- Examples 15: Invariance -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Example 15: Default Invariance</h3>
+    <p style="font-size: 12px;">Neither <code>in</code> nor <code>out</code> is specified. The class both consumes and produces <code>T</code>.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example15_Invariance.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span></span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> : <span class="hljs-type">Animal</span></span>()
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InvariantBox</span></span>(<span class="hljs-keyword">var</span> item: T)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dogBox: InvariantBox = InvariantBox(Dog())
+    <span class="hljs-comment">// val animalBox: InvariantBox = dogBox // Compile Error: Type mismatch!</span>
+    println(<span class="hljs-string">&quot;InvariantBox works safely without automatic subtype conversion.&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      InvariantBox works safely without automatic subtype conversion.
+    </div>
+
+    <!-- Examples 16 & 17: Covariance with out -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 16 &amp; 17: Covariance with <code>out</code> (Producer)</h3>
+    <p style="font-size: 12px;">By marking <code>&lt;out T&gt;</code>, <code>T</code> can only appear in <strong>out-position</strong> (return types). This makes <code>Producer&lt;Dog&gt;</code> a valid subtype of <code>Producer&lt;Animal&gt;</code>.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example16_17_Covariance.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">open</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span></span>(<span class="hljs-keyword">val</span> name: String)
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span></span>(name: String) : Animal(name)
+
+<span class="hljs-comment">// &#x27;out T&#x27; means this class only PRODUCES T</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shelter</span></span>(<span class="hljs-keyword">private</span> <span class="hljs-keyword">val</span> animal: T) {
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">adopt</span><span class="hljs-params">()</span></span>: T = animal <span class="hljs-comment">// Allowed: &#x27;out&#x27; position!</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> dogShelter: Shelter = Shelter(Dog(<span class="hljs-string">&quot;Buddy&quot;</span>))
+    <span class="hljs-comment">// Fully legal because of &#x27;out&#x27;!</span>
+    <span class="hljs-keyword">val</span> animalShelter: Shelter = dogShelter
+    println(<span class="hljs-string">&quot;Adopted: <span class="hljs-subst">${animalShelter.adopt().name}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Adopted: Buddy
+    </div>
+
+    <!-- Examples 18 & 19: Contravariance with in -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 18 &amp; 19: Contravariance with <code>in</code> (Consumer)</h3>
+    <p style="font-size: 12px;">By marking <code>&lt;in T&gt;</code>, <code>T</code> can only appear in <strong>in-position</strong> (function arguments). This inverts the subtyping relationship: a consumer of <code>Animal</code> can be used where a consumer of <code>Dog</code> is needed!</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example18_19_Contravariance.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// &#x27;in T&#x27; means this class only CONSUMES T</span>
+<span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Trainer</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">train</span><span class="hljs-params">(target: <span class="hljs-type">T</span>)</span></span> <span class="hljs-comment">// Allowed: &#x27;in&#x27; parameter position!</span>
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">GeneralAnimalTrainer</span> : <span class="hljs-type">Trainer {</span></span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">train</span><span class="hljs-params">(target: <span class="hljs-type">Animal</span>)</span></span> {
+        println(<span class="hljs-string">&quot;Training animal: <span class="hljs-subst">${target.name}</span>&quot;</span>)
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> animalTrainer: Trainer = GeneralAnimalTrainer()
+    <span class="hljs-comment">// Contravariance: Trainer can safely act as Trainer!</span>
+    <span class="hljs-keyword">val</span> dogTrainer: Trainer = animalTrainer
+    dogTrainer.train(Dog(<span class="hljs-string">&quot;Bruno&quot;</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Training animal: Bruno
+    </div>
+
+    <!-- Examples 20 & 21: Use-Site Variance (Type Projections) -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 20 &amp; 21: Use-Site Variance (Type Projections)</h3>
+    <p style="font-size: 12px;">When a class like <code>Array&lt;T&gt;</code> is invariant, you can still apply variance at the specific function calling site where it is used.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example20_21_UseSiteVariance.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// Use-site &#x27;out&#x27;: from is restricted to only producing elements (read-only)</span>
+<span class="hljs-function"><span class="hljs-keyword">fun</span>  <span class="hljs-title">copyElements</span><span class="hljs-params">(from: <span class="hljs-type">Array</span>, to: <span class="hljs-type">Array</span>)</span></span> {
+    <span class="hljs-keyword">for</span> (i <span class="hljs-keyword">in</span> from.indices) {
+        to[i] = from[i]
+    }
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> ints: Array = arrayOf(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>)
+    <span class="hljs-keyword">val</span> anyList: Array = arrayOf(<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>)
+
+    copyElements(ints, anyList)
+    println(<span class="hljs-string">&quot;Copied elements: <span class="hljs-subst">${anyList.joinToString()}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Copied elements: 1, 2, 3
+    </div>
+
+    <!-- Example 22: Star Projection -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 22: Star Projection <code>&lt;*&gt;</code></h3>
+    <p style="font-size: 12px;">When you don't know or care about the exact type, use <code>*</code> to safely read elements as <code>Any?</code>.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example22_StarProjection.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">printListLength</span><span class="hljs-params">(list: <span class="hljs-type">List</span>)</span></span> {
+    println(<span class="hljs-string">&quot;List size is <span class="hljs-subst">${list.size}</span>, first item is: <span class="hljs-subst">${list.firstOrNull()}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    printListLength(listOf(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>, <span class="hljs-string">&quot;C&quot;</span>))
+    printListLength(listOf(<span class="hljs-number">100</span>, <span class="hljs-number">200</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      List size is 3, first item is: A<br>
+      List size is 2, first item is: 100
+    </div>
+
+    <!-- Example 23: Complete Practical Pipeline -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 23: Combining Generics &amp; Covariance in a Pipeline</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">Example23_Pipeline.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">DataProvider</span> </span>{
+    <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetch</span><span class="hljs-params">()</span></span>: T
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">TextProvider</span> : <span class="hljs-type">DataProvider {</span></span>
+    <span class="hljs-keyword">override</span> <span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">fetch</span><span class="hljs-params">()</span></span>: String = <span class="hljs-string">&quot;Generics &amp; Variance Complete!&quot;</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">renderData</span><span class="hljs-params">(provider: <span class="hljs-type">DataProvider</span>)</span></span> {
+    println(<span class="hljs-string">&quot;Rendered Output: <span class="hljs-subst">${provider.fetch()}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> tp = TextProvider()
+    renderData(tp) <span class="hljs-comment">// Legal because DataProvider is covariant (out)!</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Rendered Output: Generics &amp; Variance Complete!
+    </div>
+  </section>
+
+  <!-- 6. VARIANCE COMPARISON TABLE -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">6</span> Variance Matrix &amp; Key Concepts Summary</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Concept</th>
+            <th>Keyword</th>
+            <th>Role</th>
+            <th>Subtyping Rule</th>
+            <th>Position Restriction</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Invariance</strong></td>
+            <td>(None)</td>
+            <td>Producer &amp; Consumer</td>
+            <td><code>Box&lt;Dog&gt;</code> has no relation to <code>Box&lt;Animal&gt;</code></td>
+            <td>Can appear in both in and out positions</td>
+          </tr>
+          <tr>
+            <td><strong>Covariance</strong></td>
+            <td><span class="pill pill-green">out</span></td>
+            <td>Producer Only</td>
+            <td><code>Producer&lt;Dog&gt;</code> is a subtype of <code>Producer&lt;Animal&gt;</code></td>
+            <td>Only allowed in <code>out</code> (return) position</td>
+          </tr>
+          <tr>
+            <td><strong>Contravariance</strong></td>
+            <td><span class="pill pill-blue">in</span></td>
+            <td>Consumer Only</td>
+            <td><code>Consumer&lt;Animal&gt;</code> is a subtype of <code>Consumer&lt;Dog&gt;</code></td>
+            <td>Only allowed in <code>in</code> (argument) position</td>
+          </tr>
+          <tr>
+            <td><strong>Star Projection</strong></td>
+            <td><span class="pill pill-purple">*</span></td>
+            <td>Unknown Type</td>
+            <td>Can point to any generic specialization</td>
+            <td>Read-only as <code>Any?</code>, cannot write into it</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7. COMMON BEGINNER MISTAKES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">7</span> Common Beginner Mistakes &amp; How to Fix Them</h2>
+
+    <div class="grid-2">
+      <!-- Mistake 1 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 1. Expecting Box&lt;Dog&gt; to be Box&lt;Animal&gt;</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val b: Box&lt;Animal&gt; = Box&lt;Dog&gt;() // Error: Type mismatch</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Classes are invariant by default. Mark as <code>class Box&lt;out T&gt;</code> if read-only.</p>
+      </div>
+
+      <!-- Mistake 2 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 2. Using 'out' on a function parameter</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>class Box&lt;out T&gt; { fun set(item: T) } // Error: Type parameter T is declared as 'out' but occurs in 'in' position</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> <code>out</code> classes can only produce/return values, not accept them as parameters.</p>
+      </div>
+
+      <!-- Mistake 3 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 3. Forgetting type parameter in function</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>fun printVal(item: T) // Error: Unresolved reference 'T'</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Declare the type parameter first: <code>fun &lt;T&gt; printVal(item: T)</code>.</p>
+      </div>
+
+      <!-- Mistake 4 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 4. Writing into a Star-projected collection</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val list: MutableList&lt;*&gt; = ...; list.add("Hi") // Error: Prohibited</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Star projections are strictly read-only since the exact type is unknown.</p>
+      </div>
+
+      <!-- Mistake 5 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 5. Misunderstanding constraint bounds</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>fun &lt;T : Number&gt; doMath(a: T) // Calling with "String" fails compilation</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Pass arguments that are actually subtypes of the specified constraint.</p>
+      </div>
+
+      <!-- Mistake 6 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 6. Confusing 'in' and 'out' directions</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;">Remember: <strong>PECS</strong> &rarr; <em>Producer Out, Consumer In</em>.</p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Tip:</strong> If it returns <code>T</code> &rarr; <code>out</code>. If it takes <code>T</code> as an argument &rarr; <code>in</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. QUICK REVISION -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">8</span> Quick Revision: 12 Key Takeaways</h2>
+    <ul style="font-size: 12.5px; line-height: 1.55;">
+      <li><strong>1. Generics:</strong> Writing reusable, type-safe components without code duplication.</li>
+      <li><strong>2. Type Parameter:</strong> The placeholder <code>&lt;T&gt;</code> representing an actual type supplied during instantiation.</li>
+      <li><strong>3. Generic Class:</strong> Declared with <code>class Box&lt;T&gt;(val item: T)</code>.</li>
+      <li><strong>4. Generic Function:</strong> Declared with <code>fun &lt;T&gt; printItem(item: T)</code>.</li>
+      <li><strong>5. Multiple Parameters:</strong> Classes can accept multiple parameters like <code>Pair&lt;K, V&gt;</code>.</li>
+      <li><strong>6. Type Constraints:</strong> Using <code>&lt;T : Number&gt;</code> restricts allowed types to numbers only.</li>
+      <li><strong>7. Invariance:</strong> By default, <code>Box&lt;Dog&gt;</code> is NOT a subtype of <code>Box&lt;Animal&gt;</code> to prevent unsafe writes.</li>
+      <li><strong>8. Covariance (<code>out</code>):</strong> Safe for producers. Allows <code>Shelter&lt;Dog&gt;</code> to be treated as <code>Shelter&lt;Animal&gt;</code>.</li>
+      <li><strong>9. Contravariance (<code>in</code>):</strong> Safe for consumers. Allows <code>Trainer&lt;Animal&gt;</code> to be treated as <code>Trainer&lt;Dog&gt;</code>.</li>
+      <li><strong>10. Use-Site Variance:</strong> Applying <code>out</code> or <code>in</code> at the function parameter level (type projection).</li>
+      <li><strong>11. Star Projection (<code>*</code>):</strong> Represents an unknown type safely readable as <code>Any?</code>.</li>
+      <li><strong>12. Stage 5 Kickoff:</strong> Generics and Variance lay the groundwork for high-performance collections and architectural pipelines!</li>
+    </ul>
+  </section>
+
+  <!-- 9. PRACTICE QUESTIONS & ASSESSMENT -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">9</span> Practice &amp; Assessment: Test Your Knowledge</h2>
+
+    <!-- MCQs -->
+    <div class="quiz-card">
+      <div class="quiz-question">1. What is the primary purpose of using Generics in Kotlin?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) To write reusable classes and functions that work with different data types while maintaining compile-time type safety</div>
+        <div class="quiz-opt incorrect">&#x2716; B) To bypass all type checking and allow any object to be cast into anything</div>
+        <div class="quiz-opt incorrect">&#x2716; C) To enforce that all objects run on background coroutine threads</div>
+        <div class="quiz-opt incorrect">&#x2716; D) To convert Kotlin code directly into JavaScript bytecode</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Generics eliminate redundant code while ensuring the compiler guarantees type safety without unsafe runtime casting.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">2. By default, what is the subtyping relationship between `Box<Dog>` and `Box<Animal>` if `Dog` is a subclass of `Animal`?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) They are invariant (no subtyping relationship exists between them)</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Box&lt;Dog&gt; is automatically a subtype of Box&lt;Animal&gt;</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Box&lt;Animal&gt; is automatically a subtype of Box&lt;Dog&gt;</div>
+        <div class="quiz-opt incorrect">&#x2716; D) They trigger a circular dependency compilation error</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> In Kotlin, generic types are invariant by default to prevent runtime type errors when mutating data.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">3. When is it valid to mark a generic type parameter with the `out` modifier?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) When the type parameter is only produced (returned) from methods and never consumed as a parameter</div>
+        <div class="quiz-opt incorrect">&#x2716; B) When the class only takes the type parameter as a method argument</div>
+        <div class="quiz-opt incorrect">&#x2716; C) When the class needs to write primitive values into an array</div>
+        <div class="quiz-opt incorrect">&#x2716; D) When the class implements multiple interfaces</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> The <code>out</code> modifier indicates covariance, meaning the type parameter can only appear in the "out" (return) position.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">4. What does the `in` modifier indicate on a generic type parameter?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Contravariance: the type parameter is only consumed as an input argument and never returned</div>
+        <div class="quiz-opt incorrect">&#x2716; B) The variable must be stored inside an internal collection</div>
+        <div class="quiz-opt incorrect">&#x2716; C) The class must be marked as an inner class</div>
+        <div class="quiz-opt incorrect">&#x2716; D) The type parameter can only be instantiated inside the constructor</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> The <code>in</code> modifier indicates contravariance: values of type <code>T</code> are only consumed by methods.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">5. What does `List<*>` (star projection) allow you to do safely?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Read elements safely as `Any?` without knowing the exact concrete type</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Add any object of any type into the list</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Convert the list into a mutable hashmap automatically</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Override the JVM garbage collector</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Star projection means you don't know the exact type argument, so it allows safe read-only access where items are read as <code>Any?</code>.
+      </div>
+    </div>
+
+    <!-- Output Prediction Exercises -->
+    <div class="grid-card" style="margin-top: 10px; background: #F8FAFC;">
+      <div class="grid-card-title">🔍 Output Prediction Practice</div>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q1:</strong> What does <code>fun &lt;T&gt; id(x: T): T = x; println(id("Test"))</code> output?<br>
+      <em>Answer:</em> <code>Test</code>.</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q2:</strong> Can <code>fun &lt;T : Number&gt; calc(n: T)</code> accept <code>calc("Hello")</code>?<br>
+      <em>Answer:</em> No, compile error because <code>String</code> is not a subtype of <code>Number</code>.</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q3:</strong> Is <code>List&lt;String&gt;</code> assignable to <code>List&lt;Any&gt;</code> in Kotlin?<br>
+      <em>Answer:</em> Yes, because Kotlin's standard <code>List&lt;out E&gt;</code> is covariant!</p>
+    </div>
+
+    <!-- Hands-On Coding Challenges -->
+    <div class="grid-card" style="margin-top: 8px; background: #F8FAFC;">
+      <div class="grid-card-title">💻 Hands-On Coding Challenges</div>
+      <ol style="margin-left: 18px; font-size: 11.8px; line-height: 1.5;">
+        <li><strong>Generic Stack:</strong> Create a <code>class Stack&lt;T&gt;</code> with <code>push(item: T)</code>, <code>pop(): T?</code>, and <code>peek(): T?</code> methods.</li>
+        <li><strong>Numeric Multiplier:</strong> Create a generic function <code>fun &lt;T : Number&gt; multiplyByTwo(n: T): Double</code> that returns <code>n.toDouble() * 2.0</code>.</li>
+        <li><strong>Event Producer:</strong> Create an <code>interface Producer&lt;out T&gt; { fun produce(): T }</code> and verify that <code>Producer&lt;String&gt;</code> can be assigned to <code>Producer&lt;Any&gt;</code>.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

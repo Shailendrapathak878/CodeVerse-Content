@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 11: Null Safety in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 11</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-badge">Stage 3 &bull; Null Safety &amp; Core Kotlin &bull; Topic 11</div>
+    <h1 class="hero-title">Null Safety in Kotlin</h1>
+    <p class="hero-subtitle">
+      Eliminate the Billion-Dollar Mistake. Learn how Kotlin prevents NullPointerExceptions at compile time using nullable types (<code>?</code>), safe calls (<code>?.</code>), the Elvis operator (<code>?:</code>), smart casts, and <code>let</code>.
+    </p>
+  </header>
+
+  <!-- MODULE 1: INTRODUCTION TO NULL SAFETY -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">1</span>
+      Introduction to Null Safety &amp; The Billion-Dollar Mistake
+    </h2>
+    <p>
+      In computing, <strong><code>null</code></strong> represents the total absence of a value or a reference pointing to no memory address. In many older languages like Java, C, and JavaScript, attempting to access a property or invoke a method on a <code>null</code> reference crashes the application immediately with a catastrophic <strong><code>NullPointerException</code> (NPE)</strong>.
+    </p>
+    <p>
+      Computer scientist <strong>Sir Tony Hoare</strong>, who invented the null reference in 1965, famously termed it his <em>"Billion-Dollar Mistake"</em> due to the countless software crashes, security vulnerabilities, and debugging hours it caused over 50 years.
+    </p>
+
+    <!-- DIAGRAM 1: Null vs Non-Null Visualization -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 1: Memory Reality &mdash; Real Value vs Null Reference</div>
+      <svg viewBox="0 0 740 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="5" width="345" height="40" rx="7" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+        <circle cx="32" cy="25" r="12" fill="#065F46"/>
+        <text x="32" y="29" fill="#34D399" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">&check;</text>
+        <text x="54" y="20" fill="#F8FAFC" font-family="sans-serif" font-size="11" font-weight="bold">Non-Null Value: val name = "Alex"</text>
+        <text x="54" y="36" fill="#94A3B8" font-family="sans-serif" font-size="10">Points to valid heap memory address [0x7FF3A] &rarr; Safe!</text>
+
+        <rect x="385" y="5" width="345" height="40" rx="7" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+        <circle cx="407" cy="25" r="12" fill="#7F1D1D"/>
+        <text x="407" y="29" fill="#F87171" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">&cross;</text>
+        <text x="429" y="20" fill="#F8FAFC" font-family="sans-serif" font-size="11" font-weight="bold">Null Reference: val name = null</text>
+        <text x="429" y="36" fill="#FCA5A5" font-family="sans-serif" font-size="10">Points to NOTHING (0x0000) &rarr; Dereferencing throws NPE!</text>
+      </svg>
+    </div>
+
+    <!-- DIAGRAM 3: Real Life Analogy -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 2: Real-World Analogy &mdash; Student Admission Form</div>
+      <svg viewBox="0 0 740 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="4" width="225" height="38" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+        <text x="20" y="19" fill="#38BDF8" font-family="sans-serif" font-size="10.5" font-weight="bold">First Name (Mandatory)</text>
+        <text x="20" y="33" fill="#F1F5F9" font-family="sans-serif" font-size="11">"Sophia" &bull; Cannot be blank</text>
+
+        <rect x="255" y="4" width="225" height="38" rx="6" fill="#1E293B" stroke="#A78BFA" stroke-width="1"/>
+        <text x="265" y="19" fill="#A78BFA" font-family="sans-serif" font-size="10.5" font-weight="bold">Middle Name (Optional)</text>
+        <text x="265" y="33" fill="#F1F5F9" font-family="sans-serif" font-size="11">null &bull; Missing is totally legal!</text>
+
+        <rect x="500" y="4" width="230" height="38" rx="6" fill="#1E293B" stroke="#34D399" stroke-width="1"/>
+        <text x="510" y="19" fill="#34D399" font-family="sans-serif" font-size="10.5" font-weight="bold">Empty String vs Null vs Zero</text>
+        <text x="510" y="33" fill="#94A3B8" font-family="sans-serif" font-size="10">"" (has box) | 0 (number) | null (no box)</text>
+      </svg>
+    </div>
+
+    <div class="grid-3">
+      <div class="grid-card">
+        <div class="grid-card-title"><span class="pill pill-purple">null</span></div>
+        <p style="font-size:12.5px;">No container exists. Total absence of reference and value.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-card-title"><span class="pill pill-blue">"" (Empty String)</span></div>
+        <p style="font-size:12.5px;">A real String object exists in memory, but contains 0 characters.</p>
+      </div>
+      <div class="grid-card">
+        <div class="grid-card-title"><span class="pill pill-green">0 (Zero)</span></div>
+        <p style="font-size:12.5px;">A real numerical value representing zero quantity, not absent data.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">&starf;</span>
+      <div class="alert-content">
+        <strong>Kotlin's Primary Design Philosophy:</strong> In Kotlin, types are <strong>non-nullable by default</strong>. The Kotlin compiler forces you to address potential nullness at compile time, eliminating almost all runtime NPE crashes before code reaches production!
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 2: NULLABLE VS NON-NULLABLE TYPES -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">2</span>
+      Nullable vs Non-Nullable Types (The <code>?</code> Type Modifier)
+    </h2>
+    <p>
+      In Kotlin, the type system cleanly distinguishes between references that can hold <code>null</code> and those that can never hold <code>null</code>:
+    </p>
+
+    <!-- DIAGRAM 2: Nullable vs Non-Nullable Type Comparison -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 3: Kotlin Type Safety &mdash; Regular Type vs Nullable Type</div>
+      <svg viewBox="0 0 740 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="5" width="340" height="36" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="25" y="20" fill="#38BDF8" font-family="monospace" font-size="11.5" font-weight="bold">String (Non-Nullable)</text>
+        <text x="25" y="34" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Guaranteed valid text. Assigning null = Compile Error!</text>
+
+        <rect x="385" y="5" width="340" height="36" rx="6" fill="#1E293B" stroke="#A78BFA" stroke-width="1.5"/>
+        <text x="395" y="20" fill="#A78BFA" font-family="monospace" font-size="11.5" font-weight="bold">String? (Nullable Type)</text>
+        <text x="395" y="34" fill="#94A3B8" font-family="sans-serif" font-size="10.5">Can hold a String OR null. Compiler enforces safe access.</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">NullableTypesDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-comment">// 1. Regular non-nullable type</span>
+    <span class="hljs-keyword">var</span> nonNullName: String = <span class="hljs-string">&quot;Sophia&quot;</span>
+    <span class="hljs-comment">// nonNullName = null  // ✗ COMPILE ERROR: Null can not be a value of a non-null type String</span>
+
+    <span class="hljs-comment">// 2. Nullable type with question mark (?)</span>
+    <span class="hljs-keyword">var</span> nullableName: String? = <span class="hljs-string">&quot;Alex&quot;</span>
+    println(nullableName)   <span class="hljs-comment">// Alex</span>
+
+    nullableName = <span class="hljs-literal">null</span>     <span class="hljs-comment">// ✓ Allowed! String? accepts null</span>
+    println(nullableName)   <span class="hljs-comment">// null</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+Alex<br>
+null
+    </div>
+
+    <div class="alert alert-note">
+      <span class="alert-icon">&info;</span>
+      <div class="alert-content">
+        <strong>Rule:</strong> Append a question mark <code>?</code> to any type to make it nullable: <code>Int?</code>, <code>Double?</code>, <code>Boolean?</code>, <code>List&lt;String&gt;?</code>.
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 3: SAFE CALL OPERATOR ?. -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">3</span>
+      The Safe Call Operator (<code>?.</code>)
+    </h2>
+    <p>
+      When working with a nullable variable, Kotlin will not allow you to call methods or properties directly (e.g., <code>name.length</code> is blocked by the compiler). Instead, use the <strong>Safe Call Operator</strong> (<code>?.</code>).
+    </p>
+
+    <!-- DIAGRAM 4: Safe Call Decision Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 4: Safe Call (?. ) Execution Flowchart</div>
+      <svg viewBox="0 0 740 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="6" width="150" height="36" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="90" y="28" fill="#F8FAFC" font-family="monospace" font-size="11.5" text-anchor="middle">text?.length</text>
+
+        <path d="M165 24 L225 24" stroke="#38BDF8" stroke-width="2"/>
+        
+        <polygon points="265,8 320,24 265,40 210,24" fill="#0F172A" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="265" y="28" fill="#38BDF8" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">text == null?</text>
+
+        <rect x="365" y="6" width="165" height="36" rx="6" fill="#7F1D1D" stroke="#EF4444"/>
+        <text x="447" y="22" fill="#FCA5A5" font-family="sans-serif" font-size="9.5" text-anchor="middle">YES: Skip call safely</text>
+        <text x="447" y="35" fill="#FFFFFF" font-family="monospace" font-size="10.5" font-weight="bold" text-anchor="middle">Return null</text>
+
+        <rect x="555" y="6" width="170" height="36" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="640" y="22" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">NO: Execute property</text>
+        <text x="640" y="35" fill="#FFFFFF" font-family="monospace" font-size="10.5" font-weight="bold" text-anchor="middle">Return value (5)</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SafeCallDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> city: String? = <span class="hljs-string">&quot;Tokyo&quot;</span>
+    <span class="hljs-keyword">val</span> country: String? = <span class="hljs-literal">null</span>
+
+    <span class="hljs-comment">// Safe call executes and returns Int?</span>
+    println(city?.length)     <span class="hljs-comment">// Output: 5</span>
+
+    <span class="hljs-comment">// Safe call intercepts null and safely returns null without throwing NPE!</span>
+    println(country?.length)  <span class="hljs-comment">// Output: null</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+5<br>
+null
+    </div>
+
+    <p>
+      <strong>Chaining Safe Calls:</strong> You can chain multiple safe calls seamlessly. If any item along the link is <code>null</code>, the entire chain cleanly resolves to <code>null</code> without crashing:
+    </p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ChainedSafeCalls.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment">// If user is null, address is null, or zip is null -&gt; evaluates safely to null</span>
+<span class="hljs-keyword">val</span> zipCodeLength: <span class="hljs-built_in">Int</span>? = user?.address?.zipCode?.length</code></pre>
+</div>
+    </div>
+  </section>
+
+  <!-- MODULE 4: ELVIS OPERATOR ?: -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">4</span>
+      The Elvis Operator (<code>?:</code>) &mdash; Default Fallback
+    </h2>
+    <p>
+      Often you don't want a <code>null</code> result; you want a sensible default fallback value. The <strong>Elvis Operator</strong> (<code>?:</code>) returns the left-hand expression if it is <em>not null</em>, or the right-hand value if the left side evaluates to <em>null</em>.
+    </p>
+
+    <!-- DIAGRAM 5: Elvis Fallback Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 5: Elvis Operator (?: ) Fallback Decision Flow</div>
+      <svg viewBox="0 0 740 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="6" width="165" height="36" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="97" y="28" fill="#F8FAFC" font-family="monospace" font-size="11.5" text-anchor="middle">name ?: "Guest"</text>
+
+        <path d="M180 24 L240 24" stroke="#A78BFA" stroke-width="2"/>
+
+        <polygon points="280,8 335,24 280,40 225,24" fill="#0F172A" stroke="#A78BFA" stroke-width="1.5"/>
+        <text x="280" y="28" fill="#A78BFA" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">name != null?</text>
+
+        <rect x="375" y="6" width="160" height="36" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="455" y="21" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">YES (Value Exists)</text>
+        <text x="455" y="34" fill="#FFFFFF" font-family="monospace" font-size="10.5" font-weight="bold" text-anchor="middle">Use: name</text>
+
+        <rect x="555" y="6" width="170" height="36" rx="6" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="640" y="21" fill="#FDE68A" font-family="sans-serif" font-size="9.5" text-anchor="middle">NO (Value is null)</text>
+        <text x="640" y="34" fill="#FBBF24" font-family="monospace" font-size="10.5" font-weight="bold" text-anchor="middle">Use: "Guest"</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">ElvisDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> enteredName: String? = <span class="hljs-literal">null</span>
+    
+    <span class="hljs-comment">// If enteredName is null, fallback to &quot;Anonymous Guest&quot;</span>
+    <span class="hljs-keyword">val</span> displayName: String = enteredName ?: <span class="hljs-string">&quot;Anonymous Guest&quot;</span>
+    println(<span class="hljs-string">&quot;Welcome, <span class="hljs-variable">$displayName</span>!&quot;</span>)
+
+    <span class="hljs-keyword">val</span> userAge: <span class="hljs-built_in">Int</span>? = <span class="hljs-number">25</span>
+    <span class="hljs-keyword">val</span> validAge: <span class="hljs-built_in">Int</span> = userAge ?: <span class="hljs-number">18</span>
+    println(<span class="hljs-string">&quot;Age verified: <span class="hljs-variable">$validAge</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+Welcome, Anonymous Guest!<br>
+Age verified: 25
+    </div>
+
+    <!-- DIAGRAM 13: User Welcome Fallback Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 6: User Welcome Fallback Logic Pipeline</div>
+      <svg viewBox="0 0 740 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="5" width="160" height="34" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="95" y="26" fill="#F8FAFC" font-family="monospace" font-size="11" text-anchor="middle">username: String?</text>
+        
+        <path d="M175 22 L240 22" stroke="#7F52FF" stroke-width="2"/>
+        <rect x="240" y="5" width="190" height="34" rx="6" fill="#4C1D95" stroke="#A78BFA"/>
+        <text x="335" y="26" fill="#EDE9FE" font-family="monospace" font-size="11" text-anchor="middle">username ?: "Guest"</text>
+
+        <path d="M430 22 L495 22" stroke="#10B981" stroke-width="2"/>
+        <rect x="495" y="5" width="230" height="34" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="610" y="26" fill="#ECFDF5" font-family="sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">&check; Non-Nullable String Result</text>
+      </svg>
+    </div>
+
+    <div class="alert alert-tip">
+      <span class="alert-icon">&starf;</span>
+      <div class="alert-content">
+        <strong>Early Return with Elvis:</strong> In Kotlin, <code>return</code> and <code>throw</code> are expressions. You can use Elvis for concise guard clauses:
+        <code>val name = input ?: return</code>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 5: NOT-NULL ASSERTION OPERATOR !! -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">5</span>
+      The Not-Null Assertion Operator (<code>!!</code>) &mdash; Handle with Caution!
+    </h2>
+    <p>
+      The double exclamation mark <code>!!</code> converts any nullable type to a non-nullable type by force (e.g., <code>String?</code> &rarr; <code>String</code>). It tells the compiler: <em>"I swear 100% this variable is not null right now. If it actually is null, go ahead and throw a NullPointerException!"</em>
+    </p>
+
+    <!-- DIAGRAM 6: Not-Null Assertion Risk -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 7: Danger Zone &mdash; The Not-Null Assertion (!! ) Operator</div>
+      <svg viewBox="0 0 740 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="5" width="170" height="36" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="100" y="27" fill="#FCA5A5" font-family="monospace" font-size="11.5" font-weight="bold" text-anchor="middle">data!!.toUpperCase()</text>
+
+        <path d="M185 23 L245 23" stroke="#EF4444" stroke-width="2"/>
+
+        <rect x="245" y="5" width="225" height="36" rx="6" fill="#450A0A" stroke="#DC2626" stroke-width="1.5"/>
+        <text x="357" y="20" fill="#FCA5A5" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">IF data IS NULL AT RUNTIME:</text>
+        <text x="357" y="33" fill="#F87171" font-family="monospace" font-size="10.5" text-anchor="middle">CRASH: NullPointerException!</text>
+
+        <path d="M470 23 L525 23" stroke="#10B981" stroke-width="2"/>
+
+        <rect x="525" y="5" width="200" height="36" rx="6" fill="#065F46" stroke="#10B981" stroke-width="1"/>
+        <text x="625" y="20" fill="#A7F3D0" font-family="sans-serif" font-size="10" text-anchor="middle">IF data HAS VALUE:</text>
+        <text x="625" y="33" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">Runs normally &check;</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">AssertionDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> safeString: String? = <span class="hljs-string">&quot;Kotlin&quot;</span>
+    println(safeString!!.length)   <span class="hljs-comment">// Works: 6</span>
+
+    <span class="hljs-keyword">val</span> riskyString: String? = <span class="hljs-literal">null</span>
+    <span class="hljs-comment">// println(riskyString!!.length)</span>
+    <span class="hljs-comment">// ✗ RUNTIME CRASH: Exception in thread &quot;main&quot; java.lang.NullPointerException</span>
+}</code></pre>
+</div>
+    </div>
+
+    <div class="alert alert-danger">
+      <span class="alert-icon">&warning;</span>
+      <div class="alert-content">
+        <strong>Best Practice:</strong> Avoid using <code>!!</code> in production code. Use safe calls (<code>?.</code>), Elvis fallback (<code>?:</code>), or smart casts instead. Only use <code>!!</code> in unit tests where you deliberately want a test to fail if an expected mock is absent.
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 6: IF-ELSE NULL CHECKING & SMART CASTS -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">6</span>
+      Traditional <code>if-else</code> Null Checking &amp; Smart Casts
+    </h2>
+    <p>
+      You can always perform classic null checks using standard <code>if (variable != null)</code> statements. When you do this, Kotlin's compiler does something magical: <strong>Smart Casting</strong>!
+    </p>
+
+    <!-- DIAGRAM 7: If-Else Null Check Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 8: Traditional If-Else Branching with Null Check</div>
+      <svg viewBox="0 0 740 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="5" width="160" height="36" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="95" y="27" fill="#F8FAFC" font-family="monospace" font-size="11.5" text-anchor="middle">text != null</text>
+
+        <path d="M175 23 L235 23" stroke="#38BDF8" stroke-width="2"/>
+
+        <polygon points="275,8 330,23 275,38 220,23" fill="#0F172A" stroke="#38BDF8" stroke-width="1.5"/>
+        <text x="275" y="27" fill="#38BDF8" font-family="sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">Branch?</text>
+
+        <rect x="365" y="5" width="170" height="36" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="450" y="20" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">TRUE (Safe Block)</text>
+        <text x="450" y="33" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">Smart Cast to String</text>
+
+        <rect x="555" y="5" width="170" height="36" rx="6" fill="#1E293B" stroke="#EF4444"/>
+        <text x="640" y="20" fill="#FCA5A5" font-family="sans-serif" font-size="9.5" text-anchor="middle">FALSE (else Block)</text>
+        <text x="640" y="33" fill="#F87171" font-family="monospace" font-size="10.5" text-anchor="middle">Handle null cleanly</text>
+      </svg>
+    </div>
+
+    <!-- DIAGRAM 8: Smart Cast Visual -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 9: Smart Cast Evolution &mdash; Inside the Guard Block</div>
+      <svg viewBox="0 0 740 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="4" width="190" height="34" rx="6" fill="#1E293B" stroke="#A78BFA"/>
+        <text x="115" y="25" fill="#DDD6FE" font-family="monospace" font-size="11" text-anchor="middle">val message: String?</text>
+
+        <path d="M210 21 L280 21" stroke="#38BDF8" stroke-width="2"/>
+        <text x="245" y="14" fill="#38BDF8" font-family="sans-serif" font-size="9.5" text-anchor="middle">if != null</text>
+
+        <rect x="280" y="4" width="440" height="34" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1.5"/>
+        <text x="500" y="25" fill="#34D399" font-family="monospace" font-size="11.5" font-weight="bold" text-anchor="middle">message.length &check; (Automatically cast to non-null String!)</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SmartCastDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> rawComment: String? = <span class="hljs-string">&quot;Great Kotlin tutorial!&quot;</span>
+
+    <span class="hljs-keyword">if</span> (rawComment != <span class="hljs-literal">null</span>) {
+        <span class="hljs-comment">// In this scope, Kotlin automatically smart-casts rawComment from String? to String!</span>
+        <span class="hljs-comment">// No need for safe call &#x27;?.&#x27; or explicit type casting!</span>
+        println(<span class="hljs-string">&quot;Comment length: <span class="hljs-subst">${rawComment.length}</span>&quot;</span>)
+        println(<span class="hljs-string">&quot;Uppercase: <span class="hljs-subst">${rawComment.uppercase()}</span>&quot;</span>)
+    } <span class="hljs-keyword">else</span> {
+        println(<span class="hljs-string">&quot;No comment provided.&quot;</span>)
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+Comment length: 22<br>
+Uppercase: GREAT KOTLIN TUTORIAL!
+    </div>
+
+    <div class="alert alert-note">
+      <span class="alert-icon">&info;</span>
+      <div class="alert-content">
+        <strong>Smart Cast Requirement:</strong> Smart casts only work when the compiler can guarantee the variable cannot change between the check and its usage. This works seamlessly with local immutable <code>val</code> variables.
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 7: SAFE CALL WITH LET -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">7</span>
+      Safe Call with <code>let</code> &mdash; The Idiomatic Kotlin Way
+    </h2>
+    <p>
+      To execute a block of code <em>only when a nullable reference is not null</em>, idiomatic Kotlin uses <strong><code>?.let { ... }</code></strong>. It takes the non-null value and passes it into the lambda as <code>it</code> (or a named parameter).
+    </p>
+
+    <!-- DIAGRAM 9: Safe Call with let Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 10: The ?.let Execution Gate Flowchart</div>
+      <svg viewBox="0 0 740 46" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="5" width="155" height="36" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="92" y="27" fill="#F8FAFC" font-family="monospace" font-size="11.5" text-anchor="middle">email?.let { ... }</text>
+
+        <path d="M170 23 L230 23" stroke="#7F52FF" stroke-width="2"/>
+
+        <polygon points="275,8 330,23 275,38 220,23" fill="#0F172A" stroke="#7F52FF" stroke-width="1.5"/>
+        <text x="275" y="27" fill="#DDD6FE" font-family="sans-serif" font-size="10" font-weight="bold" text-anchor="middle">email != null?</text>
+
+        <rect x="360" y="5" width="200" height="36" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="460" y="20" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">YES &rarr; Run Lambda Body</text>
+        <text x="460" y="33" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">sendEmail(it) &check;</text>
+
+        <rect x="580" y="5" width="145" height="36" rx="6" fill="#1E293B" stroke="#64748B"/>
+        <text x="652" y="20" fill="#94A3B8" font-family="sans-serif" font-size="9.5" text-anchor="middle">NO &rarr; Skip Lambda</text>
+        <text x="652" y="33" fill="#CBD5E1" font-family="sans-serif" font-size="10.5" text-anchor="middle">Do nothing safely</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">LetScopeDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">sendNewsletter</span><span class="hljs-params">(email: <span class="hljs-type">String</span>)</span></span> {
+    println(<span class="hljs-string">&quot;Newsletter sent to: <span class="hljs-variable">$email</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> user1Email: String? = <span class="hljs-string">&quot;student@codeverse.dev&quot;</span>
+    <span class="hljs-keyword">val</span> user2Email: String? = <span class="hljs-literal">null</span>
+
+    <span class="hljs-comment">// Runs because user1Email is not null</span>
+    user1Email?.let { nonNullEmail -&gt;
+        sendNewsletter(nonNullEmail)
+    }
+
+    <span class="hljs-comment">// Completely skipped because user2Email is null</span>
+    user2Email?.let {
+        sendNewsletter(it)
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+Newsletter sent to: student@codeverse.dev
+    </div>
+  </section>
+
+  <!-- MODULE 8: SAFE TYPE CONVERSIONS WITH toIntOrNull() -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">8</span>
+      Safe Conversions: <code>toIntOrNull()</code> &amp; <code>toDoubleOrNull()</code>
+    </h2>
+    <p>
+      In beginner code, user inputs from forms or the console often contain invalid characters. Calling <code>"abc".toInt()</code> throws an unhandled <code>NumberFormatException</code> and terminates the app. Kotlin provides safe parsing functions that return <code>null</code> instead of crashing:
+    </p>
+
+    <!-- DIAGRAM 10: toIntOrNull Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 11: toInt() vs toIntOrNull() Comparison</div>
+      <svg viewBox="0 0 740 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="4" width="345" height="36" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="25" y="19" fill="#FCA5A5" font-family="monospace" font-size="10.5" font-weight="bold">"abc".toInt()</text>
+        <text x="25" y="32" fill="#F87171" font-family="sans-serif" font-size="10">&cross; Throws NumberFormatException! (App Crashes)</text>
+
+        <rect x="380" y="4" width="345" height="36" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+        <text x="390" y="19" fill="#34D399" font-family="monospace" font-size="10.5" font-weight="bold">"abc".toIntOrNull() ?: 0</text>
+        <text x="390" y="32" fill="#A7F3D0" font-family="sans-serif" font-size="10">&check; Returns null safely &rarr; Elvis falls back to 0!</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SafeParsingDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">parseAge</span><span class="hljs-params">(rawInput: <span class="hljs-type">String</span>)</span></span>: <span class="hljs-built_in">Int</span> {
+    <span class="hljs-comment">// Converts to Int if valid number; otherwise falls back to default 18</span>
+    <span class="hljs-keyword">return</span> rawInput.toIntOrNull() ?: <span class="hljs-number">18</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    println(parseAge(<span class="hljs-string">&quot;25&quot;</span>))      <span class="hljs-comment">// 25</span>
+    println(parseAge(<span class="hljs-string">&quot;hello&quot;</span>))   <span class="hljs-comment">// 18 (Safe fallback!)</span>
+    println(parseAge(<span class="hljs-string">&quot;-5&quot;</span>))      <span class="hljs-comment">// -5</span>
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+25<br>
+18<br>
+-5
+    </div>
+  </section>
+
+  <!-- MODULE 9: OPERATORS COMPARISON TABLE & VISUAL -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">9</span>
+      Master Comparison: Kotlin Null Safety Operators
+    </h2>
+    <p>
+      Review all 5 fundamental null safety tools side-by-side to understand exactly when to use each operator:
+    </p>
+
+    <!-- DIAGRAM 11: Operator Matrix Visual -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 12: Kotlin Null Safety Operator Cheat-Sheet</div>
+      <svg viewBox="0 0 740 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="4" width="135" height="36" rx="6" fill="#1E293B" stroke="#A78BFA"/>
+        <text x="77" y="19" fill="#A78BFA" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">Type?</text>
+        <text x="77" y="32" fill="#DDD6FE" font-family="sans-serif" font-size="9.5" text-anchor="middle">Nullable declaration</text>
+
+        <rect x="155" y="4" width="135" height="36" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+        <text x="222" y="19" fill="#38BDF8" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">?.</text>
+        <text x="222" y="32" fill="#BAE6FD" font-family="sans-serif" font-size="9.5" text-anchor="middle">Safe call (skip if null)</text>
+
+        <rect x="300" y="4" width="135" height="36" rx="6" fill="#1E293B" stroke="#34D399"/>
+        <text x="367" y="19" fill="#34D399" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">?:</text>
+        <text x="367" y="32" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">Elvis fallback default</text>
+
+        <rect x="445" y="4" width="135" height="36" rx="6" fill="#1E293B" stroke="#EF4444"/>
+        <text x="512" y="19" fill="#F87171" font-family="monospace" font-size="12" font-weight="bold" text-anchor="middle">!!</text>
+        <text x="512" y="32" fill="#FECACA" font-family="sans-serif" font-size="9.5" text-anchor="middle">Not-null assert (risky)</text>
+
+        <rect x="590" y="4" width="140" height="36" rx="6" fill="#1E293B" stroke="#FBBF24"/>
+        <text x="660" y="19" fill="#FBBF24" font-family="monospace" font-size="11.5" font-weight="bold" text-anchor="middle">?.let { }</text>
+        <text x="660" y="32" fill="#FEF3C7" font-family="sans-serif" font-size="9.5" text-anchor="middle">Execute block if non-null</text>
+      </svg>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Operator</th>
+            <th>Name</th>
+            <th>Syntax Example</th>
+            <th>Behavior if Null</th>
+            <th>Safety</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill pill-purple">?</span></td>
+            <td>Nullable Type</td>
+            <td><code>var str: String?</code></td>
+            <td>Allows compiler to accept null value</td>
+            <td><strong style="color:var(--green)">100% Safe</strong></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-blue">?.</span></td>
+            <td>Safe Call</td>
+            <td><code>str?.length</code></td>
+            <td>Skips execution and returns null</td>
+            <td><strong style="color:var(--green)">100% Safe</strong></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-green">?:</span></td>
+            <td>Elvis Operator</td>
+            <td><code>str ?: "Default"</code></td>
+            <td>Substitutes right-hand default value</td>
+            <td><strong style="color:var(--green)">100% Safe</strong></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-red">!!</span></td>
+            <td>Not-Null Assertion</td>
+            <td><code>str!!.length</code></td>
+            <td><strong>Throws NullPointerException!</strong></td>
+            <td><strong style="color:var(--red)">High Risk</strong></td>
+          </tr>
+          <tr>
+            <td><span class="pill pill-amber">?.let</span></td>
+            <td>Safe Scope Execution</td>
+            <td><code>str?.let { print(it) }</code></td>
+            <td>Skips entire lambda execution block</td>
+            <td><strong style="color:var(--green)">100% Safe</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- MODULE 10: REAL-WORLD PRACTICAL PROGRAMS -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">10</span>
+      Real-World Practical Programs
+    </h2>
+    <p>
+      Let's look at complete, realistic Kotlin programs demonstrating professional null-safety patterns in production software.
+    </p>
+
+    <!-- Program A: Student Profile -->
+    <h3 style="font-size:14.5px; margin: 10px 0 5px; color:var(--brand-kotlin);">Program A: Student Profile Builder (Handling Optional Profile Fields)</h3>
+
+    <!-- DIAGRAM 12: Student Profile Null Handling Flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Visual 13: Student Profile Null-Handling Architecture</div>
+      <svg viewBox="0 0 740 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="4" width="160" height="34" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+        <text x="95" y="18" fill="#38BDF8" font-family="sans-serif" font-size="9.5" text-anchor="middle">First Name (Req)</text>
+        <text x="95" y="31" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">"Maya"</text>
+
+        <rect x="195" y="4" width="160" height="34" rx="6" fill="#1E293B" stroke="#A78BFA"/>
+        <text x="275" y="18" fill="#A78BFA" font-family="sans-serif" font-size="9.5" text-anchor="middle">Middle Name (Opt)</text>
+        <text x="275" y="31" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">null ?: ""</text>
+
+        <rect x="375" y="4" width="160" height="34" rx="6" fill="#1E293B" stroke="#34D399"/>
+        <text x="455" y="18" fill="#34D399" font-family="sans-serif" font-size="9.5" text-anchor="middle">Phone (Opt)</text>
+        <text x="455" y="31" fill="#FFFFFF" font-family="monospace" font-size="10.5" text-anchor="middle">phone ?: "N/A"</text>
+
+        <rect x="555" y="4" width="170" height="34" rx="6" fill="#065F46" stroke="#10B981"/>
+        <text x="640" y="18" fill="#A7F3D0" font-family="sans-serif" font-size="9.5" text-anchor="middle">Card Renderer</text>
+        <text x="640" y="31" fill="#FFFFFF" font-family="sans-serif" font-size="10.5" font-weight="bold" text-anchor="middle">0 Runtime Crashes &check;</text>
+      </svg>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">StudentProfile.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Student</span></span>(
+    <span class="hljs-keyword">val</span> firstName: String,
+    <span class="hljs-keyword">val</span> middleName: String?,
+    <span class="hljs-keyword">val</span> lastName: String,
+    <span class="hljs-keyword">val</span> emergencyContact: String?
+)
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">printStudentCard</span><span class="hljs-params">(s: <span class="hljs-type">Student</span>)</span></span> {
+    <span class="hljs-comment">// If middle name exists, add a space after it; otherwise empty string</span>
+    <span class="hljs-keyword">val</span> middle = s.middleName?.let { <span class="hljs-string">&quot;<span class="hljs-variable">$it</span> &quot;</span> } ?: <span class="hljs-string">&quot;&quot;</span>
+    <span class="hljs-keyword">val</span> fullName = <span class="hljs-string">&quot;<span class="hljs-subst">${s.firstName}</span> <span class="hljs-variable">$middle</span><span class="hljs-subst">${s.lastName}</span>&quot;</span>
+    
+    <span class="hljs-comment">// Safe contact fallback</span>
+    <span class="hljs-keyword">val</span> contact = s.emergencyContact ?: <span class="hljs-string">&quot;Not on file&quot;</span>
+    
+    println(<span class="hljs-string">&quot;=== Student Profile ===&quot;</span>)
+    println(<span class="hljs-string">&quot;Full Name : <span class="hljs-variable">$fullName</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Contact   : <span class="hljs-variable">$contact</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> s1 = Student(<span class="hljs-string">&quot;Maya&quot;</span>, <span class="hljs-literal">null</span>, <span class="hljs-string">&quot;Lin&quot;</span>, <span class="hljs-string">&quot;+1-555-0199&quot;</span>)
+    <span class="hljs-keyword">val</span> s2 = Student(<span class="hljs-string">&quot;James&quot;</span>, <span class="hljs-string">&quot;Robert&quot;</span>, <span class="hljs-string">&quot;Miller&quot;</span>, <span class="hljs-literal">null</span>)
+    
+    printStudentCard(s1)
+    printStudentCard(s2)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+=== Student Profile ===<br>
+Full Name : Maya Lin<br>
+Contact   : +1-555-0199<br>
+=== Student Profile ===<br>
+Full Name : James Robert Miller<br>
+Contact   : Not on file
+    </div>
+
+    <!-- Program B: E-Commerce Discount Calculator -->
+    <h3 style="font-size:14.5px; margin: 12px 0 5px; color:var(--brand-kotlin);">Program B: E-Commerce Safe Promo Code &amp; Discount Calculator</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">PromoCalculator.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">applyPromo</span><span class="hljs-params">(promoCode: <span class="hljs-type">String</span>?, subtotal: <span class="hljs-type">Double</span>)</span></span>: <span class="hljs-built_in">Double</span> {
+    <span class="hljs-comment">// Safe uppercase and trim; if code is null, discount is 0.0</span>
+    <span class="hljs-keyword">val</span> discountPercentage: <span class="hljs-built_in">Double</span> = promoCode?.trim()?.uppercase()?.let { code -&gt;
+        <span class="hljs-keyword">when</span> (code) {
+            <span class="hljs-string">&quot;CODEVERSE20&quot;</span> -&gt; <span class="hljs-number">0.20</span>
+            <span class="hljs-string">&quot;SAVE10&quot;</span>      -&gt; <span class="hljs-number">0.10</span>
+            <span class="hljs-keyword">else</span>          -&gt; <span class="hljs-number">0.00</span>
+        }
+    } ?: <span class="hljs-number">0.00</span>
+
+    <span class="hljs-keyword">val</span> finalPrice = subtotal * (<span class="hljs-number">1.0</span> - discountPercentage)
+    println(<span class="hljs-string">&quot;Promo applied: <span class="hljs-subst">${discountPercentage * <span class="hljs-number">100</span>}</span>% | Total: \$<span class="hljs-variable">$finalPrice</span>&quot;</span>)
+    <span class="hljs-keyword">return</span> finalPrice
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    applyPromo(<span class="hljs-string">&quot; codeverse20 &quot;</span>, <span class="hljs-number">100.0</span>)
+    applyPromo(<span class="hljs-literal">null</span>, <span class="hljs-number">100.0</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Execution Output:</span>
+Promo applied: 20.0% | Total: $80.0<br>
+Promo applied: 0.0% | Total: $100.0
+    </div>
+  </section>
+
+  <!-- MODULE 11: COMMON BEGINNER MISTAKES -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">11</span>
+      Common Beginner Mistakes &amp; How to Fix Them
+    </h2>
+
+    <div class="grid-2">
+      <div class="grid-card" style="border-left: 3px solid var(--red);">
+        <div class="grid-card-title" style="color:var(--red);">&cross; Mistake 1: Assigning null to non-nullable type</div>
+        <p style="font-size:12px; font-family:monospace; margin-bottom:3px; color:#B91C1C;">
+          var name: String = null // Compile Error!
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          <strong>Fix:</strong> Add question mark <code>?</code>: <code>var name: String? = null</code>.
+        </p>
+      </div>
+
+      <div class="grid-card" style="border-left: 3px solid var(--red);">
+        <div class="grid-card-title" style="color:var(--red);">&cross; Mistake 2: Sprinkling <code>!!</code> blindly</div>
+        <p style="font-size:12px; font-family:monospace; margin-bottom:3px; color:#B91C1C;">
+          val len = text!!.length // Crashes when null
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          <strong>Fix:</strong> Use safe call or Elvis: <code>val len = text?.length ?: 0</code>.
+        </p>
+      </div>
+
+      <div class="grid-card" style="border-left: 3px solid var(--red);">
+        <div class="grid-card-title" style="color:var(--red);">&cross; Mistake 3: Confusing <code>""</code> with <code>null</code></div>
+        <p style="font-size:12px; font-family:monospace; margin-bottom:3px; color:#B91C1C;">
+          if (str == null) // Misses blank inputs ""
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          <strong>Fix:</strong> Use Kotlin's standard utility <code>str.isNullOrBlank()</code>.
+        </p>
+      </div>
+
+      <div class="grid-card" style="border-left: 3px solid var(--red);">
+        <div class="grid-card-title" style="color:var(--red);">&cross; Mistake 4: Crashing on invalid number parsing</div>
+        <p style="font-size:12px; font-family:monospace; margin-bottom:3px; color:#B91C1C;">
+          val count = input.toInt() // Crashes on "abc"
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          <strong>Fix:</strong> Always use <code>input.toIntOrNull() ?: 0</code>.
+        </p>
+      </div>
+
+      <div class="grid-card" style="border-left: 3px solid var(--red);">
+        <div class="grid-card-title" style="color:var(--red);">&cross; Mistake 5: Smart cast failed on mutable <code>var</code></div>
+        <p style="font-size:12px; font-family:monospace; margin-bottom:3px; color:#B91C1C;">
+          var x: String? = "hi"; if (x != null) ...
+        </p>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          <strong>Fix:</strong> If <code>x</code> is a class property, assign it to a local <code>val copy = x</code>.
+        </p>
+      </div>
+
+      <div class="grid-card" style="border-left: 3px solid var(--green);">
+        <div class="grid-card-title" style="color:var(--green);">&check; Pro Tip: Clean Chain vs Nested Ifs</div>
+        <p style="font-size:12px; color:var(--text-secondary);">
+          Instead of multiple nested <code>if</code> blocks, use safe chain:
+          <code>val result = a?.b?.c?.name ?: "Default"</code>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODULE 12: QUICK REVISION & TAKEAWAYS -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">12</span>
+      Quick Revision &amp; Takeaway Summary
+    </h2>
+    <ul style="line-height:1.6; font-size:13.5px;">
+      <li><strong>Kotlin types are non-nullable by default:</strong> A regular <code>String</code> or <code>Int</code> can never be <code>null</code>.</li>
+      <li><strong>Add <code>?</code> for nullability:</strong> <code>String?</code> explicitly signals that the variable might hold missing data or <code>null</code>.</li>
+      <li><strong>Safe Call <code>?.</code>:</strong> Invokes a method/property if non-null, or immediately returns <code>null</code> without throwing an NPE.</li>
+      <li><strong>Elvis Operator <code>?:</code>:</strong> Provides a fallback default value whenever the left-hand expression resolves to <code>null</code>.</li>
+      <li><strong>Not-Null Assertion <code>!!</code>:</strong> Tells compiler to treat variable as non-null, risking a fatal runtime crash if it is null. Avoid in production!</li>
+      <li><strong>Smart Casts:</strong> Checking <code>if (v != null)</code> automatically casts <code>v</code> to its non-nullable type within the guarded block.</li>
+      <li><strong>Safe block with <code>?.let</code>:</strong> Runs an operation only on non-null values without deep nested if-checks.</li>
+      <li><strong>Safe Parsing:</strong> Always use <code>toIntOrNull()</code> or <code>toDoubleOrNull()</code> with Elvis fallback when reading user or API input.</li>
+    </ul>
+  </section>
+
+  <!-- PRACTICE & ASSESSMENT -->
+  <section class="section-card">
+    <h2 class="section-title">
+      <span class="section-title-icon">&check;</span>
+      Practice &amp; Assessment: Test Your Null Safety Knowledge
+    </h2>
+
+    <div class="quiz-card">
+      <div class="quiz-question">1. What happens if you run: <code>val title: String = null</code>?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt incorrect">A. It runs normally and prints null</div>
+        <div class="quiz-opt correct">&check; B. The compiler gives a compilation error: "Null can not be a value of a non-null type String"</div>
+        <div class="quiz-opt incorrect">C. It creates an empty string ""</div>
+        <div class="quiz-opt incorrect">D. It throws a NullPointerException at runtime</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> In Kotlin, types are non-nullable by default. You cannot assign <code>null</code> to a <code>String</code>. It must be declared as <code>String?</code>.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">2. Given: <code>val city: String? = null; println(city?.length)</code>. What is printed?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt incorrect">A. 0</div>
+        <div class="quiz-opt correct">&check; B. null</div>
+        <div class="quiz-opt incorrect">C. java.lang.NullPointerException</div>
+        <div class="quiz-opt incorrect">D. Compilation Error</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> The safe call operator <code>?.</code> detects that <code>city</code> is null, halts further execution, and safely evaluates to <code>null</code>.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">3. What does the Elvis operator <code>?:</code> do in: <code>val score = points ?: 0</code>?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt incorrect">A. Adds 0 to points</div>
+        <div class="quiz-opt incorrect">B. Multiplies points by 0 if points is negative</div>
+        <div class="quiz-opt correct">&check; C. Returns points if not null; otherwise returns the fallback value 0</div>
+        <div class="quiz-opt incorrect">D. Throws an exception if points is null</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> The Elvis operator provides a fallback value when the left expression is null.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">4. Which operator forces a nullable variable to be treated as non-nullable, risking a runtime crash?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt incorrect">A. ?.</div>
+        <div class="quiz-opt incorrect">B. ?:</div>
+        <div class="quiz-opt correct">&check; C. !! (Not-Null Assertion)</div>
+        <div class="quiz-opt incorrect">D. ?</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> The <code>!!</code> operator forces non-null assertion. If the variable is null, it throws a runtime <code>NullPointerException</code>.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">5. What does <code>"123a".toIntOrNull() ?: -1</code> return?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt incorrect">A. 123</div>
+        <div class="quiz-opt incorrect">B. null</div>
+        <div class="quiz-opt correct">&check; C. -1</div>
+        <div class="quiz-opt incorrect">D. NumberFormatException</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> <code>toIntOrNull()</code> returns <code>null</code> because <code>"123a"</code> has an invalid letter 'a'. The Elvis operator then substitutes the fallback value <code>-1</code>.
+      </div>
+    </div>
+
+    <div style="background:var(--card-soft); border-radius:var(--radius-md); padding:12px; margin-top:12px;">
+      <h3 style="font-size:13.5px; font-weight:700; color:var(--text-primary); margin-bottom:6px;">Hands-On Coding Challenges:</h3>
+      <ol style="margin-left:18px; font-size:13px; color:var(--text-secondary);">
+        <li><strong>User Greeter:</strong> Write a function <code>greetUser(name: String?)</code> that prints <code>"Hello, &lt;name&gt;!"</code> if <code>name</code> is provided, or <code>"Hello, Guest!"</code> if <code>name</code> is null or blank.</li>
+        <li><strong>Cart Item Calculator:</strong> Given a nullable quantity <code>qty: Int?</code> and nullable discount code <code>discount: Double?</code>, safely compute total price with fallbacks of <code>qty = 1</code> and <code>discount = 0.0</code> using the Elvis operator.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

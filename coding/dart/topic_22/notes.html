@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 22: Isolates, Packages &amp; Dart Tooling — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 22</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <div class="header-badge">Stage 6 &bull; Asynchronous Dart &amp; Tooling (Final Topic)</div>
+  <h1>Topic 22: Isolates, Packages &amp; Dart Tooling</h1>
+  <p class="subtitle">Master multi-core true parallel concurrency with Dart Isolates, package dependency ecosystem with pub.dev &amp; pubspec, and professional command-line tooling for formatting, linting, testing, and native compiling.</p>
+
+  <!-- SECTION 1 -->
+  <section id="section-1">
+    <h2>1. Introduction to Isolates</h2>
+    <p>In Dart, all code runs inside an <strong>Isolate</strong>. An Isolate is an independent execution unit equipped with its own private memory heap and its own single-threaded event loop. Unlike traditional OS threads in languages like C++ or Java, Dart Isolates <em>do not share mutable memory</em>. They communicate exclusively by sending and receiving messages.</p>
+    <p>Why does Dart use Isolates? In a standard UI or server application, CPU-intensive work (such as blurring high-resolution photos, parsing a 200MB JSON database dump, or training a machine learning model) monopolizes the processor. If executed on the main thread, the app freezes, drops animation frames, and stops responding to user taps. Isolates solve this by offloading computation to separate CPU cores while keeping the main UI silky smooth.</p>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 110" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="15" width="340" height="80" rx="8" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+      <text x="190" y="38" font-size="13" font-family="-apple-system, sans-serif" font-weight="700" fill="#02569B" text-anchor="middle">Main Isolate (UI &amp; App Logic)</text>
+      <rect x="40" y="48" width="140" height="34" rx="4" fill="#0175C2"/>
+      <text x="110" y="69" font-size="11" font-family="-apple-system, sans-serif" fill="#FFFFFF" font-weight="600" text-anchor="middle">Private Memory Heap A</text>
+      <rect x="200" y="48" width="140" height="34" rx="4" fill="#02569B"/>
+      <text x="270" y="69" font-size="11" font-family="-apple-system, sans-serif" fill="#FFFFFF" font-weight="600" text-anchor="middle">Own Event Loop A</text>
+
+      <path d="M370 45 L390 45" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+      <path d="M390 65 L370 65" stroke="#F59E0B" stroke-width="2"/>
+      <text x="380" y="35" font-size="9" font-family="-apple-system, sans-serif" fill="#475569" text-anchor="middle">Port Messages</text>
+
+      <rect x="400" y="15" width="340" height="80" rx="8" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
+      <text x="570" y="38" font-size="13" font-family="-apple-system, sans-serif" font-weight="700" fill="#15803D" text-anchor="middle">Worker Isolate (Heavy Computation)</text>
+      <rect x="420" y="48" width="140" height="34" rx="4" fill="#10B981"/>
+      <text x="490" y="69" font-size="11" font-family="-apple-system, sans-serif" fill="#FFFFFF" font-weight="600" text-anchor="middle">Private Memory Heap B</text>
+      <rect x="580" y="48" width="140" height="34" rx="4" fill="#047857"/>
+      <text x="650" y="69" font-size="11" font-family="-apple-system, sans-serif" fill="#FFFFFF" font-weight="600" text-anchor="middle">Own Event Loop B</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.1: Two Independent Isolates Running in True Parallelism</div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Real-Life Analogy: The Restaurant Kitchen</div>
+      <p>Imagine a professional restaurant kitchen: Chef A focuses exclusively on assembling delicate appetizers and greeting food runners (Main Isolate). Meanwhile, in a separate station, Chef B chops 50kg of potatoes and bakes loaves of bread (Worker Isolate). Chef B never touches Chef A's counter, preventing accidental collisions. They coordinate by sliding order tickets across the pass (Message Passing).</p>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="310" height="65" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="185" y="38" font-size="12" font-weight="700" fill="#02569B" text-anchor="middle">Chef A (Main UI)</text>
+      <text x="185" y="58" font-size="10" fill="#475569" text-anchor="middle">Accepts orders, renders menus, plates dishes</text>
+
+      <rect x="350" y="28" width="60" height="38" rx="4" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.2"/>
+      <text x="380" y="45" font-size="9" font-weight="700" fill="#B45309" text-anchor="middle">Ticket</text>
+      <text x="380" y="58" font-size="8" fill="#B45309" text-anchor="middle">Message</text>
+
+      <rect x="420" y="15" width="310" height="65" rx="6" fill="#F8FAFC" stroke="#10B981" stroke-width="1.5"/>
+      <text x="575" y="38" font-size="12" font-weight="700" fill="#15803D" text-anchor="middle">Chef B (Worker Isolate)</text>
+      <text x="575" y="58" font-size="10" fill="#475569" text-anchor="middle">Heavy chopping, slow roasting, deep frying</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.2: Restaurant Chef Analogy for Dart Isolates</div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="section-2">
+    <h2>2. What Is Concurrency?</h2>
+    <p><strong>Concurrency</strong> is the composition of independently executing computations. It means dealing with lots of things at once. <strong>Parallelism</strong> is the simultaneous execution of multiple computations at the exact same physical instant on separate hardware CPU cores.</p>
+    <p>In Topic 21, we learned that Dart's <code>async/await</code> is <em>cooperative concurrency on a single thread</em>. While awaiting an HTTP request or database query, the operating system kernel handles the network wait, allowing Dart to process UI clicks. However, if you execute a heavy <code>for (int i=0; i&lt;100000000; i++)</code> loop inside an <code>async</code> function, <strong>it will still freeze the entire UI</strong> because CPU work monopolizes that single thread! True multi-core parallelism in Dart requires an Isolate.</p>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="320" height="65" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+      <text x="190" y="38" font-size="12" font-weight="700" fill="#1E40AF" text-anchor="middle">Concurrency (async/await)</text>
+      <text x="190" y="54" font-size="10" fill="#1E3A8A" text-anchor="middle">Single CPU Core &bull; Interleaving Tasks</text>
+      <text x="190" y="68" font-size="9" fill="#64748B" text-anchor="middle">Task A pauses during I/O &rarr; Task B runs</text>
+
+      <rect x="410" y="15" width="320" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5"/>
+      <text x="570" y="38" font-size="12" font-weight="700" fill="#065F46" text-anchor="middle">Parallelism (Dart Isolates)</text>
+      <text x="570" y="54" font-size="10" fill="#047857" text-anchor="middle">Multiple CPU Cores &bull; Simultaneous Execution</text>
+      <text x="570" y="68" font-size="9" fill="#64748B" text-anchor="middle">Core 1 runs Main UI &bull; Core 2 runs Worker math</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.3: Concurrency vs Parallelism in Modern Computing</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="15" width="220" height="65" rx="6" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.5"/>
+      <text x="130" y="36" font-size="11" font-weight="700" fill="#334155" text-anchor="middle">1. Sequential</text>
+      <text x="130" y="52" font-size="9.5" fill="#64748B" text-anchor="middle">Line 1 &rarr; Line 2 &rarr; Line 3</text>
+      <text x="130" y="68" font-size="8.5" fill="#EF4444" text-anchor="middle">Blocks until done</text>
+
+      <rect x="260" y="15" width="230" height="65" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="375" y="36" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">2. Asynchronous (async/await)</text>
+      <text x="375" y="52" font-size="9.5" fill="#64748B" text-anchor="middle">Event Loop queue switches</text>
+      <text x="375" y="68" font-size="8.5" fill="#0284C7" text-anchor="middle">Single-thread cooperative I/O</text>
+
+      <rect x="510" y="15" width="230" height="65" rx="6" fill="#F8FAFC" stroke="#10B981" stroke-width="1.5"/>
+      <text x="625" y="36" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">3. Separate Isolate</text>
+      <text x="625" y="52" font-size="9.5" fill="#64748B" text-anchor="middle">Physical multi-core parallelism</text>
+      <text x="625" y="68" font-size="8.5" fill="#16A34A" text-anchor="middle">Zero UI thread stutter</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.4: Execution Models: Sequential vs Asynchronous vs Isolate</div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="section-3">
+    <h2>3. Dart Isolate Architecture</h2>
+    <p>Every Dart application boots up inside the <strong>Main Isolate</strong>. The Main Isolate allocates its own memory heap, runs the top-level <code>main()</code> entry point, and manages event queue scheduling.</p>
+    <p>When you spawn a <strong>Worker Isolate</strong>, Dart creates a completely isolated memory space and a new event loop. The key benefits of this architecture include:</p>
+    <ul>
+      <li><strong>No Deadlocks or Race Conditions:</strong> Because memory is not shared, two threads can never read and write to the same variable at the exact same moment. Mutexes, synchronized locks, and semaphores are unnecessary!</li>
+      <li><strong>Independent Garbage Collection:</strong> Each Isolate performs memory garbage collection on its own heap without pausing or stalling other Isolates.</li>
+      <li><strong>Isolate Groups:</strong> Modern Dart VM optimizes memory footprint by sharing read-only program code definitions (classes, functions, bytecode) across Isolates within the same group, while maintaining 100% isolation for mutable objects.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 110" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="300" y="10" width="160" height="26" rx="4" fill="#02569B"/>
+      <text x="380" y="27" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Dart Application</text>
+      <path d="M380 36 L380 48 M380 48 L200 48 L200 58 M380 48 L560 48 L560 58" stroke="#64748B" stroke-width="1.5" fill="none"/>
+
+      <rect x="80" y="58" width="240" height="46" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="200" y="76" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Main Isolate</text>
+      <text x="200" y="93" font-size="9" fill="#475569" text-anchor="middle">Heap A &bull; Event Loop A &bull; UI Thread</text>
+
+      <rect x="440" y="58" width="240" height="46" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="560" y="76" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">Worker Isolate</text>
+      <text x="560" y="93" font-size="9" fill="#475569" text-anchor="middle">Heap B &bull; Event Loop B &bull; Background Core</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.5: Dart Isolate Architecture Tree</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="40" y="15" width="260" height="50" rx="6" fill="#02569B"/>
+      <text x="170" y="38" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">Main Isolate (UI &amp; Logic)</text>
+      <text x="170" y="53" font-size="9.5" fill="#E1F5FE" text-anchor="middle">Holds ReceivePort A &amp; SendPort B</text>
+
+      <path d="M310 32 L440 32" stroke="#00B4AB" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="375" y="26" font-size="8.5" font-weight="700" fill="#00B4AB" text-anchor="middle">Input Data</text>
+      <path d="M440 48 L310 48" stroke="#10B981" stroke-width="2"/>
+      <text x="375" y="60" font-size="8.5" font-weight="700" fill="#10B981" text-anchor="middle">Computation Result</text>
+
+      <rect x="460" y="15" width="260" height="50" rx="6" fill="#047857"/>
+      <text x="590" y="38" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker Isolate (CPU Task)</text>
+      <text x="590" y="53" font-size="9.5" fill="#D1FAE5" text-anchor="middle">Holds ReceivePort B &amp; SendPort A</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.6: Main Isolate vs Worker Isolate Communication Bus</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="50" y="15" width="280" height="55" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+      <text x="190" y="38" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Heap A: [userList, appTheme]</text>
+      <text x="190" y="55" font-size="9" fill="#B91C1C" text-anchor="middle">Completely Inaccessible from Worker</text>
+
+      <text x="380" y="47" font-size="13" font-weight="800" fill="#64748B" text-anchor="middle">&ne;</text>
+
+      <rect x="430" y="15" width="280" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="570" y="38" font-size="11" font-weight="700" fill="#166534" text-anchor="middle">Heap B: [rawPixels, matrixData]</text>
+      <text x="570" y="55" font-size="9" fill="#15803D" text-anchor="middle">Isolated Memory &bull; Zero Pointer Sharing</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.7: Independent Memory Model with Zero Shared Mutable State</div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="section-4">
+    <h2>4. Isolates vs async/await</h2>
+    <p>A common beginner confusion is assuming that marking a function <code>async</code> automatically runs it on a background thread. It does not! The table below highlights the crucial differences between <code>async/await</code> and Dart Isolates:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>async / await</th>
+          <th>Dart Isolates</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Execution Location</strong></td>
+          <td>Runs on the <em>same</em> single Isolate event loop</td>
+          <td>Runs on a <em>separate</em> CPU core and memory space</td>
+        </tr>
+        <tr>
+          <td><strong>Memory Space</strong></td>
+          <td>Shared memory with surrounding code</td>
+          <td>Completely private, independent memory heap</td>
+        </tr>
+        <tr>
+          <td><strong>Best For</strong></td>
+          <td>I/O-bound tasks: HTTP requests, file reading, timers</td>
+          <td>CPU-bound tasks: parsing 100k records, image filtering, hashing</td>
+        </tr>
+        <tr>
+          <td><strong>Communication</strong></td>
+          <td>Direct function return or Future resolution</td>
+          <td>Message passing via SendPort and ReceivePort</td>
+        </tr>
+        <tr>
+          <td><strong>Creation Cost</strong></td>
+          <td>Near zero overhead (micro-tasks and event queues)</td>
+          <td>Small allocation overhead to instantiate heap &amp; event loop</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="320" height="65" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="190" y="38" font-size="12" font-weight="700" fill="#02569B" text-anchor="middle">I/O-Bound Work &rarr; async/await</text>
+      <text x="190" y="54" font-size="10" fill="#0369A1" text-anchor="middle">Waiting for network, database, or disk</text>
+      <text x="190" y="68" font-size="9" fill="#475569" text-anchor="middle">No CPU workload &bull; Single thread handles wait</text>
+
+      <rect x="410" y="15" width="320" height="65" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="570" y="38" font-size="12" font-weight="700" fill="#15803D" text-anchor="middle">CPU-Bound Work &rarr; Isolate</text>
+      <text x="570" y="54" font-size="10" fill="#166534" text-anchor="middle">Continuous math, image encoding, matrix transforms</text>
+      <text x="570" y="68" font-size="9" fill="#475569" text-anchor="middle">Heavy math &bull; Spawns separate worker core</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.8: Isolates vs async/await Decision Boundary</div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="section-5">
+    <h2>5. Introduction to Isolate.run()</h2>
+    <p>Dart 2.19 introduced <code>Isolate.run()</code>, which provides a high-level, elegant API for one-off background computations. It automates spawning a worker isolate, executing a computation callback, transferring the returned value back to the caller, and shutting down the isolate cleanly.</p>
+
+    <div class="code-card">
+      <div class="code-header">
+        <span>isolate_run_example.dart</span>
+        <span>Dart 3.x</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main Isolate started&#x27;</span>);
+
+  <span class="hljs-comment">// Offload CPU-heavy computation to a temporary worker isolate</span>
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">int</span> result = <span class="hljs-keyword">await</span> Isolate.run(() {
+    <span class="hljs-built_in">int</span> total = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">1000000</span>; i++) {
+      total += i;
+    }
+    <span class="hljs-keyword">return</span> total;
+  });
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Result: <span class="hljs-subst">$result</span>&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main Isolate completed&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Main Isolate started<br>
+Result: 500000500000<br>
+Main Isolate completed
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="20" width="130" height="45" rx="5" fill="#02569B"/>
+      <text x="85" y="46" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Main Calls run()</text>
+
+      <path d="M155 42 L215 42" stroke="#00B4AB" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="185" y="34" font-size="8.5" fill="#00B4AB" text-anchor="middle">Spawns</text>
+
+      <rect x="220" y="20" width="160" height="45" rx="5" fill="#10B981"/>
+      <text x="300" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker Executes</text>
+      <text x="300" y="53" font-size="9" fill="#D1FAE5" text-anchor="middle">1..1,000,000 Loop</text>
+
+      <path d="M385 42 L445 42" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="415" y="34" font-size="8.5" fill="#10B981" text-anchor="middle">Transfers</text>
+
+      <rect x="450" y="20" width="140" height="45" rx="5" fill="#047857"/>
+      <text x="520" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Result Returned</text>
+      <text x="520" y="53" font-size="9" fill="#D1FAE5" text-anchor="middle">500000500000</text>
+
+      <path d="M595 42 L645 42" stroke="#EF4444" stroke-width="2" marker-end="url(#arrow)"/>
+      <rect x="650" y="20" width="90" height="45" rx="5" fill="#EF4444"/>
+      <text x="695" y="46" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Auto-Kills</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.9: Isolate.run() Lifecycle and Value Resolution</div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="section-6">
+    <h2>6. Introduction to Isolate.spawn()</h2>
+    <p>While <code>Isolate.run()</code> is designed for single one-shot computations, <code>Isolate.spawn()</code> creates a long-lived worker isolate capable of ongoing two-way bidirectional communication. You supply a top-level or static entry-point function and an initial parameter (typically a <code>SendPort</code>).</p>
+
+    <div class="code-card">
+      <div class="code-header">
+        <span>isolate_spawn_conceptual.dart</span>
+        <span>Dart 3.x</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+<span class="hljs-comment">// Top-level worker entry-point function</span>
+<span class="hljs-keyword">void</span> workerEntryPoint(<span class="hljs-built_in">String</span> message) {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Worker received: <span class="hljs-subst">$message</span>&#x27;</span>);
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Spawning worker isolate...&#x27;</span>);
+  <span class="hljs-keyword">final</span> Isolate worker = <span class="hljs-keyword">await</span> Isolate.spawn(workerEntryPoint, <span class="hljs-string">&#x27;Initial payload&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main isolate continues seamlessly&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="140" y="37" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Main Isolate</text>
+      <text x="140" y="55" font-size="9" fill="#475569" text-anchor="middle">Calls Isolate.spawn(entryPoint, arg)</text>
+
+      <path d="M260 42 L390 42" stroke="#0175C2" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="325" y="34" font-size="9" font-weight="600" fill="#0175C2" text-anchor="middle">Spawns Entry Function</text>
+
+      <rect x="400" y="15" width="330" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="565" y="37" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">Worker Isolate Execution Loop</text>
+      <text x="565" y="55" font-size="9" fill="#475569" text-anchor="middle">Executes workerEntryPoint() &bull; Listens for messages</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.10: Isolate.spawn() Architecture and Entry Point Binding</div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section id="section-7">
+    <h2>7. SendPort and ReceivePort</h2>
+    <p>To pass data back and forth between Isolates, Dart uses a port pairing system:</p>
+    <ul>
+      <li><strong>ReceivePort:</strong> Owned by the receiving Isolate. It acts like a secure <strong>mailbox</strong>. It is a Dart <code>Stream</code> where incoming messages arrive in order.</li>
+      <li><strong>SendPort:</strong> The <strong>shipping address</strong> or handle to that mailbox. Anyone who holds a SendPort can drop messages into that mailbox from any Isolate.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="40" y="15" width="310" height="65" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5"/>
+      <text x="195" y="38" font-size="12" font-weight="700" fill="#1E40AF" text-anchor="middle">ReceivePort = The Physical Mailbox</text>
+      <text x="195" y="54" font-size="10" fill="#1E3A8A" text-anchor="middle">Stays fixed inside the receiver Isolate</text>
+      <text x="195" y="68" font-size="9" fill="#64748B" text-anchor="middle">Listens for messages via .listen() or await for</text>
+
+      <rect x="410" y="15" width="310" height="65" rx="6" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5"/>
+      <text x="565" y="38" font-size="12" font-weight="700" fill="#065F46" text-anchor="middle">SendPort = The Mailbox Address</text>
+      <text x="565" y="54" font-size="10" fill="#047857" text-anchor="middle">Passed across Isolates as a capability</text>
+      <text x="565" y="68" font-size="9" fill="#64748B" text-anchor="middle">Calls .send(message) to deliver payload</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.11: The Mailbox and Address Analogy for Ports</div>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section id="section-8">
+    <h2>8. Communication Between Isolates</h2>
+    <p>Let's assemble a complete, runnable two-way communication workflow where the main isolate sends two numbers to a worker isolate, the worker calculates their sum, and the worker transmits the result back to main:</p>
+
+    <div class="code-card">
+      <div class="code-header">
+        <span>isolate_two_way_communication.dart</span>
+        <span>Dart 3.x Verified</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+<span class="hljs-comment">// Worker function</span>
+<span class="hljs-keyword">void</span> workerAdd(SendPort mainSendPort) {
+  <span class="hljs-keyword">final</span> ReceivePort workerReceivePort = ReceivePort();
+  <span class="hljs-comment">// Step 1: Send worker&#x27;s SendPort address back to Main</span>
+  mainSendPort.send(workerReceivePort.sendPort);
+
+  <span class="hljs-comment">// Step 2: Listen for input data from Main</span>
+  workerReceivePort.listen((message) {
+    <span class="hljs-keyword">if</span> (message <span class="hljs-keyword">is</span> <span class="hljs-built_in">List</span>) {
+      <span class="hljs-built_in">num</span> sum = message[<span class="hljs-number">0</span>] + message[<span class="hljs-number">1</span>];
+      mainSendPort.send(sum); <span class="hljs-comment">// Send result back</span>
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (message == <span class="hljs-string">&#x27;exit&#x27;</span>) {
+      workerReceivePort.close();
+    }
+  });
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> ReceivePort mainReceivePort = ReceivePort();
+  <span class="hljs-comment">// Spawn worker, giving it main&#x27;s SendPort</span>
+  <span class="hljs-keyword">final</span> Isolate workerIsolate = <span class="hljs-keyword">await</span> Isolate.spawn(workerAdd, mainReceivePort.sendPort);
+
+  SendPort? workerSendPort;
+
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">for</span> (<span class="hljs-keyword">final</span> message <span class="hljs-keyword">in</span> mainReceivePort) {
+    <span class="hljs-keyword">if</span> (workerSendPort == <span class="hljs-keyword">null</span> &amp;&amp; message <span class="hljs-keyword">is</span> SendPort) {
+      workerSendPort = message;
+      <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Handshake established. Sending numbers [15, 27] to worker...&#x27;</span>);
+      workerSendPort.send([<span class="hljs-number">15</span>, <span class="hljs-number">27</span>]);
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (message <span class="hljs-keyword">is</span> <span class="hljs-built_in">num</span>) {
+      <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main received result from worker: <span class="hljs-subst">$message</span>&#x27;</span>);
+      workerSendPort?.send(<span class="hljs-string">&#x27;exit&#x27;</span>);
+      mainReceivePort.close();
+      workerIsolate.kill(priority: Isolate.immediate);
+      <span class="hljs-keyword">break</span>;
+    }
+  }
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Isolate completed cleanly.&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Handshake established. Sending numbers [15, 27] to worker...<br>
+Main received result from worker: 42<br>
+Isolate completed cleanly.
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="160" height="65" rx="5" fill="#02569B"/>
+      <text x="110" y="42" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Main Isolate</text>
+      <text x="110" y="58" font-size="9" fill="#E1F5FE" text-anchor="middle">Creates ReceivePort</text>
+
+      <path d="M195 32 L360 32" stroke="#0175C2" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <text x="280" y="26" font-size="8.5" fill="#0175C2" text-anchor="middle">1. Spawn(worker, mainSendPort)</text>
+
+      <path d="M360 50 L195 50" stroke="#10B981" stroke-width="1.8"/>
+      <text x="280" y="45" font-size="8.5" fill="#10B981" text-anchor="middle">2. Handshake: workerSendPort</text>
+
+      <path d="M195 68 L360 68" stroke="#0284C7" stroke-width="1.8"/>
+      <text x="280" y="63" font-size="8.5" fill="#0284C7" text-anchor="middle">3. Payload: [15, 27] &rarr; Sum: 42</text>
+
+      <rect x="370" y="15" width="160" height="65" rx="5" fill="#047857"/>
+      <text x="450" y="42" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Worker Isolate</text>
+      <text x="450" y="58" font-size="9" fill="#D1FAE5" text-anchor="middle">Computes 15 + 27</text>
+
+      <rect x="560" y="15" width="170" height="65" rx="5" fill="#F8FAFC" stroke="#64748B" stroke-width="1.5"/>
+      <text x="645" y="38" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">Cleanup Phase</text>
+      <text x="645" y="53" font-size="8.5" fill="#475569" text-anchor="middle">ports.close()</text>
+      <text x="645" y="67" font-size="8.5" fill="#EF4444" text-anchor="middle">isolate.kill()</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.12: Two-Way Handshake and Message Flow Sequence</div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section id="section-9">
+    <h2>9. Isolate Lifecycle Management</h2>
+    <p>Managing an Isolate's lifecycle involves 5 clear phases: <strong>Create</strong> &rarr; <strong>Start</strong> &rarr; <strong>Communicate</strong> &rarr; <strong>Complete</strong> &rarr; <strong>Cleanup</strong>.</p>
+    <p>Leaving an Isolate or its ReceivePort open indefinitely leaks memory and system threads, preventing the Dart process from exiting! Always call <code>receivePort.close()</code> and terminate the worker with <code>isolate.kill()</code> or <code>Isolate.exit()</code>.</p>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="20" width="125" height="42" rx="5" fill="#02569B"/>
+      <text x="82" y="45" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1. Create</text>
+      <path d="M150 41 L175 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="180" y="20" width="125" height="42" rx="5" fill="#0175C2"/>
+      <text x="242" y="45" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2. Start</text>
+      <path d="M310 41 L335 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="340" y="20" width="125" height="42" rx="5" fill="#00B4AB"/>
+      <text x="402" y="45" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3. Communicate</text>
+      <path d="M470 41 L495 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="500" y="20" width="115" height="42" rx="5" fill="#10B981"/>
+      <text x="557" y="45" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">4. Complete</text>
+      <path d="M620 41 L645 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="650" y="20" width="95" height="42" rx="5" fill="#EF4444"/>
+      <text x="697" y="45" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">5. Cleanup</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.13: The Five Stages of Isolate Lifecycle Management</div>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section id="section-10">
+    <h2>10. Error Handling in Isolates</h2>
+    <p>If an unhandled exception occurs inside a worker isolate, it does not print to the main console automatically unless monitored. With <code>Isolate.run()</code>, errors are automatically captured, serialized across the port boundary, and re-thrown at the <code>await</code> site where a standard <code>try/catch</code> block can intercept them:</p>
+
+    <div class="code-card">
+      <div class="code-header">
+        <span>isolate_error_propagation.dart</span>
+        <span>Dart 3.x Verified</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">await</span> Isolate.run(() {
+      <span class="hljs-comment">// Simulating an error during background parsing</span>
+      <span class="hljs-keyword">throw</span> FormatException(<span class="hljs-string">&#x27;Malformed image header byte&#x27;</span>);
+    });
+  } <span class="hljs-keyword">on</span> FormatException <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Successfully intercepted worker error: <span class="hljs-subst">$e</span>&#x27;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Successfully intercepted worker error: FormatException: Malformed image header byte
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="140" y="38" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Caller: try / catch</text>
+      <text x="140" y="55" font-size="9" fill="#475569" text-anchor="middle">await Isolate.run(...)</text>
+
+      <path d="M255 42 L395 42" stroke="#EF4444" stroke-width="1.8" marker-end="url(#arrow)"/>
+      <text x="325" y="34" font-size="9" font-weight="600" fill="#EF4444" text-anchor="middle">Exception Serialized</text>
+
+      <rect x="405" y="15" width="320" height="55" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+      <text x="565" y="38" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Worker Isolate Exception Triggered</text>
+      <text x="565" y="55" font-size="9" fill="#B91C1C" text-anchor="middle">Worker auto-terminates &bull; Error rethrown in caller</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.14: Error Handling Paths in Dart Isolates</div>
+  </section>
+
+  <!-- SECTION 11 -->
+  <section id="section-11">
+    <h2>11. When Should We Use Isolates?</h2>
+    <p>Creating and communicating with an Isolate carries a small overhead (copying or transferring memory objects). Therefore, Isolates should be used strategically for CPU-bound operations only.</p>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="330" height="65" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="195" y="36" font-size="11.5" font-weight="700" fill="#15803D" text-anchor="middle">&check; Recommended Use Cases</text>
+      <text x="195" y="52" font-size="9.5" fill="#166534" text-anchor="middle">1. Parsing 100MB+ JSON or XML data</text>
+      <text x="195" y="66" font-size="9.5" fill="#166534" text-anchor="middle">2. Image resizing, compression, cryptographic hashing</text>
+
+      <rect x="400" y="15" width="330" height="65" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+      <text x="565" y="36" font-size="11.5" font-weight="700" fill="#991B1B" text-anchor="middle">&cross; Unnecessary / Overkill Use Cases</text>
+      <text x="565" y="52" font-size="9.5" fill="#B91C1C" text-anchor="middle">1. Simple arithmetic (2 + 2) or short loops</text>
+      <text x="565" y="66" font-size="9.5" fill="#B91C1C" text-anchor="middle">2. Standard HTTP fetch or database read (use async/await)</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.15: Strategic Decision Matrix for Dart Isolates</div>
+  </section>
+
+  <!-- SECTION 12 -->
+  <section id="section-12">
+    <h2>12. Introduction to Dart Packages</h2>
+    <p>A <strong>package</strong> is a modular container of reusable code, libraries, and utilities that solves a specific software problem. Instead of reinventing the wheel (e.g. writing your own encryption algorithms, color converters, or HTTP clients), developers leverage packages to accelerate development and maintain high reliability.</p>
+    <p>Dart software is divided into three primary library classes:</p>
+    <ul>
+      <li><strong>Built-in SDK Libraries:</strong> Bundled directly inside the Dart runtime, imported via <code>dart:core</code>, <code>dart:isolate</code>, <code>dart:convert</code>, <code>dart:async</code>, <code>dart:math</code>.</li>
+      <li><strong>Third-Party Packages:</strong> Open-source packages published by the community and Google on <strong>pub.dev</strong>, imported via <code>package:package_name/...</code>.</li>
+      <li><strong>Local Packages:</strong> Packages created inside your own workspace or mono-repo.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="210" height="55" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="135" y="38" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Custom Project Logic</text>
+      <text x="135" y="54" font-size="9" fill="#475569" text-anchor="middle">Your app features &amp; UI</text>
+
+      <text x="260" y="47" font-size="16" font-weight="800" fill="#0175C2" text-anchor="middle">+</text>
+
+      <rect x="280" y="15" width="220" height="55" rx="6" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.5"/>
+      <text x="390" y="38" font-size="11" font-weight="700" fill="#00796B" text-anchor="middle">Reusable Packages</text>
+      <text x="390" y="54" font-size="9" fill="#475569" text-anchor="middle">Ready-made plumbing &amp; wiring</text>
+
+      <text x="520" y="47" font-size="16" font-weight="800" fill="#0175C2" text-anchor="middle">=</text>
+
+      <rect x="540" y="15" width="190" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="635" y="38" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">Production App</text>
+      <text x="635" y="54" font-size="9" fill="#166534" text-anchor="middle">Robust, fast, &amp; tested</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.16: Building House Analogy for Modular Software Packages</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="55" rx="6" fill="#02569B"/>
+      <text x="140" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">1. Dart SDK Libraries</text>
+      <text x="140" y="54" font-size="9" fill="#E1F5FE" text-anchor="middle">dart:isolate, dart:convert, dart:math</text>
+
+      <rect x="270" y="15" width="220" height="55" rx="6" fill="#00B4AB"/>
+      <text x="380" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">2. pub.dev Ecosystem</text>
+      <text x="380" y="54" font-size="9" fill="#E0F2F1" text-anchor="middle">collection, http, test, lints</text>
+
+      <rect x="510" y="15" width="220" height="55" rx="6" fill="#10B981"/>
+      <text x="620" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">3. Local Workspace Packages</text>
+      <text x="620" y="54" font-size="9" fill="#D1FAE5" text-anchor="middle">path dependencies &bull; monorepos</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.17: Dart Package Taxonomy and Categories</div>
+  </section>
+
+  <!-- SECTION 13 -->
+  <section id="section-13">
+    <h2>13. Understanding pub.dev</h2>
+    <p><strong>pub.dev</strong> is the official package repository for the Dart and Flutter community. When evaluating a package on pub.dev, inspect the following metrics before integrating it into production:</p>
+    <ol>
+      <li><strong>Pub Points (Quality Score):</strong> Evaluates code style, documentation completeness, static analysis status, and multi-platform support (max 140 points).</li>
+      <li><strong>Popularity &amp; Likes:</strong> Indicates community adoption and real-world usage.</li>
+      <li><strong>Publisher Badge:</strong> Verified publishers (e.g. <code>dart.dev</code>, <code>flutter.dev</code>) signal authentic first-party maintenance.</li>
+      <li><strong>License:</strong> Open-source licenses (MIT, BSD-3-Clause, Apache 2.0) ensure legal compliance for commercial use.</li>
+    </ol>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="18" width="130" height="48" rx="5" fill="#02569B"/>
+      <text x="85" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Search pub.dev</text>
+      <path d="M155 42 L180 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="185" y="18" width="165" height="48" rx="5" fill="#00B4AB"/>
+      <text x="267" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Check Pub Points</text>
+      <text x="267" y="53" font-size="8.5" fill="#E0F2F1" text-anchor="middle">Score &bull; Likes &bull; Popularity</text>
+      <path d="M355 42 L380 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="385" y="18" width="170" height="48" rx="5" fill="#10B981"/>
+      <text x="470" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Verify SDK Constraints</text>
+      <text x="470" y="53" font-size="8.5" fill="#D1FAE5" text-anchor="middle">Dart 3.x compatible</text>
+      <path d="M560 42 L585 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="590" y="18" width="150" height="48" rx="5" fill="#047857"/>
+      <text x="665" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Add to Project</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.18: pub.dev Package Evaluation Pipeline</div>
+  </section>
+
+  <!-- SECTION 14 -->
+  <section id="section-14">
+    <h2>14. Understanding pubspec.yaml</h2>
+    <p>The <code>pubspec.yaml</code> file is the central manifest of every Dart project. It declares the project's metadata, Dart SDK version requirements, and package dependencies.</p>
+
+    <div class="code-card">
+      <div class="code-header">
+        <span>pubspec.yaml</span>
+        <span>YAML Manifest</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>name: dart_learning_project
+description: A beginner Dart learning project <span class="hljs-keyword">for</span> CodeVerse.
+version: <span class="hljs-number">1.0</span><span class="hljs-number">.0</span>
+
+environment:
+  sdk: <span class="hljs-string">&#x27;&gt;=3.0.0 &lt;4.0.0&#x27;</span>
+
+dependencies:
+  collection: ^<span class="hljs-number">1.19</span><span class="hljs-number">.0</span>
+
+dev_dependencies:
+  lints: ^<span class="hljs-number">5.0</span><span class="hljs-number">.0</span>
+  test: ^<span class="hljs-number">1.25</span><span class="hljs-number">.0</span></code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="65" rx="5" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="140" y="36" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Metadata</text>
+      <text x="140" y="52" font-size="9" fill="#475569" text-anchor="middle">name: my_app</text>
+      <text x="140" y="67" font-size="9" fill="#475569" text-anchor="middle">version: 1.0.0 &bull; sdk: ^3.0.0</text>
+
+      <rect x="270" y="15" width="220" height="65" rx="5" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.5"/>
+      <text x="380" y="36" font-size="11" font-weight="700" fill="#00796B" text-anchor="middle">dependencies</text>
+      <text x="380" y="52" font-size="9" fill="#475569" text-anchor="middle">Runtime production code</text>
+      <text x="380" y="67" font-size="9" fill="#00796B" text-anchor="middle">collection, http, path</text>
+
+      <rect x="510" y="15" width="220" height="65" rx="5" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="620" y="36" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">dev_dependencies</text>
+      <text x="620" y="52" font-size="9" fill="#475569" text-anchor="middle">Development &amp; QA tooling only</text>
+      <text x="620" y="67" font-size="9" fill="#15803D" text-anchor="middle">lints, test, build_runner</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.19: The Anatomical Structure of pubspec.yaml</div>
+  </section>
+
+  <!-- SECTION 15 -->
+  <section id="section-15">
+    <h2>15. Dependencies vs dev_dependencies</h2>
+    <p>Distinguishing between runtime <code>dependencies</code> and <code>dev_dependencies</code> is essential for professional code architecture:</p>
+    <ul>
+      <li><strong>dependencies:</strong> Code that is shipped directly inside your compiled binary or web app. Without these, your application cannot run. Example: <code>package:collection</code> for grouping algorithms.</li>
+      <li><strong>dev_dependencies:</strong> Utilities used <em>only while authoring code</em> on your local machine (linters, test suites, code generators). They are stripped during production compilation. Example: <code>package:test</code>.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="40" y="15" width="310" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="195" y="38" font-size="11.5" font-weight="700" fill="#02569B" text-anchor="middle">dependencies (Runtime App)</text>
+      <text x="195" y="54" font-size="9.5" fill="#0369A1" text-anchor="middle">Bundled into .exe &bull; Executed by end users</text>
+
+      <rect x="410" y="15" width="310" height="55" rx="6" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.5"/>
+      <text x="565" y="38" font-size="11.5" font-weight="700" fill="#B45309" text-anchor="middle">dev_dependencies (Local Developer Tooling)</text>
+      <text x="565" y="54" font-size="9.5" fill="#92400E" text-anchor="middle">Used for dart test &amp; dart analyze &bull; Not deployed</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.20: Dependencies vs dev_dependencies Separation of Concerns</div>
+  </section>
+
+  <!-- SECTION 16 -->
+  <section id="section-16">
+    <h2>16. Adding and Removing Packages</h2>
+    <p>Modern Dart CLI provides streamlined commands to modify your dependencies without manually editing YAML text:</p>
+    <ul>
+      <li><strong>Add a runtime dependency:</strong> <code>dart pub add collection</code></li>
+      <li><strong>Add a dev dependency:</strong> <code>dart pub add --dev test</code></li>
+      <li><strong>Remove a dependency:</strong> <code>dart pub remove collection</code></li>
+    </ul>
+    <p>Once added, import the package into your Dart file using the <code>package:</code> URI scheme:</p>
+    <div class="code-card">
+      <div class="code-header">
+        <span>import_example.dart</span>
+        <span>Dart Import</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;package:collection/collection.dart&#x27;</span>;</code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="18" width="125" height="44" rx="5" fill="#02569B"/>
+      <text x="82" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart pub add</text>
+      <path d="M150 40 L175 40" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="180" y="18" width="140" height="44" rx="5" fill="#0175C2"/>
+      <text x="250" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Fetch pub.dev</text>
+      <path d="M325 40 L350 40" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="355" y="18" width="165" height="44" rx="5" fill="#00B4AB"/>
+      <text x="437" y="37" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Update pubspec.yaml</text>
+      <text x="437" y="52" font-size="8.5" fill="#E0F2F1" text-anchor="middle">&amp; pubspec.lock</text>
+      <path d="M525 40 L550 40" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="555" y="18" width="185" height="44" rx="5" fill="#10B981"/>
+      <text x="647" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">import 'package:...'</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.21: Package Addition, Resolution, and Import Flow</div>
+  </section>
+
+  <!-- SECTION 17 -->
+  <section id="section-17">
+    <h2>17. Understanding pubspec.lock</h2>
+    <p>While <code>pubspec.yaml</code> records flexible semantic version ranges (e.g. <code>^1.19.0</code>), the package manager creates <code>pubspec.lock</code> to pin the <strong>exact resolved version numbers</strong> (e.g. <code>1.19.1</code>) and transitive dependencies. This guarantees that every team member, CI/CD pipeline, and production server builds the identical dependency graph without unexpected breaking bugs.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>pubspec.yaml</th>
+          <th>pubspec.lock</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Author</strong></td>
+          <td>Created &amp; edited by the developer</td>
+          <td>Generated automatically by <code>dart pub</code></td>
+        </tr>
+        <tr>
+          <td><strong>Version Format</strong></td>
+          <td>Ranges: <code>^1.19.0</code>, <code>&gt;=2.0.0 &lt;3.0.0</code></td>
+          <td>Exact pinned versions: <code>1.19.0</code></td>
+        </tr>
+        <tr>
+          <td><strong>Purpose</strong></td>
+          <td>Declares desired project dependencies</td>
+          <td>Records reproducible snapshot of resolved tree</td>
+        </tr>
+        <tr>
+          <td><strong>Version Control</strong></td>
+          <td>Committed to Git (always)</td>
+          <td>Committed to Git for application projects</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="40" y="15" width="310" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="195" y="38" font-size="11.5" font-weight="700" fill="#02569B" text-anchor="middle">pubspec.yaml (Intent)</text>
+      <text x="195" y="54" font-size="10" font-family="monospace" fill="#0369A1" text-anchor="middle">collection: ^1.19.0</text>
+
+      <path d="M355 42 L405 42" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="380" y="34" font-size="8.5" fill="#10B981" text-anchor="middle">Resolves</text>
+
+      <rect x="410" y="15" width="310" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="565" y="38" font-size="11.5" font-weight="700" fill="#15803D" text-anchor="middle">pubspec.lock (Concrete Snapshot)</text>
+      <text x="565" y="54" font-size="10" font-family="monospace" fill="#166534" text-anchor="middle">version: "1.19.1" (pinned)</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.22: pubspec.yaml Version Range to pubspec.lock Exact Resolution</div>
+  </section>
+
+  <!-- SECTION 18 -->
+  <section id="section-18">
+    <h2>18. Dart Package Management Commands</h2>
+    <p>Professional Dart engineers use these standard <code>dart pub</code> commands to manage packages across the software lifecycle:</p>
+
+    <ul>
+      <li><code>dart pub get</code>: Reads <code>pubspec.yaml</code> and downloads missing packages to the local cache.</li>
+      <li><code>dart pub upgrade</code>: Upgrades installed packages to the highest allowed versions matching your <code>pubspec.yaml</code> constraints.</li>
+      <li><code>dart pub outdated</code>: Analyzes installed packages against pub.dev, highlighting newer minor and major versions available.</li>
+      <li><code>dart pub deps</code>: Prints a visual tree diagram of all direct and transitive dependencies.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="20" width="135" height="42" rx="5" fill="#02569B"/>
+      <text x="87" y="45" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart pub get</text>
+      <path d="M160 41 L175 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="180" y="20" width="135" height="42" rx="5" fill="#0175C2"/>
+      <text x="247" y="45" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart pub outdated</text>
+      <path d="M320 41 L335 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="340" y="20" width="135" height="42" rx="5" fill="#00B4AB"/>
+      <text x="407" y="45" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart pub upgrade</text>
+      <path d="M480 41 L495 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="500" y="20" width="115" height="42" rx="5" fill="#10B981"/>
+      <text x="557" y="45" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart pub deps</text>
+      <path d="M620 41 L635 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="640" y="20" width="100" height="42" rx="5" fill="#047857"/>
+      <text x="690" y="45" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">Build Done</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.23: Dart Package Management Lifecycle Commands</div>
+  </section>
+
+  <!-- SECTION 19 -->
+  <section id="section-19">
+    <h2>19. Dart CLI and Project Creation</h2>
+    <p>The <strong>Dart CLI</strong> is the primary developer interface bundled inside the Dart SDK. To verify your local installation, run:</p>
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Command</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart --version</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Actual Verified Output:</span>
+Dart SDK version: 3.12.2 (stable) on "windows_x64"
+    </div>
+
+    <p>To scaffold a new, modern Dart command-line application, use the <code>dart create</code> command:</p>
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Scaffolding</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart create my_app
+cd my_app
+dart run</code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="55" rx="6" fill="#02569B"/>
+      <text x="140" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Execution &amp; Dev</text>
+      <text x="140" y="54" font-size="9" fill="#E1F5FE" text-anchor="middle">dart run &bull; dart test</text>
+
+      <rect x="270" y="15" width="220" height="55" rx="6" fill="#00B4AB"/>
+      <text x="380" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Quality &amp; Hygiene</text>
+      <text x="380" y="54" font-size="9" fill="#E0F2F1" text-anchor="middle">dart format &bull; dart analyze</text>
+
+      <rect x="510" y="15" width="220" height="55" rx="6" fill="#10B981"/>
+      <text x="620" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Compilation &amp; Docs</text>
+      <text x="620" y="54" font-size="9" fill="#D1FAE5" text-anchor="middle">dart compile exe &bull; dart doc</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.24: Dart CLI Developer Tooling Ecosystem</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="15" width="130" height="65" rx="5" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.2"/>
+      <text x="85" y="36" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle">bin/</text>
+      <text x="85" y="52" font-size="8.5" fill="#475569" text-anchor="middle">my_app.dart</text>
+      <text x="85" y="66" font-size="7.5" fill="#64748B" text-anchor="middle">(CLI entry point)</text>
+
+      <rect x="165" y="15" width="135" height="65" rx="5" fill="#F8FAFC" stroke="#00B4AB" stroke-width="1.2"/>
+      <text x="232" y="36" font-size="10.5" font-weight="700" fill="#00796B" text-anchor="middle">lib/</text>
+      <text x="232" y="52" font-size="8.5" fill="#475569" text-anchor="middle">src/ logic</text>
+      <text x="232" y="66" font-size="7.5" fill="#64748B" text-anchor="middle">(Reusable core)</text>
+
+      <rect x="315" y="15" width="135" height="65" rx="5" fill="#F8FAFC" stroke="#10B981" stroke-width="1.2"/>
+      <text x="382" y="36" font-size="10.5" font-weight="700" fill="#15803D" text-anchor="middle">test/</text>
+      <text x="382" y="52" font-size="8.5" fill="#475569" text-anchor="middle">my_app_test.dart</text>
+      <text x="382" y="66" font-size="7.5" fill="#64748B" text-anchor="middle">(Unit tests)</text>
+
+      <rect x="465" y="15" width="275" height="65" rx="5" fill="#F8FAFC" stroke="#64748B" stroke-width="1.2"/>
+      <text x="602" y="36" font-size="10.5" font-weight="700" fill="#334155" text-anchor="middle">Root Configuration</text>
+      <text x="602" y="52" font-size="8.5" fill="#475569" text-anchor="middle">pubspec.yaml &bull; pubspec.lock</text>
+      <text x="602" y="66" font-size="8" fill="#64748B" text-anchor="middle">analysis_options.yaml &bull; README.md</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.25: Standard Dart Project Layout Anatomy</div>
+  </section>
+
+  <!-- SECTION 20 -->
+  <section id="section-20">
+    <h2>20. Dart Code Formatting</h2>
+    <p>Consistent whitespace and indentation eliminate endless team debates. The Dart SDK comes with an opinionated, built-in code formatter: <code>dart format</code>. Running <code>dart format .</code> standardizes your code according to the official Dart style guide without modifying program logic.</p>
+
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Formatter</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart format .</code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="320" height="65" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+      <text x="190" y="36" font-size="11" font-weight="700" fill="#991B1B" text-anchor="middle">Before: Unaligned &amp; Messy</text>
+      <text x="190" y="52" font-size="9" font-family="monospace" fill="#B91C1C" text-anchor="middle">int  calc(int a,int b){return a+b;}</text>
+      <text x="190" y="67" font-size="8.5" fill="#EF4444" text-anchor="middle">Inconsistent spacing &bull; Hard to read</text>
+
+      <path d="M355 42 L405 42" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="410" y="15" width="320" height="65" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="570" y="36" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle">After: Canonical Dart 3 Style</text>
+      <text x="570" y="52" font-size="9" font-family="monospace" fill="#166534" text-anchor="middle">int calc(int a, int b) { return a + b; }</text>
+      <text x="570" y="67" font-size="8.5" fill="#10B981" text-anchor="middle">Clean &bull; Idiomatic &bull; Zero logic change</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.26: dart format Before and After Comparison</div>
+  </section>
+
+  <!-- SECTION 21 -->
+  <section id="section-21">
+    <h2>21. Dart Static Analysis</h2>
+    <p>Static analysis examines your Dart code without running it, discovering type mismatches, unused variables, dead code, and style rule violations. It is powered by <code>analysis_options.yaml</code> (typically including <code>package:lints/recommended.yaml</code>).</p>
+
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Static Analysis</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart analyze</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Verified Analyzer Output:</span>
+Analyzing my_project...<br>
+No issues found!
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="18" width="180" height="50" rx="5" fill="#02569B"/>
+      <text x="120" y="44" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Dart Source Files (*.dart)</text>
+      <path d="M215 42 L250 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="255" y="18" width="220" height="50" rx="5" fill="#00B4AB"/>
+      <text x="365" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart analyze Engine</text>
+      <text x="365" y="53" font-size="8.5" fill="#E0F2F1" text-anchor="middle">Checks Types &bull; Lints &bull; Null Safety</text>
+      <path d="M480 42 L515 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="520" y="18" width="210" height="50" rx="5" fill="#10B981"/>
+      <text x="625" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">Zero Issues Guarantee</text>
+      <text x="625" y="53" font-size="8.5" fill="#D1FAE5" text-anchor="middle">Clean build for production</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.27: dart analyze Diagnostics and Verification Pipeline</div>
+  </section>
+
+  <!-- SECTION 22 -->
+  <section id="section-22">
+    <h2>22. Dart Testing</h2>
+    <p>Professional applications write automated unit tests using <code>package:test</code>. Tests assert that functions return expected outcomes under specific inputs, guarding against regressions.</p>
+
+    <div class="code-card">
+      <div class="code-header"><span>test/calculator_test.dart</span><span>Unit Test</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;package:test/test.dart&#x27;</span>;
+
+<span class="hljs-built_in">int</span> add(<span class="hljs-built_in">int</span> a, <span class="hljs-built_in">int</span> b) =&gt; a + b;
+
+<span class="hljs-keyword">void</span> main() {
+  test(<span class="hljs-string">&#x27;adds two integers correctly&#x27;</span>, () {
+    expect(add(<span class="hljs-number">2</span>, <span class="hljs-number">3</span>), <span class="hljs-number">5</span>);
+  });
+}</code></pre>
+</div>
+    </div>
+
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Run Tests</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart test</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Verified Test Runner Output:</span>
+00:01 +1: All tests passed!
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="18" width="170" height="50" rx="5" fill="#02569B"/>
+      <text x="115" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">add(2, 3)</text>
+      <text x="115" y="53" font-size="8.5" fill="#E1F5FE" text-anchor="middle">Actual Output: 5</text>
+      <path d="M205 42 L245 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="250" y="18" width="220" height="50" rx="5" fill="#00B4AB"/>
+      <text x="360" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">expect(actual, 5)</text>
+      <text x="360" y="53" font-size="8.5" fill="#E0F2F1" text-anchor="middle">Equality Matcher Assertion</text>
+      <path d="M475 42 L515 42" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="520" y="18" width="210" height="50" rx="5" fill="#10B981"/>
+      <text x="625" y="38" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">&check; Test Passed (+1)</text>
+      <text x="625" y="53" font-size="8.5" fill="#D1FAE5" text-anchor="middle">Zero regressions detected</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.28: Dart Unit Testing and Expectation Verification</div>
+  </section>
+
+  <!-- SECTION 23 -->
+  <section id="section-23">
+    <h2>23. Dart Compilation</h2>
+    <p>Dart offers flexible compilation strategies tailored for development speed and production performance:</p>
+    <ul>
+      <li><strong>JIT (Just-In-Time):</strong> Used during development (<code>dart run</code>) for lightning-fast incremental compilation and stateful hot reload.</li>
+      <li><strong>AOT (Ahead-Of-Time):</strong> Compiles Dart directly into machine code binaries (<code>dart compile exe</code>) for blazingly fast startup and zero runtime dependencies.</li>
+      <li><strong>Web Compilation:</strong> Compiles Dart to JavaScript (<code>dart compile js</code>) or WebAssembly (<code>dart compile wasm</code>) for high-performance browser applications.</li>
+    </ul>
+
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>AOT Native Compilation</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart compile exe bin/my_app.dart -o my_app.exe</code></pre>
+</div>
+    </div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="180" height="65" rx="5" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.2"/>
+      <text x="120" y="36" font-size="11" font-weight="700" fill="#02569B" text-anchor="middle">Dart Source (*.dart)</text>
+      <text x="120" y="52" font-size="8.5" fill="#475569" text-anchor="middle">Standard codebase</text>
+
+      <path d="M215 45 L255 45" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="260" y="15" width="220" height="65" rx="5" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.2"/>
+      <text x="370" y="36" font-size="11" font-weight="700" fill="#00796B" text-anchor="middle">Dart AOT / JIT Compiler</text>
+      <text x="370" y="52" font-size="8.5" fill="#475569" text-anchor="middle">Optimized binary synthesis</text>
+
+      <path d="M485 45 L525 45" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="530" y="15" width="205" height="65" rx="5" fill="#F0FDF4" stroke="#10B981" stroke-width="1.2"/>
+      <text x="632" y="34" font-size="10.5" font-weight="700" fill="#15803D" text-anchor="middle">Target Outputs</text>
+      <text x="632" y="49" font-size="8" fill="#166534" text-anchor="middle">&bull; Native .exe / ELF binary</text>
+      <text x="632" y="62" font-size="8" fill="#166534" text-anchor="middle">&bull; JavaScript / WebAssembly</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.29: Dart Multi-Target Compilation Ecosystem</div>
+  </section>
+
+  <!-- SECTION 24 -->
+  <section id="section-24">
+    <h2>24. Dart Debugging and DevTools</h2>
+    <p>When code misbehaves, modern developers avoid relying solely on <code>print()</code> statements. Instead, they leverage the <strong>Dart Debugger</strong> and <strong>Dart DevTools</strong>:</p>
+    <ul>
+      <li><strong>Breakpoints:</strong> Pauses execution at a specific line of code.</li>
+      <li><strong>Step Over / Step Into:</strong> Advances execution line-by-line to watch variable values change.</li>
+      <li><strong>DevTools Suite:</strong> A browser-based diagnostic suite offering a CPU Profiler, Memory Leak Inspector, and Network Monitor.</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="20" width="130" height="42" rx="5" fill="#02569B"/>
+      <text x="85" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">1. Run Debugger</text>
+      <path d="M155 41 L175 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="180" y="20" width="140" height="42" rx="5" fill="#F59E0B"/>
+      <text x="250" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">2. Hit Breakpoint</text>
+      <path d="M325 41 L345 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="350" y="20" width="150" height="42" rx="5" fill="#00B4AB"/>
+      <text x="425" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">3. Inspect Variables</text>
+      <path d="M505 41 L525 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="530" y="20" width="115" height="42" rx="5" fill="#0175C2"/>
+      <text x="587" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">4. Step Lines</text>
+      <path d="M650 41 L670 41" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="675" y="20" width="70" height="42" rx="5" fill="#10B981"/>
+      <text x="710" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">5. Fix</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.30: Step-by-Step Debugging Lifecycle</div>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="15" width="220" height="55" rx="6" fill="#02569B"/>
+      <text x="140" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Debugger &amp; Logging</text>
+      <text x="140" y="54" font-size="9" fill="#E1F5FE" text-anchor="middle">Call stack &bull; Watch expressions</text>
+
+      <rect x="270" y="15" width="220" height="55" rx="6" fill="#00B4AB"/>
+      <text x="380" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">CPU Profiler &amp; Timeline</text>
+      <text x="380" y="54" font-size="9" fill="#E0F2F1" text-anchor="middle">Find bottlenecks &bull; Frame drops</text>
+
+      <rect x="510" y="15" width="220" height="55" rx="6" fill="#10B981"/>
+      <text x="620" y="38" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle">Memory &amp; Heap Inspector</text>
+      <text x="620" y="54" font-size="9" fill="#D1FAE5" text-anchor="middle">Track leaks &bull; Object allocations</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.31: Dart DevTools Diagnostic Suite Overview</div>
+  </section>
+
+  <!-- SECTION 25 -->
+  <section id="section-25">
+    <h2>25. Dart Documentation and Code Quality Tools</h2>
+    <p>Professional Dart codebases maintain code quality with automated tooling:</p>
+    <ul>
+      <li><code>dart doc</code>: Parses <code>///</code> doc comments across your project and emits a responsive HTML API documentation website.</li>
+      <li><code>dart fix --dry-run</code>: Previews automated fixes for deprecated APIs and lint suggestions.</li>
+      <li><code>dart fix --apply</code>: Automatically refactors your codebase with the recommended fixes!</li>
+    </ul>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="30" y="18" width="210" height="45" rx="5" fill="#02569B"/>
+      <text x="135" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart doc &bull; HTML Docs</text>
+      <path d="M245 40 L275 40" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="280" y="18" width="210" height="45" rx="5" fill="#00B4AB"/>
+      <text x="385" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart fix --dry-run</text>
+      <path d="M495 40 L525 40" stroke="#64748B" stroke-width="2"/>
+
+      <rect x="530" y="18" width="200" height="45" rx="5" fill="#10B981"/>
+      <text x="630" y="45" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle">dart fix --apply</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.32: Code Documentation and Automated Fix Pipeline</div>
+  </section>
+
+  <!-- SECTION 26 -->
+  <section id="section-26">
+    <h2>26. Complete Dart Development Workflow</h2>
+    <p>From initial scaffolding to final binary release, modern Dart engineering follows this clean 12-step lifecycle:</p>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="15" width="115" height="65" rx="5" fill="#02569B"/>
+      <text x="77" y="38" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">1. Scaffold</text>
+      <text x="77" y="55" font-size="8" fill="#E1F5FE" text-anchor="middle">dart create</text>
+
+      <path d="M140 45 L160 45" stroke="#64748B" stroke-width="1.5"/>
+
+      <rect x="165" y="15" width="125" height="65" rx="5" fill="#0175C2"/>
+      <text x="227" y="38" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">2. Packages</text>
+      <text x="227" y="55" font-size="8" fill="#E1F5FE" text-anchor="middle">dart pub add</text>
+
+      <path d="M295 45 L315 45" stroke="#64748B" stroke-width="1.5"/>
+
+      <rect x="320" y="15" width="135" height="65" rx="5" fill="#00B4AB"/>
+      <text x="387" y="38" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">3. Hygiene</text>
+      <text x="387" y="55" font-size="8" fill="#E0F2F1" text-anchor="middle">format &amp; analyze</text>
+
+      <path d="M460 45 L480 45" stroke="#64748B" stroke-width="1.5"/>
+
+      <rect x="485" y="15" width="120" height="65" rx="5" fill="#10B981"/>
+      <text x="545" y="38" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">4. Test &amp; Run</text>
+      <text x="545" y="55" font-size="8" fill="#D1FAE5" text-anchor="middle">dart test / run</text>
+
+      <path d="M610 45 L630 45" stroke="#64748B" stroke-width="1.5"/>
+
+      <rect x="635" y="15" width="105" height="65" rx="5" fill="#047857"/>
+      <text x="687" y="38" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle">5. Compile</text>
+      <text x="687" y="55" font-size="8" fill="#D1FAE5" text-anchor="middle">compile exe</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.33: The Complete End-to-End Dart Development Lifecycle</div>
+  </section>
+
+  <!-- SECTION 27 -->
+  <section id="section-27">
+    <h2>27. Common Beginner Mistakes</h2>
+    <p>Watch out for these frequent mistakes when working with Dart Isolates, packages, and CLI tooling:</p>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">Mistake 1: Expecting Isolates to Share Mutable Global Variables</div>
+      <p>Modifying a top-level or static variable inside a worker isolate has <strong>zero effect</strong> on that variable in the main isolate. Each isolate operates within its own private memory heap.</p>
+    </div>
+
+    <div class="callout callout-danger">
+      <div class="callout-title">Mistake 2: Assuming async/await Spawns a New Thread</div>
+      <p><code>await Future.delayed(...)</code> or <code>await http.get(...)</code> yields time on the <em>same single-threaded event loop</em>. It does not offload heavy CPU loops to another core.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Mistake 3: Manually Editing pubspec.lock</div>
+      <p>Never hand-edit <code>pubspec.lock</code>! Always edit <code>pubspec.yaml</code> and let <code>dart pub get</code> regenerate the lockfile deterministically.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Mistake 4: Putting Runtime Packages in dev_dependencies</div>
+      <p>Putting packages like <code>http</code> or <code>collection</code> into <code>dev_dependencies</code> causes runtime crashes when deploying production binaries, because dev dependencies are stripped during builds.</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Mistake 5: Forgetting to Close ReceivePorts</div>
+      <p>An open <code>ReceivePort</code> prevents the Dart VM from exiting. Always call <code>receivePort.close()</code> and terminate worker isolates when work is done.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 28 -->
+  <section id="section-28">
+    <h2>28. Real-Life Mini Programs</h2>
+    <p>Below are 6 complete, tested, and runnable Dart programs demonstrating Isolates, packages, and tooling patterns in action:</p>
+
+    <h3>Program 1: Large Number Calculator Using Isolate.run()</h3>
+    <p><strong>Real-Life Situation:</strong> Summing an astronomical range of integers in a background worker isolate without freezing the user interface.</p>
+    <div class="code-card">
+      <div class="code-header"><span>program1_isolate_run.dart</span><span>Dart 3.x Verified</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main Isolate: Starting background sum computation...&#x27;</span>);
+
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">int</span> sum = <span class="hljs-keyword">await</span> Isolate.run(() {
+    <span class="hljs-built_in">int</span> total = <span class="hljs-number">0</span>;
+    <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">1</span>; i &lt;= <span class="hljs-number">1000000</span>; i++) {
+      total += i;
+    }
+    <span class="hljs-keyword">return</span> total;
+  });
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main Isolate: Background sum result is <span class="hljs-subst">$sum</span>&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Main Isolate: Starting background sum computation...<br>
+Main Isolate: Background sum result is 500000500000
+    </div>
+
+    <h3>Program 2: Worker Isolate Calculator with Ports</h3>
+    <p><strong>Real-Life Situation:</strong> Spawning a dedicated math calculation worker isolate, establishing a two-way port handshake, passing numbers, and closing resources gracefully.</p>
+    <div class="code-card">
+      <div class="code-header"><span>program2_worker_isolate.dart</span><span>Dart 3.x Verified</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+<span class="hljs-keyword">void</span> calcWorker(SendPort mainSendPort) {
+  <span class="hljs-keyword">final</span> ReceivePort workerPort = ReceivePort();
+  mainSendPort.send(workerPort.sendPort);
+
+  workerPort.listen((message) {
+    <span class="hljs-keyword">if</span> (message <span class="hljs-keyword">is</span> <span class="hljs-built_in">List</span>) {
+      <span class="hljs-built_in">num</span> product = message[<span class="hljs-number">0</span>] * message[<span class="hljs-number">1</span>];
+      mainSendPort.send(product);
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (message == <span class="hljs-string">&#x27;close&#x27;</span>) {
+      workerPort.close();
+    }
+  });
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> ReceivePort mainPort = ReceivePort();
+  <span class="hljs-keyword">final</span> Isolate isolate = <span class="hljs-keyword">await</span> Isolate.spawn(calcWorker, mainPort.sendPort);
+
+  SendPort? workerSendPort;
+
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">for</span> (<span class="hljs-keyword">final</span> data <span class="hljs-keyword">in</span> mainPort) {
+    <span class="hljs-keyword">if</span> (workerSendPort == <span class="hljs-keyword">null</span> &amp;&amp; data <span class="hljs-keyword">is</span> SendPort) {
+      workerSendPort = data;
+      workerSendPort.send([<span class="hljs-number">6</span>, <span class="hljs-number">7</span>]); <span class="hljs-comment">// Send numbers to multiply</span>
+    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (data <span class="hljs-keyword">is</span> <span class="hljs-built_in">num</span>) {
+      <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Main received product: <span class="hljs-subst">$data</span>&#x27;</span>);
+      workerSendPort?.send(<span class="hljs-string">&#x27;close&#x27;</span>);
+      mainPort.close();
+      isolate.kill(priority: Isolate.immediate);
+      <span class="hljs-keyword">break</span>;
+    }
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Main received product: 42
+    </div>
+
+    <h3>Program 3: Background Data Processor</h3>
+    <p><strong>Real-Life Situation:</strong> Filtering even numbers and calculating their squares across a collection in an isolated worker thread.</p>
+    <div class="code-card">
+      <div class="code-header"><span>program3_data_processor.dart</span><span>Dart 3.x Verified</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> dataset = <span class="hljs-built_in">List</span>.generate(<span class="hljs-number">50</span>, (i) =&gt; i + <span class="hljs-number">1</span>);
+
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> processed = <span class="hljs-keyword">await</span> Isolate.run(() {
+    <span class="hljs-keyword">return</span> dataset.where((n) =&gt; n % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>).map((n) =&gt; n * n).toList();
+  });
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Processed count: <span class="hljs-subst">${processed.length}</span>&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;First 5 squares: <span class="hljs-subst">${processed.take(<span class="hljs-number">5</span>).toList()}</span>&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Processed count: 25<br>
+First 5 squares: [4, 16, 36, 64, 100]
+    </div>
+
+    <h3>Program 4: Package-Based Collection Utility</h3>
+    <p><strong>Real-Life Situation:</strong> Leveraging standard algorithms (such as grouping items by criteria) using packages or idiomatic Dart collections.</p>
+    <div class="code-card">
+      <div class="code-header"><span>program4_collection_utility.dart</span><span>Dart 3.x Verified</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">List</span> fruits = [<span class="hljs-string">&#x27;apple&#x27;</span>, <span class="hljs-string">&#x27;banana&#x27;</span>, <span class="hljs-string">&#x27;apricot&#x27;</span>, <span class="hljs-string">&#x27;blueberry&#x27;</span>, <span class="hljs-string">&#x27;cherry&#x27;</span>];
+
+  <span class="hljs-comment">// Grouping fruits by initial character</span>
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">Map</span>&gt; grouped = {};
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">final</span> fruit <span class="hljs-keyword">in</span> fruits) {
+    <span class="hljs-keyword">final</span> key = fruit[<span class="hljs-number">0</span>];
+    grouped.putIfAbsent(key, () =&gt; []).add(fruit);
+  }
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Grouped categories: <span class="hljs-subst">${grouped.keys.toList()}</span>&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Fruits starting with &quot;a&quot;: <span class="hljs-subst">${grouped[<span class="hljs-string">&quot;a&quot;</span>]}</span>&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output:</span>
+Grouped categories: [a, b, c]<br>
+Fruits starting with "a": [apple, apricot]
+    </div>
+
+    <h3>Program 5: Dart Project Quality Checker</h3>
+    <p><strong>Real-Life Situation:</strong> Running static analysis and format verification before committing code to version control.</p>
+    <div class="code-card">
+      <div class="code-header"><span>Terminal</span><span>Quality Commands</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>dart format --output=none --<span class="hljs-keyword">set</span>-exit-<span class="hljs-keyword">if</span>-changed .
+dart analyze --fatal-infos</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Verified CI/CD Quality Output:</span>
+Formatted 1 file (0 changed).<br>
+Analyzing project...<br>
+No issues found! (Exit Code 0)
+    </div>
+
+    <h3>Program 6: Simple Dart Testing Project</h3>
+    <p><strong>Real-Life Situation:</strong> Creating automated unit tests with assertions to guarantee zero regression bugs.</p>
+    <div class="code-card">
+      <div class="code-header"><span>test/unit_test_example.dart</span><span>Dart 3.x Verified</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;package:test/test.dart&#x27;</span>;
+
+<span class="hljs-built_in">bool</span> isEvenNumber(<span class="hljs-built_in">int</span> n) =&gt; n % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>;
+
+<span class="hljs-keyword">void</span> main() {
+  group(<span class="hljs-string">&#x27;Math Utility Tests&#x27;</span>, () {
+    test(<span class="hljs-string">&#x27;detects even numbers accurately&#x27;</span>, () {
+      expect(isEvenNumber(<span class="hljs-number">4</span>), isTrue);
+      expect(isEvenNumber(<span class="hljs-number">7</span>), isFalse);
+    });
+  });
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Verified Test Runner Output:</span>
+00:01 +1: Math Utility Tests detects even numbers accurately<br>
+00:01 +1: All tests passed!
+    </div>
+  </section>
+
+  <!-- SECTION 29 -->
+  <section id="section-29">
+    <h2>29. Quick Revision</h2>
+    <p>Here is your comprehensive cheat-sheet summarizing all core concepts of Dart Isolates, Packages, and Developer Tooling:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Concept / Command</th>
+          <th>Primary Role</th>
+          <th>Standard Usage Pattern</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Isolate</code></td>
+          <td>Independent thread with private heap &amp; event loop</td>
+          <td>True multi-core parallelism</td>
+        </tr>
+        <tr>
+          <td><code>Isolate.run()</code></td>
+          <td>One-off computation on worker isolate</td>
+          <td><code>await Isolate.run(() =&gt; heavyMath())</code></td>
+        </tr>
+        <tr>
+          <td><code>Isolate.spawn()</code></td>
+          <td>Spawns long-lived bidirectional worker</td>
+          <td><code>Isolate.spawn(entryPoint, sendPort)</code></td>
+        </tr>
+        <tr>
+          <td><code>ReceivePort / SendPort</code></td>
+          <td>Mailbox and delivery address pairing</td>
+          <td>Message passing between isolates</td>
+        </tr>
+        <tr>
+          <td><code>pub.dev</code></td>
+          <td>Central package registry</td>
+          <td>Discover open-source packages</td>
+        </tr>
+        <tr>
+          <td><code>pubspec.yaml</code></td>
+          <td>Project configuration &amp; dependency manifest</td>
+          <td>Declares dependencies &amp; SDK version</td>
+        </tr>
+        <tr>
+          <td><code>pubspec.lock</code></td>
+          <td>Exact pinned resolved versions snapshot</td>
+          <td>Deterministic reproducible builds</td>
+        </tr>
+        <tr>
+          <td><code>dart pub get</code></td>
+          <td>Resolves and downloads dependencies</td>
+          <td>Prepares local project cache</td>
+        </tr>
+        <tr>
+          <td><code>dart format .</code></td>
+          <td>Standardizes formatting to Dart style</td>
+          <td>Pre-commit code cleanup</td>
+        </tr>
+        <tr>
+          <td><code>dart analyze</code></td>
+          <td>Static analysis for errors &amp; lints</td>
+          <td>Validates code hygiene pre-compilation</td>
+        </tr>
+        <tr>
+          <td><code>dart test</code></td>
+          <td>Executes automated test suite</td>
+          <td>Guarantees zero regression bugs</td>
+        </tr>
+        <tr>
+          <td><code>dart compile exe</code></td>
+          <td>Ahead-Of-Time native binary compilation</td>
+          <td>Produces standalone executable file</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="svg-container">
+<svg viewBox="0 0 760 105" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="20" y="15" width="225" height="75" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+      <text x="132" y="38" font-size="11.5" font-weight="700" fill="#02569B" text-anchor="middle">Isolates &amp; Parallelism</text>
+      <text x="132" y="54" font-size="9" fill="#475569" text-anchor="middle">&bull; Private Memory Heap</text>
+      <text x="132" y="68" font-size="9" fill="#475569" text-anchor="middle">&bull; Isolate.run &amp; Isolate.spawn</text>
+      <text x="132" y="82" font-size="9" fill="#475569" text-anchor="middle">&bull; SendPort &amp; ReceivePort</text>
+
+      <rect x="265" y="15" width="230" height="75" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+      <text x="380" y="38" font-size="11.5" font-weight="700" fill="#15803D" text-anchor="middle">Package Ecosystem</text>
+      <text x="380" y="54" font-size="9" fill="#475569" text-anchor="middle">&bull; pub.dev Discovery</text>
+      <text x="380" y="68" font-size="9" fill="#475569" text-anchor="middle">&bull; pubspec.yaml Manifest</text>
+      <text x="380" y="82" font-size="9" fill="#475569" text-anchor="middle">&bull; pubspec.lock Pinning</text>
+
+      <rect x="515" y="15" width="225" height="75" rx="6" fill="#FDF4FF" stroke="#A855F7" stroke-width="1.5"/>
+      <text x="627" y="38" font-size="11.5" font-weight="700" fill="#7E22CE" text-anchor="middle">Developer Tooling</text>
+      <text x="627" y="54" font-size="9" fill="#475569" text-anchor="middle">&bull; dart format &amp; analyze</text>
+      <text x="627" y="68" font-size="9" fill="#475569" text-anchor="middle">&bull; dart test Suites</text>
+      <text x="627" y="82" font-size="9" fill="#475569" text-anchor="middle">&bull; AOT Native Compilation</text>
+    
+</svg>
+</div>
+<div class="diagram-caption">Figure 22.34: Topic 22 Final Concept Map: Isolates, Packages &amp; Tooling</div>
+  </section>
+
+  <!-- SECTION 30 -->
+  <section id="section-30">
+    <h2>30. Knowledge Check</h2>
+    <p>Test your mastery of Isolates, packages, and Dart developer tooling with these challenges:</p>
+
+    <h3>Output Prediction Challenges</h3>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 1: Isolate Variable Mutation Independence</div>
+      <p>What is printed by the following code?</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-built_in">int</span> counter = <span class="hljs-number">10</span>;
+
+<span class="hljs-keyword">void</span> worker(SendPort port) {
+  counter += <span class="hljs-number">50</span>;
+  port.send(counter);
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> port = ReceivePort();
+  <span class="hljs-keyword">await</span> Isolate.spawn(worker, port.sendPort);
+  <span class="hljs-keyword">final</span> workerVal = <span class="hljs-keyword">await</span> port.first;
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;workerVal: <span class="hljs-subst">$workerVal</span>, main counter: <span class="hljs-subst">$counter</span>&#x27;</span>);
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>workerVal: 60, main counter: 10</code><br>
+          <strong>Explanation:</strong> Because Isolates do not share mutable memory, the worker isolate received a copy of <code>counter = 10</code>, mutated its local copy to <code>60</code>, and sent it back. The Main Isolate's <code>counter</code> remained unchanged at <code>10</code>!
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 2: Exception Propagation via Isolate.run()</div>
+      <p>What happens when this program executes?</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-keyword">final</span> res = <span class="hljs-keyword">await</span> Isolate.run(() =&gt; <span class="hljs-keyword">throw</span> Exception(<span class="hljs-string">&#x27;Worker crashed&#x27;</span>));
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Result: <span class="hljs-subst">$res</span>&#x27;</span>);
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Caught in main: <span class="hljs-subst">$e</span>&#x27;</span>);
+  }
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>Caught in main: Exception: Worker crashed</code><br>
+          <strong>Explanation:</strong> <code>Isolate.run()</code> automatically catches unhandled exceptions inside the worker isolate, serializes them across the isolate boundary, and re-throws them at the await call site in the main isolate.
+        </div>
+      </details>
+    </div>
+
+    <h3>Beginner Coding Exercises</h3>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 1: Background Factorial Calculation</div>
+      <p>Write an asynchronous function <code>Future&lt;BigInt&gt; calculateFactorialInBackground(int n)</code> that uses <code>Isolate.run()</code> to compute the factorial of <code>n</code> without blocking the caller.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:isolate&#x27;</span>;
+
+Future calculateFactorialInBackground(<span class="hljs-built_in">int</span> n) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">await</span> Isolate.run(() {
+    BigInt result = BigInt.one;
+    <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">1</span>; i  main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> fact20 = <span class="hljs-keyword">await</span> calculateFactorialInBackground(<span class="hljs-number">20</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;20! = <span class="hljs-subst">$fact20</span>&#x27;</span>);
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 2: Dependency Classification</div>
+      <p>Classify each of the following packages as belonging to <code>dependencies</code> or <code>dev_dependencies</code>: <code>http</code>, <code>test</code>, <code>lints</code>, <code>path</code>, <code>build_runner</code>.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box">
+          <ul>
+            <li><strong>dependencies (Runtime):</strong> <code>http</code> (for network calls), <code>path</code> (for filesystem path manipulation)</li>
+            <li><strong>dev_dependencies (Tooling):</strong> <code>test</code> (unit testing), <code>lints</code> (static code analysis), <code>build_runner</code> (code generator engine)</li>
+          </ul>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 3: Automated Quality Pipeline Script</div>
+      <p>Write the exact sequence of 4 terminal commands to: format the project, analyze for errors, execute the test suite, and compile a standalone native executable.</p>
+      <details>
+        <summary>View Solution</summary>
+        <div class="explanation-box"><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code># <span class="hljs-number">1.</span> Format code according to Dart style guide
+dart format .
+
+# <span class="hljs-number">2.</span> Perform <span class="hljs-keyword">static</span> analysis <span class="hljs-keyword">for</span> lints and compiler diagnostics
+dart analyze
+
+# <span class="hljs-number">3.</span> Run all unit tests
+dart test
+
+# <span class="hljs-number">4.</span> Compile standalone native machine binary
+dart compile exe bin/main.dart -o my_app.exe</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <div style="margin-top: 0.3rem; padding-top: 0.15rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.72rem; color: var(--text-secondary);">
+    Congratulations on completing the entire 22-Topic CodeVerse Dart Curriculum! &bull; Stage 1 through Stage 6 Complete
+  </div>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 20: Sealed Classes &amp; Advanced Type Modeling in Kotlin | CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #7F52FF;
+      --brand-dark: #6336DF;
+      --brand-light: #F5F3FF;
+      --brand-border: #DDD6FE;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">KOTLIN Track</span>
+      <span class="badge badge-teal">Topic 20</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- HERO SECTION -->
+  <header class="hero">
+    <div class="hero-badge">Stage 5 &bull; Advanced Kotlin &bull; Topic 20</div>
+    <h1 class="hero-title">Sealed Classes &amp; Advanced Type Modeling in Kotlin</h1>
+    <p class="hero-subtitle">
+      Design bulletproof, type-safe domain models. Learn how <strong>Sealed Classes</strong> and <strong>Sealed Interfaces</strong> restrict class hierarchies so the compiler knows all possible states, eliminating <code>else</code> branches in <code>when</code> expressions and preventing invalid application states.
+    </p>
+  </header>
+
+  <!-- 1. UNDERSTANDING SEALED CLASSES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">1</span> Understanding Sealed Classes: What &amp; Why?</h2>
+    <p>
+      In standard object-oriented programming, any class marked <code>open</code> can be inherited by an unlimited number of unknown subclasses anywhere in your project.
+    </p>
+    <p>
+      A <strong>Sealed Class</strong> represents a <em>restricted class hierarchy</em>. All direct subclasses of a sealed class are known <strong>at compile time</strong>. No unknown third party can create new subclasses outside your defined package/module.
+    </p>
+
+    <div class="alert alert-note">
+      <div class="alert-icon">🚦</div>
+      <div class="alert-content">
+        <strong>Real-Life Analogy: The Traffic Signal.</strong><br>
+        A traffic light has a strictly closed set of possible states: <strong>Red</strong>, <strong>Yellow</strong>, and <strong>Green</strong>. A random driver cannot suddenly invent a "Purple" signal light.
+        A Sealed Class models this closed universe: every state is known and accounted for!
+      </div>
+    </div>
+
+    <!-- Diagram 1: Sealed Hierarchy -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 1.1: Closed Hierarchy of Sealed Classes</div>
+      <svg viewBox="0 0 620 90" xmlns="http://www.w3.org/2000/svg">
+        <rect x="220" y="8" width="180" height="32" rx="6" fill="#1E293B" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="310" y="24" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">sealed class TrafficLight</text>
+        <text x="310" y="34" fill="#94A3B8" font-size="8" text-anchor="middle" font-family="monospace">Closed set of known states</text>
+
+        <path d="M 310 40 L 310 54 M 100 54 L 520 54 M 100 54 L 100 62 M 310 54 L 310 62 M 520 54 L 520 62" fill="none" stroke="#64748B" stroke-width="1.5"/>
+
+        <rect x="20" y="62" width="160" height="24" rx="4" fill="#0F172A" stroke="#EF4444" stroke-width="1.4"/>
+        <text x="100" y="78" fill="#F87171" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">Red (Stop)</text>
+
+        <rect x="230" y="62" width="160" height="24" rx="4" fill="#0F172A" stroke="#F59E0B" stroke-width="1.4"/>
+        <text x="310" y="78" fill="#FBBF24" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">Yellow (Wait)</text>
+
+        <rect x="440" y="62" width="160" height="24" rx="4" fill="#0F172A" stroke="#10B981" stroke-width="1.4"/>
+        <text x="520" y="78" fill="#34D399" font-size="10" font-weight="700" text-anchor="middle" font-family="sans-serif">Green (Go)</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 2. SEALED CLASSES WITH WHEN -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">2</span> Exhaustive <code>when</code> Expressions (No <code>else</code> Needed!)</h2>
+    <p>
+      The greatest superpower of a sealed class is its synergy with the <span class="pill pill-purple">when</span> expression. Because the Kotlin compiler knows <em>every possible subclass</em>, it can verify that your <code>when</code> expression covers 100% of the cases.
+    </p>
+
+    <!-- Diagram 2: Exhaustive when flow -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 2.1: Compiler Guarantees All Cases Are Handled</div>
+      <svg viewBox="0 0 620 80" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="12" width="230" height="56" rx="6" fill="#1E293B" stroke="#0284C7" stroke-width="1.6"/>
+        <text x="140" y="32" fill="#38BDF8" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">when (state)</text>
+        <text x="140" y="48" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="monospace">is Red -&gt; ... is Yellow -&gt; ...</text>
+        <text x="140" y="60" fill="#34D399" font-size="8.5" font-weight="700" text-anchor="middle" font-family="sans-serif">✅ Exhaustive: NO 'else' branch needed!</text>
+
+        <path d="M 265 40 L 335 40" fill="none" stroke="#7F52FF" stroke-width="2" marker-end="url(#arrowPurple)"/>
+        <defs>
+          <marker id="arrowPurple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#7F52FF"/>
+          </marker>
+        </defs>
+
+        <rect x="345" y="12" width="250" height="56" rx="6" fill="#0F172A" stroke="#7F52FF" stroke-width="1.8"/>
+        <text x="470" y="32" fill="#DDD6FE" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">Add New Subclass: BlinkingRed</text>
+        <text x="470" y="48" fill="#F87171" font-size="8.5" font-weight="700" text-anchor="middle" font-family="monospace">Compiler halts: 'when' must be exhaustive!</text>
+        <text x="470" y="60" fill="#E2E8F0" font-size="8" text-anchor="middle" font-family="sans-serif">Bugs are caught before running!</text>
+      </svg>
+    </div>
+
+    <div class="alert alert-tip">
+      <div class="alert-icon">💡</div>
+      <div class="alert-content">
+        <strong>Why omit the <code>else</code> branch?</strong> If you use an <code>else</code> branch, you lose compile-time safety! When a teammate adds a new state tomorrow (like <code>Cancelled</code>), the compiler won't warn you—it will silently run the default <code>else</code> code. Without <code>else</code>, the compiler forces you to handle the new state immediately!
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. CODE EXAMPLES 1 to 10 -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">3</span> Practical Sealed Classes (Examples 1 – 10)</h2>
+
+    <!-- Examples 1-4 -->
+    <h3 style="font-size: 13.5px; margin: 8px 0 3px; color: var(--brand-kotlin);">Examples 1 – 4: Basic Sealed Class with Exhaustive <code>when</code></h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SealedClassBasic.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shape</span> </span>{
+    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Circle</span></span>(<span class="hljs-keyword">val</span> radius: <span class="hljs-built_in">Double</span>) : Shape()
+    <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Rectangle</span></span>(<span class="hljs-keyword">val</span> width: <span class="hljs-built_in">Double</span>, <span class="hljs-keyword">val</span> height: <span class="hljs-built_in">Double</span>) : Shape()
+    <span class="hljs-keyword">object</span> Point : Shape() <span class="hljs-comment">// Singleton object state!</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">computeArea</span><span class="hljs-params">(shape: <span class="hljs-type">Shape</span>)</span></span>: <span class="hljs-built_in">Double</span> = <span class="hljs-keyword">when</span> (shape) {
+    <span class="hljs-keyword">is</span> Shape.Circle -&gt; <span class="hljs-number">3.14159</span> * shape.radius * shape.radius
+    <span class="hljs-keyword">is</span> Shape.Rectangle -&gt; shape.width * shape.height
+    Shape.Point -&gt; <span class="hljs-number">0.0</span>
+    <span class="hljs-comment">// No &#x27;else&#x27; branch needed: all Shape subclasses are handled!</span>
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> c = Shape.Circle(<span class="hljs-number">4.0</span>)
+    <span class="hljs-keyword">val</span> r = Shape.Rectangle(<span class="hljs-number">3.0</span>, <span class="hljs-number">5.0</span>)
+    println(<span class="hljs-string">&quot;Circle Area: <span class="hljs-subst">${computeArea(c)}</span>&quot;</span>)
+    println(<span class="hljs-string">&quot;Rect Area: <span class="hljs-subst">${computeArea(r)}</span>&quot;</span>)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Circle Area: 50.26544<br>
+      Rect Area: 15.0
+    </div>
+
+    <!-- Example 5: Payment Status -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Example 5: Payment Processing States</h3>
+    <p style="font-size: 12px;">Notice how each subclass can carry distinct data (e.g. transactionId, errorCode) or no data at all.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">PaymentStatusDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">PaymentStatus</span> </span>{
+    <span class="hljs-keyword">object</span> Pending : PaymentStatus()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Success</span></span>(<span class="hljs-keyword">val</span> txnId: String, <span class="hljs-keyword">val</span> amount: <span class="hljs-built_in">Double</span>) : PaymentStatus()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Failed</span></span>(<span class="hljs-keyword">val</span> reason: String, <span class="hljs-keyword">val</span> errorCode: <span class="hljs-built_in">Int</span>) : PaymentStatus()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">renderPayment</span><span class="hljs-params">(status: <span class="hljs-type">PaymentStatus</span>)</span></span> = <span class="hljs-keyword">when</span> (status) {
+    PaymentStatus.Pending -&gt; println(<span class="hljs-string">&quot;⏳ Awaiting bank gateway confirmation...&quot;</span>)
+    <span class="hljs-keyword">is</span> PaymentStatus.Success -&gt; println(<span class="hljs-string">&quot;✅ Paid \$<span class="hljs-subst">${status.amount}</span> (Txn: <span class="hljs-subst">${status.txnId}</span>)&quot;</span>)
+    <span class="hljs-keyword">is</span> PaymentStatus.Failed -&gt; println(<span class="hljs-string">&quot;❌ Error [<span class="hljs-subst">${status.errorCode}</span>]: <span class="hljs-subst">${status.reason}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    renderPayment(PaymentStatus.Pending)
+    renderPayment(PaymentStatus.Success(<span class="hljs-string">&quot;TXN_9482&quot;</span>, <span class="hljs-number">49.99</span>))
+    renderPayment(PaymentStatus.Failed(<span class="hljs-string">&quot;Insufficient funds&quot;</span>, <span class="hljs-number">402</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      ⏳ Awaiting bank gateway confirmation...<br>
+      ✅ Paid $49.99 (Txn: TXN_9482)<br>
+      ❌ Error [402]: Insufficient funds
+    </div>
+
+    <!-- Examples 6 & 7: Sealed Interfaces -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 6 &amp; 7: Sealed Interfaces &amp; Multiple Inheritance</h3>
+    <p style="font-size: 12px;">A <code>sealed interface</code> permits a class to belong to multiple closed hierarchies simultaneously.</p>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">SealedInterfaceDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">UIEvent</span></span>
+<span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">interface</span> <span class="hljs-title">Loggable</span></span>
+
+<span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">ButtonClick</span></span>(<span class="hljs-keyword">val</span> btnId: String) : UIEvent, Loggable
+<span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SwipeGesture</span></span>(<span class="hljs-keyword">val</span> direction: String) : UIEvent
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">handleEvent</span><span class="hljs-params">(e: <span class="hljs-type">UIEvent</span>)</span></span> = <span class="hljs-keyword">when</span> (e) {
+    <span class="hljs-keyword">is</span> ButtonClick -&gt; println(<span class="hljs-string">&quot;Button Clicked: <span class="hljs-subst">${e.btnId}</span>&quot;</span>)
+    <span class="hljs-keyword">is</span> SwipeGesture -&gt; println(<span class="hljs-string">&quot;Swiped: <span class="hljs-subst">${e.direction}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    handleEvent(ButtonClick(<span class="hljs-string">&quot;checkout_button&quot;</span>))
+    handleEvent(SwipeGesture(<span class="hljs-string">&quot;LEFT&quot;</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Button Clicked: checkout_button<br>
+      Swiped: LEFT
+    </div>
+
+    <!-- Examples 8-10: Nested Sealed Hierarchy & Data Objects -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 8 – 10: Nested Hierarchy &amp; Singleton State Objects</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">NestedStateHierarchy.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Resource</span> </span>{
+    <span class="hljs-keyword">object</span> Idle : Resource()
+    <span class="hljs-keyword">object</span> Loading : Resource()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Success</span></span>(<span class="hljs-keyword">val</span> <span class="hljs-keyword">data</span>: T) : Resource()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Error</span></span>(<span class="hljs-keyword">val</span> message: String) : Resource()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">renderState</span><span class="hljs-params">(res: <span class="hljs-type">Resource</span>)</span></span> = <span class="hljs-keyword">when</span> (res) {
+    Resource.Idle -&gt; println(<span class="hljs-string">&quot;Standby mode&quot;</span>)
+    Resource.Loading -&gt; println(<span class="hljs-string">&quot;Spinner active...&quot;</span>)
+    <span class="hljs-keyword">is</span> Resource.Success -&gt; println(<span class="hljs-string">&quot;Loaded payload: <span class="hljs-subst">${res.data}</span>&quot;</span>)
+    <span class="hljs-keyword">is</span> Resource.Error -&gt; println(<span class="hljs-string">&quot;Failed: <span class="hljs-subst">${res.message}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    renderState(Resource.Loading)
+    renderState(Resource.Success(<span class="hljs-string">&quot;User Profile JSON&quot;</span>))
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Spinner active...<br>
+      Loaded payload: User Profile JSON
+    </div>
+  </section>
+
+  <!-- 4. ADVANCED TYPE MODELING (Examples 11 to 20) -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">4</span> Advanced Type Modeling: Eliminating Invalid States</h2>
+    <p>
+      Beginner developers often use "Boolean flag soup" to manage application states:
+      <code>var isLoading = false; var data: String? = null; var error: String? = null;</code>.
+    </p>
+    <p>
+      This leads to dangerous impossible states (e.g., what if <code>isLoading == true</code> AND <code>error != null</code> AND <code>data != null</code> at the same time?).
+      <strong>Type Modeling</strong> solves this by making impossible states <em>unrepresentable in code</em>!
+    </p>
+
+    <!-- Diagram 3: Flag soup vs Sealed Modeling -->
+    <div class="diagram-wrapper">
+      <div class="diagram-title">Diagram 4.1: Flag Soup vs Type-Safe Sealed Modeling</div>
+      <svg viewBox="0 0 620 85" xmlns="http://www.w3.org/2000/svg">
+        <rect x="25" y="12" width="260" height="60" rx="6" fill="#1E293B" stroke="#EF4444" stroke-width="1.6"/>
+        <text x="155" y="30" fill="#FCA5A5" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">❌ Bad: Boolean Flag Soup</text>
+        <text x="155" y="46" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="monospace">var isLoading: Boolean = false</text>
+        <text x="155" y="58" fill="#94A3B8" font-size="8.5" text-anchor="middle" font-family="monospace">var data: String? = null; var error: String? = null</text>
+
+        <rect x="335" y="12" width="260" height="60" rx="6" fill="#0F172A" stroke="#10B981" stroke-width="1.8"/>
+        <text x="465" y="30" fill="#6EE7B7" font-size="11" font-weight="700" text-anchor="middle" font-family="sans-serif">✅ Good: Sealed Class Modeling</text>
+        <text x="465" y="46" fill="#34D399" font-size="9" font-weight="700" text-anchor="middle" font-family="monospace">sealed class ScreenState</text>
+        <text x="465" y="58" fill="#DDD6FE" font-size="8.5" text-anchor="middle" font-family="sans-serif">Only ONE valid state can exist at a time!</text>
+      </svg>
+    </div>
+
+    <!-- Example 11-14: Order Tracking & Authentication -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 11 – 14: Real-World Order Tracking State Machine</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">OrderStateModeling.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">OrderStatus</span> </span>{
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Placed</span></span>(<span class="hljs-keyword">val</span> orderId: String, <span class="hljs-keyword">val</span> timestamp: <span class="hljs-built_in">Long</span>) : OrderStatus()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Shipped</span></span>(<span class="hljs-keyword">val</span> trackingNumber: String, <span class="hljs-keyword">val</span> carrier: String) : OrderStatus()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Delivered</span></span>(<span class="hljs-keyword">val</span> signedBy: String) : OrderStatus()
+    <span class="hljs-keyword">object</span> Cancelled : OrderStatus()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">printOrderStatus</span><span class="hljs-params">(status: <span class="hljs-type">OrderStatus</span>)</span></span> = <span class="hljs-keyword">when</span> (status) {
+    <span class="hljs-keyword">is</span> OrderStatus.Placed -&gt; println(<span class="hljs-string">&quot;Order #<span class="hljs-subst">${status.orderId}</span> received.&quot;</span>)
+    <span class="hljs-keyword">is</span> OrderStatus.Shipped -&gt; println(<span class="hljs-string">&quot;On the way via <span class="hljs-subst">${status.carrier}</span> (Track: <span class="hljs-subst">${status.trackingNumber}</span>)&quot;</span>)
+    <span class="hljs-keyword">is</span> OrderStatus.Delivered -&gt; println(<span class="hljs-string">&quot;Package delivered! Signed by <span class="hljs-subst">${status.signedBy}</span>.&quot;</span>)
+    OrderStatus.Cancelled -&gt; println(<span class="hljs-string">&quot;Order was cancelled.&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> current = OrderStatus.Shipped(<span class="hljs-string">&quot;TRK-9021&quot;</span>, <span class="hljs-string">&quot;BlueDart Express&quot;</span>)
+    printOrderStatus(current)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      On the way via BlueDart Express (Track: TRK-9021)
+    </div>
+
+    <!-- Examples 15-18: Food Delivery & Authentication -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 15 – 18: User Authentication State Machine</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">AuthStateModeling.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span></span>(<span class="hljs-keyword">val</span> username: String, <span class="hljs-keyword">val</span> email: String)
+
+<span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AuthState</span> </span>{
+    <span class="hljs-keyword">object</span> LoggedOut : AuthState()
+    <span class="hljs-keyword">object</span> Authenticating : AuthState()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Authenticated</span></span>(<span class="hljs-keyword">val</span> user: User) : AuthState()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Error</span></span>(<span class="hljs-keyword">val</span> message: String) : AuthState()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">displayNavHeader</span><span class="hljs-params">(state: <span class="hljs-type">AuthState</span>)</span></span> = <span class="hljs-keyword">when</span> (state) {
+    AuthState.LoggedOut -&gt; println(<span class="hljs-string">&quot;Header: [Login] [Register]&quot;</span>)
+    AuthState.Authenticating -&gt; println(<span class="hljs-string">&quot;Header: Logging in...&quot;</span>)
+    <span class="hljs-keyword">is</span> AuthState.Authenticated -&gt; println(<span class="hljs-string">&quot;Header: Welcome, <span class="hljs-subst">${state.user.username}</span>!&quot;</span>)
+    <span class="hljs-keyword">is</span> AuthState.Error -&gt; println(<span class="hljs-string">&quot;Header: Error - <span class="hljs-subst">${state.message}</span>&quot;</span>)
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> loggedIn = AuthState.Authenticated(User(<span class="hljs-string">&quot;aditi_dev&quot;</span>, <span class="hljs-string">&quot;aditi@codeverse.com&quot;</span>))
+    displayNavHeader(loggedIn)
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      Header: Welcome, aditi_dev!
+    </div>
+
+    <!-- Examples 19-20: Media Playback State -->
+    <h3 style="font-size: 13.5px; margin: 10px 0 3px; color: var(--brand-kotlin);">Examples 19 &amp; 20: Media Playback State Modeling</h3>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-lang-badge">Kotlin</span>
+        <span class="code-filename">MediaPlaybackDemo.kt</span>
+      </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">KOTLIN Script</span>
+    <div class="code-actions">
+      <span class="code-badge">KOTLIN</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">sealed</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Playback</span> </span>{
+    <span class="hljs-keyword">object</span> Stopped : Playback()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Playing</span></span>(<span class="hljs-keyword">val</span> title: String, <span class="hljs-keyword">val</span> positionSec: <span class="hljs-built_in">Int</span>) : Playback()
+    <span class="hljs-keyword">data</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Paused</span></span>(<span class="hljs-keyword">val</span> title: String, <span class="hljs-keyword">val</span> positionSec: <span class="hljs-built_in">Int</span>) : Playback()
+}
+
+<span class="hljs-function"><span class="hljs-keyword">fun</span> <span class="hljs-title">main</span><span class="hljs-params">()</span></span> {
+    <span class="hljs-keyword">val</span> states: List = listOf(
+        Playback.Stopped,
+        Playback.Playing(<span class="hljs-string">&quot;Kotlin Symphony&quot;</span>, <span class="hljs-number">45</span>),
+        Playback.Paused(<span class="hljs-string">&quot;Kotlin Symphony&quot;</span>, <span class="hljs-number">45</span>)
+    )
+
+    <span class="hljs-keyword">for</span> (s <span class="hljs-keyword">in</span> states) {
+        <span class="hljs-keyword">when</span> (s) {
+            Playback.Stopped -&gt; println(<span class="hljs-string">&quot;⏹ Player idle&quot;</span>)
+            <span class="hljs-keyword">is</span> Playback.Playing -&gt; println(<span class="hljs-string">&quot;▶ Playing &#x27;<span class="hljs-subst">${s.title}</span>&#x27; at <span class="hljs-subst">${s.positionSec}</span>s&quot;</span>)
+            <span class="hljs-keyword">is</span> Playback.Paused -&gt; println(<span class="hljs-string">&quot;⏸ Paused &#x27;<span class="hljs-subst">${s.title}</span>&#x27; at <span class="hljs-subst">${s.positionSec}</span>s&quot;</span>)
+        }
+    }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-box">
+      <span class="output-label">Terminal Output</span>
+      ⏹ Player idle<br>
+      ▶ Playing 'Kotlin Symphony' at 45s<br>
+      ⏸ Paused 'Kotlin Symphony' at 45s
+    </div>
+  </section>
+
+  <!-- 5. COMPARISON TABLES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">5</span> Architectural Comparison Tables</h2>
+
+    <h3 style="font-size: 13px; margin: 6px 0 3px; color: var(--text-primary);">Table 1: Normal Class vs Sealed Class vs Enum</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Normal Class</th>
+            <th>Enum Class</th>
+            <th>Sealed Class</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Subclasses</strong></td>
+            <td>Unlimited, open anywhere</td>
+            <td>None (fixed constant objects)</td>
+            <td>Restricted, defined at compile-time</td>
+          </tr>
+          <tr>
+            <td><strong>Different Data per State?</strong></td>
+            <td>Yes, but hierarchy is unsealed</td>
+            <td>❌ All constants share same structure</td>
+            <td>✅ Each subclass can hold unique data</td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Instances?</strong></td>
+            <td>Unlimited instances</td>
+            <td>One singleton per enum value</td>
+            <td>Can mix Data Classes and Objects</td>
+          </tr>
+          <tr>
+            <td><strong>Exhaustive 'when'?</strong></td>
+            <td>Requires <code>else</code> branch</td>
+            <td>Exhaustive (no <code>else</code> needed)</td>
+            <td>Exhaustive (no <code>else</code> needed)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size: 13px; margin: 10px 0 3px; color: var(--text-primary);">Table 2: Sealed Class vs Sealed Interface</h3>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Dimension</th>
+            <th>Sealed Class</th>
+            <th>Sealed Interface</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Constructors &amp; State</strong></td>
+            <td>✅ Can have constructors and stored state</td>
+            <td>❌ No constructors (cannot store state)</td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Implementations</strong></td>
+            <td>Single inheritance only</td>
+            <td>A class can implement multiple sealed interfaces</td>
+          </tr>
+          <tr>
+            <td><strong>Enums Participation</strong></td>
+            <td>Enums cannot inherit a sealed class</td>
+            <td>Enums <strong>can</strong> implement a sealed interface</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. COMMON BEGINNER MISTAKES -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">6</span> Common Beginner Mistakes &amp; How to Fix Them</h2>
+
+    <div class="grid-2">
+      <!-- Mistake 1 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 1. Adding unnecessary 'else' in sealed when</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>when(state) { ... else -&gt; Unit } // Silences compiler warnings!</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Omit <code>else</code> so the compiler alerts you whenever a new state is introduced.</p>
+      </div>
+
+      <!-- Mistake 2 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 2. Trying to instantiate a Sealed Class</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>val s = ScreenState() // Error: Cannot create instance of sealed class</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Instantiate a concrete subclass: <code>ScreenState.Success(...)</code>.</p>
+      </div>
+
+      <!-- Mistake 3 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 3. Using Enum when states need different data</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;">Enums force all entries to have the exact same constructor fields.</p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Use a sealed class so <code>Success</code> has data while <code>Loading</code> has none.</p>
+      </div>
+
+      <!-- Mistake 4 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 4. Subclassing outside allowed module</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;">Subclasses must be declared in the same package and compilation module.</p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Keep all subclasses inside the package where the sealed class is declared.</p>
+      </div>
+
+      <!-- Mistake 5 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 5. Forgetting 'data' keyword on state class</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;"><code>class Success(val user: User) : State() // Missing equals/hashCode</code></p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Use <code>data class Success(...)</code> for automatic structural equality.</p>
+      </div>
+
+      <!-- Mistake 6 -->
+      <div class="grid-card">
+        <div class="grid-card-title" style="color: #DC2626;">❌ 6. Using mutable boolean flag soup</div>
+        <p style="font-size: 11.5px; margin-bottom: 3px;">Managing <code>isLoading</code>, <code>isError</code>, <code>isSuccess</code> flags creates invalid overlaps.</p>
+        <p style="font-size: 11.5px; color: #047857;"><strong>Fix:</strong> Model states with a sealed class to guarantee mutually exclusive truth.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. QUICK REVISION -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">7</span> Quick Revision: 12 Key Takeaways</h2>
+    <ul style="font-size: 12.5px; line-height: 1.55;">
+      <li><strong>1. Sealed Class:</strong> A restricted class hierarchy where all direct subclasses are known at compile time.</li>
+      <li><strong>2. Exhaustive 'when':</strong> The compiler knows every subclass, so no <code>else</code> branch is required.</li>
+      <li><strong>3. Future Proofing:</strong> Adding a new subclass forces you to handle it in every <code>when</code> expression.</li>
+      <li><strong>4. Non-Instantiable:</strong> Sealed classes are abstract by default and cannot be instantiated directly.</li>
+      <li><strong>5. Varied Data:</strong> Unlike Enums, subclasses of a sealed class can have completely different properties.</li>
+      <li><strong>6. Singleton States:</strong> Use <code>object</code> or <code>data object</code> for states that carry no data (e.g. <code>Loading</code>, <code>Idle</code>).</li>
+      <li><strong>7. Data States:</strong> Use <code>data class</code> for states carrying payloads (e.g. <code>Success(data)</code>, <code>Error(msg)</code>).</li>
+      <li><strong>8. Sealed Interfaces:</strong> Allows classes to participate in multiple sealed hierarchies and enables Enum integration.</li>
+      <li><strong>9. Type Modeling:</strong> Designing types so that impossible or illegal application states cannot be represented.</li>
+      <li><strong>10. Package Boundary:</strong> Direct subclasses must be in the same package and compilation unit.</li>
+      <li><strong>11. Pattern Matching:</strong> <code>when (res) { is Success -&gt; ... }</code> automatically smart-casts <code>res</code> to <code>Success</code>!</li>
+      <li><strong>12. Industry Standard:</strong> Sealed classes are the foundation of state management in Android and Jetpack Compose.</li>
+    </ul>
+  </section>
+
+  <!-- 8. PRACTICE QUESTIONS & ASSESSMENT -->
+  <section class="section-card">
+    <h2 class="section-title"><span class="section-title-icon">8</span> Practice &amp; Assessment: Test Your Knowledge</h2>
+
+    <!-- MCQs -->
+    <div class="quiz-card">
+      <div class="quiz-question">1. What is the fundamental difference between an Enum class and a Sealed class?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Enum constants must all share the exact same constructor fields, while Sealed class subclasses can carry completely different data structures</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Enum classes support exhaustive when, while sealed classes always require an else branch</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Sealed classes can be instantiated directly with `SealedClass()`, while enums cannot</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Enums can only hold String values, while sealed classes can only hold numbers</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Sealed classes are an extension of enum concepts: each state in a sealed hierarchy can be a distinct class with its own customized fields and methods.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">2. Why is omitting the `else` branch in a sealed class `when` expression recommended?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Because if a new subclass is added later, the compiler will trigger an error reminding you to handle it</div>
+        <div class="quiz-opt incorrect">&#x2716; B) Because the else branch slows down execution on mobile processors</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Because Kotlin 2.0 has deprecated the else keyword entirely</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Because sealed classes cannot execute code inside an else branch</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> Omitting <code>else</code> ensures compile-time exhaustiveness: adding a new subclass forces you to explicitly handle the new state everywhere.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">3. Where must direct subclasses of a sealed class be declared?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) In the same package and module as the sealed class itself</div>
+        <div class="quiz-opt incorrect">&#x2716; B) In any package across any library jar</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Strictly nested inside the sealed class body only</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Inside a companion object</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> In modern Kotlin, direct subclasses of a sealed class can be top-level or nested, provided they reside in the same package and compilation module.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">4. How should a state that carries no parameters (like `Loading` or `Idle`) be represented inside a sealed class?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) As an `object` or `data object` singleton declaration</div>
+        <div class="quiz-opt incorrect">&#x2716; B) As an empty function pointer</div>
+        <div class="quiz-opt incorrect">&#x2716; C) As a private constructor parameter</div>
+        <div class="quiz-opt incorrect">&#x2716; D) As a nullable String property</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> States without parameters don't need multiple instances; using a singleton <code>object</code> avoids allocating duplicate objects in memory.
+      </div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">5. Can an enum class implement a `sealed interface` in Kotlin?</div>
+      <div class="quiz-options">
+        <div class="quiz-opt correct">&#x2714; A) Yes, enum classes can implement sealed interfaces</div>
+        <div class="quiz-opt incorrect">&#x2716; B) No, enums can only implement standard non-sealed interfaces</div>
+        <div class="quiz-opt incorrect">&#x2716; C) Only if the enum has zero constant values</div>
+        <div class="quiz-opt incorrect">&#x2716; D) Only if the sealed interface has a constructor</div>
+      </div>
+      <div class="quiz-explanation">
+        <strong>Explanation:</strong> One major benefit of sealed interfaces is that enum classes can implement them, enabling flexible hybrid type hierarchies.
+      </div>
+    </div>
+
+    <!-- Output Prediction Exercises -->
+    <div class="grid-card" style="margin-top: 10px; background: #F8FAFC;">
+      <div class="grid-card-title">🔍 Output Prediction Practice</div>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q1:</strong> Given <code>sealed class R; object S : R()</code>, what does <code>println(S == S)</code> output?<br>
+      <em>Answer:</em> <code>true</code> (singleton object equality).</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q2:</strong> Inside <code>when(res) { is Success -&gt; res.data }</code>, is manual casting required?<br>
+      <em>Answer:</em> No, Kotlin smart-casts <code>res</code> to <code>Success</code> automatically.</p>
+      <p style="font-size: 11.8px; margin-bottom: 4px;"><strong>Q3:</strong> Can <code>val x = SealedClass()</code> be compiled?<br>
+      <em>Answer:</em> No, compile error: sealed classes are abstract and cannot be instantiated directly.</p>
+    </div>
+
+    <!-- Hands-On Coding Challenges -->
+    <div class="grid-card" style="margin-top: 8px; background: #F8FAFC;">
+      <div class="grid-card-title">💻 Hands-On Coding Challenges</div>
+      <ol style="margin-left: 18px; font-size: 11.8px; line-height: 1.5;">
+        <li><strong>Network Result Modeling:</strong> Create a <code>sealed class NetworkResult&lt;out T&gt;</code> with <code>Loading</code> (object), <code>Success(val data: T)</code>, and <code>Error(val exception: String)</code>.</li>
+        <li><strong>Music Player State:</strong> Model a <code>sealed class PlayerState</code> with <code>Idle</code>, <code>Buffering(val percent: Int)</code>, <code>Playing(val track: String)</code>, and <code>Paused(val track: String)</code>.</li>
+        <li><strong>Food Order Delivery:</strong> Write a <code>when</code> expression evaluating an <code>OrderState</code> that prints real-time delivery estimates for each stage.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+

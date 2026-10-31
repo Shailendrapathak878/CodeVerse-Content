@@ -1,0 +1,3261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R Topic 17: dplyr &amp; Tidy Data - CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #276DC3;
+      --brand-dark: #19355E;
+      --brand-light: #F0F4F8;
+      --brand-border: #C8D7E8;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">R Track</span>
+      <span class="badge badge-teal">Topic 17</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+<div class="topic-container">
+
+  <!-- Header -->
+  <header class="topic-header">
+    <div class="badge-stage">R Programming &bull; Stage 4: Tabular Data Structures &amp; Manipulation</div>
+    <h1>Topic 17: dplyr &amp; Tidy Data in R</h1>
+    <p>Master the Grammar of Data Manipulation, Relational Joins, Tidy Data Reshaping &amp; Feature Pipelines for Modern Data Science &amp; AI</p>
+  </header>
+
+  <!-- 1. Topic Introduction -->
+  <section class="section-card">
+    <h2>1. Topic Introduction</h2>
+    <p>In modern data science and machine learning, data preparation is governed by the <strong>tidyverse</strong>—an opinionated collection of R packages designed to make data science faster, more readable, and mathematically coherent. At the heart of this ecosystem lies <code>dplyr</code>, known as the "grammar of data manipulation", and the concept of <strong>Tidy Data</strong> developed by Hadley Wickham.</p>
+    <p>While Base R provides bracket indexing (<code>df[rows, cols]</code>), real-world data pipelines quickly become unreadable when operations are nested inside multiple brackets. <code>dplyr</code> replaces complex indexing with clear, expressive verbs that read like English prose: <code>select()</code>, <code>filter()</code>, <code>arrange()</code>, <code>mutate()</code>, <code>summarise()</code>, and relational joins.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="25" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="120" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Grammar of Data</text>
+  <text x="120" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Intuitive functional verbs</text>
+  <text x="120" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">select, filter, mutate, arrange</text>
+  <rect x="245" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+  <text x="340" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Blazing Fast (C++)</text>
+  <text x="340" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">High-performance engine</text>
+  <text x="340" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Optimized memory management</text>
+  <rect x="465" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+  <text x="560" y="48" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Piping Pipelines</text>
+  <text x="560" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Chains cleanly with %&gt;% or |&gt;</text>
+  <text x="560" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Readable top-to-bottom code</text>
+</svg></div>
+    <div class="info-callout">
+      <strong>Core Philosophy:</strong> Programs should be written for people to read, and only incidentally for machines to execute. The pipe operator (<code>%&gt;%</code> or <code>|&gt;</code>) lets you chain data operations into an intuitive assembly line.
+    </div>
+  </section>
+
+  <!-- 2. Learning Objectives -->
+  <section class="section-card">
+    <h2>2. Learning Objectives</h2>
+    <p>Upon completing this comprehensive topic, you will be equipped to:</p>
+    <ul>
+      <li><strong>Master Core Verbs:</strong> Effortlessly filter rows with <code>filter()</code>, pick variables with <code>select()</code>, sort observations with <code>arrange()</code>, and engineer features with <code>mutate()</code>.</li>
+      <li><strong>Harness Pipes:</strong> Express multi-step data pipelines cleanly from left-to-right and top-to-bottom using <code>%&gt;%</code> and the native R pipe <code>|&gt;</code>.</li>
+      <li><strong>Embrace Tidy Data:</strong> Understand the three sacred tidy data principles and distinguish between wide presentation tables and long tidy feature sets.</li>
+      <li><strong>Execute Relational Joins:</strong> Combine disparate relational datasets safely using <code>left_join()</code>, <code>inner_join()</code>, <code>full_join()</code>, <code>anti_join()</code>, and <code>semi_join()</code> without suffering duplicate-key explosions.</li>
+      <li><strong>Reshape Tables with tidyr:</strong> Fluidly pivot between wide and long representations using <code>pivot_longer()</code> and <code>pivot_wider()</code>.</li>
+      <li><strong>Aggregate Efficiently:</strong> Master the Split-Apply-Combine workflow via <code>group_by()</code> and <code>summarise()</code> to extract KPI summaries.</li>
+      <li><strong>Prepare AI Feature Sets:</strong> Construct robust, leakage-free feature matrices ready for machine learning algorithms.</li>
+    </ul>
+    <div class="svg-container"><svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="130" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Base R vs dplyr Syntax Comparison</text>
+  <rect x="25" y="35" width="300" height="80" rx="5" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="54" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Base R (Nested / Indexing)</text>
+  <text x="40" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">subset &lt;- df[df$age &gt;= 18 &amp; df$score &gt; 80, ]</text>
+  <text x="40" y="90" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">sorted &lt;- subset[order(-subset$score), ]</text>
+  <text x="40" y="104" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Complex indexing, comma traps &amp; redundant df$</text>
+  <rect x="355" y="35" width="300" height="80" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="54" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">dplyr (Pipeline of Clear Verbs)</text>
+  <text x="375" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">df %&gt;%</text>
+  <text x="375" y="90" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">  filter(age &gt;= 18, score &gt; 80) %&gt;%</text>
+  <text x="375" y="104" fill="#34D399" font-size="9" font-family="system-ui, sans-serif">  arrange(desc(score))</text>
+</svg></div>
+  </section>
+
+  <!-- 3. Introduction to dplyr -->
+  <section class="section-card">
+    <h2>3. Introduction to dplyr</h2>
+    <p><code>dplyr</code> is an R package written by Hadley Wickham and Romain François that provides a fast, consistent set of verbs to solve common data manipulation challenges. Under the hood, critical operations are implemented in C++ via <code>cpp11</code>, giving you exceptional speed on multi-million-row datasets.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Check if dplyr is installed; install if needed, then attach</span>
+<span class="hljs-keyword">if</span> (!requireNamespace(<span class="hljs-string">&quot;dplyr&quot;</span>, quietly = <span class="hljs-literal">TRUE</span>)) {
+  install.packages(<span class="hljs-string">&quot;dplyr&quot;</span>)
+}
+library(dplyr)</code></pre>
+</div>
+    <div class="info-callout">
+      <strong>Analogy:</strong> Think of a data table like an Excel spreadsheet. Base R is like writing nested formulas inside formula bars. <code>dplyr</code> is like a modern robotic conveyor belt where raw sheets glide smoothly through named workstations: Filter out defective items &rarr; Pick columns &rarr; Calculate totals &rarr; Sort by revenue.
+    </div>
+  </section>
+
+  <!-- 4. Tidy Data Principles -->
+  <section class="section-card">
+    <h2>4. The Tidy Data Principles</h2>
+    <p>A dataset is formally defined as <strong>tidy</strong> when it conforms to three straightforward structural rules:</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="22" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">What is Tidy Data?</text>
+  <rect x="30" y="38" width="620" height="65" rx="6" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="340" y="60" fill="#BAE6FD" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">"Happy families are all alike; every unhappy family is unhappy in its own way." &mdash; Leo Tolstoy</text>
+  <text x="340" y="78" fill="#E2E8F0" font-size="10" font-family="system-ui, sans-serif" text-anchor="middle">Tidy datasets provide a uniform, standardized structure that makes wrangling, modeling and plotting intuitive.</text>
+  <text x="340" y="92" fill="#34D399" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Created by Hadley Wickham &bull; Core foundation of the modern R tidyverse</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Three Sacred Principles of Tidy Data</text>
+  <rect x="25" y="36" width="195" height="72" rx="6" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+  <text x="122" y="58" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">1. Variables = Columns</text>
+  <text x="122" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Each measured feature</text>
+  <text x="122" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">forms its own vertical column</text>
+  <rect x="242" y="36" width="195" height="72" rx="6" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+  <text x="339" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">2. Observations = Rows</text>
+  <text x="339" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Each individual entity/unit</text>
+  <text x="339" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">forms its own horizontal row</text>
+  <rect x="460" y="36" width="195" height="72" rx="6" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+  <text x="557" y="58" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">3. Values = Cells</text>
+  <text x="557" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Each individual value</text>
+  <text x="557" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">occupies exactly one cell</text>
+</svg></div>
+    <div class="grid-2">
+      <div class="grid-card">
+        <h4>1. Variables are Columns</h4>
+        <p>A variable is a measurable characteristic or attribute, such as age, gender, temperature, or exam score. In a tidy dataset, every distinct variable occupies exactly one vertical column.</p>
+      </div>
+      <div class="grid-card">
+        <h4>2. Observations are Rows</h4>
+        <p>An observation is a single data collection event or entity (e.g. one patient visit, one customer purchase, or one hourly sensor ping). Each observation forms its own horizontal row.</p>
+      </div>
+    </div>
+    <div class="svg-container"><svg viewBox="0 0 680 135" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="135" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Visual Transformation: Untidy vs Tidy Dataset</text>
+  <rect x="25" y="35" width="295" height="85" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="172" y="54" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Untidy (Wide Header Metrics)</text>
+  <text x="40" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Student | Math | Science | English</text>
+  <text x="40" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Rahul   |  85  |   90    |   78</text>
+  <text x="40" y="104" fill="#EF4444" font-size="8" font-family="system-ui, sans-serif">Variable names are stored as column headers!</text>
+  <rect x="360" y="35" width="295" height="85" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="507" y="54" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Tidy (Stacked Observations)</text>
+  <text x="380" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Student | Subject | Score</text>
+  <text x="380" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Rahul   | Math    | 85</text>
+  <text x="380" y="104" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Rahul   | Science | 90  &bull; Ready for ggplot2/ML</text>
+</svg></div>
+  </section>
+
+  <!-- 5. Tibbles -->
+  <section class="section-card">
+    <h2>5. Understanding Tibbles (tbl_df)</h2>
+    <p>A <strong>tibble</strong> is a modernized version of the classic R <code>data.frame</code>. Developed in the <code>tibble</code> package (part of core tidyverse), tibbles keep the best aspects of data frames while fixing their most frustrating historical behaviors.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Tibble vs Standard Base R Data Frame</text>
+  <rect x="30" y="35" width="290" height="75" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+  <text x="175" y="55" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Base R data.frame</text>
+  <text x="50" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">&#8226; Prints all 10,000 rows (flooding console!)</text>
+  <text x="50" y="88" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">&#8226; Partial matching: df$a may match df$amount</text>
+  <text x="50" y="100" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">&#8226; Silently drops to vector on single column [, 1]</text>
+  <rect x="360" y="35" width="290" height="75" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+  <text x="505" y="55" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyverse tibble (tbl_df)</text>
+  <text x="380" y="74" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">&#8226; Prints neat top 10 rows with column types</text>
+  <text x="380" y="88" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">&#8226; Strict matching: no accidental column aliasing</text>
+  <text x="380" y="100" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">&#8226; Always returns a tibble on [, 1]</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(tibble)
+
+<span class="hljs-comment"># Creating a modern tibble</span>
+students &lt;- tibble(
+  id = <span class="hljs-number">101</span>:<span class="hljs-number">103</span>,
+  name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Priya&quot;</span>, <span class="hljs-string">&quot;Aman&quot;</span>),
+  math = <span class="hljs-built_in">c</span>(<span class="hljs-number">88</span>, <span class="hljs-number">95</span>, <span class="hljs-number">76</span>),
+  city = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Lucknow&quot;</span>, <span class="hljs-string">&quot;Delhi&quot;</span>, <span class="hljs-string">&quot;Mumbai&quot;</span>)
+)
+
+print(students)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 4
+     id name     math city   
+  &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  
+1   101 Rahul      88 Lucknow
+2   102 Priya      95 Delhi  
+3   103 Aman       76 Mumbai </div>
+  </section>
+
+  <!-- 6. Pipe Operators -->
+  <section class="section-card">
+    <h2>6. Understanding the Pipe Operators (%&gt;% and |&gt;)</h2>
+    <p>When performing multiple data manipulation steps in Base R, code either requires deeply nested function calls (which evaluate from the inside out) or endless temporary variables that clutter RAM.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="22" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Pipe Operator: x %&gt;% f(y) becomes f(x, y)</text>
+  <rect x="35" y="38" width="285" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="177" y="58" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Tidyverse Pipe (%&gt;%)</text>
+  <text x="177" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">From package:magrittr &bull; Loaded with dplyr</text>
+  <text x="177" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Supports dot placeholder: df %&gt;% f(1, .)</text>
+  <rect x="360" y="38" width="285" height="65" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="502" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Native R Pipe (|&gt;)</text>
+  <text x="502" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Built into Base R (R 4.1.0+)</text>
+  <text x="502" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Zero dependency &bull; High speed parsing</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Piped Execution Assembly Line</text>
+  <g transform="translate(15, 35)">
+    <rect x="0" y="0" width="110" height="60" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="55" y="26" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Raw Input</text>
+    <text x="55" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">100 rows</text>
+    <text x="125" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">%&gt;%</text>
+    <rect x="145" y="0" width="120" height="60" rx="5" fill="#1E293B" stroke="#60A5FA" stroke-width="1"/>
+    <text x="205" y="26" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">filter(age &gt;= 18)</text>
+    <text x="205" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">85 rows remain</text>
+    <text x="280" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">%&gt;%</text>
+    <rect x="300" y="0" width="120" height="60" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="360" y="26" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">select(id, score)</text>
+    <text x="360" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">2 cols kept</text>
+    <text x="435" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">%&gt;%</text>
+    <rect x="455" y="0" width="120" height="60" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="515" y="26" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">arrange(desc)</text>
+    <text x="515" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Ordered rows</text>
+    <text x="590" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">%&gt;%</text>
+    <circle cx="625" cy="30" r="18" fill="#10B981"/>
+    <text x="625" y="34" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Output</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># 1. Without Pipe (Nested, read inside-out):</span>
+res_nested = <span class="hljs-number">80</span>), name, math), desc(math))
+
+<span class="hljs-comment"># 2. With Pipe (Chained, read top-to-bottom):</span>
+res_piped %
+  filter(math &gt;= 80) %&gt;%
+  select(name, math) %&gt;%
+  arrange(desc(math))
+
+print(res_piped)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 2 &times; 2
+  name   math
+  &lt;chr&gt; &lt;dbl&gt;
+1 Priya    95
+2 Rahul    88</div>
+  </section>
+
+  <!-- 7. Column Selection and Organization -->
+  <section class="section-card">
+    <h2>7. Column Selection and Organization</h2>
+    <p>The <code>select()</code> verb allows you to pick, exclude, and reorder vertical variables from a dataset. Paired with <strong>tidyselect</strong> helper functions, you can select columns by pattern or data type without hardcoding names.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Positive Selection</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">df %&gt;% select(name, age, city)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Explicitly keeps named variables in exact order</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Negative Selection (Exclusion)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">df %&gt;% select(-unneeded_col, -temp_id)</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Drops unwanted attributes, retaining all others</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">dplyr Tidyselect Column Helpers</text>
+  <g transform="translate(20, 35)">
+    <rect x="0" y="0" width="120" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="60" y="22" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">starts_with()</text>
+    <text x="60" y="40" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Match prefix</text>
+    <text x="60" y="56" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. starts_with("tx_")</text>
+    <rect x="130" y="0" width="120" height="70" rx="5" fill="#1E293B" stroke="#60A5FA" stroke-width="1"/>
+    <text x="190" y="22" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">ends_with()</text>
+    <text x="190" y="40" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Match suffix</text>
+    <text x="190" y="56" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. ends_with("_date")</text>
+    <rect x="260" y="0" width="120" height="70" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="320" y="22" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">contains()</text>
+    <text x="320" y="40" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Match substring</text>
+    <text x="320" y="56" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. contains("score")</text>
+    <rect x="390" y="0" width="120" height="70" rx="5" fill="#1E293B" stroke="#A855F7" stroke-width="1"/>
+    <text x="450" y="22" fill="#C084FC" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">where()</text>
+    <text x="450" y="40" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Predicate test</text>
+    <text x="450" y="56" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. where(is.numeric)</text>
+    <rect x="520" y="0" width="120" height="70" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="580" y="22" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">everything()</text>
+    <text x="580" y="40" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Remaining cols</text>
+    <text x="580" y="56" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Used with relocate()</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Demonstrating column selection and helper functions</span>
+students %&gt;% select(name, math)               <span class="hljs-comment"># Positive selection</span>
+students %&gt;% select(-city)                     <span class="hljs-comment"># Negative selection (exclude)</span>
+students %&gt;% select(starts_with(<span class="hljs-string">&quot;m&quot;</span>))          <span class="hljs-comment"># Starts with &#x27;m&#x27;</span>
+students %&gt;% select(where(<span class="hljs-built_in">is.numeric</span>))         <span class="hljs-comment"># Predicate selection (numbers only)</span></code></pre>
+</div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">relocate(column, .before / .after)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">df %&gt;% relocate(email, .after = id)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Changes column positioning without dropping any columns</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">rename(new_name = old_name)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">df %&gt;% rename(customer_id = id)</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Renames attributes cleanly &bull; New name is on the LEFT</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Relocating and renaming columns</span>
+students %&gt;%
+  relocate(city, .after = id) %&gt;%
+  rename(student_name = name, exam_score = math)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 4
+     id city    student_name exam_score
+  &lt;int&gt; &lt;chr&gt;   &lt;chr&gt;             &lt;dbl&gt;
+1   101 Lucknow Rahul                88
+2   102 Delhi   Priya                95
+3   103 Mumbai  Aman                 76</div>
+  </section>
+
+  <!-- 8. Filtering and Row Selection -->
+  <section class="section-card">
+    <h2>8. Filtering and Row Selection</h2>
+    <p>The <code>filter()</code> verb extracts rows (observations) based on boolean criteria. Commas inside <code>filter()</code> act as logical AND (<code>&amp;</code>), while <code>|</code> denotes logical OR.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">filter(): Horizontal Slicing Based on Conditions</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="60" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% filter(age &gt;= 18, city == "Delhi", !is.na(score))</text>
+  <text x="340" y="78" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Commas inside filter() act as logical AND (&amp;) &bull; Preserves all columns</text>
+  <text x="340" y="92" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Returns rows where the combined evaluation is strictly TRUE</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Advanced Filtering Conditions</text>
+  <rect x="30" y="35" width="195" height="72" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="127" y="55" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">between(x, left, right)</text>
+  <text x="127" y="72" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">between(score, 80, 100)</text>
+  <text x="127" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Inclusive range check</text>
+  <rect x="242" y="35" width="195" height="72" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+  <text x="339" y="55" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">%in% Membership</text>
+  <text x="339" y="72" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">city %in% c("Delhi","Mumbai")</text>
+  <text x="339" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Vectorized category match</text>
+  <rect x="455" y="35" width="195" height="72" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+  <text x="552" y="55" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Missing Handling</text>
+  <text x="552" y="72" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">!is.na(salary)</text>
+  <text x="552" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Filter out missing rows</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Multiple condition filtering</span>
+students %&gt;%
+  filter(
+    math &gt;= <span class="hljs-number">80</span>,
+    city %in% <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Delhi&quot;</span>, <span class="hljs-string">&quot;Lucknow&quot;</span>),
+    between(id, <span class="hljs-number">100</span>, <span class="hljs-number">105</span>)
+  )</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 2 &times; 4
+     id name  math city   
+  &lt;int&gt; &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;  
+1   101 Rahul    88 Lucknow
+2   102 Priya    95 Delhi  </div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The slice() Family of Position Selectors</text>
+  <g transform="translate(20, 35)">
+    <rect x="0" y="0" width="120" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="60" y="22" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">slice(1:5)</text>
+    <text x="60" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">By exact row index</text>
+    <rect x="130" y="0" width="120" height="65" rx="5" fill="#1E293B" stroke="#60A5FA" stroke-width="1"/>
+    <text x="190" y="22" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">slice_head(n=5)</text>
+    <text x="190" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">First n rows</text>
+    <rect x="260" y="0" width="120" height="65" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="320" y="22" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">slice_tail(n=5)</text>
+    <text x="320" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Last n rows</text>
+    <rect x="390" y="0" width="120" height="65" rx="5" fill="#1E293B" stroke="#A855F7" stroke-width="1"/>
+    <text x="450" y="22" fill="#C084FC" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">slice_max(n=3)</text>
+    <text x="450" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Top 3 by value</text>
+    <rect x="520" y="0" width="120" height="65" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+    <text x="580" y="22" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">slice_sample(n=5)</text>
+    <text x="580" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Random rows</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Row slicing by position, extremes, and random sample</span>
+students %&gt;% slice_head(n = <span class="hljs-number">2</span>)           <span class="hljs-comment"># First 2 rows</span>
+students %&gt;% slice_max(order_by = math, n = <span class="hljs-number">1</span>)  <span class="hljs-comment"># Top scorer</span></code></pre>
+</div>
+  </section>
+
+  <!-- 9. Arranging and Sorting -->
+  <section class="section-card">
+    <h2>9. Arranging and Sorting Data</h2>
+    <p><code>arrange()</code> reorders observations based on one or more variables without changing the values or dropping rows. It defaults to ascending order; wrapping a column in <code>desc()</code> sorts it in descending order.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">arrange(age)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Sorts rows in ASCENDING order (low to high)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Default behavior &bull; NAs placed at the bottom</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">arrange(desc(score), age)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Multi-column tie-breaking sort</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">First sorts score high-to-low; ties sorted by age</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Multi-column sorting: First by city ascending, then by math score descending</span>
+students %&gt;%
+  arrange(city, desc(math))</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 4
+     id name     math city   
+  &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  
+1   102 Priya      95 Delhi  
+2   101 Rahul      88 Lucknow
+3   103 Aman       76 Mumbai </div>
+  </section>
+
+  <!-- 10. Creating and Modifying Columns -->
+  <section class="section-card">
+    <h2>10. Creating and Modifying Columns (mutate, case_when)</h2>
+    <p>The <code>mutate()</code> verb creates new variables or transforms existing variables in place. Unlike Base R, freshly defined columns can be reused immediately in subsequent calculations within the same <code>mutate()</code> call.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">mutate(): Vectorized Feature Engineering</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% mutate(total = qty * price, tax = total * 0.18, net = total + tax)</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Can immediately reuse freshly created columns in subsequent expressions!</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Preserves all existing variables and row counts</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="22" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">transmute(): Mutate + Select Combined</text>
+  <rect x="30" y="38" width="290" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="175" y="58" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Original Columns</text>
+  <text x="175" y="76" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">id, name, age, salary, bonus, dept</text>
+  <text x="175" y="90" fill="#EF4444" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">All unmentioned columns dropped</text>
+  <rect x="360" y="38" width="290" height="65" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">transmute(tot = salary + bonus)</text>
+  <text x="505" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Only retains newly created column "tot"</text>
+  <text x="505" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Clean lightweight output</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">case_when(): Multi-Branch Conditional Mapping</text>
+  <g transform="translate(25, 35)">
+    <rect x="0" y="0" width="145" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="72" y="25" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">marks &gt;= 90</text>
+    <text x="72" y="44" fill="#34D399" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">~ "Excellent"</text>
+    <text x="72" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">First match wins</text>
+    <rect x="160" y="0" width="145" height="70" rx="5" fill="#1E293B" stroke="#60A5FA" stroke-width="1"/>
+    <text x="232" y="25" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">marks &gt;= 75</text>
+    <text x="232" y="44" fill="#60A5FA" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">~ "Good"</text>
+    <text x="232" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Evaluated second</text>
+    <rect x="320" y="0" width="145" height="70" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="392" y="25" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">marks &gt;= 50</text>
+    <text x="392" y="44" fill="#FBBF24" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">~ "Average"</text>
+    <text x="392" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Evaluated third</text>
+    <rect x="480" y="0" width="145" height="70" rx="5" fill="#1E293B" stroke="#EF4444" stroke-width="1"/>
+    <text x="552" y="25" fill="#F87171" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">TRUE (Default)</text>
+    <text x="552" y="44" fill="#F87171" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">~ "Needs Help"</text>
+    <text x="552" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Catch-all fallback</text>
+  </g>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">across(): Iterating Operations Over Multiple Columns</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% mutate(across(where(is.numeric), ~ round(., 2)))</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Replaces old scoped variants like mutate_if() &bull; Clean lambda syntax (~)</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Applies rounding to every numeric column in a single expressive pass</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Feature engineering with mutate() and case_when()</span>
+students_featured %
+  mutate(
+    percentage = (math / 100) * 100,
+    grade = case_when(
+      math &gt;= 90 ~ &quot;A+&quot;,
+      math &gt;= 80 ~ &quot;A&quot;,
+      math &gt;= 70 ~ &quot;B&quot;,
+      TRUE ~ &quot;C&quot;
+    ),
+    is_honor_roll = math &gt;= 85
+  )
+
+print(students_featured)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 7
+     id name     math city    percentage grade is_honor_roll
+  &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;        &lt;dbl&gt; &lt;chr&gt; &lt;lgl&gt;        
+1   101 Rahul      88 Lucknow         88 A     TRUE         
+2   102 Priya      95 Delhi           95 A+    TRUE         
+3   103 Aman       76 Mumbai          76 B     FALSE        </div>
+  </section>
+
+  <!-- 11. Summarizing and Grouping -->
+  <section class="section-card">
+    <h2>11. Summarizing and Grouping Data</h2>
+    <p><code>summarise()</code> collapses a dataset into a single summary row. When combined with <code>group_by()</code>, it implements the powerful <strong>Split-Apply-Combine</strong> strategy to compute aggregates per category.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">summarise(): Collapsing Rows into Scalar Summary Metrics</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% summarise(mean_score = mean(score, na.rm=T), count = n(), distinct_cities = n_distinct(city))</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Reduces the entire dataset down to a single row containing requested aggregates</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">n() counts total rows &bull; n_distinct() counts unique values</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">group_by(): Partitioning Rows by Categorical Keys</text>
+  <rect x="30" y="38" width="290" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="175" y="58" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Virtual Grouping</text>
+  <text x="175" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% group_by(city)</text>
+  <text x="175" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Does not alter rows, attaches metadata</text>
+  <rect x="360" y="38" width="290" height="65" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">ungroup() Best Practice</text>
+  <text x="505" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Always call ungroup() after finished</text>
+  <text x="505" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Prevents grouped behavior leaking downstream</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Split-Apply-Combine Pattern</text>
+  <g transform="translate(25, 35)">
+    <rect x="0" y="0" width="160" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <text x="80" y="25" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">1. Group (Split)</text>
+    <text x="80" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">group_by(dept)</text>
+    <text x="80" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Divides table into bins</text>
+    <path d="M 175 35 L 225 35" stroke="#38BDF8" stroke-width="2"/>
+    <rect x="235" y="0" width="200" height="70" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="335" y="25" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">2. Summarise (Apply)</text>
+    <text x="335" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">avg_sal = mean(salary)</text>
+    <text x="335" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Calculates per bin</text>
+    <path d="M 450 35 L 495 35" stroke="#38BDF8" stroke-width="2"/>
+    <rect x="505" y="0" width="125" height="70" rx="5" fill="#10B981"/>
+    <text x="567" y="28" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">3. Output (Combine)</text>
+    <text x="567" y="46" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">1 row per dept</text>
+    <text x="567" y="58" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Final summary table</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Grouped summary calculation</span>
+orders %
+  group_by(dept) %&gt;%
+  summarise(
+    headcount = n(),
+    avg_salary = mean(salary),
+    max_salary = max(salary)
+  ) %&gt;%
+  ungroup()
+
+print(dept_kpis)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 4
+  dept  headcount avg_salary max_salary
+  &lt;chr&gt;     &lt;int&gt;      &lt;dbl&gt;      &lt;dbl&gt;
+1 HR            2      62500      65000
+2 IT            2      80000      85000
+3 Sales         1      70000      70000</div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">count(col1, col2, sort = TRUE)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Shorthand for group_by(col) %&gt;% summarise(n = n())</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Returns frequency table of categories sorted high-to-low</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tally(sort = TRUE)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Operates directly on already-grouped data</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Counts rows in current group context</text>
+</svg></div>
+  </section>
+
+  <!-- 12. Joining Datasets -->
+  <section class="section-card">
+    <h2>12. Combining Datasets with Relational Joins</h2>
+    <p>Real-world datasets are normalized across multiple tables. <code>dplyr</code> provides two families of joins: <strong>Mutating Joins</strong> (which append columns from another table) and <strong>Filtering Joins</strong> (which filter rows based on matches).</p>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Relational Data &amp; Join Keys</text>
+  <rect x="25" y="35" width="195" height="72" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+  <text x="122" y="55" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Primary Key</text>
+  <text x="122" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Uniquely identifies observation</text>
+  <text x="122" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. customers$cust_id</text>
+  <rect x="242" y="35" width="195" height="72" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+  <text x="339" y="55" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Foreign Key</text>
+  <text x="339" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Points to primary key in other table</text>
+  <text x="339" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">e.g. orders$cust_id</text>
+  <rect x="460" y="35" width="195" height="72" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1"/>
+  <text x="557" y="55" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">by = "key"</text>
+  <text x="557" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Specifies match column</text>
+  <text x="557" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">join_by(id == user_id)</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">left_join(x, y, by = "id"): Keep All Left Rows</text>
+  <circle cx="280" cy="65" r="40" fill="#38BDF8" opacity="0.6"/>
+  <circle cx="360" cy="65" r="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <text x="250" y="68" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Table X</text>
+  <text x="390" y="68" fill="#94A3B8" font-size="10" font-family="system-ui, sans-serif">Table Y</text>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">All rows in Table X are retained.</text>
+  <text x="510" y="75" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Unmatched right columns filled with NA.</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">right_join(x, y, by = "id"): Keep All Right Rows</text>
+  <circle cx="280" cy="65" r="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <circle cx="360" cy="65" r="40" fill="#10B981" opacity="0.6"/>
+  <text x="250" y="68" fill="#94A3B8" font-size="10" font-family="system-ui, sans-serif">Table X</text>
+  <text x="390" y="68" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Table Y</text>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">All rows in Table Y are retained.</text>
+  <text x="510" y="75" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Unmatched left columns filled with NA.</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">inner_join(x, y, by = "id"): Keep Matching Intersection Only</text>
+  <circle cx="280" cy="65" r="40" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <circle cx="360" cy="65" r="40" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <!-- Intersection highlighted -->
+  <path d="M 320 38 A 40 40 0 0 1 320 92 A 40 40 0 0 1 320 38" fill="#38BDF8" opacity="0.8"/>
+  <text x="250" y="68" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif">Only X</text>
+  <text x="320" y="68" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Match</text>
+  <text x="390" y="68" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif">Only Y</text>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Rows without matches in EITHER table are dropped.</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">full_join(x, y, by = "id"): Keep All Rows from Both Tables</text>
+  <circle cx="280" cy="65" r="40" fill="#6366F1" opacity="0.6"/>
+  <circle cx="360" cy="65" r="40" fill="#6366F1" opacity="0.6"/>
+  <text x="250" y="68" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif">Table X</text>
+  <text x="320" y="68" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Union</text>
+  <text x="390" y="68" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif">Table Y</text>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">No observations are ever discarded.</text>
+  <text x="510" y="75" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">NAs inserted for unmatched columns on either side.</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#EF4444" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">anti_join(x, y, by = "id"): Filtering Unmatched Records</text>
+  <circle cx="280" cy="65" r="40" fill="#EF4444" opacity="0.7"/>
+  <circle cx="360" cy="65" r="40" fill="#0B132B" stroke="#64748B" stroke-width="1.5"/>
+  <text x="250" y="68" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif">Unmatched</text>
+  <text x="390" y="68" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif">Table Y</text>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Keeps rows in X that have NO match in Y.</text>
+  <text x="510" y="75" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">Crucial for auditing lost customers or orphaned orders.</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">semi_join(x, y, by = "id"): Filtering Matched Rows</text>
+  <circle cx="280" cy="65" r="40" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <circle cx="360" cy="65" r="40" fill="#1E293B" stroke="#64748B" stroke-width="1.5"/>
+  <path d="M 320 38 A 40 40 0 0 1 320 92 A 40 40 0 0 1 320 38" fill="#10B981" opacity="0.8"/>
+  <text x="510" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Keeps rows in X that DO have a match in Y.</text>
+  <text x="510" y="75" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Does NOT duplicate rows if Y has multiple matches!</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Demonstrating joins with customer &amp; transaction tables</span>
+cust &lt;- tibble(cust_id = <span class="hljs-built_in">c</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>), name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Priya&quot;</span>, <span class="hljs-string">&quot;Aman&quot;</span>))
+orders &lt;- tibble(cust_id = <span class="hljs-built_in">c</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">4</span>), amount = <span class="hljs-built_in">c</span>(<span class="hljs-number">250</span>, <span class="hljs-number">400</span>, <span class="hljs-number">150</span>))
+
+<span class="hljs-comment"># 1. Left Join: Keeps all customers</span>
+left_join(cust, orders, by = <span class="hljs-string">&quot;cust_id&quot;</span>)
+
+<span class="hljs-comment"># 2. Anti Join: Identifies customers with NO purchases (Aman)</span>
+anti_join(cust, orders, by = <span class="hljs-string">&quot;cust_id&quot;</span>)</code></pre>
+</div>
+    <div class="output-label">Expected Output (Left Join):</div>
+    <div class="output-block"># A tibble: 3 &times; 3
+  cust_id name  amount
+    &lt;dbl&gt; &lt;chr&gt;  &lt;dbl&gt;
+1       1 Rahul    250
+2       2 Priya    400
+3       3 Aman      NA</div>
+    <div class="output-label">Expected Output (Anti Join):</div>
+    <div class="output-block"># A tibble: 1 &times; 2
+  cust_id name 
+    &lt;dbl&gt; &lt;chr&gt;
+1       3 Aman </div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Modern join_by() Syntax in dplyr 1.1.0+</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">customers %&gt;% left_join(orders, join_by(id == customer_id))</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Replaces old c("id" = "customer_id") string vectors with clean unquoted expressions</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Also supports inequality &amp; rolling joins: join_by(date &gt;= start_date)</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#EF4444" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Many-to-Many Join Explosion Hazard</text>
+  <rect x="30" y="35" width="290" height="75" rx="5" fill="#1E293B" stroke="#EF4444" stroke-width="1"/>
+  <text x="175" y="55" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Table X has 3 rows with ID = 101</text>
+  <text x="175" y="72" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Table Y has 4 rows with ID = 101</text>
+  <text x="175" y="90" fill="#F87171" font-size="9" font-weight="bold" font-family="system-ui, sans-serif">Result: 3 &times; 4 = 12 Cartesian Rows!</text>
+  <rect x="360" y="35" width="290" height="75" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="55" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Defensive Deduplication</text>
+  <text x="505" y="72" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Audit keys with anyDuplicated(table$id)</text>
+  <text x="505" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Deduplicate with distinct() before joining!</text>
+</svg></div>
+  </section>
+
+  <!-- 13. Binding Datasets -->
+  <section class="section-card">
+    <h2>13. Combining Data with Bind Functions</h2>
+    <p>When you have separate datasets with identical columns (e.g. sales logs from January and February) or parallel vectors, bind functions combine them without key matching.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">bind_rows(): Vertical Stacking of Datasets</text>
+  <rect x="40" y="38" width="160" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="120" y="60" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Jan Sales (100 rows)</text>
+  <text x="120" y="78" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">cols: date, amt, prod</text>
+  <text x="235" y="75" fill="#38BDF8" font-size="18" font-family="system-ui, sans-serif">+</text>
+  <rect x="270" y="38" width="160" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="350" y="60" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Feb Sales (120 rows)</text>
+  <text x="350" y="78" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">cols: date, amt, prod</text>
+  <text x="465" y="75" fill="#38BDF8" font-size="18" font-family="system-ui, sans-serif">=</text>
+  <rect x="500" y="38" width="145" height="65" rx="5" fill="#10B981"/>
+  <text x="572" y="60" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">bind_rows()</text>
+  <text x="572" y="78" fill="#D1FAE5" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">220 Total Rows</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">bind_cols(): Horizontal Stitching by Row Order</text>
+  <rect x="30" y="38" width="290" height="65" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="175" y="58" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Positional Matching Only</text>
+  <text x="50" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Attaches columns side-by-side without checking keys</text>
+  <text x="50" y="90" fill="#EF4444" font-size="8" font-family="system-ui, sans-serif">Danger: If row orders are misaligned, data is silently corrupted!</text>
+  <rect x="360" y="38" width="290" height="65" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Join vs Bind Guideline</text>
+  <text x="380" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Use joins whenever key identifiers exist.</text>
+  <text x="380" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Use bind_cols() only on tightly paired parallel vectors.</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>jan &lt;- tibble(day = <span class="hljs-number">1</span>:<span class="hljs-number">2</span>, sales = <span class="hljs-built_in">c</span>(<span class="hljs-number">100</span>, <span class="hljs-number">150</span>))
+feb &lt;- tibble(day = <span class="hljs-number">1</span>:<span class="hljs-number">2</span>, sales = <span class="hljs-built_in">c</span>(<span class="hljs-number">120</span>, <span class="hljs-number">180</span>))
+
+<span class="hljs-comment"># Stacking rows vertically with an identifier</span>
+q1_sales &lt;- bind_rows(jan = jan, feb = feb, .id = <span class="hljs-string">&quot;month&quot;</span>)
+print(q1_sales)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 4 &times; 3
+  month   day sales
+  &lt;chr&gt; &lt;int&gt; &lt;dbl&gt;
+1 jan       1   100
+2 jan       2   150
+3 feb       1   120
+4 feb       2   180</div>
+  </section>
+
+  <!-- 14. Tidy Data in Depth -->
+  <section class="section-card">
+    <h2>14. Tidy Data in Depth (Wide vs Long Representation)</h2>
+    <p>Understanding when to use wide format versus long format is a hallmark of senior data engineering.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Wide Data Format (Presentation / Human Friendly)</text>
+  <rect x="30" y="35" width="620" height="75" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="60" y="56" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Patient_ID</text>
+  <text x="180" y="56" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Dose_0mg</text>
+  <text x="310" y="56" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Dose_10mg</text>
+  <text x="440" y="56" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Dose_20mg</text>
+  <text x="560" y="56" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif">Characteristics:</text>
+  <text x="60" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">P001</text>
+  <text x="180" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">120</text>
+  <text x="310" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">115</text>
+  <text x="440" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">110</text>
+  <text x="560" y="78" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">One entity per row</text>
+  <text x="60" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">P002</text>
+  <text x="180" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">135</text>
+  <text x="310" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">128</text>
+  <text x="440" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">122</text>
+  <text x="560" y="96" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Spread across columns</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Long Data Format (Tidy / Machine Learning Friendly)</text>
+  <rect x="30" y="35" width="620" height="75" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="80" y="56" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Patient_ID</text>
+  <text x="240" y="56" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Dose_Level</text>
+  <text x="400" y="56" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif">Blood_Pressure</text>
+  <text x="540" y="56" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif">Characteristics:</text>
+  <text x="80" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">P001</text>
+  <text x="240" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">0mg</text>
+  <text x="400" y="78" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">120</text>
+  <text x="540" y="78" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">1 observation per row</text>
+  <text x="80" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">P001</text>
+  <text x="240" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">10mg</text>
+  <text x="400" y="96" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">115</text>
+  <text x="540" y="96" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Ideal for ggplot2 facets</text>
+</svg></div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr><th>Aspect</th><th>Wide Format</th><th>Long (Tidy) Format</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Structure</td><td>Multiple measurement columns across width</td><td>Repeated measures stacked in 2 key-value columns</td></tr>
+          <tr><td>Readability</td><td>Easy for humans to read in Excel tables</td><td>Compact, machine-readable, normalized</td></tr>
+          <tr><td>ggplot2 Plotting</td><td>Difficult: requires hardcoding each line/bar</td><td>Effortless: map <code>aes(color = subject)</code></td></tr>
+          <tr><td>AI &amp; Statistical Modeling</td><td>Impractical for repeated-measures ANOVA/ML</td><td>Standard input format for regression and GLMs</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 15. Data Reshaping with tidyr -->
+  <section class="section-card">
+    <h2>15. Data Reshaping with tidyr (pivot_longer, pivot_wider)</h2>
+    <p>The <code>tidyr</code> package provides modern reshaping tools that replace older functions like <code>gather()</code> and <code>spread()</code>.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::pivot_longer(): Lengthening Tables</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% pivot_longer(cols = starts_with("q"), names_to = "quarter", values_to = "revenue")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Gathers repeated measurement columns into stacked key-value pairs</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Decreases column count &bull; Increases row count</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::pivot_wider(): Widening Tables</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#34D399" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% pivot_wider(names_from = metric, values_from = score, values_fill = 0)</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Spreads categorical values into separate column headers</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">values_fill replaces structural missing combinations with a default scalar</text>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(tidyr)
+
+wide_grades %
+  pivot_longer(
+    cols = c(math, science),
+    names_to = &quot;subject&quot;,
+    values_to = &quot;grade&quot;
+  )
+print(long_grades)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 4 &times; 3
+  student subject grade
+  &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt;
+1 Rahul   math       85
+2 Rahul   science    78
+3 Priya   math       92
+4 Priya   science    96</div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::separate(): Splitting Delimited Columns</text>
+  <rect x="30" y="38" width="220" height="65" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="140" y="58" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Composite Column</text>
+  <text x="140" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">location: "Delhi_India"</text>
+  <path d="M 270 70 L 330 70" stroke="#38BDF8" stroke-width="2"/>
+  <rect x="350" y="38" width="290" height="65" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="495" y="58" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">separate(location, into=c("city","country"), sep="_")</text>
+  <text x="495" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">city: "Delhi"  |  country: "India"</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::unite(): Merging Multiple Columns</text>
+  <rect x="30" y="38" width="230" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="145" y="58" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Separate Columns</text>
+  <text x="145" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">year: 2026, month: 10, day: 31</text>
+  <path d="M 280 70 L 340 70" stroke="#38BDF8" stroke-width="2"/>
+  <rect x="360" y="38" width="280" height="65" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="500" y="58" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">unite("full_date", year, month, day, sep="-")</text>
+  <text x="500" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">full_date: "2026-10-31"</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">drop_na(df, ...)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Selective row deletion</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">drop_na(df, target_col) drops rows if target is NA</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">replace_na(df, list(...))</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Targeted scalar imputation</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">replace_na(list(score = 0, city = "Unknown"))</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::fill(): Directional Imputation for Time-Series</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% fill(stock_price, .direction = "down")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Fills missing NA values with the most recent non-missing observation (LOCF)</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Essential for financial ledgers and IoT streaming sensors</text>
+</svg></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">tidyr::complete(): Turning Implicit Missingness Explicit</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#FBBF24" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">df %&gt;% complete(year = 2024:2026, quarter = 1:4, fill = list(sales = 0))</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Generates missing combinations of categories that were never recorded in raw logs</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Guarantees balanced time series matrices for forecasting models</text>
+</svg></div>
+  </section>
+
+  <!-- 16. Complete Tidy Data Workflow -->
+  <section class="section-card">
+    <h2>16. Complete End-to-End Tidy Data Workflow</h2>
+    <p>This 12-step operational pipeline demonstrates the full journey: ingesting raw messy transaction logs, filtering, deriving features, reshaping, joining dimensions, and calculating summary metrics.</p>
+    <div class="svg-container"><svg viewBox="0 0 680 135" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="135" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">End-to-End Tidy Data Processing Architecture</text>
+  <g transform="translate(15, 35)">
+    <rect x="0" y="0" width="100" height="75" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="50" y="24" fill="#38BDF8" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">1. Ingest</text>
+    <text x="50" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">as_tibble()</text>
+    <text x="50" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">audit schema</text>
+    <rect x="110" y="0" width="100" height="75" rx="5" fill="#1E293B" stroke="#60A5FA" stroke-width="1"/>
+    <text x="160" y="24" fill="#60A5FA" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">2. Filter</text>
+    <text x="160" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">filter(valid)</text>
+    <text x="160" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">select(features)</text>
+    <rect x="220" y="0" width="100" height="75" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1"/>
+    <text x="270" y="24" fill="#FBBF24" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">3. Mutate</text>
+    <text x="270" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">mutate(new)</text>
+    <text x="270" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">case_when()</text>
+    <rect x="330" y="0" width="100" height="75" rx="5" fill="#1E293B" stroke="#A855F7" stroke-width="1"/>
+    <text x="380" y="24" fill="#C084FC" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">4. Reshape</text>
+    <text x="380" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">pivot_longer()</text>
+    <text x="380" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">tidy format</text>
+    <rect x="440" y="0" width="100" height="75" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1"/>
+    <text x="490" y="24" fill="#38BDF8" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">5. Join</text>
+    <text x="490" y="42" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">left_join(dim)</text>
+    <text x="490" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">group_by()</text>
+    <rect x="550" y="0" width="100" height="75" rx="5" fill="#10B981"/>
+    <text x="600" y="26" fill="#FFFFFF" font-size="9" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">6. Deploy</text>
+    <text x="600" y="44" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Aggregates / ML</text>
+    <text x="600" y="58" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Clean Tidy Table</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># End-to-End Enterprise E-Commerce Data Wrangling Pipeline</span>
+raw_tx %
+  # 1. Separate composite location
+  separate(city_state, into = c(&quot;city&quot;, &quot;state&quot;), sep = &quot;_&quot;) %&gt;%
+  # 2. Standardize text casing
+  mutate(category = tolower(category)) %&gt;%
+  # 3. Engineer total line-item spend
+  mutate(total_spend = price * qty) %&gt;%
+  # 4. Filter high-value transactions
+  filter(total_spend &gt;= 50) %&gt;%
+  # 5. Group by city and category to compute KPIs
+  group_by(city, category) %&gt;%
+  summarise(
+    revenue = sum(total_spend),
+    tx_count = n(),
+    .groups = &quot;drop&quot;
+  ) %&gt;%
+  # 6. Sort results descending by revenue
+  arrange(desc(revenue))
+
+print(clean_sales_summary)</code></pre>
+</div>
+    <div class="output-label">Expected Output:</div>
+    <div class="output-block"># A tibble: 3 &times; 4
+  city    category revenue tx_count
+  &lt;chr&gt;   &lt;chr&gt;      &lt;dbl&gt;    &lt;int&gt;
+1 Delhi   tech        1000        2
+2 Mumbai  clothing     240        1</div>
+  </section>
+
+  <!-- 17. AI/ML/Data Science Applications -->
+  <section class="section-card">
+    <h2>17. Real AI, Machine Learning &amp; Data Science Applications (18 Pipelines)</h2>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">AI / ML Feature Engineering with Tidy Data</text>
+  <rect x="30" y="38" width="190" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="125" y="58" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Behavioral Aggregates</text>
+  <text x="125" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">group_by(user_id) %&gt;%</text>
+  <text x="125" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">summarise(recency, frequency)</text>
+  <rect x="245" y="38" width="190" height="65" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+  <text x="340" y="58" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Target Feature Join</text>
+  <text x="340" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">left_join(target_labels)</text>
+  <text x="340" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Clean entity level matrix</text>
+  <rect x="460" y="38" width="190" height="65" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+  <text x="555" y="58" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Train-Only Split</text>
+  <text x="555" y="74" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Zero Data Leakage</text>
+  <text x="555" y="88" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Train bounds applied to test</text>
+</svg></div>
+
+    <div class="grid-card">
+      <h4>1. Customer Churn Feature Mart</h4>
+      <p>Compute customer recency, frequency, and total spend (RFM metrics) from log tables.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>logs % group_by(user) %&gt;% summarise(rec=min(days_ago), freq=n(), spend=sum(amt))
+print(rfm)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 4
+   user   rec  freq spend
+  &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt;
+1     1     5     2    60
+2     2    65     1   100</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>2. Student Performance Risk Analytics</h4>
+      <p>Calculate student GPA across subjects and flag students requiring early academic intervention.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>marks % group_by(id) %&gt;% summarise(gpa = mean(score)) %&gt;% mutate(risk = gpa &lt; 60)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 3
+     id   gpa risk 
+  &lt;dbl&gt; &lt;dbl&gt; &lt;lgl&gt;
+1     1    50 TRUE 
+2     2    87.5 FALSE</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>3. Healthcare Diagnostic Patient Triage</h4>
+      <p>Group clinical patient vitals by admission unit and detect critical hypertension thresholds.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>vitals % mutate(stage = case_when(sbp &gt;= 140 | dbp &gt;= 90 ~ &quot;Stage2&quot;, TRUE ~ &quot;Normal&quot;))</code></pre>
+</div>
+      <div class="output-block"># A tibble: 3 &times; 4
+    pid   sbp   dbp stage 
+  &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; 
+1     1   118    78 Normal
+2     2   142    92 Stage2
+3     3   165   105 Stage2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>4. IoT Edge Device Stream Processing</h4>
+      <p>Filter noisy hardware readings and compute hourly rolling averages per sensor node.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>telemetry % group_by(node) %&gt;% summarise(avg_temp = mean(temp), pings = n())</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 3
+  node  avg_temp pings
+  &lt;chr&gt;    &lt;dbl&gt; &lt;int&gt;
+1 A         22.3     2
+2 B         31       1</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>5. NLP Sentiment Classification Token Prep</h4>
+      <p>Structure document reviews into tidy token formats for lexicon matching.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>reviews % mutate(sentiment = if_else(score &gt;= 0.5, &quot;Positive&quot;, &quot;Negative&quot;))</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 4
+     id label score sentiment
+  &lt;int&gt; &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt;    
+1     1 pos     0.9 Positive 
+2     2 neg     0.2 Negative </div>
+    </div>
+
+    <div class="grid-card">
+      <h4>6. Computer Vision Dataset Metadata Auditing</h4>
+      <p>Filter out corrupt image filenames and compute class balance distributions.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>img_df % count(label, sort = TRUE)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 2
+  label     n
+  &lt;chr&gt; &lt;int&gt;
+1 cat       2
+2 dog       1</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>7. Recommendation System Interaction Matrix</h4>
+      <p>Join user profiles with item interaction logs to assemble collaborative filtering matrices.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>users &lt;- tibble(uid=<span class="hljs-number">1</span>:<span class="hljs-number">2</span>, tier=<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Gold&quot;</span>,<span class="hljs-string">&quot;Free&quot;</span>))
+ratings &lt;- tibble(uid=<span class="hljs-built_in">c</span>(<span class="hljs-number">1</span>,<span class="hljs-number">2</span>), iid=<span class="hljs-built_in">c</span>(<span class="hljs-number">101</span>,<span class="hljs-number">102</span>), rating=<span class="hljs-built_in">c</span>(<span class="hljs-number">5</span>, <span class="hljs-number">4</span>))
+inner_join(users, ratings, by=<span class="hljs-string">&quot;uid&quot;</span>)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 4
+    uid tier    iid rating
+  &lt;int&gt; &lt;chr&gt; &lt;dbl&gt;  &lt;dbl&gt;
+1     1 Gold    101      5
+2     2 Free    102      4</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>8. Credit Card Fraud Deviation Detection</h4>
+      <p>Compute customer transaction z-scores compared to their historic personal baseline.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>txs % mutate(mean_amt=mean(amt), is_anomaly = amt &gt; 3 * mean_amt)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 3 &times; 4
+   user   amt mean_amt is_anomaly
+  &lt;dbl&gt; &lt;dbl&gt;    &lt;dbl&gt; &lt;lgl&gt;     
+1     1    20     181. FALSE     
+2     1    25     181. FALSE     
+3     1   500     181. FALSE     </div>
+    </div>
+
+    <div class="grid-card">
+      <h4>9. Sales Forecasting Seasonality Aggregation</h4>
+      <p>Roll up transaction timestamps into monthly and quarterly revenue buckets.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>sales % group_by(q) %&gt;% summarise(tot=sum(rev))</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 2
+  q       tot
+  &lt;chr&gt; &lt;dbl&gt;
+1 Q1      200
+2 Q2      250</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>10. Credit Risk Feature Engineering</h4>
+      <p>Derive debt-to-income and credit utilization ratios.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>loans % mutate(dti = debt / inc, risk = if_else(dti &gt; 0.20, &quot;High&quot;, &quot;Low&quot;))</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 4
+   debt   inc   dti risk 
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+1 12000 60000   0.2 Low  
+2  5000 50000   0.1 Low  </div>
+    </div>
+
+    <div class="grid-card">
+      <h4>11. Training Feature Matrix Assembly</h4>
+      <p>Select predictor features and target label, dropping non-generalizable primary keys.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>raw % select(-id)
+print(train_feats)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 3
+    age salary churn
+  &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt;
+1    25     50     0
+2    45     90     1</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>12. Customer Behavioral Segmentation</h4>
+      <p>Create behavioral clusters based on purchase frequency and basket size.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>custs % mutate(segment = case_when(visits &gt;= 10 ~ &quot;VIP&quot;, visits &gt;= 5 ~ &quot;Regular&quot;, TRUE ~ &quot;Occasional&quot;))</code></pre>
+</div>
+      <div class="output-block"># A tibble: 3 &times; 4
+     id visits avg_cart segment   
+  &lt;int&gt;  &lt;dbl&gt;    &lt;dbl&gt; &lt;chr&gt;     
+1     1      1       15 Occasional
+2     2     15       80 VIP       
+3     3      8       45 Regular   </div>
+    </div>
+
+    <div class="grid-card">
+      <h4>13. Time-Series Sensor Imputation via fill()</h4>
+      <p>Use Last Observation Carried Forward (LOCF) to replace missing sensor readings.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>pings % fill(val, .direction=&quot;down&quot;)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 4 &times; 2
+      t   val
+  &lt;int&gt; &lt;dbl&gt;
+1     1  10.2
+2     2  10.2
+3     3  10.2
+4     4  10.8</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>14. E-Commerce Multi-Table Data Fusion</h4>
+      <p>Join orders, customer demographics, and product catalog into one unified analytical mart.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ords &lt;- tibble(oid=<span class="hljs-number">1</span>, cid=<span class="hljs-number">10</span>, pid=<span class="hljs-number">99</span>)
+prods &lt;- tibble(pid=<span class="hljs-number">99</span>, name=<span class="hljs-string">&quot;Shoes&quot;</span>, price=<span class="hljs-number">120</span>)
+left_join(ords, prods, by=<span class="hljs-string">&quot;pid&quot;</span>)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 1 &times; 5
+    oid   cid   pid name  price
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt;
+1     1    10    99 Shoes   120</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>15. Imbalanced Classification Class Tally</h4>
+      <p>Assess minority class representation to determine SMOTE or downsampling requirements.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>targets % count(label) %&gt;% mutate(pct = n / sum(n) * 100)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 2 &times; 3
+  label      n   pct
+  &lt;chr&gt;  &lt;int&gt; &lt;dbl&gt;
+1 fraud      1    20
+2 normal     4    80</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>16. Model Evaluation Metric Reshaping</h4>
+      <p>Pivot cross-validation fold scores into long tidy format for ANOVA comparison.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>folds % pivot_longer(-fold, names_to=&quot;model&quot;, values_to=&quot;accuracy&quot;)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 4 &times; 3
+   fold model  accuracy
+  &lt;int&gt; &lt;chr&gt;     &lt;dbl&gt;
+1     1 acc_lr     0.85
+2     1 acc_rf     0.91
+3     2 acc_lr     0.88
+4     2 acc_rf     0.93</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>17. Natural Language Lexicon Sentiment Join</h4>
+      <p>Join extracted tokens with sentiment polarities via inner_join.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tokens &lt;- tibble(word=<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;excellent&quot;</span>,<span class="hljs-string">&quot;slow&quot;</span>))
+lexicon &lt;- tibble(word=<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;excellent&quot;</span>,<span class="hljs-string">&quot;bad&quot;</span>), score=<span class="hljs-built_in">c</span>(<span class="hljs-number">3</span>, -<span class="hljs-number">2</span>))
+inner_join(tokens, lexicon, by=<span class="hljs-string">&quot;word&quot;</span>)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 1 &times; 2
+  word      score
+  &lt;chr&gt;     &lt;dbl&gt;
+1 excellent     3</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>18. Leakage-Free Preprocessing with Tidy Pipeline</h4>
+      <p>Compute scaling parameters on training partition only and apply to validation partition.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df % filter(split==&quot;train&quot;) %&gt;% summarise(m=mean(x)) %&gt;% pull(m)
+df %&gt;% mutate(x_centered = x - tr_m)</code></pre>
+</div>
+      <div class="output-block"># A tibble: 3 &times; 3
+  split     x x_centered
+  &lt;chr&gt; &lt;dbl&gt;      &lt;dbl&gt;
+1 train    10         -5
+2 train    20          5
+3 test     30         15</div>
+    </div>
+  </section>
+
+  <!-- 18. Practical Programs -->
+  <section class="section-card">
+    <h2>18. Practical Runnable R Programs (22 Complete Scripts)</h2>
+
+    <div class="grid-card">
+      <h4>Prog 1: Creating a Tibble</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb &lt;- tibble(id=<span class="hljs-number">1</span>:<span class="hljs-number">3</span>, name=<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;A&quot;</span>,<span class="hljs-string">&quot;B&quot;</span>,<span class="hljs-string">&quot;C&quot;</span>)); is_tibble(tb)</code></pre>
+</div>
+      <div class="output-block">[1] TRUE</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 2: Selecting Specific Columns</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb &lt;- tibble(x=<span class="hljs-number">1</span>, y=<span class="hljs-number">2</span>, z=<span class="hljs-number">3</span>); <span class="hljs-built_in">names</span>(select(tb, x, z))</code></pre>
+</div>
+      <div class="output-block">[1] "x" "z"</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 3: Negative Column Exclusion</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb &lt;- tibble(a=<span class="hljs-number">1</span>, b=<span class="hljs-number">2</span>, <span class="hljs-built_in">c</span>=<span class="hljs-number">3</span>); <span class="hljs-built_in">names</span>(select(tb, -b))</code></pre>
+</div>
+      <div class="output-block">[1] "a" "c"</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 4: Filtering Rows by Value</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % filter(val &gt; 10) %&gt;% nrow()</code></pre>
+</div>
+      <div class="output-block">[1] 1</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 5: Multiple Filter Conditions</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % filter(a==1, b==&quot;x&quot;) %&gt;% nrow()</code></pre>
+</div>
+      <div class="output-block">[1] 1</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 6: Filtering with between()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % filter(between(score, 80, 90)) %&gt;% pull(score)</code></pre>
+</div>
+      <div class="output-block">[1] 82</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 7: Category Filtering with %in%</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % filter(city %<span class="hljs-keyword">in</span>% c(&quot;Delhi&quot;,&quot;Goa&quot;)) %&gt;% nrow()</code></pre>
+</div>
+      <div class="output-block">[1] 2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 8: Ascending Sorting with arrange()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % arrange(num) %&gt;% pull(num)</code></pre>
+</div>
+      <div class="output-block">[1] 10 20 30</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 9: Descending Sorting with desc()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % arrange(desc(num)) %&gt;% pull(num)</code></pre>
+</div>
+      <div class="output-block">[1] 30 20 10</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 10: Slicing Top Extremes</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % slice_max(x, n=1) %&gt;% pull(x)</code></pre>
+</div>
+      <div class="output-block">[1] 90</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 11: Feature Creation with mutate()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % mutate(tot = q * p) %&gt;% pull(tot)</code></pre>
+</div>
+      <div class="output-block">[1] 100</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 12: Conditional Categorization with case_when()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % mutate(g = case_when(s &gt;= 90 ~ &quot;A&quot;, TRUE ~ &quot;B&quot;)) %&gt;% pull(g)</code></pre>
+</div>
+      <div class="output-block">[1] "A" "B"</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 13: Renaming Columns</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb &lt;- tibble(old_col=<span class="hljs-number">1</span>); <span class="hljs-built_in">names</span>(rename(tb, new_col = old_col))</code></pre>
+</div>
+      <div class="output-block">[1] "new_col"</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 14: Category Frequency with count()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % count(c) %&gt;% filter(c==&quot;X&quot;) %&gt;% pull(n)</code></pre>
+</div>
+      <div class="output-block">[1] 2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 15: Grouped Summary with group_by() + summarise()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % group_by(g) %&gt;% summarise(m=mean(v)) %&gt;% pull(m)</code></pre>
+</div>
+      <div class="output-block">[1] 15 30</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 16: Multi-Column Grouping</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % group_by(d, loc) %&gt;% n_groups()</code></pre>
+</div>
+      <div class="output-block">[1] 2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 17: Relational left_join()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>a % ncol()</code></pre>
+</div>
+      <div class="output-block">[1] 3</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 18: Vertical Stacking with bind_rows()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>r1 % nrow()</code></pre>
+</div>
+      <div class="output-block">[1] 2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 19: Wide to Long with pivot_longer()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>w % pivot_longer(-id) %&gt;% nrow()</code></pre>
+</div>
+      <div class="output-block">[1] 2</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 20: Long to Wide with pivot_wider()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>lg % pivot_wider(names_from=k, values_from=val) %&gt;% ncol()</code></pre>
+</div>
+      <div class="output-block">[1] 3</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 21: Column Splitting with separate()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>tb % separate(s, into=c(&quot;x&quot;,&quot;y&quot;), sep=&quot;_&quot;) %&gt;% pull(y)</code></pre>
+</div>
+      <div class="output-block">[1] "B"</div>
+    </div>
+
+    <div class="grid-card">
+      <h4>Prog 22: Complete Tidy Pipeline Workflow</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>raw % replace_na(list(v=0)) %&gt;% summarise(tot=sum(v)) %&gt;% pull(tot)</code></pre>
+</div>
+      <div class="output-block">[1] 10</div>
+    </div>
+  </section>
+
+  <!-- 19. Common Beginner Mistakes -->
+  <section class="section-card">
+    <h2>19. Common Beginner Mistakes &amp; Fixes (28 Cataloged Traps)</h2>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 1: Confusing select() with filter()</div>
+      <p>Using <code>select(age &gt;= 18)</code> instead of <code>filter(age &gt;= 18)</code>.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># filter() chooses horizontal rows; select() picks vertical columns</span>
+df %&gt;% filter(age &gt;= <span class="hljs-number">18</span>) %&gt;% select(name, age)</code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 2: Confusing mutate() with summarise()</div>
+      <p>Expecting <code>summarise()</code> to keep all rows or <code>mutate()</code> to collapse the table.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># mutate() preserves row count; summarise() collapses into 1 row per group</span>
+df %&gt;% mutate(tax = price * <span class="hljs-number">0.1</span>)     <span class="hljs-comment"># Keeps all rows</span>
+df %&gt;% summarise(avg = mean(price))   <span class="hljs-comment"># Collapses to 1 row</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 3: Forgetting to Load dplyr in New Sessions</div>
+      <p>Calling <code>df %&gt;% filter(...)</code> without <code>library(dplyr)</code> throws: <code>could not find function "%&gt;%"</code>.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(dplyr) <span class="hljs-comment"># Always include at top of scripts</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 4: Using Single Equals = Instead of Double Equals == in filter()</div>
+      <p><code>filter(city = "Delhi")</code> throws an error because single equals is assignment.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df %&gt;% filter(city == <span class="hljs-string">&quot;Delhi&quot;</span>) <span class="hljs-comment"># Use == for equality comparisons</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 5: Misunderstanding Logical AND vs OR</div>
+      <p>Writing <code>filter(city == "Delhi" &amp; city == "Mumbai")</code> which returns 0 rows since no single cell is both!</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df %&gt;% filter(city == <span class="hljs-string">&quot;Delhi&quot;</span> | city == <span class="hljs-string">&quot;Mumbai&quot;</span>) <span class="hljs-comment"># or city %in% c(...)</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 6: Forgetting ungroup() After Grouped Mutate</div>
+      <p>Subsequent verbs continue to operate within grouped categories silently.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df %&gt;% group_by(dept) %&gt;% mutate(rel_sal = sal / <span class="hljs-built_in">sum</span>(sal)) %&gt;% ungroup()</code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 7: Calling n() Outside dplyr Context</div>
+      <p>Executing <code>n()</code> in standalone console returns <code>Error: n() should only be called inside dplyr verbs</code>.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df %&gt;% summarise(count = n()) <span class="hljs-comment"># Use nrow(df) for standalone row count</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 8: Missing Catch-All in case_when()</div>
+      <p>Unmatched observations silently become <code>NA</code> instead of a desired default string.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>case_when(score &gt;= <span class="hljs-number">90</span> ~ <span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-literal">TRUE</span> ~ <span class="hljs-string">&quot;Other&quot;</span>) <span class="hljs-comment"># Explicit TRUE ~ default</span></code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 9: Accidentally Creating Cartesian Explosion via Duplicate Keys</div>
+      <p>Joining two tables that both have duplicate primary keys causes runaway row duplication.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Ensure left or right table is deduplicated before join</span>
+right_table % distinct(id, .keep_all = TRUE)
+left_join(left_table, right_table, by = &quot;id&quot;)</code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 10: Using bind_cols() on Misaligned Data</div>
+      <p>Assuming rows match by identity when they only match by positional order.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Always prefer key-based joins:</span>
+left_join(df1, df2, by = <span class="hljs-string">&quot;id&quot;</span>)</code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 11: Misspecifying Columns in pivot_longer()</div>
+      <p>Pivoting primary keys like <code>id</code> into values by forgetting negative selection.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df %&gt;% pivot_longer(cols = -id, names_to = <span class="hljs-string">&quot;metric&quot;</span>, values_to = <span class="hljs-string">&quot;value&quot;</span>)</code></pre>
+</div>
+    </div>
+
+    <div class="mistake-box">
+      <div class="mistake-title">Mistake 12: Data Leakage in Preprocessing</div>
+      <p>Calculating mean or scaling bounds across the entire dataset before splitting train/test.</p>
+      <div class="fix-title">Correct Fix:</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Split first; compute parameters on train; apply same parameters to test!</span></code></pre>
+</div>
+    </div>
+  </section>
+
+  <!-- 20. Quick Revision -->
+  <section class="section-card">
+    <h2>20. Quick Revision &amp; Reference Cheat-Sheet</h2>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr><th>Task</th><th>dplyr / tidyr Function</th><th>Primary Objective</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pick columns</td><td><code>select(cols)</code></td><td>Vertical column subset</td></tr>
+          <tr><td>Drop columns</td><td><code>select(-cols)</code></td><td>Negative column exclusion</td></tr>
+          <tr><td>Prefix match</td><td><code>starts_with("prefix")</code></td><td>Helper matching starting text</td></tr>
+          <tr><td>Suffix match</td><td><code>ends_with("suffix")</code></td><td>Helper matching ending text</td></tr>
+          <tr><td>Substring match</td><td><code>contains("str")</code></td><td>Helper matching substring</td></tr>
+          <tr><td>Reorder columns</td><td><code>relocate(col, .after=...)</code></td><td>Move column positions</td></tr>
+          <tr><td>Rename column</td><td><code>rename(new = old)</code></td><td>Change variable identifier</td></tr>
+          <tr><td>Filter rows</td><td><code>filter(cond1, cond2)</code></td><td>Horizontal row subset (AND)</td></tr>
+          <tr><td>Range match</td><td><code>between(x, a, b)</code></td><td>Inclusive range check</td></tr>
+          <tr><td>Set match</td><td><code>x %in% vec</code></td><td>Category membership check</td></tr>
+          <tr><td>Row positions</td><td><code>slice(1:5)</code></td><td>Select by numerical index</td></tr>
+          <tr><td>Top rows</td><td><code>slice_head(n=5)</code></td><td>First n observations</td></tr>
+          <tr><td>Bottom rows</td><td><code>slice_tail(n=5)</code></td><td>Last n observations</td></tr>
+          <tr><td>Max extremes</td><td><code>slice_max(x, n=5)</code></td><td>Highest values</td></tr>
+          <tr><td>Min extremes</td><td><code>slice_min(x, n=5)</code></td><td>Lowest values</td></tr>
+          <tr><td>Random sample</td><td><code>slice_sample(n=5)</code></td><td>Random row sampling</td></tr>
+          <tr><td>Ascending sort</td><td><code>arrange(col)</code></td><td>Small to large / A to Z</td></tr>
+          <tr><td>Descending sort</td><td><code>arrange(desc(col))</code></td><td>Large to small / Z to A</td></tr>
+          <tr><td>Create columns</td><td><code>mutate(new = expr)</code></td><td>Derive features, keep all rows</td></tr>
+          <tr><td>Keep new only</td><td><code>transmute(new = expr)</code></td><td>Derive features, drop others</td></tr>
+          <tr><td>Multi-condition</td><td><code>case_when(c1 ~ r1, TRUE ~ def)</code></td><td>Branching value assignment</td></tr>
+          <tr><td>Multi-column</td><td><code>across(cols, fn)</code></td><td>Map function over variables</td></tr>
+          <tr><td>Aggregate</td><td><code>summarise(m = mean(x))</code></td><td>Collapse to summary row</td></tr>
+          <tr><td>Group rows</td><td><code>group_by(category)</code></td><td>Attach partition metadata</td></tr>
+          <tr><td>Remove groups</td><td><code>ungroup()</code></td><td>Clear grouping state</td></tr>
+          <tr><td>Frequency table</td><td><code>count(x, sort=TRUE)</code></td><td>Tallies occurrences per category</td></tr>
+          <tr><td>Left join</td><td><code>left_join(x, y, by="k")</code></td><td>Keep all left rows</td></tr>
+          <tr><td>Right join</td><td><code>right_join(x, y, by="k")</code></td><td>Keep all right rows</td></tr>
+          <tr><td>Inner join</td><td><code>inner_join(x, y, by="k")</code></td><td>Keep matching rows only</td></tr>
+          <tr><td>Full join</td><td><code>full_join(x, y, by="k")</code></td><td>Keep all rows from both</td></tr>
+          <tr><td>Anti join</td><td><code>anti_join(x, y, by="k")</code></td><td>Keep rows in left with NO match</td></tr>
+          <tr><td>Semi join</td><td><code>semi_join(x, y, by="k")</code></td><td>Filter rows in left with match</td></tr>
+          <tr><td>Stack rows</td><td><code>bind_rows(df1, df2)</code></td><td>Combine tables vertically</td></tr>
+          <tr><td>Stitch cols</td><td><code>bind_cols(df1, df2)</code></td><td>Combine tables horizontally</td></tr>
+          <tr><td>Wide to Long</td><td><code>pivot_longer(cols, ...)</code></td><td>Gather columns into rows</td></tr>
+          <tr><td>Long to Wide</td><td><code>pivot_wider(names_from, ...)</code></td><td>Spread rows into columns</td></tr>
+          <tr><td>Split string</td><td><code>separate(col, into, sep)</code></td><td>Divide delimited column</td></tr>
+          <tr><td>Merge strings</td><td><code>unite(new, c1, c2, sep)</code></td><td>Combine multiple columns</td></tr>
+          <tr><td>Drop NAs</td><td><code>drop_na(cols)</code></td><td>Drop rows missing in target cols</td></tr>
+          <tr><td>Replace NAs</td><td><code>replace_na(list(x=0))</code></td><td>Impute fixed defaults</td></tr>
+          <tr><td>Fill direction</td><td><code>fill(col, .direction="down")</code></td><td>Last Observation Carried Forward</td></tr>
+          <tr><td>Complete keys</td><td><code>complete(k1, k2, fill=...)</code></td><td>Make implicit missing explicit</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 21. Practice Questions & Challenges -->
+  <section class="section-card">
+    <h2>21. Practice Questions &amp; Challenges</h2>
+
+    <h3>A. 20 Output Prediction Challenges</h3>
+    <div class="grid-card">
+      <p><strong>Challenge 1:</strong> What does <code>tibble(x=1:3) %&gt;% filter(x &gt; 1) %&gt;% nrow()</code> return?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 2:</strong> What does <code>tibble(a=1, b=2, c=3) %&gt;% select(-b) %&gt;% ncol()</code> return?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 3:</strong> What is <code>tibble(v=c(5, 20, 15)) %&gt;% arrange(desc(v)) %&gt;% slice_head(n=1) %&gt;% pull(v)</code>?</p>
+      <div class="output-block">Answer: [1] 20</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 4:</strong> What does <code>tibble(x=c(10, 20)) %&gt;% mutate(y = x * 2, z = y + 5) %&gt;% pull(z)</code> output?</p>
+      <div class="output-block">Answer: [1] 25 45</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 5:</strong> What does <code>tibble(g=c("A","A","B")) %&gt;% count(g) %&gt;% filter(g=="A") %&gt;% pull(n)</code> return?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 6:</strong> What is <code>nrow(inner_join(tibble(id=c(1,2)), tibble(id=c(2,3)), by="id"))</code>?</p>
+      <div class="output-block">Answer: [1] 1</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 7:</strong> What is <code>nrow(left_join(tibble(id=c(1,2)), tibble(id=c(2,3)), by="id"))</code>?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 8:</strong> What is <code>nrow(full_join(tibble(id=c(1,2)), tibble(id=c(2,3)), by="id"))</code>?</p>
+      <div class="output-block">Answer: [1] 3</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 9:</strong> What is <code>nrow(anti_join(tibble(id=c(1,2)), tibble(id=c(2,3)), by="id"))</code>?</p>
+      <div class="output-block">Answer: [1] 1 (Only ID 1)</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 10:</strong> What does <code>tibble(x=c(1, NA, 3)) %&gt;% drop_na() %&gt;% nrow()</code> return?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 11:</strong> What is <code>tibble(a=c(10, 20)) %&gt;% transmute(b = a * 3) %&gt;% names()</code>?</p>
+      <div class="output-block">Answer: [1] "b"</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 12:</strong> What does <code>case_when(10 &gt; 20 ~ "X", TRUE ~ "Y")</code> return?</p>
+      <div class="output-block">Answer: [1] "Y"</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 13:</strong> In <code>tibble(x=1) %&gt;% bind_rows(tibble(x=2)) %&gt;% nrow()</code>, what is returned?</p>
+      <div class="output-block">Answer: [1] 2</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 14:</strong> What is <code>between(15, 10, 20)</code> in R?</p>
+      <div class="output-block">Answer: [1] TRUE</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 15:</strong> What does <code>tibble(c=c("a","b")) %&gt;% filter(c %in% c("a","z")) %&gt;% pull(c)</code> return?</p>
+      <div class="output-block">Answer: [1] "a"</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 16:</strong> What is the row count when wide data with 3 student rows and 2 exam columns is pivoted with <code>pivot_longer(-id)</code>?</p>
+      <div class="output-block">Answer: 3 * 2 = 6 rows</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 17:</strong> What does <code>tibble(loc="NY_USA") %&gt;% separate(loc, into=c("c","co"), sep="_") %&gt;% pull(c)</code> return?</p>
+      <div class="output-block">Answer: [1] "NY"</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 18:</strong> What does <code>tibble(y=2026, m=10) %&gt;% unite("ym", y, m, sep="-") %&gt;% pull(ym)</code> return?</p>
+      <div class="output-block">Answer: [1] "2026-10"</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 19:</strong> In <code>tibble(v=c(10, NA)) %&gt;% fill(v, .direction="down") %&gt;% pull(v)</code>, what is the second element?</p>
+      <div class="output-block">Answer: [1] 10</div>
+    </div>
+    <div class="grid-card">
+      <p><strong>Challenge 20:</strong> What does <code>tibble(id=c(1,1), val=c(10,20)) %&gt;% group_by(id) %&gt;% summarise(m=mean(val)) %&gt;% pull(m)</code> return?</p>
+      <div class="output-block">Answer: [1] 15</div>
+    </div>
+
+    <h3>B. 20 Beginner Coding Exercises</h3>
+    <div class="grid-card">
+      <p><strong>Exercise 1: Create a Tibble:</strong> Construct a tibble containing employee names, departments, and salaries.</p>
+      <p><em>Hint:</em> Use <code>tibble(name=..., dept=..., salary=...)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 2: Pick Columns:</strong> Select only <code>mpg</code> and <code>cyl</code> from <code>mtcars</code> using dplyr.</p>
+      <p><em>Hint:</em> <code>mtcars %&gt;% select(mpg, cyl)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 3: Exclude Columns:</strong> Drop the <code>qsec</code> and <code>vs</code> columns from <code>mtcars</code>.</p>
+      <p><em>Hint:</em> <code>mtcars %&gt;% select(-qsec, -vs)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 4: Filter Powerful Cars:</strong> Extract cars with <code>hp &gt; 150</code> and <code>cyl == 8</code>.</p>
+      <p><em>Hint:</em> <code>mtcars %&gt;% filter(hp &gt; 150, cyl == 8)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 5: Range Filter:</strong> Filter cars with <code>mpg</code> between 20 and 30 inclusive.</p>
+      <p><em>Hint:</em> <code>filter(between(mpg, 20, 30))</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 6: Sort Descending:</strong> Sort <code>mtcars</code> by <code>mpg</code> from highest to lowest.</p>
+      <p><em>Hint:</em> <code>arrange(desc(mpg))</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 7: Top 3 Efficient Cars:</strong> Extract the top 3 highest mpg cars using slice.</p>
+      <p><em>Hint:</em> <code>slice_max(mpg, n = 3)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 8: Engineer Power-to-Weight:</strong> Calculate <code>hp_per_wt = hp / wt</code>.</p>
+      <p><em>Hint:</em> <code>mutate(hp_per_wt = hp / wt)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 9: Discretize Efficiency:</strong> Create a <code>mileage_cat</code> column using <code>case_when()</code>.</p>
+      <p><em>Hint:</em> <code>case_when(mpg &gt;= 25 ~ "High", mpg &gt;= 18 ~ "Med", TRUE ~ "Low")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 10: Grouped Aggregation:</strong> Compute average horsepower and count per cylinder group.</p>
+      <p><em>Hint:</em> <code>group_by(cyl) %&gt;% summarise(avg_hp = mean(hp), n = n())</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 11: Count Frequencies:</strong> Count cars by cylinder and transmission type (<code>am</code>).</p>
+      <p><em>Hint:</em> <code>count(cyl, am, sort = TRUE)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 12: Combine Sales Logs:</strong> Stack two monthly sales tibbles vertically.</p>
+      <p><em>Hint:</em> <code>bind_rows(sales_jan, sales_feb)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 13: Left Join Profiles:</strong> Join user profiles with their transaction history.</p>
+      <p><em>Hint:</em> <code>left_join(users, tx, by = "user_id")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 14: Find Inactive Users:</strong> Find users who have never placed an order.</p>
+      <p><em>Hint:</em> <code>anti_join(users, orders, by = "user_id")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 15: Pivot to Long:</strong> Reshape quarterly sales columns (<code>Q1</code> to <code>Q4</code>) into stacked rows.</p>
+      <p><em>Hint:</em> <code>pivot_longer(starts_with("Q"), names_to = "quarter", values_to = "sales")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 16: Pivot to Wide:</strong> Spread product category revenues into distinct columns.</p>
+      <p><em>Hint:</em> <code>pivot_wider(names_from = category, values_from = revenue, values_fill = 0)</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 17: Split City and State:</strong> Split a composite column <code>"Dallas_TX"</code> into two variables.</p>
+      <p><em>Hint:</em> <code>separate(city_state, into = c("city", "state"), sep = "_")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 18: Forward Fill Missing Vitals:</strong> Replace missing patient temperatures using LOCF.</p>
+      <p><em>Hint:</em> <code>fill(temperature, .direction = "down")</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 19: Impute Missing Defaults:</strong> Replace missing discounts with 0 using <code>replace_na()</code>.</p>
+      <p><em>Hint:</em> <code>replace_na(list(discount = 0))</code>.</p>
+    </div>
+    <div class="grid-card">
+      <p><strong>Exercise 20: Full AI Preparation:</strong> Filter, mutate, join catalog, and select training features.</p>
+      <p><em>Hint:</em> Chain <code>filter()</code> &rarr; <code>mutate()</code> &rarr; <code>left_join()</code> &rarr; <code>select()</code>.</p>
+    </div>
+  </section>
+
+</div>
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

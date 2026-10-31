@@ -1,0 +1,2822 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R Topic 18: Data Visualization with ggplot2</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #276DC3;
+      --brand-dark: #19355E;
+      --brand-light: #F0F4F8;
+      --brand-border: #C8D7E8;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">R Track</span>
+      <span class="badge badge-teal">Topic 18</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <header>
+    <h1>R Topic 18: Data Visualization with ggplot2</h1>
+    <p>CodeVerse Learning App &bull; Stage 5: Data Visualization &bull; Grammar of Graphics &bull; Real AI/ML Workflows</p>
+    <div style="margin-top: 3px;">
+      <span class="badge badge-brand">ggplot2 3.5+</span>
+      <span class="badge badge-primary">Grammar of Graphics</span>
+      <span class="badge badge-success">54 Pure Responsive SVGs</span>
+      <span class="badge badge-warning">22 Runnable Programs</span>
+      <span class="badge badge-danger">42 Validated MCQs</span>
+    </div>
+  </header>
+
+  <!-- SECTION 1: INTRODUCTION & GRAMMAR OF GRAPHICS -->
+  <div class="card">
+    <div class="card-title"><span>1. Introduction to Data Visualization & The Grammar of Graphics</span></div>
+    <p><strong>Data Visualization</strong> is the graphical representation of data and information. By turning numerical matrices and categorical features into visual elements (points, lines, bars, colors, and coordinates), we empower human cognition to instantly spot patterns, anomalies, correlations, and clusters.</p>
+    <p><strong>The Grammar of Graphics</strong> was pioneered by statistician Leland Wilkinson (1999) and brought to life in R by Hadley Wickham via <code>ggplot2</code>. Rather than viewing charts as isolated "types" (pie, bar, line), ggplot2 decomposes every graphic into a formal grammar composed of 7 independent structural layers.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="25" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+  <text x="120" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Visual Perception</text>
+  <text x="120" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Human brain processes images</text>
+  <text x="120" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">60,000x faster than raw text</text>
+  <rect x="245" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+  <text x="340" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Pattern Discovery</text>
+  <text x="340" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Reveals clusters, correlations,</text>
+  <text x="340" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">trends, and anomalous outliers</text>
+  <rect x="465" y="25" width="190" height="70" rx="6" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+  <text x="560" y="48" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Actionable Insights</text>
+  <text x="560" y="66" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Translates statistical metrics</text>
+  <text x="560" y="80" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">into executive business decisions</text>
+</svg></div>
+    
+    <div class="grid-2">
+      <div class="callout">
+        <strong>The 7 Core Layers:</strong>
+        <ul>
+          <li><strong>Data:</strong> The tidy rectangular dataset containing observations (rows) and variables (columns).</li>
+          <li><strong>Aesthetics (aes):</strong> Mappings from data variables to visual channels (x, y, color, fill, shape, size).</li>
+          <li><strong>Geometries (geoms):</strong> Visual shapes representing data points (geom_point, geom_line, geom_col).</li>
+          <li><strong>Facets:</strong> Small multiples splitting data across categorical variables into subpanels.</li>
+          <li><strong>Statistics (stats):</strong> Algorithmic transformations (binning, counting, smoothing, density estimation).</li>
+          <li><strong>Coordinates (coord):</strong> Coordinate system projecting data (Cartesian, polar, flipped, map projection).</li>
+          <li><strong>Theme:</strong> Non-data visual styling (fonts, backgrounds, grids, legend positioning).</li>
+        </ul>
+      </div>
+      <div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Why Visualization Matters: Anscombe's Quartet Lesson</text>
+  <rect x="30" y="38" width="290" height="65" rx="5" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="58" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Summary Statistics Alone Can Lie</text>
+  <text x="50" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">4 distinct datasets can share IDENTICAL</text>
+  <text x="50" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">mean, variance, correlation and regression slopes!</text>
+  <rect x="360" y="38" width="290" height="65" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="58" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Visual Plots Reveal True Realities</text>
+  <text x="380" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Plotting exposes parabolic curves, extreme leverage</text>
+  <text x="380" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">points, and bimodal clusters instantly.</text>
+</svg></div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The End-to-End Data Visualization Pipeline</text>
+  <g transform="translate(15, 35)">
+    <rect x="0" y="0" width="100" height="60" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+    <text x="50" y="26" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">1. Raw Data</text>
+    <text x="50" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Import &amp; Ingest</text>
+    <text x="115" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">&rarr;</text>
+    <rect x="135" y="0" width="105" height="60" rx="5" fill="#1C2541" stroke="#60A5FA" stroke-width="1"/>
+    <text x="187" y="26" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">2. Clean/Tidy</text>
+    <text x="187" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">dplyr &amp; tidyr</text>
+    <text x="255" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">&rarr;</text>
+    <rect x="275" y="0" width="105" height="60" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+    <text x="327" y="26" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">3. Map aes()</text>
+    <text x="327" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">x, y, color, size</text>
+    <text x="395" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">&rarr;</text>
+    <rect x="415" y="0" width="105" height="60" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+    <text x="467" y="26" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">4. Add Geom</text>
+    <text x="467" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">point, bar, line</text>
+    <text x="535" y="35" fill="#38BDF8" font-size="14" font-family="system-ui, sans-serif">&rarr;</text>
+    <rect x="555" y="0" width="95" height="60" rx="5" fill="#10B981"/>
+    <text x="602" y="28" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">5. Insights</text>
+    <text x="602" y="46" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Decisions &amp; AI</text>
+  </g>
+</svg></div>
+      </div>
+    </div>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Numerical (Quantitative)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Continuous: salary (45250.50), temperature (21.4)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Discrete: count (5 visits) &bull; Charts: Histogram, Scatter, Boxplot</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Categorical (Qualitative)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Nominal: city ("Delhi", "Mumbai"), gender</text>
+  <text x="380" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Ordinal: tier ("Bronze", "Silver", "Gold") &bull; Charts: Bar, Pie</text>
+</svg></div>
+  </div>
+
+  <!-- SECTION 2: ARCHITECTURE & THE PLUS OPERATOR -->
+  <div class="card">
+    <div class="card-title"><span>2. ggplot2 Architecture & The Addition (+) Operator</span></div>
+    <p>In ggplot2, you initialize a plot object with <code>ggplot(data, aes(...))</code> and append visual layers sequentially using the addition <code>+</code> operator. Note that <code>+</code> must always remain at the end of the line, never at the beginning of the next line.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 130" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="130" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Chart Selection Guide: Mapping Analytical Goals to Geometries</text>
+  <g transform="translate(20, 35)">
+    <rect x="0" y="0" width="120" height="75" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+    <text x="60" y="24" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Compare Categories</text>
+    <text x="60" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">geom_col()</text>
+    <text x="60" y="60" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">or geom_bar()</text>
+    <rect x="130" y="0" width="120" height="75" rx="5" fill="#1C2541" stroke="#60A5FA" stroke-width="1"/>
+    <text x="190" y="24" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Show Trend / Time</text>
+    <text x="190" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">geom_line()</text>
+    <text x="190" y="60" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">+ geom_point()</text>
+    <rect x="260" y="0" width="120" height="75" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+    <text x="320" y="24" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Relationship (2 Num)</text>
+    <text x="320" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">geom_point()</text>
+    <text x="320" y="60" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">+ geom_smooth()</text>
+    <rect x="390" y="0" width="120" height="75" rx="5" fill="#1C2541" stroke="#A855F7" stroke-width="1"/>
+    <text x="450" y="24" fill="#C084FC" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Distribution / Spread</text>
+    <text x="450" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">geom_histogram()</text>
+    <text x="450" y="60" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">or geom_density()</text>
+    <rect x="520" y="0" width="120" height="75" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+    <text x="580" y="24" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Quartiles &amp; Outliers</text>
+    <text x="580" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">geom_boxplot()</text>
+    <text x="580" y="60" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">or geom_violin()</text>
+  </g>
+</svg></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Base Canvas Initialization</span>
+library(ggplot2)
+p</code></pre>
+</div>
+
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">What is ggplot2?</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Created by Hadley Wickham &bull; Implementation of Leland Wilkinson's</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">"Grammar of Graphics" &bull; Composes plots by layering visual bricks</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Golden Advantage</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Separates data declaration from geometry and theme styling.</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Swap chart types by simply changing geom_*()!</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 135" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="135" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The 7 Structural Layers of the Grammar of Graphics</text>
+  <g transform="translate(30, 35)">
+    <rect x="0" y="60" width="85" height="24" fill="#334155" rx="3"/><text x="42" y="76" fill="#F8FAFC" font-size="9" text-anchor="middle">1. Data</text>
+    <rect x="90" y="50" width="85" height="24" fill="#1E3A8A" rx="3"/><text x="132" y="66" fill="#BFDBFE" font-size="9" text-anchor="middle">2. Aesthetics</text>
+    <rect x="180" y="40" width="85" height="24" fill="#065F46" rx="3"/><text x="222" y="56" fill="#A7F3D0" font-size="9" text-anchor="middle">3. Geometries</text>
+    <rect x="270" y="30" width="85" height="24" fill="#854D0E" rx="3"/><text x="312" y="46" fill="#FDE68A" font-size="9" text-anchor="middle">4. Facets</text>
+    <rect x="360" y="20" width="85" height="24" fill="#6B21A8" rx="3"/><text x="402" y="36" fill="#E9D5FF" font-size="9" text-anchor="middle">5. Statistics</text>
+    <rect x="450" y="10" width="85" height="24" fill="#991B1B" rx="3"/><text x="492" y="26" fill="#FECACA" font-size="9" text-anchor="middle">6. Coordinates</text>
+    <rect x="540" y="0" width="80" height="24" fill="#0F766E" rx="3"/><text x="580" y="16" fill="#CCFBF1" font-size="9" text-anchor="middle">7. Theme</text>
+  </g>
+  <text x="340" y="120" fill="#94A3B8" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Layers stack seamlessly using the addition (+) operator</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: AESTHETIC MAPPINGS -->
+  <div class="card">
+    <div class="card-title"><span>3. Aesthetic Mappings: aes() vs Fixed Attributes</span></div>
+    <p>A crucial conceptual hurdle for beginners is distinguishing between <strong>mapping</strong> a variable inside <code>aes()</code> versus <strong>setting</strong> a constant aesthetic outside <code>aes()</code>.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Basic Anatomy of a ggplot2 Expression</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="12" font-family="system-ui, sans-serif" text-anchor="middle">ggplot(data = df, aes(x = hours, y = marks)) + geom_point()</text>
+  <text x="140" y="80" fill="#93C5FD" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">&#8593; Data Frame</text>
+  <text x="340" y="80" fill="#FBBF24" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">&#8593; Visual Aesthetics (Coordinates)</text>
+  <text x="450" y="80" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">&#8593; + Layer</text>
+  <text x="560" y="80" fill="#34D399" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">&#8593; Geometric Shape</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div class="callout callout-warning">
+        <strong>Aesthetic Mapping: inside aes()</strong><br>
+        <code>geom_point(aes(color = class))</code><br>
+        Maps values of the column <code>class</code> to distinct colors via an automatic color scale and legend.
+      </div>
+      <div class="callout callout-success">
+        <strong>Static Aesthetic Setting: outside aes()</strong><br>
+        <code>geom_point(color = "#276DC3", size = 3)</code><br>
+        Sets every point to the constant hex color <code>#276DC3</code> with size 3. No legend is drawn.
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Visual Aesthetic Channels in aes()</text>
+  <g transform="translate(20, 35)">
+    <rect x="0" y="0" width="100" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+    <text x="50" y="24" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Position</text>
+    <text x="50" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">x, y</text>
+    <text x="50" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Spatial grid</text>
+    <rect x="110" y="0" width="100" height="70" rx="5" fill="#1C2541" stroke="#60A5FA" stroke-width="1"/>
+    <text x="160" y="24" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Color / Fill</text>
+    <text x="160" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">color, fill</text>
+    <text x="160" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Borders &amp; areas</text>
+    <rect x="220" y="0" width="100" height="70" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+    <text x="270" y="24" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Magnitude</text>
+    <text x="270" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">size</text>
+    <text x="270" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Bubble diameter</text>
+    <rect x="330" y="0" width="100" height="70" rx="5" fill="#1C2541" stroke="#A855F7" stroke-width="1"/>
+    <text x="380" y="24" fill="#C084FC" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Category</text>
+    <text x="380" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">shape</text>
+    <text x="380" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Circles, triangles</text>
+    <rect x="440" y="0" width="100" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+    <text x="490" y="24" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Transparency</text>
+    <text x="490" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">alpha</text>
+    <text x="490" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Overplotting fix</text>
+    <rect x="550" y="0" width="90" height="70" rx="5" fill="#1C2541" stroke="#EC4899" stroke-width="1"/>
+    <text x="595" y="24" fill="#F472B6" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Grouping</text>
+    <text x="595" y="44" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">group</text>
+    <text x="595" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Series splitting</text>
+  </g>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Mapped (INSIDE aes())</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">geom_point(aes(color = department))</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Varies color dynamically per data category &bull; Builds a legend</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Fixed Setting (OUTSIDE aes())</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">geom_point(color = "steelblue", size = 3)</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Sets uniform visual property for ALL points &bull; No legend</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: FOUNDATIONAL GEOMETRIC LAYERS -->
+  <div class="card">
+    <div class="card-title"><span>4. Foundational Geometric Layers</span></div>
+    <p>Geometric layers dictate how data rows are materialized visually on the Cartesian plane. Choose geoms matching data variable types (continuous vs categorical).</p>
+    
+    <div class="grid-3">
+      <div class="callout">
+        <strong>Scatter & Line:</strong>
+        <ul>
+          <li><code>geom_point()</code>: 2 continuous variables (x, y).</li>
+          <li><code>geom_line()</code>: Continuous ordered trend over time/steps.</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <strong>Bar Charts:</strong>
+        <ul>
+          <li><code>geom_bar()</code>: Auto-counts frequencies (stat = 'count').</li>
+          <li><code>geom_col()</code>: Plots pre-aggregated y values directly.</li>
+        </ul>
+      </div>
+      <div class="callout">
+        <strong>Distributions:</strong>
+        <ul>
+          <li><code>geom_histogram()</code>: Bins continuous x data.</li>
+          <li><code>geom_boxplot()</code>: Median, IQR, whiskers, outliers.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Layering Multiple Geometries in a Single Plot</text>
+  <g transform="translate(30, 35)">
+    <rect x="0" y="0" width="130" height="60" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+    <text x="65" y="26" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Base Canvas</text>
+    <text x="65" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">ggplot(df, aes(x,y))</text>
+    <text x="145" y="34" fill="#38BDF8" font-size="16" font-family="system-ui, sans-serif">+</text>
+    <rect x="165" y="0" width="130" height="60" rx="5" fill="#1C2541" stroke="#60A5FA" stroke-width="1"/>
+    <text x="230" y="26" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_point()</text>
+    <text x="230" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Individual observations</text>
+    <text x="310" y="34" fill="#38BDF8" font-size="16" font-family="system-ui, sans-serif">+</text>
+    <rect x="330" y="0" width="130" height="60" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+    <text x="395" y="26" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_smooth()</text>
+    <text x="395" y="44" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Trend line with CI</text>
+    <text x="475" y="34" fill="#38BDF8" font-size="16" font-family="system-ui, sans-serif">+</text>
+    <rect x="495" y="0" width="125" height="60" rx="5" fill="#10B981"/>
+    <text x="557" y="28" fill="#FFFFFF" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">labs() + theme()</text>
+    <text x="557" y="46" fill="#D1FAE5" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Publication Ready</text>
+  </g>
+</svg></div>
+    
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Bar Chart: Category Comparison</text>
+  <rect x="100" y="75" width="50" height="25" fill="#38BDF8" rx="2"/><text x="125" y="65" fill="#93C5FD" font-size="9" text-anchor="middle">IT (25)</text>
+  <rect x="220" y="55" width="50" height="45" fill="#38BDF8" rx="2"/><text x="245" y="45" fill="#93C5FD" font-size="9" text-anchor="middle">HR (45)</text>
+  <rect x="340" y="35" width="50" height="65" fill="#38BDF8" rx="2"/><text x="365" y="25" fill="#93C5FD" font-size="9" text-anchor="middle">Sales (65)</text>
+  <line x1="80" y1="100" x2="420" y2="100" stroke="#64748B" stroke-width="1.5"/>
+  <text x="520" y="60" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Height of bar represents frequency count</text>
+  <text x="520" y="75" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">or an aggregated summary variable.</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_bar(): Counts Rows</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Requires ONLY x aesthetic: aes(x = dept)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">R counts occurrences automatically (stat = "count")</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_col(): Uses Existing Values</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Requires BOTH x and y: aes(x = dept, y = revenue)</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Plots pre-computed metrics directly (stat = "identity")</text>
+</svg></div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Grouped Bar Chart: position = "dodge"</text>
+  <g transform="translate(100, 35)">
+    <rect x="0" y="30" width="25" height="35" fill="#38BDF8"/><text x="12" y="22" fill="#93C5FD" font-size="8" text-anchor="middle">2025</text>
+    <rect x="28" y="15" width="25" height="50" fill="#10B981"/><text x="40" y="8" fill="#A7F3D0" font-size="8" text-anchor="middle">2026</text>
+    <text x="26" y="80" fill="#CBD5E1" font-size="9" text-anchor="middle">Product A</text>
+    <rect x="90" y="25" width="25" height="40" fill="#38BDF8"/>
+    <rect x="118" y="10" width="25" height="55" fill="#10B981"/>
+    <text x="116" y="80" fill="#CBD5E1" font-size="9" text-anchor="middle">Product B</text>
+    <line x1="-20" y1="65" x2="180" y2="65" stroke="#64748B" stroke-width="1.5"/>
+  </g>
+  <text x="480" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Side-by-side comparison across subcategories.</text>
+  <text x="480" y="70" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">geom_col(position = "dodge") or position_dodge()</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Stacked Bar Chart: position = "stack" vs "fill"</text>
+  <g transform="translate(80, 35)">
+    <rect x="0" y="35" width="45" height="30" fill="#38BDF8"/>
+    <rect x="0" y="10" width="45" height="25" fill="#F59E0B"/>
+    <text x="22" y="80" fill="#CBD5E1" font-size="9" text-anchor="middle">stack (Total)</text>
+    <rect x="90" y="35" width="45" height="30" fill="#38BDF8"/>
+    <rect x="90" y="0" width="45" height="35" fill="#F59E0B"/>
+    <text x="112" y="80" fill="#CBD5E1" font-size="9" text-anchor="middle">fill (100% Pct)</text>
+    <line x1="-15" y1="65" x2="160" y2="65" stroke="#64748B" stroke-width="1.5"/>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">position = "stack": Displays absolute cumulative totals</text>
+  <text x="400" y="72" fill="#FBBF24" font-size="8" font-family="system-ui, sans-serif">position = "fill": Normalizes bars to 100% to compare proportions</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: ADVANCED GEOMETRIC LAYERS -->
+  <div class="card">
+    <div class="card-title"><span>5. Advanced & Distributional Geometric Layers</span></div>
+    <p>When dataset complexity increases, basic geoms can suffer from severe overplotting or conceal multi-modal distributions. Advanced geoms reveal dense point clusters and density distributions.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Line Chart: Tracking Changes Over Time / Order</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="250" y2="65" stroke="#64748B" stroke-width="1.5"/>
+    <path d="M 20 50 L 70 30 L 120 40 L 180 15 L 230 25" fill="none" stroke="#38BDF8" stroke-width="2.5"/>
+    <circle cx="20" cy="50" r="3.5" fill="#38BDF8"/>
+    <circle cx="70" cy="30" r="3.5" fill="#38BDF8"/>
+    <circle cx="120" cy="40" r="3.5" fill="#38BDF8"/>
+    <circle cx="180" cy="15" r="3.5" fill="#38BDF8"/>
+    <circle cx="230" cy="25" r="3.5" fill="#38BDF8"/>
+  </g>
+  <text x="450" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Connects consecutive observations along ordered x-axis.</text>
+  <text x="450" y="70" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Combine geom_line() + geom_point() for clarity!</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div>
+        <p><strong>geom_violin() & geom_jitter():</strong> Violins mirror kernel density estimates, exposing bimodal clusters invisible in boxplots. Jitter adds small noise to eliminate point overlaps.</p>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Multiple Line Series: aes(color = product, group = product)</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="250" y2="65" stroke="#64748B" stroke-width="1.5"/>
+    <path d="M 20 45 L 80 25 L 140 35 L 200 10" fill="none" stroke="#38BDF8" stroke-width="2"/>
+    <path d="M 20 60 L 80 50 L 140 40 L 200 30" fill="none" stroke="#10B981" stroke-width="2"/>
+  </g>
+  <text x="450" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Color aesthetic automatically splits series into distinct lines.</text>
+  <text x="450" y="70" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Allows multi-entity trend comparisons over identical time spans.</text>
+</svg></div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">True Date Axis Parsing</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Ensure dates are Date objects: as.Date(date)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">scale_x_date(date_labels = "%b %Y", date_breaks = "1 month")</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Crucial Ordering Requirement</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Unordered dates produce zig-zag spaghetti lines!</text>
+  <text x="380" y="82" fill="#FBBF24" font-size="8" font-family="system-ui, sans-serif">Always arrange(date) prior to passing into ggplot().</text>
+</svg></div>
+      </div>
+      <div>
+        <p><strong>geom_density() & geom_tile():</strong> Continuous probability density smooths histograms. <code>geom_tile()</code> converts 2D grid matrices into correlation or confusion heatmaps.</p>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Scatter Plot: Comparing Two Continuous Variables</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="200" y2="65" stroke="#64748B" stroke-width="1.5"/>
+    <line x1="0" y1="65" x2="0" y2="5" stroke="#64748B" stroke-width="1.5"/>
+    <circle cx="30" cy="55" r="3" fill="#38BDF8"/>
+    <circle cx="60" cy="45" r="3" fill="#38BDF8"/>
+    <circle cx="90" cy="35" r="3" fill="#38BDF8"/>
+    <circle cx="130" cy="25" r="3" fill="#38BDF8"/>
+    <circle cx="170" cy="15" r="3" fill="#38BDF8"/>
+  </g>
+  <text x="420" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Each dot represents an observation (x = hours, y = marks).</text>
+  <text x="420" y="70" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Reveals correlation direction, clustering, and anomalous points.</text>
+</svg></div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#10B981" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Positive Correlation (r &gt; 0)</text>
+  <g transform="translate(120, 30)">
+    <line x1="0" y1="60" x2="160" y2="60" stroke="#64748B"/>
+    <line x1="0" y1="60" x2="0" y2="0" stroke="#64748B"/>
+    <path d="M 20 50 L 140 10" stroke="#10B981" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <circle cx="30" cy="45" r="3" fill="#10B981"/><circle cx="70" cy="35" r="3" fill="#10B981"/>
+    <circle cx="110" cy="20" r="3" fill="#10B981"/><circle cx="135" cy="12" r="3" fill="#10B981"/>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">As X increases, Y also increases.</text>
+  <text x="400" y="70" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">e.g. Study hours vs Examination marks</text>
+</svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 6: FACETING & SMALL MULTIPLES -->
+  <div class="card">
+    <div class="card-title"><span>6. Small Multiples & Faceting (facet_wrap & facet_grid)</span></div>
+    <p><strong>Faceting</strong> splits a plot into multiple subpanels, with each panel presenting a slice of data corresponding to a categorical conditioning factor. This avoids cluttered visual legends and enables clean comparisons.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#EF4444" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Negative Correlation (r &lt; 0)</text>
+  <g transform="translate(120, 30)">
+    <line x1="0" y1="60" x2="160" y2="60" stroke="#64748B"/>
+    <line x1="0" y1="60" x2="0" y2="0" stroke="#64748B"/>
+    <path d="M 20 10 L 140 50" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <circle cx="30" cy="15" r="3" fill="#EF4444"/><circle cx="65" cy="25" r="3" fill="#EF4444"/>
+    <circle cx="105" cy="40" r="3" fill="#EF4444"/><circle cx="135" cy="48" r="3" fill="#EF4444"/>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">As X increases, Y decreases.</text>
+  <text x="400" y="70" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">e.g. Car mileage vs Market resale value</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div class="callout">
+        <strong>facet_wrap(~ group, ncol = 3):</strong><br>
+        Takes a 1D sequence of panels and wraps them across rows/columns. Ideal for a single categorical variable with many levels.
+      </div>
+      <div class="callout">
+        <strong>facet_grid(rows ~ cols):</strong><br>
+        Forms a 2D matrix of subplots mapped strictly to row factors and column factors. Every intersection is visually evaluated.
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#94A3B8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Zero / No Clear Correlation (r &approx; 0)</text>
+  <g transform="translate(120, 30)">
+    <line x1="0" y1="60" x2="160" y2="60" stroke="#64748B"/>
+    <line x1="0" y1="60" x2="0" y2="0" stroke="#64748B"/>
+    <circle cx="30" cy="20" r="3" fill="#94A3B8"/><circle cx="50" cy="45" r="3" fill="#94A3B8"/>
+    <circle cx="85" cy="15" r="3" fill="#94A3B8"/><circle cx="110" cy="50" r="3" fill="#94A3B8"/>
+    <circle cx="140" cy="25" r="3" fill="#94A3B8"/>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Points scattered randomly without linear trend.</text>
+  <text x="400" y="70" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">e.g. Student shoe size vs Math exam score</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_smooth(method = "lm", se = TRUE)</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="200" y2="65" stroke="#64748B"/>
+    <!-- Confidence band -->
+    <path d="M 20 48 L 180 10 L 180 20 L 20 56 Z" fill="#38BDF8" opacity="0.25"/>
+    <line x1="20" y1="52" x2="180" y2="15" stroke="#38BDF8" stroke-width="2"/>
+    <circle cx="40" cy="50" r="3" fill="#60A5FA"/>
+    <circle cx="80" cy="35" r="3" fill="#60A5FA"/>
+    <circle cx="120" cy="32" r="3" fill="#60A5FA"/>
+    <circle cx="160" cy="18" r="3" fill="#60A5FA"/>
+  </g>
+  <text x="420" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Fits Ordinary Least Squares (OLS) trend line.</text>
+  <text x="420" y="70" fill="#38BDF8" font-size="8" font-family="system-ui, sans-serif">Shaded region = 95% confidence interval of the mean.</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: STATISTICAL TRANSFORMATIONS & COORDINATES -->
+  <div class="card">
+    <div class="card-title"><span>7. Statistical Transformations & Coordinate Systems</span></div>
+    <p>Every geom has an underlying statistical transformation (stat). You can alter coordinates (flipping axes, transforming to polar rings, or fixing aspect ratios).</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Histogram: Discretizing Continuous Values into Bins</text>
+  <g transform="translate(100, 35)">
+    <rect x="0" y="45" width="28" height="20" fill="#38BDF8" stroke="#0F172A"/>
+    <rect x="30" y="25" width="28" height="40" fill="#38BDF8" stroke="#0F172A"/>
+    <rect x="60" y="10" width="28" height="55" fill="#38BDF8" stroke="#0F172A"/>
+    <rect x="90" y="20" width="28" height="45" fill="#38BDF8" stroke="#0F172A"/>
+    <rect x="120" y="50" width="28" height="15" fill="#38BDF8" stroke="#0F172A"/>
+    <line x1="-10" y1="65" x2="160" y2="65" stroke="#64748B" stroke-width="1.5"/>
+  </g>
+  <text x="380" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">geom_histogram(binwidth = 5): Groups numbers into ranges.</text>
+  <text x="380" y="70" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Y-axis displays frequency count of observations per bin.</text>
+</svg></div>
+
+    <div class="grid-3">
+      <div class="callout">
+        <strong>coord_flip():</strong><br>
+        Swaps horizontal and vertical axes. Extremely useful for reading long horizontal bar labels.
+      </div>
+      <div class="callout">
+        <strong>coord_polar(theta = 'y'):</strong><br>
+        Bends Cartesian space into polar coordinates. Turns stacked bars into pie or donut charts.
+      </div>
+      <div class="callout">
+        <strong>coord_fixed(ratio = 1):</strong><br>
+        Forces 1 unit on x to equal 1 unit on y. Essential for ROC curves, PCA, and maps.
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1"/>
+  <text x="175" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Too Wide vs Too Narrow Bins</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Too wide (bins=3): Over-smoothes, hides multi-modality</text>
+  <text x="50" y="82" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">Too narrow (bins=200): Over-noises, spiky comb appearance</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Best Practice Guidance</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Always experiment with binwidth = ... or bins = 30.</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Look for central tendency, skewness, and outliers.</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_density(): Smooth Kernel Density Estimation</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="220" y2="65" stroke="#64748B"/>
+    <path d="M 10 65 Q 60 65 80 40 Q 110 5 130 5 Q 160 40 180 65 Z" fill="#38BDF8" opacity="0.35"/>
+    <path d="M 10 65 Q 60 65 80 40 Q 110 5 130 5 Q 160 40 180 65" fill="none" stroke="#38BDF8" stroke-width="2.5"/>
+  </g>
+  <text x="440" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Non-parametric probability curve where total area under</text>
+  <text x="440" y="70" fill="#38BDF8" font-size="8" font-family="system-ui, sans-serif">the curve integrates to exactly 1.0 (100%).</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Histogram (Discrete Bins)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Direct observation counts &bull; Dependent on bin placement</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Hard to compare multiple overlapping groups cleanly</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Density (Continuous Curves)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Smooth estimation &bull; Great for overlapping group curves</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">geom_density(aes(color = dept, fill = dept), alpha = 0.3)</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 8: SCALES, COLOR PALETTES & CUSTOMIZATION -->
+  <div class="card">
+    <div class="card-title"><span>8. Scales, Color Palettes & Customization</span></div>
+    <p><strong>Scales</strong> control how data values translate into visual dimensions: axis tick increments, numerical formatting (currency, percent, log), and color gradients.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 135" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="135" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Boxplot Five-Number Summary &amp; Outlier Anatomy</text>
+  <g transform="translate(40, 30)">
+    <line x1="80" y1="50" x2="480" y2="50" stroke="#475569" stroke-width="1"/>
+    <!-- Whiskers -->
+    <line x1="120" y1="50" x2="200" y2="50" stroke="#38BDF8" stroke-width="2"/>
+    <line x1="120" y1="35" x2="120" y2="65" stroke="#38BDF8" stroke-width="2"/>
+    <text x="120" y="80" fill="#94A3B8" font-size="8" text-anchor="middle">Q1 - 1.5*IQR</text>
+    <!-- Box -->
+    <rect x="200" y="25" width="200" height="50" fill="#1E293B" stroke="#38BDF8" stroke-width="2"/>
+    <!-- Median -->
+    <line x1="280" y1="25" x2="280" y2="75" stroke="#10B981" stroke-width="3"/>
+    <text x="200" y="18" fill="#93C5FD" font-size="8" text-anchor="middle">Q1 (25%)</text>
+    <text x="280" y="18" fill="#34D399" font-size="9" font-weight="bold" text-anchor="middle">Median (50%)</text>
+    <text x="400" y="18" fill="#93C5FD" font-size="8" text-anchor="middle">Q3 (75%)</text>
+    <!-- Upper whisker -->
+    <line x1="400" y1="50" x2="480" y2="50" stroke="#38BDF8" stroke-width="2"/>
+    <line x1="480" y1="35" x2="480" y2="65" stroke="#38BDF8" stroke-width="2"/>
+    <text x="480" y="80" fill="#94A3B8" font-size="8" text-anchor="middle">Q3 + 1.5*IQR</text>
+    <!-- Outliers -->
+    <circle cx="530" cy="50" r="4" fill="#EF4444"/>
+    <text x="530" y="80" fill="#F87171" font-size="8" font-weight="bold" text-anchor="middle">Outlier &gt; 1.5*IQR</text>
+  </g>
+</svg></div>
+
+    <div class="grid-3">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_boxplot(outlier.color = "red")</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Points beyond whiskers automatically highlighted as dots</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Whiskers represent max/min observations WITHIN 1.5*IQR bounds</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Comparing Groups</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">aes(x = department, y = salary): Displays side-by-side</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">boxplots across all categories on a shared scale.</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_violin(): Mirrored Kernel Density Contours</text>
+  <g transform="translate(140, 30)">
+    <path d="M 60 5 C 90 20, 80 40, 60 65 C 40 40, 30 20, 60 5 Z" fill="#A855F7" opacity="0.4" stroke="#C084FC" stroke-width="1.5"/>
+    <line x1="60" y1="20" x2="60" y2="50" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="60" cy="35" r="3" fill="#FFFFFF"/>
+  </g>
+  <text x="360" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Combines a boxplot with mirrored density curves.</text>
+  <text x="360" y="70" fill="#C084FC" font-size="8" font-family="system-ui, sans-serif">Reveals bimodal peaks and multimodal distributions hidden by boxplots.</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Boxplot (Summary Fences)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Shows exact median, Q1, Q3, and individual outlier dots</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Cannot show whether data has two peaks (bimodal)</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#A855F7" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#C084FC" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Violin Plot (Distribution Shape)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Bulges show where data points concentrate</text>
+  <text x="380" y="82" fill="#C084FC" font-size="8" font-family="system-ui, sans-serif">Best of both: geom_violin() + geom_boxplot(width = 0.1)</text>
+</svg></div>
+    </div>
+
+    <div class="callout callout-success">
+      <strong>Accessibility & Perceptual Uniformity:</strong> Always prefer <code>scale_fill_viridis_c()</code> or <code>scale_color_viridis_d()</code> over rainbow palettes. Viridis scales maintain monotonic luminance ramps that remain clear when printed in greyscale or viewed by colorblind users.
+    </div>
+  </div>
+
+  <!-- SECTION 9: THEMES, STYLING & ANNOTATIONS -->
+  <div class="card">
+    <div class="card-title"><span>9. Themes, Styling & Annotations</span></div>
+    <p>Themes manage non-data visual properties. ggplot2 includes standard themes (<code>theme_minimal</code>, <code>theme_classic</code>, <code>theme_void</code>) which can be customized via <code>theme(...)</code> and element functions (<code>element_text</code>, <code>element_line</code>, <code>element_rect</code>, <code>element_blank</code>).</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Pie Chart: Parts of a Whole</text>
+  <circle cx="160" cy="65" r="35" fill="#38BDF8"/>
+  <path d="M 160 65 L 160 30 A 35 35 0 0 1 195 65 Z" fill="#10B981"/>
+  <path d="M 160 65 L 195 65 A 35 35 0 0 1 160 100 Z" fill="#F59E0B"/>
+  <text x="320" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Represents proportions of a total 100% sum.</text>
+  <text x="320" y="70" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Built in ggplot2 by transforming stacked bar charts to polar coordinates.</text>
+</svg></div>
+
+    <div class="grid-3">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Human Perception Flaw in Pies</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Human eyes struggle to judge angles and area slices accurately</text>
+  <text x="50" y="82" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">Comparing 28% vs 31% slice is nearly impossible visually</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Bar Charts: Linear Baseline Clarity</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Bar charts align items against a shared zero baseline</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Always preferred when comparing 4+ categories</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">coord_polar(): Cartesian to Circular Coordinate Wrapping</text>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">ggplot(df, aes(x = "", y = share, fill = brand)) + geom_col() + coord_polar(theta = "y")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">A single stacked bar chart of width 1 is curled into a 360-degree circle</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">theta = "y" maps the y-axis (heights) to angle around the origin</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">facet_wrap(~ category): Subplotting Along a 1D Variable</text>
+  <g transform="translate(60, 35)">
+    <rect x="0" y="0" width="80" height="55" fill="#1C2541" stroke="#38BDF8"/><text x="40" y="32" fill="#93C5FD" font-size="8" text-anchor="middle">Panel: IT</text>
+    <rect x="95" y="0" width="80" height="55" fill="#1C2541" stroke="#38BDF8"/><text x="135" y="32" fill="#93C5FD" font-size="8" text-anchor="middle">Panel: HR</text>
+    <rect x="190" y="0" width="80" height="55" fill="#1C2541" stroke="#38BDF8"/><text x="230" y="32" fill="#93C5FD" font-size="8" text-anchor="middle">Panel: Sales</text>
+  </g>
+  <text x="450" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Wraps 1D sequence of panels into a 2D ribbon of subplots.</text>
+  <text x="450" y="72" fill="#38BDF8" font-size="8" font-family="system-ui, sans-serif">facet_wrap(~ dept, scales = "free_y") allows independent Y limits.</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 10: COMBINING PLOTS & EXPORTING -->
+  <div class="card">
+    <div class="card-title"><span>10. Combining Plots & Publication Export (ggsave & patchwork)</span></div>
+    <p>Modern data pipelines compose multiple figures into cohesive dashboards using <code>patchwork</code> (e.g., <code>(p1 | p2) / p3</code>) and export print-ready assets via <code>ggsave()</code>.</p>
+    
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">facet_grid(row_var ~ col_var): 2D Matrix of Subplots</text>
+  <g transform="translate(60, 35)">
+    <rect x="0" y="0" width="70" height="30" fill="#1E293B" stroke="#10B981"/><text x="35" y="18" fill="#A7F3D0" font-size="7" text-anchor="middle">M &times; 2025</text>
+    <rect x="80" y="0" width="70" height="30" fill="#1E293B" stroke="#10B981"/><text x="115" y="18" fill="#A7F3D0" font-size="7" text-anchor="middle">M &times; 2026</text>
+    <rect x="0" y="38" width="70" height="30" fill="#1E293B" stroke="#10B981"/><text x="35" y="56" fill="#A7F3D0" font-size="7" text-anchor="middle">F &times; 2025</text>
+    <rect x="80" y="38" width="70" height="30" fill="#1E293B" stroke="#10B981"/><text x="115" y="56" fill="#A7F3D0" font-size="7" text-anchor="middle">F &times; 2026</text>
+  </g>
+  <text x="380" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Forms an explicit grid where rows represent one variable</text>
+  <text x="380" y="72" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">and columns represent another &bull; Ideal for two-factor breakdowns.</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">labs(title = "...", subtitle = "...", caption = "...", x = "...", y = "...", color = "...")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Centralizes all chart labeling &bull; Replaces cryptic variable names with clear business titles</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Setting aesthetic name (e.g. color = "Category") re-labels the legend title!</text>
+</svg></div>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Combining plots with patchwork and exporting at 300 DPI</span>
+library(ggplot2)
+library(patchwork)
+
+p_combined</code></pre>
+</div>
+  </div>
+
+  <!-- SECTION 11: AI & ML VISUALIZATIONS -->
+  <div class="card">
+    <div class="card-title"><span>11. Real-World AI, Machine Learning & Data Science Visualizations</span></div>
+    <p>In AI and Machine Learning engineering, ggplot2 is indispensable for diagnosing training dynamics, evaluating classification thresholds, inspecting feature importance, and validating model calibrations.</p>
+    
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Discrete Scales (scale_color_manual)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">For categorical factors: c("IT" = "#38BDF8", "HR" = "#10B981")</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">ColorBrewer palettes: scale_fill_brewer(palette = "Set2")</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Continuous Scales (scale_color_gradient)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">scale_color_gradient(low = "blue", high = "red")</text>
+  <text x="380" y="82" fill="#FBBF24" font-size="8" font-family="system-ui, sans-serif">scale_fill_viridis_c(): Perceptually uniform &amp; colorblind safe</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div>
+        <p><strong>Training Dynamics:</strong> Loss and validation divergence curves pinpoint the optimal early stopping checkpoint.</p>
+        <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Built-In ggplot2 Themes</text>
+  <g transform="translate(20, 35)">
+    <rect x="0" y="0" width="120" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1"/>
+    <text x="60" y="24" fill="#38BDF8" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">theme_minimal()</text>
+    <text x="60" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Zero border</text>
+    <text x="60" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Clean light grid</text>
+    <rect x="130" y="0" width="120" height="70" rx="5" fill="#1C2541" stroke="#60A5FA" stroke-width="1"/>
+    <text x="190" y="24" fill="#60A5FA" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">theme_bw()</text>
+    <text x="190" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Black border</text>
+    <text x="190" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Classic white panel</text>
+    <rect x="260" y="0" width="120" height="70" rx="5" fill="#1C2541" stroke="#F59E0B" stroke-width="1"/>
+    <text x="320" y="24" fill="#FBBF24" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">theme_classic()</text>
+    <text x="320" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">No grid lines</text>
+    <text x="320" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">X &amp; Y axes only</text>
+    <rect x="390" y="0" width="120" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1"/>
+    <text x="450" y="24" fill="#34D399" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">theme_light()</text>
+    <text x="450" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Light grey border</text>
+    <text x="450" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Very subtle grid</text>
+    <rect x="520" y="0" width="120" height="70" rx="5" fill="#1C2541" stroke="#A855F7" stroke-width="1"/>
+    <text x="580" y="24" fill="#C084FC" font-size="10" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">theme_dark()</text>
+    <text x="580" y="44" fill="#E2E8F0" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Dark grey panel</text>
+    <text x="580" y="58" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Colloquial UI style</text>
+  </g>
+</svg></div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">theme(legend.position = "bottom" / "top" / "none")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Moving legend to bottom frees up horizontal space for wide charts</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">legend.position = "none" completely removes redundant legends</text>
+</svg></div>
+      </div>
+      <div>
+        <p><strong>Classification Diagnostics:</strong> ROC-AUC curves measure threshold trade-offs, and confusion heatmaps reveal class misclassifications.</p>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">scale_y_continuous(breaks = seq(0, 100, 20), limits = c(0, 100))</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Controls exact tick marks (breaks) and boundary clamping</text>
+  <text x="340" y="90" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">scales::dollar or scales::percent formats numbers without manual regex</text>
+</svg></div>
+        <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Horizontal Flipping: coord_flip()</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Rotates X and Y axes 90 degrees clockwise</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Invaluable when category labels are long and overlap horizontally</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Modern ggplot2 Equivalent</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">You can now simply map: aes(y = category, x = count)</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">geom_col() automatically renders horizontal bars!</text>
+</svg></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 12: 22 PRACTICAL RUNNABLE R PROGRAMS -->
+  <div class="card">
+    <div class="card-title"><span>12. 22 Practical Runnable R Programs</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#F87171" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">scale_x_continuous(limits = ...)</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">DROPS data outside the limits before calculations!</text>
+  <text x="50" y="82" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">Boxplots and regression lines recalculate with missing data!</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">coord_cartesian(xlim = ...)</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">ZOOMS like a magnifying glass without dropping data.</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Boxplot whiskers and trend lines remain 100% accurate.</text>
+</svg></div>
+    
+    <div class="grid-2">
+      <div>
+        <h4>1. Simple Scatter Plot</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(ggplot2)
+ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(color = <span class="hljs-string">&quot;#38BDF8&quot;</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>2. Colored Scatter Plot with Grouping</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy, color = drv)) +
+  geom_point(size = <span class="hljs-number">2.5</span>, alpha = <span class="hljs-number">0.8</span>) +
+  scale_color_manual(values = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;4&quot;</span>=<span class="hljs-string">&quot;#EF4444&quot;</span>,<span class="hljs-string">&quot;f&quot;</span>=<span class="hljs-string">&quot;#10B981&quot;</span>,<span class="hljs-string">&quot;r&quot;</span>=<span class="hljs-string">&quot;#38BDF8&quot;</span>)) +
+  theme_light()</code></pre>
+</div>
+
+        <h4>3. Scatter Plot with Linear Regression (lm)</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(alpha = <span class="hljs-number">0.5</span>) +
+  geom_smooth(method = <span class="hljs-string">&quot;lm&quot;</span>, color = <span class="hljs-string">&quot;#EF4444&quot;</span>, se = <span class="hljs-literal">TRUE</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>4. Scatter Plot with Non-Linear LOESS Curve</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(alpha = <span class="hljs-number">0.4</span>) +
+  geom_smooth(method = <span class="hljs-string">&quot;loess&quot;</span>, color = <span class="hljs-string">&quot;#10B981&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>5. Time Series Line Chart</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>6. Multi-Series Line Chart with Legends</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>7. Frequency Bar Chart (geom_bar)</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-built_in">class</span>, fill = <span class="hljs-built_in">class</span>)) +
+  geom_bar(show.legend = <span class="hljs-literal">FALSE</span>) +
+  coord_flip() + theme_minimal()</code></pre>
+</div>
+
+        <h4>8. Aggregated Bar Chart (geom_col)</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>9. Grouped Bar Chart (position = 'dodge')</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-built_in">class</span>, fill = drv)) +
+  geom_bar(position = <span class="hljs-string">&quot;dodge&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>10. Stacked Percentage Bar Chart</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-built_in">class</span>, fill = drv)) +
+  geom_bar(position = <span class="hljs-string">&quot;fill&quot;</span>) +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>11. Continuous Histogram with Custom Bins</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = hwy)) +
+  geom_histogram(bins = <span class="hljs-number">20</span>, fill = <span class="hljs-string">&quot;#38BDF8&quot;</span>, color = <span class="hljs-string">&quot;#0F172A&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+      </div>
+
+      <div>
+        <h4>12. Overlaid Kernel Density Curves</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = hwy, fill = drv)) +
+  geom_density(alpha = <span class="hljs-number">0.4</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>13. Comparative Boxplot</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-built_in">class</span>, y = hwy, fill = <span class="hljs-built_in">class</span>)) +
+  geom_boxplot(outlier.color = <span class="hljs-string">&quot;#EF4444&quot;</span>, show.legend = <span class="hljs-literal">FALSE</span>) +
+  coord_flip() + theme_minimal()</code></pre>
+</div>
+
+        <h4>14. Combined Violin and Boxplot</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = drv, y = hwy, fill = drv)) +
+  geom_violin(alpha = <span class="hljs-number">0.5</span>) +
+  geom_boxplot(width = <span class="hljs-number">0.15</span>, fill = <span class="hljs-string">&quot;white&quot;</span>, outlier.shape = <span class="hljs-literal">NA</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>15. Jittered Scatter Overlay on Boxplot</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = drv, y = hwy)) +
+  geom_boxplot(outlier.shape = <span class="hljs-literal">NA</span>, alpha = <span class="hljs-number">0.3</span>) +
+  geom_jitter(width = <span class="hljs-number">0.2</span>, color = <span class="hljs-string">&quot;#38BDF8&quot;</span>, alpha = <span class="hljs-number">0.6</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>16. Circular Pie Chart via coord_polar</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>17. 2D Correlation Matrix Heatmap</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>c_mat</code></pre>
+</div>
+
+        <h4>18. Faceted Grid of Subplots</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(color = <span class="hljs-string">&quot;#38BDF8&quot;</span>) +
+  facet_grid(drv ~ cyl) + theme_bw()</code></pre>
+</div>
+
+        <h4>19. Custom Publication Theme & Labels</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point(color = <span class="hljs-string">&quot;#276DC3&quot;</span>) +
+  labs(title = <span class="hljs-string">&quot;Engine vs MPG&quot;</span>, subtitle = <span class="hljs-string">&quot;EPA Data&quot;</span>, caption = <span class="hljs-string">&quot;Source: mpg&quot;</span>) +
+  theme_classic() +
+  theme(plot.title = element_text(face = <span class="hljs-string">&quot;bold&quot;</span>, size = <span class="hljs-number">12</span>))</code></pre>
+</div>
+
+        <h4>20. Adding Custom Annotations & Lines</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_hline(yintercept = mean(mpg$hwy), linetype = <span class="hljs-string">&quot;dashed&quot;</span>, color = <span class="hljs-string">&quot;#EF4444&quot;</span>) +
+  annotate(<span class="hljs-string">&quot;text&quot;</span>, x = <span class="hljs-number">6</span>, y = <span class="hljs-number">25</span>, label = <span class="hljs-string">&quot;Fleet Mean&quot;</span>, color = <span class="hljs-string">&quot;#EF4444&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>21. Area Under the Curve (Cumulative Metric)</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>22. High-DPI Plot Export with ggsave</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>p</code></pre>
+</div>
+      </div>
+    </div>
+    
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">annotate("text", x = 5, y = 90, label = "Key Event", color = "red")</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Adds single callout notes without mapping to an entire data frame column</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">Use geom_vline(xintercept = ...) or geom_hline() for target benchmark lines</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_area()</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Fills area from line down to y = 0 baseline</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Great for cumulative volume &amp; total revenue over time</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_ribbon(aes(ymin, ymax))</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Fills continuous shaded interval between ymin and ymax</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Ideal for standard error bands &amp; prediction uncertainty</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 13: 18 REAL-WORLD AI/ML APPLICATIONS -->
+  <div class="card">
+    <div class="card-title"><span>13. 18 Real-World AI & Data Science Applications</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">geom_tile(): Color-Coded 2D Grid Intensity</text>
+  <g transform="translate(100, 35)">
+    <rect x="0" y="0" width="30" height="25" fill="#1E3A8A"/><rect x="32" y="0" width="30" height="25" fill="#3B82F6"/>
+    <rect x="64" y="0" width="30" height="25" fill="#93C5FD"/><rect x="96" y="0" width="30" height="25" fill="#EF4444"/>
+    <rect x="0" y="27" width="30" height="25" fill="#3B82F6"/><rect x="32" y="27" width="30" height="25" fill="#93C5FD"/>
+    <rect x="64" y="27" width="30" height="25" fill="#F87171"/><rect x="96" y="27" width="30" height="25" fill="#B91C1C"/>
+  </g>
+  <text x="360" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Visualizes numerical values across two discrete axis dimensions.</text>
+  <text x="360" y="70" fill="#38BDF8" font-size="8" font-family="system-ui, sans-serif">aes(x = day, y = hour, fill = site_traffic)</text>
+</svg></div>
+
+    <div class="grid-3">
+      <div class="callout">
+        <strong>1. Deep Learning Loss Curves:</strong> Tracking train vs validation cross-entropy over 100 epochs.
+      </div>
+      <div class="callout">
+        <strong>2. Model Accuracy Progress:</strong> Visualizing Top-1 and Top-5 accuracy across training checkpoints.
+      </div>
+      <div class="callout">
+        <strong>3. ROC & AUC Analysis:</strong> Plotting True Positive Rate vs False Positive Rate for binary classifiers.
+      </div>
+      <div class="callout">
+        <strong>4. Precision-Recall Curves:</strong> Diagnosing performance under severe class imbalance.
+      </div>
+      <div class="callout">
+        <strong>5. Confusion Matrix Heatmaps:</strong> Visualizing predicted vs actual classification counts with geom_tile.
+      </div>
+      <div class="callout">
+        <strong>6. Random Forest Feature Importance:</strong> Horizontal bar chart ranked by mean decrease in Gini impurity.
+      </div>
+      <div class="callout">
+        <strong>7. PCA & t-SNE Projections:</strong> Visualizing high-dimensional embeddings in 2D latent space.
+      </div>
+      <div class="callout">
+        <strong>8. K-Means Cluster Centroids:</strong> Scatter plots with colored clusters and highlighted centroid points.
+      </div>
+      <div class="callout">
+        <strong>9. Regression Residual Analysis:</strong> Plotting residuals vs predicted values to inspect heteroscedasticity.
+      </div>
+      <div class="callout">
+        <strong>10. Probability Calibration Curves:</strong> Comparing predicted probabilities against observed empirical proportions.
+      </div>
+      <div class="callout">
+        <strong>11. Hyperparameter Tuning Surfaces:</strong> 2D tile heatmap of grid search performance (e.g. learning rate vs batch size).
+      </div>
+      <div class="callout">
+        <strong>12. Anomaly Detection Thresholds:</strong> Time series with flagged outlier points exceeding 3 standard deviations.
+      </div>
+      <div class="callout">
+        <strong>13. A/B Testing Uplift Distributions:</strong> Dual density plots displaying conversion rate distributions between variants.
+      </div>
+      <div class="callout">
+        <strong>14. Gradient Norm Monitoring:</strong> Tracking backpropagation gradient magnitudes across layers to detect vanishing gradients.
+      </div>
+      <div class="callout">
+        <strong>15. Learning Rate Schedules:</strong> Visualizing cosine annealing with warmup cycles over iterations.
+      </div>
+      <div class="callout">
+        <strong>16. Quantile Regression Fans:</strong> Shaded ribbon envelopes displaying 10th, 50th, and 90th percentile forecast intervals.
+      </div>
+      <div class="callout">
+        <strong>17. NLP Token Frequency Zipf Plots:</strong> Log-log rank-frequency plots of vocabulary distribution.
+      </div>
+      <div class="callout">
+        <strong>18. Computer Vision Class Distributions:</strong> Faceted bar charts showing bounding box label counts per category.
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="175" y="48" fill="#38BDF8" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Correlation Matrix [-1 to +1]</text>
+  <text x="50" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Diagonal is always +1.0 (self-correlation)</text>
+  <text x="50" y="82" fill="#94A3B8" font-size="8" font-family="system-ui, sans-serif">Computed via cor(df) %&gt;% as_tibble() %&gt;% pivot_longer()</text>
+  <rect x="360" y="25" width="290" height="70" rx="5" fill="#1C2541" stroke="#10B981" stroke-width="1.5"/>
+  <text x="505" y="48" fill="#34D399" font-size="11" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Color Divergence</text>
+  <text x="380" y="68" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">scale_fill_gradient2(low="blue", mid="white", high="red", midpoint=0)</text>
+  <text x="380" y="82" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">Instantly flags collinear features to avoid multi-collinearity in ML</text>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Composing Multi-Plot Dashboards with patchwork / cowplot</text>
+  <g transform="translate(60, 35)">
+    <rect x="0" y="0" width="80" height="50" fill="#1E293B" stroke="#38BDF8"/><text x="40" y="28" fill="#93C5FD" font-size="8" text-anchor="middle">Plot 1 (p1)</text>
+    <text x="95" y="30" fill="#38BDF8" font-size="14">+</text>
+    <rect x="115" y="0" width="80" height="50" fill="#1E293B" stroke="#10B981"/><text x="155" y="28" fill="#A7F3D0" font-size="8" text-anchor="middle">Plot 2 (p2)</text>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">patchwork syntax: (p1 | p2) / p3 creates top side-by-side</text>
+  <text x="400" y="70" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">plots with full-width bottom plot &bull; Unifies shared legends!</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 14: 28 BEGINNER PITFALLS & COMMON MISTAKES -->
+  <div class="card">
+    <div class="card-title"><span>14. 28 Beginner Pitfalls & Common Mistakes</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <rect x="30" y="38" width="620" height="65" rx="5" fill="#1C2541" stroke="#38BDF8" stroke-width="1.5"/>
+  <text x="340" y="58" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif" text-anchor="middle">ggsave("plot.png", width = 8, height = 5, dpi = 300)</text>
+  <text x="340" y="76" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif" text-anchor="middle">Automatically saves the most recent active plot to disk</text>
+  <text x="340" y="90" fill="#34D399" font-size="8" font-family="system-ui, sans-serif" text-anchor="middle">dpi = 300 delivers crystal-clear print publication quality &bull; Vector: .pdf, .svg</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div>
+        <p><strong>1. Static color inside aes():</strong> <span class="wrong">geom_point(aes(color = "blue"))</span> maps string "blue" to a single-level categorical color (red). <span class="correct">geom_point(color = "blue")</span>.</p>
+        <p><strong>2. Starting a line with +:</strong> In R script execution, placing + on the new line breaks execution. Always keep + at the end of the previous line.</p>
+        <p><strong>3. Using %>% instead of +:</strong> ggplot2 uses <code>+</code> to combine layers, not the magrittr pipe <code>%>%</code>.</p>
+        <p><strong>4. geom_bar with raw heights:</strong> Using <code>geom_bar()</code> on raw numbers fails because its default stat is 'count'. Use <code>geom_col()</code> or <code>geom_bar(stat = "identity")</code>.</p>
+        <p><strong>5. Overwriting theme settings:</strong> Calling <code>theme_minimal()</code> AFTER custom <code>theme(...)</code> wipes out custom modifications. Always declare standard themes first.</p>
+        <p><strong>6. Forgetting group aesthetic in lines:</strong> Drawing lines on multi-group data without <code>group = id</code> creates a messy zigzag. Map <code>group</code> or <code>color</code>.</p>
+        <p><strong>7. Overplotting dense points:</strong> Thousands of points render as an opaque blob. Use <code>geom_jitter()</code>, <code>alpha = 0.2</code>, or <code>geom_bin2d()</code>.</p>
+        <p><strong>8. Alphabetical factor ordering:</strong> Categories sort alphabetically by default. Use <code>reorder(cat, val)</code> or <code>factor(levels = ...)</code>.</p>
+        <p><strong>9. Inverting coord_polar parameters:</strong> Forgetting <code>theta = "y"</code> draws bullseye concentric rings instead of pie wedges.</p>
+        <p><strong>10. Truncating data with scale limits:</strong> <code>scale_y_continuous(limits = c(0, 10))</code> drops out-of-bound rows. Use <code>coord_cartesian(ylim = c(0, 10))</code> to zoom without dropping data.</p>
+        <p><strong>11. Confusing fill and color:</strong> Setting <code>color = "blue"</code> on bars colors the border lines, not the interior. Use <code>fill</code> for 2D areas.</p>
+        <p><strong>12. Missing aes() mapping quotes:</strong> Writing <code>aes(x = "mpg")</code> creates a single constant category "mpg", rather than reading the column <code>mpg</code>.</p>
+        <p><strong>13. Non-tidy wide data:</strong> ggplot requires long format. Convert wide tables with <code>tidyr::pivot_longer()</code> first.</p>
+        <p><strong>14. Legend label confusion:</strong> Setting <code>labs(color = "Category")</code> when points use <code>fill</code> splits the legend into two. Match aesthetic labels.</p>
+      </div>
+
+      <div>
+        <p><strong>15. Misinterpreting histogram binwidth:</strong> Too few bins over-smooth trends; too many bins introduce excessive noise. Test multiple binwidth values.</p>
+        <p><strong>16. Pie charts with > 5 categories:</strong> Slices become impossible to distinguish. Use a sorted horizontal bar chart instead.</p>
+        <p><strong>17. Unbounded facet scales:</strong> Default fixed scales can compress smaller subgroups. Enable <code>scales = "free_y"</code> where appropriate.</p>
+        <p><strong>18. Rainbow color maps:</strong> Rainbow palettes have non-monotonic luminance ramps that mislead perception. Use viridis.</p>
+        <p><strong>19. ggsave default overwrite:</strong> Calling <code>ggsave()</code> without passing <code>plot = p</code> saves <code>last_plot()</code>, which might be an unintended plot.</p>
+        <p><strong>20. Forgetting print() in loops:</strong> In for-loops or functions, ggplots do not display automatically without an explicit <code>print(p)</code>.</p>
+        <p><strong>21. Hardcoded aspect ratios:</strong> Warped aspect ratios distort slope perceptions. Use <code>coord_fixed()</code> for 1:1 comparisons.</p>
+        <p><strong>22. Double dodging without position_dodge:</strong> Combining points and error bars requires matching <code>position_dodge(width = 0.8)</code>.</p>
+        <p><strong>23. Missing scale library for formatting:</strong> <code>scales::percent</code> requires <code>install.packages("scales")</code>.</p>
+        <p><strong>24. Hardcoded pixel dimensions in ggsave:</strong> Passing <code>width = 800</code> without setting <code>units = "px"</code> assumes inches, resulting in an enormous file.</p>
+        <p><strong>25. Outlier duplication in boxplot + jitter:</strong> <code>geom_boxplot()</code> plots outliers by default. Set <code>outlier.shape = NA</code> when overlaying jitter.</p>
+        <p><strong>26. Cluttered x-axis labels:</strong> Overlapping date or category names. Rotate them with <code>theme(axis.text.x = element_text(angle = 45, hjust = 1))</code>.</p>
+        <p><strong>27. Omitting baseline zero on bar charts:</strong> Truncating the y-axis on bar charts exaggerates relative differences, misleading readers.</p>
+        <p><strong>28. Misunderstanding layer ordering:</strong> Layers render sequentially. Drawing points before regression lines hides points beneath the shaded ribbon.</p>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">The Role of Visualization in Machine Learning Lifecycle</text>
+  <g transform="translate(15, 35)">
+    <rect x="0" y="0" width="140" height="60" rx="5" fill="#1E293B" stroke="#38BDF8"/>
+    <text x="70" y="24" fill="#38BDF8" font-size="9" font-weight="bold" text-anchor="middle">1. EDA Phase</text>
+    <text x="70" y="44" fill="#94A3B8" font-size="8" text-anchor="middle">Histograms &amp; Heatmaps</text>
+    <text x="155" y="34" fill="#38BDF8" font-size="14">&rarr;</text>
+    <rect x="175" y="0" width="140" height="60" rx="5" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="245" y="24" fill="#FBBF24" font-size="9" font-weight="bold" text-anchor="middle">2. Training Monitoring</text>
+    <text x="245" y="44" fill="#94A3B8" font-size="8" text-anchor="middle">Loss / Accuracy curves</text>
+    <text x="330" y="34" fill="#38BDF8" font-size="14">&rarr;</text>
+    <rect x="350" y="0" width="140" height="60" rx="5" fill="#1E293B" stroke="#10B981"/>
+    <text x="420" y="24" fill="#34D399" font-size="9" font-weight="bold" text-anchor="middle">3. Model Evaluation</text>
+    <text x="420" y="44" fill="#94A3B8" font-size="8" text-anchor="middle">Confusion Matrix &amp; ROC</text>
+    <text x="505" y="34" fill="#38BDF8" font-size="14">&rarr;</text>
+    <rect x="525" y="0" width="125" height="60" rx="5" fill="#10B981"/>
+    <text x="587" y="24" fill="#FFFFFF" font-size="9" font-weight="bold" text-anchor="middle">4. Explainability</text>
+    <text x="587" y="44" fill="#D1FAE5" font-size="8" text-anchor="middle">Feature Importance</text>
+  </g>
+</svg></div>
+      <div class="svg-container"><svg viewBox="0 0 680 125" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="125" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Confusion Matrix Heatmap Visualization</text>
+  <g transform="translate(140, 32)">
+    <rect x="0" y="0" width="70" height="35" fill="#10B981" stroke="#0B132B"/><text x="35" y="22" fill="#FFFFFF" font-size="9" font-weight="bold" text-anchor="middle">TP: 85</text>
+    <rect x="75" y="0" width="70" height="35" fill="#EF4444" stroke="#0B132B"/><text x="110" y="22" fill="#FFFFFF" font-size="9" font-weight="bold" text-anchor="middle">FP: 15</text>
+    <rect x="0" y="40" width="70" height="35" fill="#EF4444" stroke="#0B132B"/><text x="35" y="62" fill="#FFFFFF" font-size="9" font-weight="bold" text-anchor="middle">FN: 10</text>
+    <rect x="75" y="40" width="70" height="35" fill="#10B981" stroke="#0B132B"/><text x="110" y="62" fill="#FFFFFF" font-size="9" font-weight="bold" text-anchor="middle">TN: 90</text>
+  </g>
+  <text x="420" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Green diagonal = Correct model predictions</text>
+  <text x="420" y="72" fill="#F87171" font-size="8" font-family="system-ui, sans-serif">Red off-diagonal = Misclassified errors (Type I &amp; II)</text>
+</svg></div>
+    </div>
+  </div>
+
+  <!-- SECTION 15: QUICK REVISION REFERENCE TABLE -->
+  <div class="card">
+    <div class="card-title"><span>15. Quick Revision Reference Table</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Regression Evaluation: Actual vs Predicted</text>
+  <g transform="translate(110, 30)">
+    <line x1="0" y1="65" x2="180" y2="65" stroke="#64748B"/>
+    <line x1="0" y1="65" x2="0" y2="5" stroke="#64748B"/>
+    <line x1="15" y1="55" x2="165" y2="10" stroke="#10B981" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <circle cx="35" cy="50" r="3" fill="#38BDF8"/><circle cx="70" cy="42" r="3" fill="#38BDF8"/>
+    <circle cx="115" cy="22" r="3" fill="#38BDF8"/><circle cx="155" cy="12" r="3" fill="#38BDF8"/>
+  </g>
+  <text x="400" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Green dashed line = Perfect prediction (y = x reference).</text>
+  <text x="400" y="70" fill="#38BDF8" font-size="8" font-family="system-ui, sans-serif">Points tightly hugging the diagonal indicate high R&sup2; accuracy.</text>
+</svg></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>ggplot2 Function</th>
+          <th>Key Parameters / Aesthetics</th>
+          <th>Primary Use Case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Base Plot</strong></td>
+          <td><code>ggplot(data, aes())</code></td>
+          <td><code>data = df, mapping = aes(x, y)</code></td>
+          <td>Initialize graphic canvas and default aesthetics</td>
+        </tr>
+        <tr>
+          <td><strong>Points</strong></td>
+          <td><code>geom_point()</code></td>
+          <td><code>color, size, shape, alpha</code></td>
+          <td>Scatter plots, clustering, embeddings</td>
+        </tr>
+        <tr>
+          <td><strong>Lines</strong></td>
+          <td><code>geom_line()</code></td>
+          <td><code>color, linewidth, linetype, group</code></td>
+          <td>Time-series, training loss, ROC curves</td>
+        </tr>
+        <tr>
+          <td><strong>Bar Counts</strong></td>
+          <td><code>geom_bar()</code></td>
+          <td><code>stat = "count", fill, position</code></td>
+          <td>Frequencies of raw categorical variables</td>
+        </tr>
+        <tr>
+          <td><strong>Bar Values</strong></td>
+          <td><code>geom_col()</code></td>
+          <td><code>fill, position = "dodge", width</code></td>
+          <td>Pre-computed values, feature importance</td>
+        </tr>
+        <tr>
+          <td><strong>Histogram</strong></td>
+          <td><code>geom_histogram()</code></td>
+          <td><code>bins, binwidth, fill, color</code></td>
+          <td>Continuous distribution shape</td>
+        </tr>
+        <tr>
+          <td><strong>Density</strong></td>
+          <td><code>geom_density()</code></td>
+          <td><code>fill, alpha, adjust</code></td>
+          <td>Smooth probability density curves</td>
+        </tr>
+        <tr>
+          <td><strong>Boxplot</strong></td>
+          <td><code>geom_boxplot()</code></td>
+          <td><code>outlier.shape, varwidth, fill</code></td>
+          <td>5-number summary, outlier inspection</td>
+        </tr>
+        <tr>
+          <td><strong>Violin</strong></td>
+          <td><code>geom_violin()</code></td>
+          <td><code>trim = FALSE, draw_quantiles</code></td>
+          <td>Multi-modal distribution comparisons</td>
+        </tr>
+        <tr>
+          <td><strong>Heatmap</strong></td>
+          <td><code>geom_tile()</code></td>
+          <td><code>x, y, fill</code></td>
+          <td>Correlation matrices, confusion matrices</td>
+        </tr>
+        <tr>
+          <td><strong>Trendline</strong></td>
+          <td><code>geom_smooth()</code></td>
+          <td><code>method = "lm"|"loess", se = TRUE</code></td>
+          <td>Regression lines, confidence ribbons</td>
+        </tr>
+        <tr>
+          <td><strong>Facet Wrap</strong></td>
+          <td><code>facet_wrap()</code></td>
+          <td><code>~ var, ncol, scales = "free"</code></td>
+          <td>Wrap 1D subpanels across rows</td>
+        </tr>
+        <tr>
+          <td><strong>Facet Grid</strong></td>
+          <td><code>facet_grid()</code></td>
+          <td><code>row_var ~ col_var</code></td>
+          <td>2D matrix of conditioning subpanels</td>
+        </tr>
+        <tr>
+          <td><strong>Flip Coords</strong></td>
+          <td><code>coord_flip()</code></td>
+          <td>None</td>
+          <td>Horizontal bar charts, inverted axes</td>
+        </tr>
+        <tr>
+          <td><strong>Polar Coords</strong></td>
+          <td><code>coord_polar()</code></td>
+          <td><code>theta = "y", start = 0</code></td>
+          <td>Pie charts, donut charts, radial plots</td>
+        </tr>
+        <tr>
+          <td><strong>Viridis Color</strong></td>
+          <td><code>scale_fill_viridis_c()</code></td>
+          <td><code>option = "magma"|"viridis"</code></td>
+          <td>Colorblind-safe continuous gradients</td>
+        </tr>
+        <tr>
+          <td><strong>Labels</strong></td>
+          <td><code>labs()</code></td>
+          <td><code>title, subtitle, x, y, caption</code></td>
+          <td>Chart title, subtitle, axis titles, caption</td>
+        </tr>
+        <tr>
+          <td><strong>Themes</strong></td>
+          <td><code>theme_minimal()</code></td>
+          <td><code>base_size, base_family</code></td>
+          <td>Pre-packaged minimalist styling</td>
+        </tr>
+        <tr>
+          <td><strong>Export</strong></td>
+          <td><code>ggsave()</code></td>
+          <td><code>filename, width, height, dpi</code></td>
+          <td>Save publication-ready PNG/PDF to disk</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 16: 22 OUTPUT PREDICTION CHALLENGES -->
+  <div class="card">
+    <div class="card-title"><span>16. 22 Output Prediction Challenges</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0B132B"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Model Training History: Detecting Overfitting</text>
+  <g transform="translate(100, 30)">
+    <line x1="0" y1="65" x2="200" y2="65" stroke="#64748B"/>
+    <path d="M 10 50 Q 70 20 180 8" fill="none" stroke="#38BDF8" stroke-width="2"/>
+    <path d="M 10 52 Q 70 25 120 22 Q 150 25 180 40" fill="none" stroke="#EF4444" stroke-width="2"/>
+  </g>
+  <text x="400" y="50" fill="#38BDF8" font-size="9" font-family="system-ui, sans-serif">Blue curve = Training loss (keeps decreasing)</text>
+  <text x="400" y="65" fill="#F87171" font-size="9" font-family="system-ui, sans-serif">Red curve = Validation loss (inflects upwards = OVERFITTING!)</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div>
+        <p><strong>1. Code:</strong> <code>ggplot(mpg, aes(x = displ, y = hwy)) + geom_point(aes(color = "darkblue"))</code><br>
+        <strong>Prediction:</strong> Points are NOT dark blue! ggplot creates a 1-level factor "darkblue" with the default coral-red color.</p>
+
+        <p><strong>2. Code:</strong> <code>ggplot(data.frame(x = 1:5, y = 1:5)) + geom_bar()</code><br>
+        <strong>Prediction:</strong> Error! <code>geom_bar()</code> stat is 'count', which requires only x aesthetic, but y was passed without <code>stat = 'identity'</code>.</p>
+
+        <p><strong>3. Code:</strong> <code>ggplot(mpg, aes(x = class)) + geom_bar(position = "fill")</code><br>
+        <strong>Prediction:</strong> All bars stretch to exactly 1.0 (100% height) across the y-axis.</p>
+
+        <p><strong>4. Code:</strong> <code>ggplot(data.frame(x=1:3, y=1:3), aes(x, y)) + geom_line() + coord_flip()</code><br>
+        <strong>Prediction:</strong> The line runs from (1,1) to (3,3) with transposed coordinates (horizontal becomes vertical).</p>
+
+        <p><strong>5. Code:</strong> <code>p <- ggplot(mpg, aes(displ, hwy)) + geom_point(); p + theme_void()</code><br>
+        <strong>Prediction:</strong> Points float on a completely blank canvas with zero axes, ticks, or labels.</p>
+
+        <p><strong>6. Code:</strong> <code>ggplot(mpg, aes(hwy)) + geom_histogram(bins = 1)</code><br>
+        <strong>Prediction:</strong> A single solid vertical bar containing all 234 observations.</p>
+
+        <p><strong>7. Code:</strong> <code>ggplot(mpg, aes(drv, hwy)) + geom_boxplot(outlier.shape = NA)</code><br>
+        <strong>Prediction:</strong> Boxplot displays median and hinges, but hides all outlier points.</p>
+
+        <p><strong>8. Code:</strong> <code>ggplot(mpg, aes(x = factor(cyl), y = hwy)) + geom_violin()</code><br>
+        <strong>Prediction:</strong> 4 violin shapes (cyl 4, 5, 6, 8) displaying distribution density widths.</p>
+
+        <p><strong>9. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_smooth(method = "lm", se = FALSE)</code><br>
+        <strong>Prediction:</strong> A straight regression line without a shaded 95% confidence ribbon.</p>
+
+        <p><strong>10. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point() + scale_x_log10()</code><br>
+        <strong>Prediction:</strong> Points spaced logarithmically on x; original non-log values remain on tick labels.</p>
+
+        <p><strong>11. Code:</strong> <code>ggplot(data.frame(val = c(10, 20)), aes(x = "", y = val, fill = factor(val))) + geom_col() + coord_polar(theta = "y")</code><br>
+        <strong>Prediction:</strong> A 2-slice pie chart with 33.3% and 66.7% slices.</p>
+      </div>
+
+      <div>
+        <p><strong>12. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point() + facet_wrap(~ drv, ncol = 1)</code><br>
+        <strong>Prediction:</strong> 3 subpanels stacked vertically in a single column.</p>
+
+        <p><strong>13. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point(alpha = 0)</code><br>
+        <strong>Prediction:</strong> Blank chart! Points are 100% transparent (invisible).</p>
+
+        <p><strong>14. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point() + geom_vline(xintercept = 4)</code><br>
+        <strong>Prediction:</strong> Scatter plot with a solid vertical line passing through x = 4.</p>
+
+        <p><strong>15. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point() + theme(panel.grid = element_blank())</code><br>
+        <strong>Prediction:</strong> Scatter plot with all grid lines removed, retaining grey panel background.</p>
+
+        <p><strong>16. Code:</strong> <code>ggplot(data.frame(x=1:4, y=c(1,2,1,2), g=c("A","A","B","B")), aes(x, y)) + geom_line()</code><br>
+        <strong>Prediction:</strong> A single continuous line connecting all 4 points because <code>group = g</code> was omitted.</p>
+
+        <p><strong>17. Code:</strong> <code>ggplot(mpg, aes(class, hwy)) + geom_point() + coord_cartesian(ylim = c(20, 30))</code><br>
+        <strong>Prediction:</strong> Chart zoomed into y = [20, 30] without dropping rows outside the range.</p>
+
+        <p><strong>18. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_jitter(width = 0, height = 0)</code><br>
+        <strong>Prediction:</strong> Identical to <code>geom_point()</code> because zero noise is added.</p>
+
+        <p><strong>19. Code:</strong> <code>ggplot(mpg, aes(displ, hwy)) + geom_point() + labs(title = NULL)</code><br>
+        <strong>Prediction:</strong> Plot rendered with no title space allocated at the top.</p>
+
+        <p><strong>20. Code:</strong> <code>ggplot(data.frame(x=1:3, y=1:3), aes(x, y)) + geom_area()</code><br>
+        <strong>Prediction:</strong> A shaded polygon filling the region between the diagonal line and y = 0.</p>
+
+        <p><strong>21. Code:</strong> <code>ggplot(mpg, aes(hwy, fill = drv)) + geom_density(position = "fill")</code><br>
+        <strong>Prediction:</strong> A 100% conditional probability density stack across highway MPG.</p>
+
+        <p><strong>22. Code:</strong> <code>p <- ggplot(mpg, aes(displ, hwy)); p</code><br>
+        <strong>Prediction:</strong> An empty coordinate grid with x and y axes, but no geometric marks.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 17: 22 BEGINNER CODING EXERCISES -->
+  <div class="card">
+    <div class="card-title"><span>17. 22 Beginner Coding Exercises & Hands-On Challenges</span></div>
+    <div class="svg-container"><svg viewBox="0 0 680 120" xmlns="http://www.w3.org/2000/svg">
+  <rect width="680" height="120" rx="8" fill="#0F172A"/>
+  <text x="340" y="20" fill="#38BDF8" font-size="12" font-weight="bold" font-family="system-ui, sans-serif" text-anchor="middle">Feature Distribution Split by Target Class</text>
+  <g transform="translate(120, 30)">
+    <line x1="0" y1="65" x2="200" y2="65" stroke="#64748B"/>
+    <path d="M 10 65 Q 40 10 70 65 Z" fill="#38BDF8" opacity="0.4"/>
+    <path d="M 80 65 Q 120 10 160 65 Z" fill="#10B981" opacity="0.4"/>
+  </g>
+  <text x="420" y="55" fill="#E2E8F0" font-size="9" font-family="system-ui, sans-serif">Distinct non-overlapping distributions indicate a powerful</text>
+  <text x="420" y="70" fill="#34D399" font-size="8" font-family="system-ui, sans-serif">discriminative feature for classification algorithms!</text>
+</svg></div>
+
+    <div class="grid-2">
+      <div>
+        <h4>Exercise 1: Basic Scatter Plot</h4>
+        <p><strong>Task:</strong> Create a scatter plot of <code>mtcars</code> with <code>wt</code> on x and <code>mpg</code> on y.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point(color = <span class="hljs-string">&quot;#38BDF8&quot;</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 2: Colored Groups</h4>
+        <p><strong>Task:</strong> Color the scatter points by transmission type <code>factor(am)</code>.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mtcars, aes(x = wt, y = mpg, color = factor(am))) +
+  geom_point(size = <span class="hljs-number">3</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 3: Regression Line</h4>
+        <p><strong>Task:</strong> Add a linear model trend line with confidence ribbon.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() + geom_smooth(method = <span class="hljs-string">&quot;lm&quot;</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 4: Frequency Bar Chart</h4>
+        <p><strong>Task:</strong> Create a bar chart showing counts of cars by cylinder count (<code>factor(cyl)</code>).</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mtcars, aes(x = factor(cyl), fill = factor(cyl))) +
+  geom_bar() + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 5: Horizontal Bar Chart</h4>
+        <p><strong>Task:</strong> Flip the cylinder bar chart horizontally.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mtcars, aes(x = factor(cyl))) +
+  geom_bar() + coord_flip() + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 6: Mileage Distribution Histogram</h4>
+        <p><strong>Task:</strong> Plot a histogram of <code>mpg$hwy</code> using 15 bins and a navy fill.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = hwy)) +
+  geom_histogram(bins = <span class="hljs-number">15</span>, fill = <span class="hljs-string">&quot;#1E3A8A&quot;</span>, color = <span class="hljs-string">&quot;white&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 7: Boxplot by Category</h4>
+        <p><strong>Task:</strong> Create boxplots of <code>hwy</code> grouped by vehicle <code>class</code>.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-built_in">class</span>, y = hwy, fill = <span class="hljs-built_in">class</span>)) +
+  geom_boxplot() + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 8: Density Plot with Transparency</h4>
+        <p><strong>Task:</strong> Compare <code>cty</code> mileage density curves across drive types with alpha = 0.3.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = cty, fill = drv)) +
+  geom_density(alpha = <span class="hljs-number">0.3</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 9: Time Series Line Plot</h4>
+        <p><strong>Task:</strong> Plot monthly airline passengers using the built-in <code>AirPassengers</code> data.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>Exercise 10: Faceted Scatter Matrix</h4>
+        <p><strong>Task:</strong> Facet the <code>mpg</code> scatter plot by drive type (<code>drv</code>) in 1 row.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() + facet_wrap(~ drv, nrow = <span class="hljs-number">1</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 11: Jitter Plot for Categorical Data</h4>
+        <p><strong>Task:</strong> Overlay jittered points over boxplots of highway MPG by drive type.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = drv, y = hwy)) +
+  geom_boxplot(outlier.shape = <span class="hljs-literal">NA</span>) +
+  geom_jitter(width = <span class="hljs-number">0.2</span>, color = <span class="hljs-string">&quot;#38BDF8&quot;</span>) + theme_minimal()</code></pre>
+</div>
+      </div>
+
+      <div>
+        <h4>Exercise 12: Heatmap of Pairwise Counts</h4>
+        <p><strong>Task:</strong> Create a 2D tile plot of vehicle counts by <code>cyl</code> and <code>drv</code>.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>Exercise 13: Viridis Palette Customization</h4>
+        <p><strong>Task:</strong> Apply the magma viridis scale to a continuous scatter plot.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy, color = cty)) +
+  geom_point(size = <span class="hljs-number">3</span>) +
+  scale_color_viridis_c(option = <span class="hljs-string">&quot;magma&quot;</span>) + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 14: Log-Transformed Axis</h4>
+        <p><strong>Task:</strong> Transform diamond prices onto a log10 scale.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = <span class="hljs-number">0.1</span>) + scale_y_log10() + theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 15: Adding Target Benchmark Line</h4>
+        <p><strong>Task:</strong> Draw a red dashed horizontal threshold line at y = 30.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  geom_hline(yintercept = <span class="hljs-number">30</span>, color = <span class="hljs-string">&quot;#EF4444&quot;</span>, linetype = <span class="hljs-string">&quot;dashed&quot;</span>) +
+  theme_minimal()</code></pre>
+</div>
+
+        <h4>Exercise 16: Custom Plot Titles & Subtitles</h4>
+        <p><strong>Task:</strong> Add full labels: title, subtitle, axis names, and caption.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = displ, y = hwy)) +
+  geom_point() +
+  labs(title = <span class="hljs-string">&quot;Engine vs Efficiency&quot;</span>, subtitle = <span class="hljs-string">&quot;EPA 1999-2008&quot;</span>,
+       x = <span class="hljs-string">&quot;Displacement (L)&quot;</span>, y = <span class="hljs-string">&quot;MPG&quot;</span>, caption = <span class="hljs-string">&quot;Source: ggplot2::mpg&quot;</span>) +
+  theme_light()</code></pre>
+</div>
+
+        <h4>Exercise 17: Donut / Pie Chart</h4>
+        <p><strong>Task:</strong> Convert a single stacked column of drive proportions into a circular pie.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = <span class="hljs-string">&quot;&quot;</span>, fill = drv)) +
+  geom_bar(width = <span class="hljs-number">1</span>) + coord_polar(theta = <span class="hljs-string">&quot;y&quot;</span>) + theme_void()</code></pre>
+</div>
+
+        <h4>Exercise 18: Area Plot</h4>
+        <p><strong>Task:</strong> Fill the area under a cumulative learning rate decay schedule.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>Exercise 19: Error Bars</h4>
+        <p><strong>Task:</strong> Draw point estimates with vertical error bars representing standard deviation.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df</code></pre>
+</div>
+
+        <h4>Exercise 20: Rotated X-Axis Labels</h4>
+        <p><strong>Task:</strong> Rotate long categorical x labels 45 degrees without clipping.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>ggplot(mpg, aes(x = manufacturer)) +
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = <span class="hljs-number">45</span>, hjust = <span class="hljs-number">1</span>))</code></pre>
+</div>
+
+        <h4>Exercise 21: ROC Curve Visualization</h4>
+        <p><strong>Task:</strong> Plot False Positive Rate vs True Positive Rate with a diagonal chance line.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>roc_df</code></pre>
+</div>
+
+        <h4>Exercise 22: High-Resolution Export</h4>
+        <p><strong>Task:</strong> Save a publication plot to <code>figures/model_eval.png</code> at 300 DPI.</p><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>p</code></pre>
+</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

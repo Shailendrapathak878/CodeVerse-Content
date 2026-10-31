@@ -1,0 +1,3059 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>R Topic 14: Data Frames & Tibbles - Complete Learning Notes</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #276DC3;
+      --brand-dark: #19355E;
+      --brand-light: #F0F4F8;
+      --brand-border: #C8D7E8;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">R Track</span>
+      <span class="badge badge-teal">Topic 14</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <span class="badge">R Programming Stage 4: Tabular Data Structures & Manipulation</span>
+    <h1>Topic 14: Data Frames & Tibbles in R</h1>
+    <p>Comprehensive Reference: Tabular Data Architecture, Subsetting, Cleaning, Tibble Modernization, dplyr Pipelines & AI Workflows</p>
+  </header>
+
+  <!-- Section 1 -->
+  <section class="section-card">
+    <h2>1. Topic Introduction</h2>
+    <p>In modern data science, tabular data is the universal currency of computation. From customer transaction logs to clinical patient registries and machine learning training sets, data is organized into structured rows and columns. In R, two primary data structures power tabular computing: the classic Base R <strong>data.frame</strong> and the modern tidyverse <strong>tibble</strong>.</p>
+    <p>This comprehensive topic guides you from the fundamental anatomy of rows, columns, and cells to advanced manipulation with <code>dplyr</code>, missing-value handling, and enterprise machine learning preprocessing pipelines.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Why Data Frames are Indispensable in Real Systems</text>
+  
+  <g transform="translate(50, 60)">
+    <rect width="150" height="145" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="75" y="30" fill="#38BDF8" font-size="18" text-anchor="middle">🏥</text>
+    <text x="75" y="55" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Hospital Records</text>
+    <text x="75" y="80" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Patient ID (char)</text>
+    <text x="75" y="100" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Heart Rate (num)</text>
+    <text x="75" y="120" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Diagnosis (factor)</text>
+  </g>
+
+  <g transform="translate(225, 60)">
+    <rect width="150" height="145" rx="8" fill="#1E293B" stroke="#10B981"/>
+    <text x="75" y="30" fill="#34D399" font-size="18" text-anchor="middle">💳</text>
+    <text x="75" y="55" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Bank Transactions</text>
+    <text x="75" y="80" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Account # (int)</text>
+    <text x="75" y="100" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Amount (num)</text>
+    <text x="75" y="120" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">IsFraud (logical)</text>
+  </g>
+
+  <g transform="translate(400, 60)">
+    <rect width="150" height="145" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="75" y="30" fill="#FBBF24" font-size="18" text-anchor="middle">📡</text>
+    <text x="75" y="55" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">IoT Sensors</text>
+    <text x="75" y="80" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Device ID (char)</text>
+    <text x="75" y="100" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Temp (num)</text>
+    <text x="75" y="120" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Active (logical)</text>
+  </g>
+
+  <g transform="translate(575, 60)">
+    <rect width="175" height="145" rx="8" fill="#19355E" stroke="#38BDF8" stroke-width="2"/>
+    <text x="87" y="30" fill="#38BDF8" font-size="18" text-anchor="middle">🤖</text>
+    <text x="87" y="55" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">AI / ML Training</text>
+    <text x="87" y="80" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Feature Matrix (X)</text>
+    <text x="87" y="100" fill="#34D399" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Target Label (y)</text>
+    <text x="87" y="125" fill="#FBBF24" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Train / Test Splits</text>
+  </g>
+</svg>
+    </div>
+  </section>
+
+  <!-- Section 2 -->
+  <section class="section-card">
+    <h2>2. Learning Objectives</h2>
+    <ul>
+      <li>Understand the architectural anatomy of tabular data: rows (observations), columns (variables), and cells.</li>
+      <li>Construct two-dimensional data frames using <code>data.frame()</code> with heterogeneous column data types.</li>
+      <li>Inspect tabular structures using <code>str()</code>, <code>dim()</code>, <code>nrow()</code>, <code>ncol()</code>, and <code>summary()</code>.</li>
+      <li>Master the critical differences between <code>$</code>, <code>[[ ]]</code>, and <code>[ ]</code>, including the <code>drop = FALSE</code> safeguard.</li>
+      <li>Modify data frames safely: append columns, update cells, add rows via <code>rbind()</code>, and remove redundant attributes.</li>
+      <li>Filter and sort datasets using logical indexing, compound operators (<code>&amp;</code>, <code>|</code>, <code>!</code>), and <code>order()</code>.</li>
+      <li>Detect, audit, and impute missing data (<code>NA</code>) and remove duplicate records.</li>
+      <li>Understand what a <strong>tibble</strong> is, how it modernizes printing and subsetting, and how to convert two-way with <code>as_tibble()</code> and <code>as.data.frame()</code>.</li>
+      <li>Harness the grammar of data manipulation with <code>dplyr</code> verbs: <code>select()</code>, <code>filter()</code>, <code>arrange()</code>, <code>mutate()</code>, <code>group_by()</code>, and <code>summarise()</code>.</li>
+      <li>Chain complex data transformation workflows seamlessly using the native R pipe operator <code>|&gt;</code>.</li>
+      <li>Engineer production-grade training and testing tabular splits for Artificial Intelligence and Machine Learning models without data leakage.</li>
+    </ul>
+  </section>
+
+  <!-- Section 3 -->
+  <section class="section-card">
+    <h2>3. Tabular Data: Rows, Columns, and Cells</h2>
+    <p>Tabular data is information arranged in a 2-dimensional grid of rows and columns, exactly like a spreadsheet or SQL relational database table.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gHeader" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#19355E" />
+      <stop offset="100%" stop-color="#276DC3" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">What is Tabular Data?</text>
+  
+  <rect x="50" y="55" width="700" height="35" rx="6" fill="url(#gHeader)" stroke="#38BDF8"/>
+  <text x="140" y="78" fill="#FFFFFF" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Student (Name)</text>
+  <text x="320" y="78" fill="#FFFFFF" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Age (Years)</text>
+  <text x="500" y="78" fill="#FFFFFF" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Course</text>
+  <text x="660" y="78" fill="#FFFFFF" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Marks (%)</text>
+
+  <rect x="50" y="95" width="700" height="35" rx="4" fill="#1E293B" stroke="#334155"/>
+  <text x="140" y="118" fill="#38BDF8" font-size="12" text-anchor="middle" font-family="monospace">Rahul</text>
+  <text x="320" y="118" fill="#F8FAFC" font-size="12" text-anchor="middle" font-family="monospace">20</text>
+  <text x="500" y="118" fill="#34D399" font-size="12" text-anchor="middle" font-family="monospace">B.Tech</text>
+  <text x="660" y="118" fill="#FBBF24" font-size="12" text-anchor="middle" font-family="monospace">85</text>
+
+  <rect x="50" y="135" width="700" height="35" rx="4" fill="#1E293B" stroke="#334155"/>
+  <text x="140" y="158" fill="#38BDF8" font-size="12" text-anchor="middle" font-family="monospace">Priya</text>
+  <text x="320" y="158" fill="#F8FAFC" font-size="12" text-anchor="middle" font-family="monospace">21</text>
+  <text x="500" y="158" fill="#34D399" font-size="12" text-anchor="middle" font-family="monospace">BCA</text>
+  <text x="660" y="158" fill="#FBBF24" font-size="12" text-anchor="middle" font-family="monospace">91</text>
+
+  <rect x="50" y="175" width="700" height="35" rx="4" fill="#1E293B" stroke="#334155"/>
+  <text x="140" y="198" fill="#38BDF8" font-size="12" text-anchor="middle" font-family="monospace">Aman</text>
+  <text x="320" y="198" fill="#F8FAFC" font-size="12" text-anchor="middle" font-family="monospace">19</text>
+  <text x="500" y="198" fill="#34D399" font-size="12" text-anchor="middle" font-family="monospace">B.Tech</text>
+  <text x="660" y="198" fill="#FBBF24" font-size="12" text-anchor="middle" font-family="monospace">78</text>
+  <text x="400" y="228" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Columns = Variables (Features)  |  Rows = Observations (Records)  |  Intersections = Cells</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Row, Column, and Cell Anatomy</text>
+  
+  <g transform="translate(40, 55)">
+    <rect width="215" height="155" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <rect x="15" y="45" width="185" height="30" rx="4" fill="#0369A1" stroke="#38BDF8" stroke-width="2"/>
+    <text x="107" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">1. Row (Observation)</text>
+    <text x="107" y="65" fill="#FFFFFF" font-size="11" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Priya | 21 | BCA | 91</text>
+    <text x="107" y="105" fill="#E2E8F0" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">A complete entity record</text>
+    <text x="107" y="125" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Across all variables</text>
+    <text x="107" y="145" fill="#38BDF8" font-size="11" font-family="monospace" text-anchor="middle">df[2, ]</text>
+  </g>
+
+  <g transform="translate(290, 55)">
+    <rect width="215" height="155" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+    <rect x="70" y="35" width="75" height="105" rx="4" fill="#065F46" stroke="#10B981" stroke-width="2"/>
+    <text x="107" y="25" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">2. Column (Variable)</text>
+    <text x="107" y="55" fill="#FFFFFF" font-size="11" text-anchor="middle" font-family="monospace">Age</text>
+    <text x="107" y="75" fill="#A7F3D0" font-size="11" text-anchor="middle" font-family="monospace">20</text>
+    <text x="107" y="95" fill="#A7F3D0" font-size="11" text-anchor="middle" font-family="monospace">21</text>
+    <text x="107" y="115" fill="#A7F3D0" font-size="11" text-anchor="middle" font-family="monospace">19</text>
+    <text x="107" y="145" fill="#34D399" font-size="11" font-family="monospace" text-anchor="middle">df$age or df[, 2]</text>
+  </g>
+
+  <g transform="translate(540, 55)">
+    <rect width="215" height="155" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+    <rect x="65" y="50" width="85" height="35" rx="4" fill="#92400E" stroke="#F59E0B" stroke-width="2"/>
+    <text x="107" y="30" fill="#FBBF24" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">3. Cell (Single Value)</text>
+    <text x="107" y="73" fill="#FFFFFF" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">"BCA"</text>
+    <text x="107" y="105" fill="#E2E8F0" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Row 2, Column 3</text>
+    <text x="107" y="125" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Single data element</text>
+    <text x="107" y="145" fill="#FBBF24" font-size="11" font-family="monospace" text-anchor="middle">df[2, 3]</text>
+  </g>
+</svg>
+    </div>
+    <div class="card-grid">
+      <div class="sub-card">
+        <h3>Row (Observation / Record)</h3>
+        <p>A horizontal slice representing a single entity. For example, Row 2 contains all measurements for "Priya" (Age: 21, Course: BCA, Marks: 91). Indexed as <code>df[2, ]</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h3>Column (Variable / Feature)</h3>
+        <p>A vertical slice representing an individual measured attribute across all entities. For example, the <code>age</code> column holds <code>c(20, 21, 19)</code>. Indexed as <code>df$age</code> or <code>df[, 2]</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h3>Cell (Single Value)</h3>
+        <p>The intersection of one row and one column. Cell <code>[2, 3]</code> holds the string value <code>"BCA"</code>. Indexed as <code>df[2, 3]</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4 -->
+  <section class="section-card">
+    <h2>4. What Is a Data Frame in R?</h2>
+    <p>In R, a <strong>data frame</strong> is a two-dimensional tabular data structure where columns are stored as a named list of equal-length vectors. While a matrix requires every single cell to share the exact same atomic type, a data frame is <em>heterogeneous across columns</em>: Column 1 can be character, Column 2 numeric, Column 3 logical, and Column 4 a factor.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">What is a Data Frame in R?</text>
+  
+  <rect x="50" y="55" width="280" height="155" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+  <text x="190" y="80" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Under the Hood Architecture</text>
+  <text x="190" y="105" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">A named list of equal-length vectors:</text>
+  <rect x="70" y="120" width="240" height="25" rx="4" fill="#0F172A"/>
+  <text x="190" y="137" fill="#34D399" font-size="11" font-family="monospace" text-anchor="middle">$name: character [1:3]</text>
+  <rect x="70" y="150" width="240" height="25" rx="4" fill="#0F172A"/>
+  <text x="190" y="167" fill="#FBBF24" font-size="11" font-family="monospace" text-anchor="middle">$age : numeric   [1:3]</text>
+  <rect x="70" y="180" width="240" height="25" rx="4" fill="#0F172A"/>
+  <text x="190" y="197" fill="#38BDF8" font-size="11" font-family="monospace" text-anchor="middle">$pass: logical   [1:3]</text>
+
+  <g transform="translate(345, 120)">
+    <path d="M0 10 L50 10 M40 2 L50 10 L40 18" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-5" fill="#FBBF24" font-size="10" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Binds 2D</text>
+  </g>
+
+  <rect x="410" y="55" width="340" height="155" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="580" y="80" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">User-Facing 2D Tabular Grid</text>
+  <text x="430" y="110" fill="#94A3B8" font-size="11" font-family="monospace">   name  age  pass</text>
+  <text x="430" y="132" fill="#E2E8F0" font-size="11" font-family="monospace">1 Rahul   20  TRUE</text>
+  <text x="430" y="154" fill="#E2E8F0" font-size="11" font-family="monospace">2 Priya   21  TRUE</text>
+  <text x="430" y="176" fill="#E2E8F0" font-size="11" font-family="monospace">3  Aman   19  TRUE</text>
+  <text x="580" y="200" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">class(df) = "data.frame" | typeof(df) = "list"</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Core Characteristics of Data Frames</text>
+  
+  <g transform="translate(30, 55)">
+    <rect width="165" height="160" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="82" y="25" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">1. Heterogeneous</text>
+    <text x="82" y="55" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 1: Text</text>
+    <text x="82" y="75" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 2: Double</text>
+    <text x="82" y="95" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 3: Logical</text>
+    <text x="82" y="120" fill="#34D399" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 4: Factor</text>
+    <text x="82" y="145" fill="#E2E8F0" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Different types OK!</text>
+  </g>
+
+  <g transform="translate(220, 55)">
+    <rect width="165" height="160" rx="8" fill="#1E293B" stroke="#10B981"/>
+    <text x="82" y="25" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">2. Equal Lengths</text>
+    <text x="82" y="55" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 1: N elements</text>
+    <text x="82" y="75" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 2: N elements</text>
+    <text x="82" y="95" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col 3: N elements</text>
+    <text x="82" y="125" fill="#EF4444" font-size="10" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Mismatched length</text>
+    <text x="82" y="145" fill="#FCA5A5" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Causes ERROR!</text>
+  </g>
+
+  <g transform="translate(410, 55)">
+    <rect width="165" height="160" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="82" y="25" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">3. Dual Names</text>
+    <text x="82" y="55" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">colnames(df)</text>
+    <text x="82" y="75" fill="#F8FAFC" font-size="10" font-family="monospace" text-anchor="middle">"name", "age"</text>
+    <text x="82" y="105" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">rownames(df)</text>
+    <text x="82" y="125" fill="#F8FAFC" font-size="10" font-family="monospace" text-anchor="middle">"1", "2", "3"</text>
+    <text x="82" y="145" fill="#E2E8F0" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Indexed by name</text>
+  </g>
+
+  <g transform="translate(600, 55)">
+    <rect width="170" height="160" rx="8" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="85" y="25" fill="#A78BFA" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">4. Ecosystem Hub</text>
+    <text x="85" y="55" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Native modeling:</text>
+    <text x="85" y="75" fill="#F8FAFC" font-size="10" font-family="monospace" text-anchor="middle">lm(y ~ x, data=df)</text>
+    <text x="85" y="105" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Plotting:</text>
+    <text x="85" y="125" fill="#F8FAFC" font-size="10" font-family="monospace" text-anchor="middle">ggplot(df, aes(...))</text>
+    <text x="85" y="145" fill="#34D399" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Standard in R &amp; AI</text>
+  </g>
+</svg>
+    </div>
+    <div class="callout callout-info">
+      <strong>Internal R Architecture:</strong> Under the hood, <code>typeof(df)</code> returns <code>"list"</code>, while <code>class(df)</code> returns <code>"data.frame"</code>. This proves a data frame is a list of equal-length column vectors bound with 2D attributes!
+    </div>
+  </section>
+
+  <!-- Section 5 -->
+  <section class="section-card">
+    <h2>5. Creating Data Frames with data.frame()</h2>
+    <p>Data frames are initialized using the <code>data.frame(...)</code> constructor function. Column names are assigned via named arguments.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Constructing Data Frames with data.frame()</text>
+  
+  <rect x="50" y="55" width="320" height="155" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+  <text x="210" y="80" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Input Syntax</text>
+  <text x="70" y="110" fill="#E2E8F0" font-size="11" font-family="monospace">students &lt;- data.frame(</text>
+  <text x="90" y="130" fill="#38BDF8" font-size="11" font-family="monospace">name  = c("Rahul", "Priya"),</text>
+  <text x="90" y="150" fill="#34D399" font-size="11" font-family="monospace">age   = c(20, 21),</text>
+  <text x="90" y="170" fill="#FBBF24" font-size="11" font-family="monospace">marks = c(85, 91)</text>
+  <text x="70" y="195" fill="#E2E8F0" font-size="11" font-family="monospace">)</text>
+
+  <g transform="translate(385, 120)">
+    <path d="M0 10 L45 10 M35 2 L45 10 L35 18" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <rect x="445" y="55" width="305" height="155" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="597" y="80" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Resulting 2x3 Data Frame</text>
+  <rect x="465" y="100" width="265" height="28" rx="4" fill="#0F172A"/>
+  <text x="480" y="118" fill="#94A3B8" font-size="11" font-family="monospace">   name age marks</text>
+  <rect x="465" y="132" width="265" height="25" rx="4" fill="#1E293B"/>
+  <text x="480" y="149" fill="#F8FAFC" font-size="11" font-family="monospace">1 Rahul  20    85</text>
+  <rect x="465" y="160" width="265" height="25" rx="4" fill="#1E293B"/>
+  <text x="480" y="177" fill="#F8FAFC" font-size="11" font-family="monospace">2 Priya  21    91</text>
+  <text x="597" y="200" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Col names mapped directly from argument tags</text>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Creating a simple student data frame</span>
+students &lt;- data.frame(
+  name  = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Priya&quot;</span>, <span class="hljs-string">&quot;Aman&quot;</span>),
+  age   = <span class="hljs-built_in">c</span>(<span class="hljs-number">20</span>, <span class="hljs-number">21</span>, <span class="hljs-number">19</span>),
+  marks = <span class="hljs-built_in">c</span>(<span class="hljs-number">85</span>, <span class="hljs-number">91</span>, <span class="hljs-number">78</span>)
+)
+print(students)</code></pre>
+</div>
+    <div class="output-box">   name age marks
+1 Rahul  20    85
+2 Priya  21    91
+3  Aman  19    78</div>
+    <p><strong>Recycling &amp; Length Rules:</strong> All columns passed into <code>data.frame()</code> must either have the exact same length, or length 1 (which R will recycle to fill all rows). If you pass vectors of differing lengths (e.g., 3 and 4), R halts with an error: <code>arguments imply differing number of rows</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Vectors Becoming Data Frame Columns</text>
+  
+  <g transform="translate(60, 60)">
+    <rect width="180" height="60" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+    <text x="90" y="25" fill="#38BDF8" font-size="11" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">v1 &lt;- c("A", "B", "C")</text>
+    <text x="90" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Length = 3 (character)</text>
+
+    <rect y="80" width="180" height="60" rx="6" fill="#1E293B" stroke="#34D399"/>
+    <text x="90" y="105" fill="#34D399" font-size="11" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">v2 &lt;- c(90, 80, 85)</text>
+    <text x="90" y="125" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Length = 3 (numeric)</text>
+  </g>
+
+  <g transform="translate(270, 115)">
+    <path d="M0 15 L70 15 M55 5 L70 15 L55 25" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="35" y="-5" fill="#FBBF24" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">data.frame(v1, v2)</text>
+  </g>
+
+  <g transform="translate(370, 55)">
+    <rect width="370" height="155" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+    <text x="185" y="25" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Combined 2D Table</text>
+    <rect x="25" y="45" width="150" height="95" rx="4" fill="#0369A1" stroke="#38BDF8"/>
+    <text x="100" y="70" fill="#FFFFFF" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">student (v1)</text>
+    <text x="100" y="95" fill="#E2E8F0" font-size="11" text-anchor="middle" font-family="monospace">"A", "B", "C"</text>
+    <text x="100" y="120" fill="#93C5FD" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Column 1</text>
+
+    <rect x="195" y="45" width="150" height="95" rx="4" fill="#065F46" stroke="#34D399"/>
+    <text x="270" y="70" fill="#FFFFFF" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">score (v2)</text>
+    <text x="270" y="95" fill="#E2E8F0" font-size="11" text-anchor="middle" font-family="monospace">90, 80, 85</text>
+    <text x="270" y="120" fill="#A7F3D0" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Column 2</text>
+  </g>
+</svg>
+    </div>
+  </section>
+
+  <!-- Section 6 -->
+  <section class="section-card">
+    <h2>6. Diverse Column Data Types in One Data Frame</h2>
+    <p>A data frame can hold any combination of R data types across its different columns, providing the foundation for real-world enterprise databases.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Diverse Column Data Types in One Data Frame</text>
+  
+  <g transform="translate(40, 55)">
+    <rect width="135" height="150" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+    <text x="67" y="25" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">name</text>
+    <text x="67" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="monospace">typeof: character</text>
+    <rect x="10" y="60" width="115" height="75" rx="4" fill="#0F172A"/>
+    <text x="67" y="80" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">"Amit"</text>
+    <text x="67" y="102" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">"Neha"</text>
+    <text x="67" y="124" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">"Riya"</text>
+  </g>
+
+  <g transform="translate(190, 55)">
+    <rect width="135" height="150" rx="6" fill="#1E293B" stroke="#10B981"/>
+    <text x="67" y="25" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">age</text>
+    <text x="67" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="monospace">typeof: double</text>
+    <rect x="10" y="60" width="115" height="75" rx="4" fill="#0F172A"/>
+    <text x="67" y="80" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">24.5</text>
+    <text x="67" y="102" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">26.0</text>
+    <text x="67" y="124" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">23.2</text>
+  </g>
+
+  <g transform="translate(340, 55)">
+    <rect width="135" height="150" rx="6" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="67" y="25" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">emp_id</text>
+    <text x="67" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="monospace">typeof: integer</text>
+    <rect x="10" y="60" width="115" height="75" rx="4" fill="#0F172A"/>
+    <text x="67" y="80" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">101L</text>
+    <text x="67" y="102" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">102L</text>
+    <text x="67" y="124" fill="#F8FAFC" font-size="11" text-anchor="middle" font-family="monospace">103L</text>
+  </g>
+
+  <g transform="translate(490, 55)">
+    <rect width="135" height="150" rx="6" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="67" y="25" fill="#A78BFA" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">active</text>
+    <text x="67" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="monospace">typeof: logical</text>
+    <rect x="10" y="60" width="115" height="75" rx="4" fill="#0F172A"/>
+    <text x="67" y="80" fill="#34D399" font-size="11" text-anchor="middle" font-family="monospace">TRUE</text>
+    <text x="67" y="102" fill="#34D399" font-size="11" text-anchor="middle" font-family="monospace">TRUE</text>
+    <text x="67" y="124" fill="#EF4444" font-size="11" text-anchor="middle" font-family="monospace">FALSE</text>
+  </g>
+
+  <g transform="translate(640, 55)">
+    <rect width="125" height="150" rx="6" fill="#1E293B" stroke="#EC4899"/>
+    <text x="62" y="25" fill="#F472B6" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">dept</text>
+    <text x="62" y="45" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="monospace">class: factor</text>
+    <rect x="8" y="60" width="109" height="75" rx="4" fill="#0F172A"/>
+    <text x="62" y="80" fill="#F472B6" font-size="11" text-anchor="middle" font-family="monospace">IT</text>
+    <text x="62" y="102" fill="#F472B6" font-size="11" text-anchor="middle" font-family="monospace">HR</text>
+    <text x="62" y="124" fill="#F472B6" font-size="11" text-anchor="middle" font-family="monospace">IT</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Demonstrating 5 distinct column data types</span>
+employees &lt;- data.frame(
+  name        = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Amit&quot;</span>, <span class="hljs-string">&quot;Neha&quot;</span>, <span class="hljs-string">&quot;Riya&quot;</span>),         <span class="hljs-comment"># Character</span>
+  age         = <span class="hljs-built_in">c</span>(<span class="hljs-number">24.5</span>, <span class="hljs-number">26.0</span>, <span class="hljs-number">23.2</span>),               <span class="hljs-comment"># Numeric (double)</span>
+  employee_id = <span class="hljs-built_in">c</span>(<span class="hljs-number">101L</span>, <span class="hljs-number">102L</span>, <span class="hljs-number">103L</span>),               <span class="hljs-comment"># Integer</span>
+  active      = <span class="hljs-built_in">c</span>(<span class="hljs-literal">TRUE</span>, <span class="hljs-literal">TRUE</span>, <span class="hljs-literal">FALSE</span>),              <span class="hljs-comment"># Logical</span>
+  department  = factor(<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;IT&quot;</span>, <span class="hljs-string">&quot;HR&quot;</span>, <span class="hljs-string">&quot;IT&quot;</span>))        <span class="hljs-comment"># Factor</span>
+)
+print(employees)
+str(employees)</code></pre>
+</div>
+    <div class="output-box">'data.frame':	3 obs. of  5 variables:
+ $ name       : chr  "Amit" "Neha" "Riya"
+ $ age        : num  24.5 26 23.2
+ $ employee_id: int  101 102 103
+ $ active     : logi  TRUE TRUE FALSE
+ $ department : Factor w/ 2 levels "HR","IT": 2 1 2</div>
+  </section>
+
+  <!-- Section 7 -->
+  <section class="section-card">
+    <h2>7. Inspecting Data Frames: str(), dim(), nrow(), ncol()</h2>
+    <p>Before analyzing any tabular dataset, you must audit its shape, column headers, and internal data types using R's inspection functions.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Essential Data Frame Inspection Toolkit</text>
+  
+  <g transform="translate(30, 55)">
+    <rect width="130" height="155" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="65" y="30" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">dim(df)</text>
+    <text x="65" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Returns vector</text>
+    <text x="65" y="95" fill="#F8FAFC" font-size="13" font-family="monospace" text-anchor="middle">[1] 100  4</text>
+    <text x="65" y="135" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">c(nrows, ncols)</text>
+  </g>
+
+  <g transform="translate(180, 55)">
+    <rect width="130" height="155" rx="8" fill="#1E293B" stroke="#10B981"/>
+    <text x="65" y="30" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">nrow / ncol</text>
+    <text x="65" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Individual counts</text>
+    <text x="65" y="90" fill="#34D399" font-size="11" font-family="monospace" text-anchor="middle">nrow: 100</text>
+    <text x="65" y="110" fill="#34D399" font-size="11" font-family="monospace" text-anchor="middle">ncol: 4</text>
+    <text x="65" y="135" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Scalar row/col size</text>
+  </g>
+
+  <g transform="translate(330, 55)">
+    <rect width="130" height="155" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="65" y="30" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">colnames(df)</text>
+    <text x="65" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Column headers</text>
+    <text x="65" y="95" fill="#FBBF24" font-size="11" font-family="monospace" text-anchor="middle">"id", "name"</text>
+    <text x="65" y="135" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">names(df) works too</text>
+  </g>
+
+  <g transform="translate(480, 55)">
+    <rect width="130" height="155" rx="8" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="65" y="30" fill="#A78BFA" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">str(df)</text>
+    <text x="65" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Deep structure</text>
+    <text x="65" y="95" fill="#A78BFA" font-size="10" font-family="monospace" text-anchor="middle">data.frame: 100x4</text>
+    <text x="65" y="135" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Types + previews</text>
+  </g>
+
+  <g transform="translate(630, 55)">
+    <rect width="140" height="155" rx="8" fill="#1E293B" stroke="#06B6D4"/>
+    <text x="70" y="30" fill="#22D3EE" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">summary(df)</text>
+    <text x="70" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Statistical digest</text>
+    <text x="70" y="95" fill="#22D3EE" font-size="10" font-family="monospace" text-anchor="middle">Min, Median, Max</text>
+    <text x="70" y="135" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Quartiles &amp; counts</text>
+  </g>
+</svg>
+    </div>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Return Value</th>
+            <th>Description &amp; Practical Use</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>dim(df)</code></td>
+            <td><code>c(nrow, ncol)</code></td>
+            <td>Returns a 2-element integer vector: total rows and total columns.</td>
+          </tr>
+          <tr>
+            <td><code>nrow(df)</code></td>
+            <td>Integer scalar</td>
+            <td>Count of observations (rows) in the table.</td>
+          </tr>
+          <tr>
+            <td><code>ncol(df)</code></td>
+            <td>Integer scalar</td>
+            <td>Count of variables (columns) in the table.</td>
+          </tr>
+          <tr>
+            <td><code>colnames(df)</code></td>
+            <td>Character vector</td>
+            <td>Extracts or sets the column names (identical to <code>names(df)</code>).</td>
+          </tr>
+          <tr>
+            <td><code>rownames(df)</code></td>
+            <td>Character vector</td>
+            <td>Extracts or sets row identifier labels.</td>
+          </tr>
+          <tr>
+            <td><code>str(df)</code></td>
+            <td>Console report</td>
+            <td>Deep inspection: displays class, dimensions, column types, and previews.</td>
+          </tr>
+          <tr>
+            <td><code>head(df, n)</code></td>
+            <td>Data frame</td>
+            <td>Displays the first <code>n</code> rows (defaults to 6).</td>
+          </tr>
+          <tr>
+            <td><code>tail(df, n)</code></td>
+            <td>Data frame</td>
+            <td>Displays the last <code>n</code> rows.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 8 -->
+  <section class="section-card">
+    <h2>8. Accessing Rows and Columns ($, [[ ]], [ ], drop = FALSE)</h2>
+    <p>R provides three primary operators to extract information from data frames: the dollar sign <code>$</code>, double brackets <code>[[ ]]</code>, and single brackets <code>[ ]</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Accessing Columns with $ Operator (Vector Extraction)</text>
+  
+  <rect x="50" y="60" width="310" height="150" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+  <text x="205" y="85" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Input: Data Frame Object</text>
+  <rect x="70" y="105" width="270" height="85" rx="4" fill="#0F172A"/>
+  <text x="85" y="125" fill="#94A3B8" font-size="11" font-family="monospace">   name age marks</text>
+  <text x="85" y="145" fill="#E2E8F0" font-size="11" font-family="monospace">1 Rahul  20    85</text>
+  <text x="85" y="165" fill="#E2E8F0" font-size="11" font-family="monospace">2 Priya  21    91</text>
+  <text x="85" y="185" fill="#E2E8F0" font-size="11" font-family="monospace">3  Aman  19    78</text>
+
+  <g transform="translate(380, 115)">
+    <path d="M0 15 L50 15 M40 5 L50 15 L40 25" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-5" fill="#FBBF24" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">df$marks</text>
+  </g>
+
+  <rect x="450" y="60" width="300" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="600" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Result: Pure Atomic Vector</text>
+  <rect x="470" y="110" width="260" height="40" rx="4" fill="#0F172A"/>
+  <text x="600" y="135" fill="#34D399" font-size="13" font-weight="bold" font-family="monospace" text-anchor="middle">[1] 85 91 78</text>
+  <text x="600" y="175" fill="#93C5FD" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Vector is stripped of data.frame wrapper</text>
+  <text x="600" y="195" fill="#A7F3D0" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Ready for mean(), sum(), or arithmetic</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Accessing Columns with [[ ]] (Programmatic Extraction)</text>
+  
+  <rect x="50" y="60" width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+  <text x="210" y="85" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Dynamic Column Variable Access</text>
+  <text x="70" y="115" fill="#E2E8F0" font-size="11" font-family="monospace">col_name &lt;- "marks"</text>
+  <text x="70" y="140" fill="#EF4444" font-size="11" font-family="monospace">students$col_name   # NULL (Fails!)</text>
+  <text x="70" y="165" fill="#34D399" font-size="11" font-family="monospace">students[[col_name]] # [1] 85 91 78 (Works!)</text>
+  <text x="70" y="190" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">$ expects literal text; [[ ]] evaluates variables</text>
+
+  <rect x="420" y="60" width="330" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="585" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Numeric Indexing with [[ ]]</text>
+  <text x="440" y="115" fill="#E2E8F0" font-size="11" font-family="monospace">students[[3]] # Extracts 3rd column as vector</text>
+  <rect x="440" y="130" width="290" height="35" rx="4" fill="#0F172A"/>
+  <text x="585" y="152" fill="#34D399" font-size="12" font-family="monospace" text-anchor="middle">[1] 85 91 78</text>
+  <text x="585" y="185" fill="#38BDF8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Identical to list element extraction</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Single Bracket [ ] vs. Double Bracket [[ ]] / $</text>
+  
+  <rect x="40" y="55" width="340" height="165" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+  <text x="210" y="80" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Single Bracket: df["marks"]</text>
+  <text x="60" y="105" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">Preserves Data Frame container structure:</text>
+  <rect x="60" y="120" width="300" height="55" rx="4" fill="#0F172A"/>
+  <text x="75" y="140" fill="#94A3B8" font-size="11" font-family="monospace">  marks</text>
+  <text x="75" y="160" fill="#38BDF8" font-size="11" font-family="monospace">1    85</text>
+  <text x="210" y="195" fill="#38BDF8" font-size="11" text-anchor="middle" font-family="monospace">class = "data.frame" (1 column)</text>
+
+  <rect x="420" y="55" width="340" height="165" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="590" y="80" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Double Bracket: df[["marks"]] or df$marks</text>
+  <text x="440" y="105" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">Extracts naked internal vector:</text>
+  <rect x="440" y="120" width="300" height="55" rx="4" fill="#0F172A"/>
+  <text x="455" y="152" fill="#34D399" font-size="13" font-weight="bold" font-family="monospace">[1] 85 91 78</text>
+  <text x="590" y="195" fill="#34D399" font-size="11" text-anchor="middle" font-family="monospace">class = "numeric" (Vector)</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">2D Matrix-Style Row &amp; Column Indexing: df[row, col]</text>
+  
+  <g transform="translate(60, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#64748B"/>
+    <text x="160" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">The Comma Rule: [Rows , Columns]</text>
+    <text x="25" y="60" fill="#E2E8F0" font-size="11" font-family="monospace">df[1, ]      # Row 1, ALL columns</text>
+    <text x="25" y="85" fill="#E2E8F0" font-size="11" font-family="monospace">df[, 2]      # ALL rows, Column 2</text>
+    <text x="25" y="110" fill="#34D399" font-size="11" font-family="monospace">df[1, 2]     # Row 1, Column 2 (Single cell)</text>
+    <text x="25" y="135" fill="#FBBF24" font-size="11" font-family="monospace">df[1:2, 1:3] # Sub-matrix slice</text>
+  </g>
+
+  <g transform="translate(420, 60)">
+    <rect width="320" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+    <text x="160" y="30" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">The drop = FALSE Safeguard</text>
+    <text x="25" y="60" fill="#EF4444" font-size="11" font-family="monospace">df[, 2]               # Simplifies to vector!</text>
+    <text x="25" y="85" fill="#34D399" font-size="11" font-family="monospace">df[, 2, drop = FALSE] # Stays a data frame!</text>
+    <rect x="25" y="105" width="270" height="35" rx="4" fill="#0F172A"/>
+    <text x="160" y="127" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Essential in generic functions to prevent bugs</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Accessing data frame elements</span>
+students &lt;- data.frame(name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Priya&quot;</span>), marks = <span class="hljs-built_in">c</span>(<span class="hljs-number">85</span>, <span class="hljs-number">91</span>))
+
+<span class="hljs-comment"># 1. Dollar sign ($): Returns vector</span>
+students$marks         <span class="hljs-comment"># [1] 85 91</span>
+
+<span class="hljs-comment"># 2. Double brackets ([[ ]]): Returns vector (supports variables)</span>
+col &lt;- <span class="hljs-string">&quot;marks&quot;</span>
+students[[col]]        <span class="hljs-comment"># [1] 85 91</span>
+
+<span class="hljs-comment"># 3. Single bracket ([ ]): Preserves 1-column data frame!</span>
+students[<span class="hljs-string">&quot;marks&quot;</span>]      <span class="hljs-comment"># class: &quot;data.frame&quot;</span>
+
+<span class="hljs-comment"># 4. Matrix-style 2D indexing [row, col]</span>
+students[<span class="hljs-number">1</span>, <span class="hljs-number">2</span>]         <span class="hljs-comment"># [1] 85 (Single cell)</span>
+students[<span class="hljs-number">1</span>, ]          <span class="hljs-comment"># Row 1 (all columns)</span>
+students[, <span class="hljs-number">2</span>, drop = <span class="hljs-literal">FALSE</span>] <span class="hljs-comment"># Column 2 preserved as data frame!</span></code></pre>
+</div>
+    <div class="output-box">[1] 85 91
+[1] 85 91
+  marks
+1    85
+2    91
+[1] 85
+   name marks
+1 Rahul    85
+  marks
+1    85
+2    91</div>
+  </section>
+
+  <!-- Section 9 -->
+  <section class="section-card">
+    <h2>9. Modifying Data Frames: Adding, Updating &amp; Deleting</h2>
+    <p>Data frames in R are mutable via reassignment. You can add new columns, modify existing values, append rows with <code>rbind()</code>, and delete columns by assigning <code>NULL</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Adding a New Column to a Data Frame</text>
+  
+  <rect x="50" y="60" width="310" height="150" rx="8" fill="#1E293B" stroke="#64748B"/>
+  <text x="205" y="85" fill="#94A3B8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Original Data Frame (3 Columns)</text>
+  <rect x="70" y="105" width="270" height="75" rx="4" fill="#0F172A"/>
+  <text x="85" y="125" fill="#94A3B8" font-size="11" font-family="monospace">name   age marks</text>
+  <text x="85" y="145" fill="#E2E8F0" font-size="11" font-family="monospace">Rahul   20    85</text>
+  <text x="85" y="165" fill="#E2E8F0" font-size="11" font-family="monospace">Priya   21    91</text>
+
+  <g transform="translate(380, 115)">
+    <path d="M0 15 L50 15 M40 5 L50 15 L40 25" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-5" fill="#34D399" font-size="10" font-weight="bold" text-anchor="middle" font-family="monospace">$city &lt;-</text>
+  </g>
+
+  <rect x="450" y="60" width="300" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="600" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Expanded Data Frame (4 Columns)</text>
+  <rect x="470" y="105" width="260" height="75" rx="4" fill="#0F172A"/>
+  <text x="485" y="125" fill="#94A3B8" font-size="11" font-family="monospace">name   age marks  city</text>
+  <text x="485" y="145" fill="#E2E8F0" font-size="11" font-family="monospace">Rahul   20    85  Lucknow</text>
+  <text x="485" y="165" fill="#E2E8F0" font-size="11" font-family="monospace">Priya   21    91  Delhi</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Updating Existing Values in Data Frames</text>
+  
+  <g transform="translate(60, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="160" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Update Single Cell: df[row, col] &lt;- val</text>
+    <text x="25" y="65" fill="#E2E8F0" font-size="11" font-family="monospace">students$marks[1] &lt;- 95</text>
+    <text x="25" y="90" fill="#E2E8F0" font-size="11" font-family="monospace"># Or: students[1, "marks"] &lt;- 95</text>
+    <text x="25" y="125" fill="#34D399" font-size="11" font-family="system-ui, sans-serif">Targeted modification of exact coordinate</text>
+  </g>
+
+  <g transform="translate(420, 60)">
+    <rect width="320" height="150" rx="8" fill="#19355E" stroke="#10B981"/>
+    <text x="160" y="30" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Update Entire Column Vector</text>
+    <text x="25" y="65" fill="#E2E8F0" font-size="11" font-family="monospace">students$marks &lt;- students$marks + 5</text>
+    <text x="25" y="90" fill="#E2E8F0" font-size="11" font-family="monospace"># Vectorized bonus applied to all rows!</text>
+    <text x="25" y="125" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif">Vectorized operations preserve column length</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Appending New Rows with rbind()</text>
+  
+  <rect x="50" y="55" width="280" height="155" rx="8" fill="#1E293B" stroke="#276DC3"/>
+  <text x="190" y="80" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Existing Table (2 rows)</text>
+  <rect x="70" y="95" width="240" height="40" rx="4" fill="#0F172A"/>
+  <text x="80" y="120" fill="#E2E8F0" font-size="11" font-family="monospace">1 Rahul 20 85 | 2 Priya 21 91</text>
+  
+  <text x="190" y="160" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">+ New Row Record</text>
+  <rect x="70" y="170" width="240" height="30" rx="4" fill="#065F46" stroke="#10B981"/>
+  <text x="80" y="190" fill="#A7F3D0" font-size="11" font-family="monospace">3 Aman  19 78</text>
+
+  <g transform="translate(345, 120)">
+    <path d="M0 10 L50 10 M40 2 L50 10 L40 18" stroke="#F59E0B" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-5" fill="#FBBF24" font-size="10" font-weight="bold" text-anchor="middle" font-family="monospace">rbind()</text>
+  </g>
+
+  <rect x="415" y="55" width="335" height="155" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="582" y="80" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Combined Table (3 rows)</text>
+  <text x="440" y="110" fill="#94A3B8" font-size="11" font-family="monospace">   name age marks</text>
+  <text x="440" y="130" fill="#E2E8F0" font-size="11" font-family="monospace">1 Rahul  20    85</text>
+  <text x="440" y="150" fill="#E2E8F0" font-size="11" font-family="monospace">2 Priya  21    91</text>
+  <text x="440" y="170" fill="#34D399" font-size="11" font-family="bold monospace">3  Aman  19    78</text>
+  <text x="582" y="198" fill="#FBBF24" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Column names and data types must match!</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Removing Rows and Columns</text>
+  
+  <g transform="translate(50, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#EF4444"/>
+    <text x="160" y="30" fill="#F87171" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Removing Rows: Negative Indexing</text>
+    <text x="25" y="65" fill="#E2E8F0" font-size="11" font-family="monospace">df &lt;- df[-2, ] # Drops 2nd row</text>
+    <text x="25" y="90" fill="#E2E8F0" font-size="11" font-family="monospace">df &lt;- df[-c(1, 3), ] # Drops rows 1 &amp; 3</text>
+    <text x="25" y="125" fill="#FCA5A5" font-size="11" font-family="system-ui, sans-serif">Negative row numbers delete matching records</text>
+  </g>
+
+  <g transform="translate(430, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="160" y="30" fill="#FBBF24" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Removing Columns: NULL Assignment</text>
+    <text x="25" y="65" fill="#E2E8F0" font-size="11" font-family="monospace">df$city &lt;- NULL # Drops 'city' column</text>
+    <text x="25" y="90" fill="#E2E8F0" font-size="11" font-family="monospace">df &lt;- df[, -3]  # Drops 3rd column</text>
+    <text x="25" y="125" fill="#FDE68A" font-size="11" font-family="system-ui, sans-serif">Assigning NULL purges variable from table in RAM</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Renaming Columns in Base R vs. dplyr</text>
+  
+  <rect x="50" y="60" width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3"/>
+  <text x="210" y="85" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Base R Method: names()</text>
+  <text x="70" y="115" fill="#E2E8F0" font-size="11" font-family="monospace">names(df)[1] &lt;- "student_name"</text>
+  <text x="70" y="145" fill="#E2E8F0" font-size="11" font-family="monospace">colnames(df) &lt;- c("id", "score")</text>
+  <text x="70" y="180" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">Requires knowing index position or renaming all</text>
+
+  <rect x="430" y="60" width="320" height="150" rx="8" fill="#19355E" stroke="#10B981"/>
+  <text x="590" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Modern dplyr Method: rename()</text>
+  <text x="450" y="115" fill="#34D399" font-size="11" font-family="monospace">df &lt;- rename(df, new_col = old_col)</text>
+  <text x="450" y="145" fill="#FBBF24" font-size="11" font-family="monospace">df &lt;- df |&gt; rename(student_name = name)</text>
+  <text x="450" y="180" fill="#A7F3D0" font-size="11" font-family="system-ui, sans-serif">Syntax: rename(new_name = old_name)</text>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Data frame manipulation demonstration</span>
+df &lt;- data.frame(name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Priya&quot;</span>), marks = <span class="hljs-built_in">c</span>(<span class="hljs-number">85</span>, <span class="hljs-number">91</span>))
+
+<span class="hljs-comment"># Add a new column</span>
+df$city &lt;- <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Delhi&quot;</span>, <span class="hljs-string">&quot;Mumbai&quot;</span>)
+
+<span class="hljs-comment"># Update a value</span>
+df$marks[<span class="hljs-number">1</span>] &lt;- <span class="hljs-number">95</span>
+
+<span class="hljs-comment"># Add a row using rbind()</span>
+new_row &lt;- data.frame(name = <span class="hljs-string">&quot;Aman&quot;</span>, marks = <span class="hljs-number">78</span>, city = <span class="hljs-string">&quot;Lucknow&quot;</span>)
+df &lt;- rbind(df, new_row)
+
+<span class="hljs-comment"># Delete a column</span>
+df$city &lt;- <span class="hljs-literal">NULL</span>
+
+<span class="hljs-comment"># Delete row 2 using negative indexing</span>
+df &lt;- df[-<span class="hljs-number">2</span>, ]
+
+<span class="hljs-comment"># Rename column 1</span>
+<span class="hljs-built_in">names</span>(df)[<span class="hljs-number">1</span>] &lt;- <span class="hljs-string">&quot;student_name&quot;</span>
+print(df)</code></pre>
+</div>
+    <div class="output-box">  student_name marks
+1        Rahul    95
+3         Aman    78</div>
+  </section>
+
+  <!-- Section 10 -->
+  <section class="section-card">
+    <h2>10. Filtering and Sorting Data Frames</h2>
+    <p>Extracting subsets of data based on business rules or statistical filters is performed using logical row indexing <code>df[condition, ]</code> and sorting with <code>order()</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Logical Row Filtering: df[condition, ]</text>
+  
+  <g transform="translate(60, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="160" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Single Condition</text>
+    <text x="25" y="60" fill="#E2E8F0" font-size="11" font-family="monospace">df[df$marks &gt; 80, ]</text>
+    <text x="25" y="85" fill="#94A3B8" font-size="10" font-family="monospace">df$marks &gt; 80 -&gt; c(TRUE, TRUE, FALSE)</text>
+    <text x="25" y="115" fill="#34D399" font-size="11" font-family="system-ui, sans-serif">Only rows evaluating to TRUE are kept</text>
+    <text x="25" y="135" fill="#94A3B8" font-size="10" font-family="system-ui, sans-serif">Don't forget the comma before the closing bracket!</text>
+  </g>
+
+  <g transform="translate(420, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#10B981"/>
+    <text x="160" y="30" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Multiple Compound Conditions</text>
+    <text x="25" y="60" fill="#E2E8F0" font-size="11" font-family="monospace">df[df$marks &gt; 80 &amp; df$age &lt; 21, ]</text>
+    <text x="25" y="85" fill="#E2E8F0" font-size="11" font-family="monospace">df[df$city == "NY" | df$city == "SF", ]</text>
+    <text x="25" y="110" fill="#FBBF24" font-size="11" font-family="monospace">df[df$name %in% c("Rahul", "Priya"), ]</text>
+    <text x="25" y="135" fill="#38BDF8" font-size="10" font-family="system-ui, sans-serif">&amp; (AND)  |  | (OR)  |  ! (NOT)  |  %in% (Group)</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Sorting Data Frames with order()</text>
+  
+  <g transform="translate(60, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="160" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Ascending Order (Low to High)</text>
+    <text x="25" y="65" fill="#E2E8F0" font-size="11" font-family="monospace">ord &lt;- order(df$marks)</text>
+    <text x="25" y="90" fill="#E2E8F0" font-size="11" font-family="monospace">sorted_df &lt;- df[ord, ]</text>
+    <text x="25" y="125" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">order() returns integer index permutation</text>
+  </g>
+
+  <g transform="translate(420, 60)">
+    <rect width="320" height="150" rx="8" fill="#19355E" stroke="#10B981"/>
+    <text x="160" y="30" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Descending Order (High to Low)</text>
+    <text x="25" y="65" fill="#34D399" font-size="11" font-family="monospace">df[order(-df$marks), ] # Numeric minus</text>
+    <text x="25" y="90" fill="#34D399" font-size="11" font-family="monospace">df[order(df$name, decreasing = TRUE), ]</text>
+    <text x="25" y="125" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif">In dplyr: arrange(df, desc(marks))</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Filtering and sorting examples</span>
+students  <span class="hljs-number">80</span> AND age  <span class="hljs-number">80</span> &amp; students$age &lt;= <span class="hljs-number">21</span>, ]
+
+<span class="hljs-comment"># Filter using %in%</span>
+selected &lt;- students[students$name %in% <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Rahul&quot;</span>, <span class="hljs-string">&quot;Neha&quot;</span>), ]
+
+<span class="hljs-comment"># Sort descending by marks using order(-marks)</span>
+sorted_students &lt;- students[order(-students$marks), ]
+print(sorted_students)</code></pre>
+</div>
+    <div class="output-box">   name age marks
+2 Priya  21    91
+4  Neha  22    88
+1 Rahul  20    85
+3  Aman  19    78</div>
+  </section>
+
+  <!-- Section 11 -->
+  <section class="section-card">
+    <h2>11. Missing Values (NA) and Data Cleaning</h2>
+    <p>Real-world datasets frequently contain missing values (<code>NA</code>). Unhandled missing values propagate through calculations and produce <code>NA</code> in sums, means, and machine learning algorithms.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Missing Values (NA) in Real-World Tabular Datasets</text>
+  
+  <rect x="50" y="60" width="700" height="150" rx="8" fill="#1E293B" stroke="#EF4444" stroke-width="1.5"/>
+  <g transform="translate(80, 85)">
+    <text x="0" y="20" fill="#94A3B8" font-size="12" font-family="monospace">Customer A:</text>
+    <text x="120" y="20" fill="#38BDF8" font-size="12" font-family="monospace">Age = 22</text>
+    <text x="240" y="20" fill="#34D399" font-size="12" font-family="monospace">Spending = $500</text>
+    <text x="400" y="20" fill="#34D399" font-size="11" font-family="system-ui, sans-serif">Complete record</text>
+
+    <text x="0" y="50" fill="#94A3B8" font-size="12" font-family="monospace">Customer B:</text>
+    <rect x="115" y="35" width="60" height="20" rx="4" fill="#991B1B"/>
+    <text x="145" y="49" fill="#FCA5A5" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">NA</text>
+    <text x="240" y="50" fill="#34D399" font-size="12" font-family="monospace">Spending = $700</text>
+    <text x="400" y="50" fill="#EF4444" font-size="11" font-family="system-ui, sans-serif">Age omitted during signup</text>
+
+    <text x="0" y="80" fill="#94A3B8" font-size="12" font-family="monospace">Customer C:</text>
+    <text x="120" y="80" fill="#38BDF8" font-size="12" font-family="monospace">Age = 25</text>
+    <rect x="235" y="65" width="60" height="20" rx="4" fill="#991B1B"/>
+    <text x="265" y="79" fill="#FCA5A5" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">NA</text>
+    <text x="400" y="80" fill="#EF4444" font-size="11" font-family="system-ui, sans-serif">Transaction timed out</text>
+  </g>
+  <text x="400" y="195" fill="#FBBF24" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Missing values (NA) must be identified and handled prior to statistical or AI modeling!</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Detecting and Quantifying Missing Values in R</text>
+  
+  <g transform="translate(40, 55)">
+    <rect width="215" height="155" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="107" y="30" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">anyNA(df)</text>
+    <text x="107" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Fast global scan</text>
+    <text x="107" y="95" fill="#34D399" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">TRUE</text>
+    <text x="107" y="130" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Returns single boolean</text>
+  </g>
+
+  <g transform="translate(290, 55)">
+    <rect width="215" height="155" rx="8" fill="#1E293B" stroke="#10B981"/>
+    <text x="107" y="30" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">sum(is.na(df))</text>
+    <text x="107" y="65" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Total NA cells in table</text>
+    <text x="107" y="95" fill="#FBBF24" font-size="14" font-weight="bold" text-anchor="middle" font-family="monospace">2</text>
+    <text x="107" y="130" fill="#94A3B8" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Count across all entries</text>
+  </g>
+
+  <g transform="translate(540, 55)">
+    <rect width="220" height="155" rx="8" fill="#19355E" stroke="#38BDF8" stroke-width="2"/>
+    <text x="110" y="30" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">colSums(is.na(df))</text>
+    <text x="110" y="60" fill="#94A3B8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Per-column breakdown:</text>
+    <text x="40" y="85" fill="#F8FAFC" font-size="10" font-family="monospace">name: 0</text>
+    <text x="40" y="105" fill="#EF4444" font-size="10" font-family="monospace">age : 1</text>
+    <text x="40" y="125" fill="#EF4444" font-size="10" font-family="monospace">spend: 1</text>
+    <text x="110" y="145" fill="#A7F3D0" font-size="10" text-anchor="middle" font-family="system-ui, sans-serif">Pinpoints dirty columns</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Basic 6-Step Tabular Data Cleaning Workflow</text>
+  
+  <g transform="translate(25, 60)">
+    <rect width="105" height="145" rx="6" fill="#1E293B" stroke="#64748B"/>
+    <text x="52" y="25" fill="#94A3B8" font-size="11" font-weight="bold" text-anchor="middle">Step 1</text>
+    <text x="52" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Inspect</text>
+    <text x="52" y="75" fill="#38BDF8" font-size="10" font-family="monospace" text-anchor="middle">dim, str</text>
+    <text x="52" y="105" fill="#94A3B8" font-size="9" text-anchor="middle">Check shape</text>
+  </g>
+
+  <g transform="translate(150, 60)">
+    <rect width="105" height="145" rx="6" fill="#1E293B" stroke="#EF4444"/>
+    <text x="52" y="25" fill="#F87171" font-size="11" font-weight="bold" text-anchor="middle">Step 2</text>
+    <text x="52" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Scan NAs</text>
+    <text x="52" y="75" fill="#EF4444" font-size="10" font-family="monospace" text-anchor="middle">colSums()</text>
+    <text x="52" y="105" fill="#94A3B8" font-size="9" text-anchor="middle">Find missing</text>
+  </g>
+
+  <g transform="translate(275, 60)">
+    <rect width="105" height="145" rx="6" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="52" y="25" fill="#FBBF24" font-size="11" font-weight="bold" text-anchor="middle">Step 3</text>
+    <text x="52" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Fix Types</text>
+    <text x="52" y="75" fill="#FBBF24" font-size="10" font-family="monospace" text-anchor="middle">as.factor()</text>
+    <text x="52" y="105" fill="#94A3B8" font-size="9" text-anchor="middle">Cast columns</text>
+  </g>
+
+  <g transform="translate(400, 60)">
+    <rect width="105" height="145" rx="6" fill="#1E293B" stroke="#10B981"/>
+    <text x="52" y="25" fill="#34D399" font-size="11" font-weight="bold" text-anchor="middle">Step 4</text>
+    <text x="52" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Handle NAs</text>
+    <text x="52" y="75" fill="#34D399" font-size="10" font-family="monospace" text-anchor="middle">na.omit()</text>
+    <text x="52" y="105" fill="#94A3B8" font-size="9" text-anchor="middle">Or impute</text>
+  </g>
+
+  <g transform="translate(525, 60)">
+    <rect width="105" height="145" rx="6" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="52" y="25" fill="#A78BFA" font-size="11" font-weight="bold" text-anchor="middle">Step 5</text>
+    <text x="52" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Duplicates</text>
+    <text x="52" y="75" fill="#A78BFA" font-size="10" font-family="monospace" text-anchor="middle">unique()</text>
+    <text x="52" y="105" fill="#94A3B8" font-size="9" text-anchor="middle">Drop twins</text>
+  </g>
+
+  <g transform="translate(650, 60)">
+    <rect width="120" height="145" rx="6" fill="#19355E" stroke="#38BDF8" stroke-width="2"/>
+    <text x="60" y="25" fill="#38BDF8" font-size="11" font-weight="bold" text-anchor="middle">Step 6</text>
+    <text x="60" y="45" fill="#FFFFFF" font-size="10" font-weight="bold" text-anchor="middle">Verify</text>
+    <text x="60" y="75" fill="#38BDF8" font-size="10" font-family="monospace" text-anchor="middle">summary()</text>
+    <text x="60" y="105" fill="#A7F3D0" font-size="9" text-anchor="middle">Model Ready</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Missing value detection and treatment</span>
+customers &lt;- data.frame(
+  name     = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>, <span class="hljs-string">&quot;C&quot;</span>, <span class="hljs-string">&quot;D&quot;</span>),
+  age      = <span class="hljs-built_in">c</span>(<span class="hljs-number">22</span>, <span class="hljs-literal">NA</span>, <span class="hljs-number">25</span>, <span class="hljs-number">30</span>),
+  spending = <span class="hljs-built_in">c</span>(<span class="hljs-number">500</span>, <span class="hljs-number">700</span>, <span class="hljs-literal">NA</span>, <span class="hljs-number">900</span>)
+)
+
+<span class="hljs-comment"># 1. Audit missingness per column</span>
+colSums(<span class="hljs-built_in">is.na</span>(customers))
+
+<span class="hljs-comment"># 2. Complete cases removal with na.omit()</span>
+clean_rows &lt;- na.omit(customers)
+
+<span class="hljs-comment"># 3. Simple mean imputation for age</span>
+customers$age[<span class="hljs-built_in">is.na</span>(customers$age)] &lt;- mean(customers$age, na.rm = <span class="hljs-literal">TRUE</span>)
+print(customers)</code></pre>
+</div>
+    <div class="output-box">    name      age spending
+1      A 22.00000      500
+2      B 25.66667      700
+3      C 25.00000       NA
+4      D 30.00000      900</div>
+    <div class="callout callout-warn">
+      <strong>Data Science Notice on Imputation:</strong> Mean imputation across the entire dataset is demonstrated here for basic educational mechanics. In real Machine Learning pipelines, imputation parameters must be learned exclusively from the <em>training split</em> to prevent data leakage!
+    </div>
+  </section>
+
+  <!-- Section 12 -->
+  <section class="section-card">
+    <h2>12. Introduction to Tibbles: The Modern Data Frame</h2>
+    <p>A <strong>tibble</strong> (class <code>tbl_df</code>) is a modern evolution of the classic data frame, introduced by Hadley Wickham and the Tidyverse core team. Tibbles preserve everything that makes data frames great while redesigning legacy behaviors that cause frustration in production.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">What is a Tibble (tbl_df) in R?</text>
+  
+  <rect x="50" y="60" width="320" height="150" rx="8" fill="#1E293B" stroke="#64748B"/>
+  <text x="210" y="85" fill="#CBD5E1" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Base R data.frame (Classic)</text>
+  <text x="70" y="115" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">• Origin: S language (1980s)</text>
+  <text x="70" y="135" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">• Prints entire dataset by default (floods screen)</text>
+  <text x="70" y="155" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">• Single column slice df[, 1] drops to vector</text>
+  <text x="70" y="175" fill="#94A3B8" font-size="11" font-family="system-ui, sans-serif">• Partial matching on $ can cause silent bugs</text>
+
+  <g transform="translate(385, 120)">
+    <path d="M0 10 L45 10 M35 2 L45 10 L35 18" stroke="#10B981" stroke-width="3" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <rect x="445" y="60" width="305" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+  <text x="597" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Tidyverse tibble (Modern)</text>
+  <text x="465" y="115" fill="#E2E8F0" font-size="11" font-family="system-ui, sans-serif">• Is a data frame (class inherits data.frame)</text>
+  <text x="465" y="135" fill="#E2E8F0" font-size="11" font-family="system-ui, sans-serif">• Prints 10 rows &amp; fits screen with column types</text>
+  <text x="465" y="155" fill="#34D399" font-size="11" font-family="system-ui, sans-serif">• [ , 1] ALWAYS returns a tibble (no drop!)</text>
+  <text x="465" y="175" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif">• Strict: never does partial matching on $</text>
+</svg>
+    </div>
+    <div class="card-grid">
+      <div class="sub-card">
+        <h3>1. Polite Screen Printing</h3>
+        <p>Printing a 1-million-row base data frame crashes your console terminal. A tibble politely prints only the first 10 rows and fits columns to your screen width.</p>
+      </div>
+      <div class="sub-card">
+        <h3>2. Column Type Previews</h3>
+        <p>Every column header displays its data type directly beneath the name (e.g., <code>&lt;chr&gt;</code>, <code>&lt;dbl&gt;</code>, <code>&lt;int&gt;</code>, <code>&lt;fct&gt;</code>), eliminating constant calls to <code>str()</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h3>3. Predictable Subsetting</h3>
+        <p>Subsetting a tibble with <code>tbl[, 1]</code> always returns a 1-column tibble. It <strong>never</strong> silently simplifies to an atomic vector!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 13 -->
+  <section class="section-card">
+    <h2>13. Creating and Converting Tibbles (tibble(), as_tibble())</h2>
+    <p>Tibbles are constructed using the <code>tibble(...)</code> function from <code>library(tibble)</code> or converted from existing data frames using <code>as_tibble()</code>.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Creating a Tibble with tibble()</text>
+  
+  <rect x="50" y="60" width="320" height="150" rx="8" fill="#1E293B" stroke="#276DC3"/>
+  <text x="210" y="85" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Referencing Earlier Columns Dynamically!</text>
+  <text x="70" y="115" fill="#E2E8F0" font-size="11" font-family="monospace">library(tibble)</text>
+  <text x="70" y="140" fill="#38BDF8" font-size="11" font-family="monospace">tbl &lt;- tibble(</text>
+  <text x="90" y="160" fill="#F8FAFC" font-size="11" font-family="monospace">x = 1:3,</text>
+  <text x="90" y="180" fill="#34D399" font-size="11" font-family="monospace">y = x * 2  # References x immediately!</text>
+  <text x="70" y="200" fill="#38BDF8" font-size="11" font-family="monospace">)</text>
+
+  <rect x="420" y="60" width="330" height="150" rx="8" fill="#19355E" stroke="#10B981"/>
+  <text x="585" y="85" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Base R Fails on Sequential Reference</text>
+  <text x="440" y="115" fill="#EF4444" font-size="11" font-family="monospace">data.frame(x = 1:3, y = x * 2)</text>
+  <text x="440" y="140" fill="#FCA5A5" font-size="11" font-family="system-ui, sans-serif">Error in data.frame: object 'x' not found!</text>
+  <text x="440" y="175" fill="#38BDF8" font-size="11" font-family="system-ui, sans-serif">Tibble builds columns sequentially in real time</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Seamless Two-Way Conversion</text>
+  
+  <g transform="translate(60, 65)">
+    <rect width="250" height="135" rx="8" fill="#1E293B" stroke="#276DC3"/>
+    <text x="125" y="35" fill="#38BDF8" font-size="14" font-weight="bold" text-anchor="middle">data.frame</text>
+    <text x="125" y="65" fill="#94A3B8" font-size="11" text-anchor="middle">Base R tabular format</text>
+    <text x="125" y="90" fill="#E2E8F0" font-size="11" font-family="monospace" text-anchor="middle">class: "data.frame"</text>
+    <text x="125" y="115" fill="#94A3B8" font-size="10" text-anchor="middle">Compatible with legacy C code</text>
+  </g>
+
+  <g transform="translate(340, 95)">
+    <path d="M0 10 L100 10 M85 2 L100 10 L85 18" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <text x="50" y="-3" fill="#34D399" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">as_tibble()</text>
+
+    <path d="M100 45 L0 45 M15 37 L0 45 L15 53" stroke="#38BDF8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <text x="50" y="65" fill="#38BDF8" font-size="11" font-weight="bold" text-anchor="middle" font-family="monospace">as.data.frame()</text>
+  </g>
+
+  <g transform="translate(470, 65)">
+    <rect width="260" height="135" rx="8" fill="#19355E" stroke="#10B981"/>
+    <text x="130" y="35" fill="#34D399" font-size="14" font-weight="bold" text-anchor="middle">tibble (tbl_df)</text>
+    <text x="130" y="65" fill="#E2E8F0" font-size="11" text-anchor="middle">Modern Tidyverse format</text>
+    <text x="130" y="90" fill="#A7F3D0" font-size="10" font-family="monospace" text-anchor="middle">class: "tbl_df" "tbl" "data.frame"</text>
+    <text x="130" y="115" fill="#38BDF8" font-size="10" text-anchor="middle">Optimized for dplyr &amp; ggplot2</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Creating and converting tibbles</span>
+library(tibble)
+
+<span class="hljs-comment"># 1. Sequential column creation (x can be referenced immediately by y!)</span>
+t &lt;- tibble(
+  x = <span class="hljs-number">1</span>:<span class="hljs-number">3</span>,
+  y = x * <span class="hljs-number">10</span>,
+  label = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Low&quot;</span>, <span class="hljs-string">&quot;Med&quot;</span>, <span class="hljs-string">&quot;Hi&quot;</span>)
+)
+print(t)
+
+<span class="hljs-comment"># 2. Conversion between formats</span>
+df &lt;- as.data.frame(t)  <span class="hljs-comment"># Convert tibble to classic data frame</span>
+tbl &lt;- as_tibble(df)    <span class="hljs-comment"># Convert data frame to modern tibble</span></code></pre>
+</div>
+    <div class="output-box"># A tibble: 3 x 3
+      x     y label
+  &lt;int&gt; &lt;dbl&gt; &lt;chr&gt;
+1     1    10 Low  
+2     2    20 Med  
+3     3    30 Hi   </div>
+  </section>
+
+  <!-- Section 14 -->
+  <section class="section-card">
+    <h2>14. Data Frame vs. Tibble: Key Architectural Differences</h2>
+    <p>The table below provides a comprehensive comparison between Base R data frames and Tidyverse tibbles.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Tibble vs. Data Frame Printing Comparison</text>
+  
+  <rect x="50" y="55" width="320" height="160" rx="8" fill="#1E293B" stroke="#64748B"/>
+  <text x="210" y="80" fill="#CBD5E1" font-size="12" font-weight="bold" text-anchor="middle">Data Frame (Prints All Rows)</text>
+  <rect x="65" y="95" width="290" height="105" rx="4" fill="#0F172A"/>
+  <text x="75" y="115" fill="#94A3B8" font-size="10" font-family="monospace">   name age marks</text>
+  <text x="75" y="135" fill="#E2E8F0" font-size="10" font-family="monospace">1 Rahul  20    85</text>
+  <text x="75" y="155" fill="#E2E8F0" font-size="10" font-family="monospace">2 Priya  21    91</text>
+  <text x="75" y="175" fill="#EF4444" font-size="10" font-family="monospace">... prints 1,000,000 rows!</text>
+
+  <rect x="430" y="55" width="320" height="160" rx="8" fill="#19355E" stroke="#10B981"/>
+  <text x="590" y="80" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle">Tibble (Polite Console Output)</text>
+  <rect x="445" y="95" width="290" height="105" rx="4" fill="#0F172A"/>
+  <text x="455" y="115" fill="#38BDF8" font-size="10" font-family="monospace"># A tibble: 1,000,000 x 3</text>
+  <text x="455" y="135" fill="#94A3B8" font-size="10" font-family="monospace">  name    age marks</text>
+  <text x="455" y="150" fill="#FBBF24" font-size="9" font-family="monospace">  &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;</text>
+  <text x="455" y="170" fill="#E2E8F0" font-size="10" font-family="monospace">1 Rahul    20    85</text>
+  <text x="455" y="190" fill="#34D399" font-size="10" font-family="monospace"># ... with 999,990 more rows</text>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="28" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Data Frame vs. Tibble Architectural Matrix</text>
+  
+  <rect x="40" y="50" width="720" height="165" rx="8" fill="#1E293B" stroke="#334155"/>
+  <g transform="translate(60, 75)">
+    <text x="0" y="15" fill="#38BDF8" font-size="12" font-weight="bold">Feature</text>
+    <text x="240" y="15" fill="#CBD5E1" font-size="12" font-weight="bold">Base R data.frame</text>
+    <text x="480" y="15" fill="#34D399" font-size="12" font-weight="bold">Tidyverse tibble</text>
+
+    <line x1="0" y1="25" x2="680" y2="25" stroke="#475569" stroke-width="1"/>
+
+    <text x="0" y="45" fill="#E2E8F0" font-size="11">Default Printing</text>
+    <text x="240" y="45" fill="#94A3B8" font-size="11">All rows (can flood terminal)</text>
+    <text x="480" y="45" fill="#34D399" font-size="11">First 10 rows + column types</text>
+
+    <text x="0" y="70" fill="#E2E8F0" font-size="11">Subsetting [ , 1]</text>
+    <text x="240" y="70" fill="#EF4444" font-size="11">Simplifies to atomic vector</text>
+    <text x="480" y="70" fill="#34D399" font-size="11">Always preserves 1-col tibble</text>
+
+    <text x="0" y="95" fill="#E2E8F0" font-size="11">Partial Matching $</text>
+    <text x="240" y="95" fill="#FBBF24" font-size="11">Allowed (df$m matches marks)</text>
+    <text x="480" y="95" fill="#34D399" font-size="11">Strict warning / NULL (No guessing)</text>
+
+    <text x="0" y="120" fill="#E2E8F0" font-size="11">Row Names</text>
+    <text x="240" y="120" fill="#94A3B8" font-size="11">Supported natively</text>
+    <text x="480" y="120" fill="#34D399" font-size="11">Discouraged (Uses explicit ID col)</text>
+  </g>
+</svg>
+    </div>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>Base R data.frame</th>
+            <th>Tidyverse tibble (tbl_df)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Inheritance</strong></td>
+            <td><code>class: "data.frame"</code></td>
+            <td>Inherits: <code>c("tbl_df", "tbl", "data.frame")</code></td>
+          </tr>
+          <tr>
+            <td><strong>Default Terminal Print</strong></td>
+            <td>Dumps all rows (floods terminal)</td>
+            <td>Politely prints 10 rows and column data types</td>
+          </tr>
+          <tr>
+            <td><strong>Subsetting <code>df[, 1]</code></strong></td>
+            <td>Simplifies to atomic vector unless <code>drop=FALSE</code></td>
+            <td><strong>Never</strong> simplifies; always returns a 1-column tibble</td>
+          </tr>
+          <tr>
+            <td><strong>Partial Matching with <code>$</code></strong></td>
+            <td>Allowed (<code>df$m</code> matches <code>marks</code>) &rarr; dangerous!</td>
+            <td>Disabled (returns <code>NULL</code> and throws warning)</td>
+          </tr>
+          <tr>
+            <td><strong>Row Names</strong></td>
+            <td>Supported via <code>rownames()</code></td>
+            <td>Deprecated in favor of explicit ID columns</td>
+          </tr>
+          <tr>
+            <td><strong>Sequential Column Creation</strong></td>
+            <td>Fails (cannot refer to earlier columns)</td>
+            <td>Supported natively (e.g. <code>tibble(x=1:3, y=x*2)</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 15 -->
+  <section class="section-card">
+    <h2>15. Introduction to dplyr: The Grammar of Data Manipulation</h2>
+    <p>The <code>dplyr</code> package (part of the Tidyverse) provides a standardized, fast, and human-readable grammar for tabular data manipulation. Rather than wrestling with nested brackets and commas, <code>dplyr</code> provides dedicated action verbs.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">The Grammar of Data Manipulation (dplyr Verbs)</text>
+  
+  <g transform="translate(40, 55)">
+    <rect width="130" height="155" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+    <text x="65" y="25" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">select()</text>
+    <text x="65" y="50" fill="#94A3B8" font-size="10" text-anchor="middle">Action: Pick columns</text>
+    <rect x="10" y="70" width="110" height="65" rx="4" fill="#0F172A"/>
+    <text x="65" y="95" fill="#38BDF8" font-size="10" text-anchor="middle" font-family="monospace">name, marks</text>
+    <text x="65" y="120" fill="#94A3B8" font-size="9" text-anchor="middle">Variable subset</text>
+  </g>
+
+  <g transform="translate(185, 55)">
+    <rect width="130" height="155" rx="6" fill="#1E293B" stroke="#10B981"/>
+    <text x="65" y="25" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">filter()</text>
+    <text x="65" y="50" fill="#94A3B8" font-size="10" text-anchor="middle">Action: Pick rows</text>
+    <rect x="10" y="70" width="110" height="65" rx="4" fill="#0F172A"/>
+    <text x="65" y="95" fill="#34D399" font-size="10" text-anchor="middle" font-family="monospace">marks &gt; 80</text>
+    <text x="65" y="120" fill="#94A3B8" font-size="9" text-anchor="middle">Observation subset</text>
+  </g>
+
+  <g transform="translate(330, 55)">
+    <rect width="130" height="155" rx="6" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="65" y="25" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">arrange()</text>
+    <text x="65" y="50" fill="#94A3B8" font-size="10" text-anchor="middle">Action: Sort rows</text>
+    <rect x="10" y="70" width="110" height="65" rx="4" fill="#0F172A"/>
+    <text x="65" y="95" fill="#FBBF24" font-size="10" text-anchor="middle" font-family="monospace">desc(marks)</text>
+    <text x="65" y="120" fill="#94A3B8" font-size="9" text-anchor="middle">Reorders records</text>
+  </g>
+
+  <g transform="translate(475, 55)">
+    <rect width="130" height="155" rx="6" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="65" y="25" fill="#A78BFA" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">mutate()</text>
+    <text x="65" y="50" fill="#94A3B8" font-size="10" text-anchor="middle">Action: New cols</text>
+    <rect x="10" y="70" width="110" height="65" rx="4" fill="#0F172A"/>
+    <text x="65" y="95" fill="#A78BFA" font-size="10" text-anchor="middle" font-family="monospace">pct = marks/100</text>
+    <text x="65" y="120" fill="#94A3B8" font-size="9" text-anchor="middle">Feature engineering</text>
+  </g>
+
+  <g transform="translate(620, 55)">
+    <rect width="145" height="155" rx="6" fill="#19355E" stroke="#EC4899"/>
+    <text x="72" y="25" fill="#F472B6" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">summarise()</text>
+    <text x="72" y="50" fill="#94A3B8" font-size="10" text-anchor="middle">Action: Collapse stats</text>
+    <rect x="10" y="70" width="125" height="65" rx="4" fill="#0F172A"/>
+    <text x="72" y="95" fill="#F472B6" font-size="10" text-anchor="middle" font-family="monospace">avg = mean(marks)</text>
+    <text x="72" y="120" fill="#A7F3D0" font-size="9" text-anchor="middle">Aggregates table</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">The #1 Beginner Confusion: select() vs. filter()</text>
+  
+  <g transform="translate(50, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.5"/>
+    <text x="160" y="30" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle">select(df, name, marks)</text>
+    <text x="160" y="55" fill="#94A3B8" font-size="11" text-anchor="middle">Acts VERTICALLY on COLUMNS</text>
+    <rect x="30" y="75" width="260" height="50" rx="4" fill="#0369A1"/>
+    <text x="160" y="105" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Keeps: [name, marks] columns</text>
+    <text x="160" y="145" fill="#A7F3D0" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Rows are unchanged; only variables are picked</text>
+  </g>
+
+  <g transform="translate(430, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+    <text x="160" y="30" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle">filter(df, marks &gt; 80)</text>
+    <text x="160" y="55" fill="#94A3B8" font-size="11" text-anchor="middle">Acts HORIZONTALLY on ROWS</text>
+    <rect x="30" y="75" width="260" height="50" rx="4" fill="#065F46"/>
+    <text x="160" y="105" fill="#FFFFFF" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">Keeps: Rows where marks &gt; 80</text>
+    <text x="160" y="145" fill="#38BDF8" font-size="11" text-anchor="middle" font-family="system-ui, sans-serif">Columns are unchanged; only records are picked</text>
+  </g>
+</svg>
+    </div>
+    <div class="callout callout-info">
+      <strong>Core Golden Rule:</strong> <code>select()</code> operates vertically on <strong>COLUMNS</strong> (variables). <code>filter()</code> operates horizontally on <strong>ROWS</strong> (observations). Never confuse the two!
+    </div>
+  </section>
+
+  <!-- Section 16 -->
+  <section class="section-card">
+    <h2>16. Core dplyr Verbs: select, filter, arrange, mutate, rename, distinct</h2>
+    <p>Each <code>dplyr</code> verb takes a data frame or tibble as its first argument and returns a new transformed data frame or tibble.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">arrange() and mutate() in Action</text>
+  
+  <g transform="translate(50, 60)">
+    <rect width="320" height="150" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="160" y="30" fill="#FBBF24" font-size="13" font-weight="bold" text-anchor="middle">arrange(desc(marks))</text>
+    <text x="25" y="60" fill="#E2E8F0" font-size="11" font-family="monospace">df |&gt; arrange(desc(marks))</text>
+    <rect x="25" y="75" width="270" height="50" rx="4" fill="#0F172A"/>
+    <text x="40" y="95" fill="#34D399" font-size="11" font-family="monospace">1 Priya   21   91</text>
+    <text x="40" y="115" fill="#E2E8F0" font-size="11" font-family="monospace">2 Rahul   20   85</text>
+    <text x="160" y="145" fill="#94A3B8" font-size="11" text-anchor="middle">Sorts entire table by column values</text>
+  </g>
+
+  <g transform="translate(430, 60)">
+    <rect width="320" height="150" rx="8" fill="#19355E" stroke="#8B5CF6"/>
+    <text x="160" y="30" fill="#A78BFA" font-size="13" font-weight="bold" text-anchor="middle">mutate(status = ...)</text>
+    <text x="25" y="60" fill="#E2E8F0" font-size="11" font-family="monospace">df |&gt; mutate(pass = marks &gt;= 80)</text>
+    <rect x="25" y="75" width="270" height="50" rx="4" fill="#0F172A"/>
+    <text x="40" y="95" fill="#A78BFA" font-size="11" font-family="monospace">Priya 91 -&gt; pass: TRUE</text>
+    <text x="40" y="115" fill="#A78BFA" font-size="11" font-family="monospace">Aman  78 -&gt; pass: FALSE</text>
+    <text x="160" y="145" fill="#38BDF8" font-size="11" text-anchor="middle">Appends derived features dynamically</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(dplyr)
+
+students  <span class="hljs-number">80</span>)
+
+<span class="hljs-comment"># 3. arrange(): Sort rows (descending with desc())</span>
+arrange(students, desc(marks))
+
+<span class="hljs-comment"># 4. mutate(): Compute new derived columns</span>
+mutate(students, grade = ifelse(marks &gt;= <span class="hljs-number">90</span>, <span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>))
+
+<span class="hljs-comment"># 5. rename(): Change column names (new_name = old_name)</span>
+rename(students, student_name = name)
+
+<span class="hljs-comment"># 6. distinct(): Remove duplicate rows or unique combinations</span>
+distinct(students, city)</code></pre>
+</div>
+    <div class="output-box"># A tibble: 3 x 1
+  city   
+  &lt;chr&gt;  
+1 Lucknow
+2 Delhi  
+3 Mumbai </div>
+  </section>
+
+  <!-- Section 17 -->
+  <section class="section-card">
+    <h2>17. Grouped Summaries: group_by() and summarise()</h2>
+    <p>The <strong>Split-Apply-Combine</strong> strategy is implemented in R via <code>group_by()</code> and <code>summarise()</code>. First, the table is virtually partitioned into groups by a categorical column; then, summary statistics (means, counts, totals) are calculated per group.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Split-Apply-Combine: group_by() |&gt; summarise()</text>
+  
+  <g transform="translate(50, 60)">
+    <rect width="190" height="150" rx="8" fill="#1E293B" stroke="#64748B"/>
+    <text x="95" y="25" fill="#94A3B8" font-size="12" font-weight="bold" text-anchor="middle">Raw Sales Table</text>
+    <text x="20" y="55" fill="#E2E8F0" font-size="10" font-family="monospace">Elec  $1000</text>
+    <text x="20" y="75" fill="#E2E8F0" font-size="10" font-family="monospace">Cloth  $500</text>
+    <text x="20" y="95" fill="#E2E8F0" font-size="10" font-family="monospace">Elec  $1500</text>
+    <text x="20" y="115" fill="#E2E8F0" font-size="10" font-family="monospace">Cloth  $700</text>
+    <text x="95" y="140" fill="#94A3B8" font-size="10" text-anchor="middle">4 transactions</text>
+  </g>
+
+  <g transform="translate(255, 115)">
+    <path d="M0 15 L50 15 M40 5 L50 15 L40 25" stroke="#F59E0B" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-3" fill="#FBBF24" font-size="10" font-weight="bold" text-anchor="middle" font-family="monospace">group_by()</text>
+  </g>
+
+  <g transform="translate(320, 60)">
+    <rect width="190" height="150" rx="8" fill="#1E293B" stroke="#F59E0B"/>
+    <text x="95" y="25" fill="#FBBF24" font-size="12" font-weight="bold" text-anchor="middle">Grouped Subsets</text>
+    <rect x="15" y="45" width="160" height="40" rx="4" fill="#0F172A"/>
+    <text x="95" y="68" fill="#38BDF8" font-size="10" font-family="monospace" text-anchor="middle">Electronics: [1000, 1500]</text>
+
+    <rect x="15" y="95" width="160" height="40" rx="4" fill="#0F172A"/>
+    <text x="95" y="118" fill="#34D399" font-size="10" font-family="monospace" text-anchor="middle">Clothing: [500, 700]</text>
+  </g>
+
+  <g transform="translate(525, 115)">
+    <path d="M0 15 L50 15 M40 5 L50 15 L40 25" stroke="#10B981" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <text x="25" y="-3" fill="#34D399" font-size="10" font-weight="bold" text-anchor="middle" font-family="monospace">summarise()</text>
+  </g>
+
+  <g transform="translate(590, 60)">
+    <rect width="165" height="150" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+    <text x="82" y="25" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle">Collapsed Digest</text>
+    <text x="20" y="65" fill="#F8FAFC" font-size="11" font-family="monospace">Elec  : $2500</text>
+    <text x="20" y="95" fill="#F8FAFC" font-size="11" font-family="monospace">Cloth : $1200</text>
+    <text x="82" y="135" fill="#38BDF8" font-size="10" text-anchor="middle">2 rows returned</text>
+  </g>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Grouped aggregation pipeline</span>
+sales 
+  group_by(category) |&gt;
+  summarise(
+    total_sales = <span class="hljs-built_in">sum</span>(amount),
+    avg_sale    = mean(amount),
+    count       = n(),
+    .groups     = <span class="hljs-string">&quot;drop&quot;</span>
+  )
+print(result)</code></pre>
+</div>
+    <div class="output-box"># A tibble: 2 x 4
+  category    total_sales avg_sale count
+  &lt;chr&gt;             &lt;dbl&gt;    &lt;dbl&gt; &lt;int&gt;
+1 Clothing           1200      600     2
+2 Electronics        2500     1250     2</div>
+  </section>
+
+  <!-- Section 18 -->
+  <section class="section-card">
+    <h2>18. The Native Pipe Operator (|&gt;)</h2>
+    <p>Introduced natively in R 4.1.0, the pipe operator <code>|&gt;</code> passes the result of the left-hand expression as the first argument to the right-hand function call. This transforms deeply nested, unreadable code into a clean, left-to-right processing assembly line.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">The Native R Pipe Operator |&gt; Dataflow</text>
+  
+  <g transform="translate(40, 65)">
+    <rect width="180" height="60" rx="6" fill="#1E293B" stroke="#38BDF8"/>
+    <text x="90" y="35" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">students</text>
+  </g>
+
+  <text x="245" y="105" fill="#F59E0B" font-size="20" font-weight="bold" text-anchor="middle">|&gt;</text>
+
+  <g transform="translate(270, 65)">
+    <rect width="210" height="60" rx="6" fill="#1E293B" stroke="#10B981"/>
+    <text x="105" y="35" fill="#34D399" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">filter(marks &gt; 80)</text>
+  </g>
+
+  <text x="505" y="105" fill="#F59E0B" font-size="20" font-weight="bold" text-anchor="middle">|&gt;</text>
+
+  <g transform="translate(530, 65)">
+    <rect width="230" height="60" rx="6" fill="#19355E" stroke="#38BDF8" stroke-width="2"/>
+    <text x="115" y="35" fill="#38BDF8" font-size="12" font-weight="bold" text-anchor="middle" font-family="monospace">select(name, marks)</text>
+  </g>
+
+  <rect x="40" y="145" width="720" height="70" rx="8" fill="#1E293B" stroke="#64748B"/>
+  <text x="60" y="172" fill="#FBBF24" font-size="11" font-weight="bold" font-family="system-ui, sans-serif">Equivalent to Nested Function Calls without the Headache:</text>
+  <text x="60" y="195" fill="#94A3B8" font-size="11" font-family="monospace">select(filter(students, marks &gt; 80), name, marks) # Left-to-right is 10x more readable!</text>
+</svg>
+    </div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-comment"># Native pipe workflow (|&gt;)</span>
+cleaned_report 
+  filter(marks &gt;= <span class="hljs-number">80</span>) |&gt;
+  mutate(status = <span class="hljs-string">&quot;Honors&quot;</span>) |&gt;
+  arrange(desc(marks)) |&gt;
+  select(name, marks, status)
+
+print(cleaned_report)</code></pre>
+</div>
+    <div class="output-box"># A tibble: 3 x 3
+  name  marks status
+  &lt;chr&gt; &lt;dbl&gt; &lt;chr&gt; 
+1 Priya    91 Honors
+2 Neha     88 Honors
+3 Rahul    85 Honors</div>
+  </section>
+
+  <!-- Section 19 -->
+  <section class="section-card">
+    <h2>19. 15 Practical Runnable R Programs</h2>
+    <p>Below are 15 complete, practical, runnable scripts demonstrating every critical tabular manipulation operation with exact expected outputs.</p>
+
+    <div class="card-grid">
+      <div class="sub-card">
+        <h4>Program 1: Student Marks Data Frame</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df &lt;- data.frame(
+  id = <span class="hljs-number">1</span>:<span class="hljs-number">3</span>,
+  name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>, <span class="hljs-string">&quot;C&quot;</span>),
+  score = <span class="hljs-built_in">c</span>(<span class="hljs-number">88</span>, <span class="hljs-number">92</span>, <span class="hljs-number">79</span>)
+)
+print(df)</code></pre>
+</div>
+        <div class="output-box">  id name score
+1  1    A    88
+2  2    B    92
+3  3    C    79</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 2: Employee Information Table</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>emp &lt;- data.frame(
+  emp_id = <span class="hljs-built_in">c</span>(<span class="hljs-number">101L</span>, <span class="hljs-number">102L</span>),
+  salary = <span class="hljs-built_in">c</span>(<span class="hljs-number">65000</span>, <span class="hljs-number">72000</span>),
+  active = <span class="hljs-built_in">c</span>(<span class="hljs-literal">TRUE</span>, <span class="hljs-literal">FALSE</span>)
+)
+str(emp)</code></pre>
+</div>
+        <div class="output-box">'data.frame':	2 obs. of  3 variables:
+ $ emp_id: int  101 102
+ $ salary: num  65000 72000
+ $ active: logi  TRUE FALSE</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 3: Customer Purchase Ledger</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>purchases &lt;- data.frame(
+  cust = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;C1&quot;</span>, <span class="hljs-string">&quot;C2&quot;</span>, <span class="hljs-string">&quot;C1&quot;</span>),
+  item = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Book&quot;</span>, <span class="hljs-string">&quot;Pen&quot;</span>, <span class="hljs-string">&quot;Bag&quot;</span>),
+  price = <span class="hljs-built_in">c</span>(<span class="hljs-number">25</span>, <span class="hljs-number">5</span>, <span class="hljs-number">45</span>)
+)
+<span class="hljs-built_in">sum</span>(purchases$price)</code></pre>
+</div>
+        <div class="output-box">[1] 75</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 4: Hospital Patient Triage</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>patients &lt;- data.frame(
+  pid = <span class="hljs-number">101</span>:<span class="hljs-number">103</span>,
+  bp = <span class="hljs-built_in">c</span>(<span class="hljs-number">120</span>, <span class="hljs-number">145</span>, <span class="hljs-number">118</span>),
+  risk = factor(<span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;Norm&quot;</span>, <span class="hljs-string">&quot;High&quot;</span>, <span class="hljs-string">&quot;Norm&quot;</span>))
+)
+table(patients$risk)</code></pre>
+</div>
+        <div class="output-box">High Norm 
+   1    2 </div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 5: IoT Sensor Monitoring Stream</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>sensors &lt;- data.frame(
+  sensor_id = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;S1&quot;</span>, <span class="hljs-string">&quot;S2&quot;</span>, <span class="hljs-string">&quot;S1&quot;</span>),
+  temp = <span class="hljs-built_in">c</span>(<span class="hljs-number">24.2</span>, <span class="hljs-number">28.5</span>, <span class="hljs-number">24.8</span>)
+)
+mean(sensors$temp[sensors$sensor_id == <span class="hljs-string">&quot;S1&quot;</span>])</code></pre>
+</div>
+        <div class="output-box">[1] 24.5</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 6: Row and Column Indexing</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df &lt;- data.frame(x = <span class="hljs-number">10</span>:<span class="hljs-number">12</span>, y = <span class="hljs-number">20</span>:<span class="hljs-number">22</span>)
+cat(<span class="hljs-string">&quot;Cell [2,1]:&quot;</span>, df[<span class="hljs-number">2</span>, <span class="hljs-number">1</span>], <span class="hljs-string">&quot;\n&quot;</span>)
+cat(<span class="hljs-string">&quot;Row 3:&quot;</span>, unlist(df[<span class="hljs-number">3</span>, ]), <span class="hljs-string">&quot;\n&quot;</span>)</code></pre>
+</div>
+        <div class="output-box">Cell [2,1]: 11 
+Row 3: 12 22 </div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 7: Add, Update, and Remove Columns</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df &lt;- data.frame(a = <span class="hljs-number">1</span>:<span class="hljs-number">2</span>)
+df$b &lt;- <span class="hljs-built_in">c</span>(<span class="hljs-number">10</span>, <span class="hljs-number">20</span>)  <span class="hljs-comment"># Add</span>
+df$b[<span class="hljs-number">1</span>] &lt;- <span class="hljs-number">99</span>       <span class="hljs-comment"># Update</span>
+df$a &lt;- <span class="hljs-literal">NULL</span>        <span class="hljs-comment"># Remove</span>
+print(df)</code></pre>
+</div>
+        <div class="output-box">   b
+1 99
+2 20</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 8: Adding and Removing Rows</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df &lt;- data.frame(x = <span class="hljs-number">1</span>:<span class="hljs-number">2</span>, y = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>))
+df &lt;- rbind(df, data.frame(x = <span class="hljs-number">3</span>, y = <span class="hljs-string">&quot;C&quot;</span>))
+df &lt;- df[-<span class="hljs-number">1</span>, ] <span class="hljs-comment"># Remove row 1</span>
+print(df)</code></pre>
+</div>
+        <div class="output-box">  x y
+2 2 B
+3 3 C</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 9: Logical Filtering on Scores</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df = <span class="hljs-number">80</span>, ]
+print(pass_df)</code></pre>
+</div>
+        <div class="output-box">  name  s
+2    B 88
+3    C 92</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 10: Sorting Employees by Salary</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>emp &lt;- data.frame(name = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;X&quot;</span>, <span class="hljs-string">&quot;Y&quot;</span>, <span class="hljs-string">&quot;Z&quot;</span>), sal = <span class="hljs-built_in">c</span>(<span class="hljs-number">50</span>, <span class="hljs-number">90</span>, <span class="hljs-number">70</span>))
+sorted_emp &lt;- emp[order(-emp$sal), ]
+print(sorted_emp)</code></pre>
+</div>
+        <div class="output-box">  name sal
+2    Y  90
+3    Z  70
+1    X  50</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 11: Missing Value Imputation</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>df &lt;- data.frame(v = <span class="hljs-built_in">c</span>(<span class="hljs-number">10</span>, <span class="hljs-literal">NA</span>, <span class="hljs-number">30</span>, <span class="hljs-literal">NA</span>))
+df$v[<span class="hljs-built_in">is.na</span>(df$v)] &lt;- median(df$v, na.rm = <span class="hljs-literal">TRUE</span>)
+print(df$v)</code></pre>
+</div>
+        <div class="output-box">[1] 10 20 30 20</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 12: Deduplication with unique()</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>records &lt;- data.frame(id = <span class="hljs-built_in">c</span>(<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">1</span>), code = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;X&quot;</span>, <span class="hljs-string">&quot;Y&quot;</span>, <span class="hljs-string">&quot;X&quot;</span>))
+clean_records &lt;- unique(records)
+print(clean_records)</code></pre>
+</div>
+        <div class="output-box">  id code
+1  1    X
+2  2    Y</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 13: Convert Data Frame into Tibble</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(tibble)
+raw_df &lt;- data.frame(x = <span class="hljs-number">1</span>:<span class="hljs-number">2</span>, y = <span class="hljs-built_in">c</span>(<span class="hljs-string">&quot;A&quot;</span>, <span class="hljs-string">&quot;B&quot;</span>))
+t_df &lt;- as_tibble(raw_df)
+<span class="hljs-built_in">class</span>(t_df)</code></pre>
+</div>
+        <div class="output-box">[1] "tbl_df"     "tbl"        "data.frame"</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 14: Multiple dplyr Verbs Chained</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(dplyr)
+tbl 
+  filter(val &gt; <span class="hljs-number">15</span>) |&gt;
+  arrange(desc(val)) |&gt;
+  mutate(log_val = <span class="hljs-built_in">round</span>(<span class="hljs-built_in">log</span>(val), <span class="hljs-number">2</span>))
+print(res)</code></pre>
+</div>
+        <div class="output-box"># A tibble: 2 x 3
+  n       val log_val
+  &lt;chr&gt; &lt;dbl&gt;   &lt;dbl&gt;
+1 B        40    3.69
+2 C        25    3.22</div>
+      </div>
+
+      <div class="sub-card">
+        <h4>Program 15: Grouped Aggregations with Pipe</h4><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">R Script</span>
+    <div class="code-actions">
+      <span class="code-badge">R</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>library(dplyr)
+sales 
+  group_by(dept) |&gt;
+  summarise(total = <span class="hljs-built_in">sum</span>(cost), .groups = <span class="hljs-string">&quot;drop&quot;</span>)
+print(summary_tbl)</code></pre>
+</div>
+        <div class="output-box"># A tibble: 2 x 2
+  dept  total
+  &lt;chr&gt; &lt;dbl&gt;
+1 HR       20
+2 IT      250</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 20 -->
+  <section class="section-card">
+    <h2>20. Real AI, Machine Learning &amp; Data Science Applications</h2>
+    <p>Tabular data structures are the bedrock of supervised machine learning, deep learning feature engineering, and statistical modeling in R.</p>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Machine Learning Data Structure: Features (X) &amp; Target Label (y)</text>
+  
+  <g transform="translate(40, 55)">
+    <rect width="520" height="155" rx="8" fill="#1E293B" stroke="#276DC3" stroke-width="1.5"/>
+    <text x="260" y="28" fill="#38BDF8" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Feature Matrix: X (Predictors / Independent Variables)</text>
+    <rect x="20" y="45" width="480" height="28" rx="4" fill="#0369A1"/>
+    <text x="80" y="63" fill="#FFFFFF" font-size="11" font-weight="bold" font-family="monospace">Age</text>
+    <text x="200" y="63" fill="#FFFFFF" font-size="11" font-weight="bold" font-family="monospace">Income</text>
+    <text x="320" y="63" fill="#FFFFFF" font-size="11" font-weight="bold" font-family="monospace">Education</text>
+    <text x="440" y="63" fill="#FFFFFF" font-size="11" font-weight="bold" font-family="monospace">CreditScore</text>
+
+    <text x="80" y="95" fill="#E2E8F0" font-size="11" font-family="monospace">35</text>
+    <text x="200" y="95" fill="#E2E8F0" font-size="11" font-family="monospace">$75,000</text>
+    <text x="320" y="95" fill="#E2E8F0" font-size="11" font-family="monospace">Masters</text>
+    <text x="440" y="95" fill="#E2E8F0" font-size="11" font-family="monospace">720</text>
+
+    <text x="80" y="120" fill="#E2E8F0" font-size="11" font-family="monospace">28</text>
+    <text x="200" y="120" fill="#E2E8F0" font-size="11" font-family="monospace">$48,000</text>
+    <text x="320" y="120" fill="#E2E8F0" font-size="11" font-family="monospace">Bachelors</text>
+    <text x="440" y="120" fill="#E2E8F0" font-size="11" font-family="monospace">650</text>
+    <text x="260" y="148" fill="#94A3B8" font-size="10" text-anchor="middle">Input measurements feeding the AI model</text>
+  </g>
+
+  <g transform="translate(580, 55)">
+    <rect width="180" height="155" rx="8" fill="#19355E" stroke="#10B981" stroke-width="1.5"/>
+    <text x="90" y="28" fill="#34D399" font-size="13" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Target: y</text>
+    <rect x="20" y="45" width="140" height="28" rx="4" fill="#065F46"/>
+    <text x="90" y="63" fill="#FFFFFF" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">Defaulted</text>
+
+    <text x="90" y="95" fill="#34D399" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">No</text>
+    <text x="90" y="120" fill="#EF4444" font-size="11" font-weight="bold" font-family="monospace" text-anchor="middle">Yes</text>
+    <text x="90" y="148" fill="#A7F3D0" font-size="10" text-anchor="middle">Outcome to predict</text>
+  </g>
+</svg>
+    </div>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 240" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="240" rx="12" fill="#0F172A"/>
+  <text x="400" y="30" fill="#F8FAFC" font-size="16" font-weight="bold" text-anchor="middle" font-family="system-ui, sans-serif">Complete AI/ML Tabular Data Preparation Lifecycle</text>
+  
+  <g transform="translate(30, 60)">
+    <rect width="125" height="145" rx="6" fill="#1E293B" stroke="#64748B"/>
+    <text x="62" y="25" fill="#94A3B8" font-size="11" font-weight="bold" text-anchor="middle">1. Raw Load</text>
+    <text x="62" y="55" fill="#E2E8F0" font-size="10" text-anchor="middle">read.csv()</text>
+    <text x="62" y="80" fill="#E2E8F0" font-size="10" text-anchor="middle">read_csv()</text>
+    <text x="62" y="115" fill="#94A3B8" font-size="9" text-anchor="middle">Messy raw table</text>
+  </g>
+
+  <text x="170" y="135" fill="#F59E0B" font-size="18" font-weight="bold">→</text>
+
+  <g transform="translate(185, 60)">
+    <rect width="125" height="145" rx="6" fill="#1E293B" stroke="#EF4444"/>
+    <text x="62" y="25" fill="#F87171" font-size="11" font-weight="bold" text-anchor="middle">2. Clean &amp; Prune</text>
+    <text x="62" y="55" fill="#E2E8F0" font-size="10" text-anchor="middle">is.na()</text>
+    <text x="62" y="80" fill="#E2E8F0" font-size="10" text-anchor="middle">unique()</text>
+    <text x="62" y="115" fill="#94A3B8" font-size="9" text-anchor="middle">No duplicate rows</text>
+  </g>
+
+  <text x="325" y="135" fill="#F59E0B" font-size="18" font-weight="bold">→</text>
+
+  <g transform="translate(340, 60)">
+    <rect width="125" height="145" rx="6" fill="#1E293B" stroke="#8B5CF6"/>
+    <text x="62" y="25" fill="#A78BFA" font-size="11" font-weight="bold" text-anchor="middle">3. Engineer</text>
+    <text x="62" y="55" fill="#E2E8F0" font-size="10" text-anchor="middle">mutate()</text>
+    <text x="62" y="80" fill="#E2E8F0" font-size="10" text-anchor="middle">as.factor()</text>
+    <text x="62" y="115" fill="#94A3B8" font-size="9" text-anchor="middle">Derived features</text>
+  </g>
+
+  <text x="480" y="135" fill="#F59E0B" font-size="18" font-weight="bold">→</text>
+
+  <g transform="translate(495, 60)">
+    <rect width="125" height="145" rx="6" fill="#1E293B" stroke="#10B981"/>
+    <text x="62" y="25" fill="#34D399" font-size="11" font-weight="bold" text-anchor="middle">4. Split 80/20</text>
+    <text x="62" y="55" fill="#E2E8F0" font-size="10" text-anchor="middle">set.seed(42)</text>
+    <text x="62" y="80" fill="#E2E8F0" font-size="10" text-anchor="middle">sample()</text>
+    <text x="62" y="115" fill="#94A3B8" font-size="9" text-anchor="middle">No data leakage</text>
+  </g>
+
+  <text x="635" y="135" fill="#F59E0B" font-size="18" font-weight="bold">→</text>
+
+  <g transform="translate(650, 60)">
+    <rect width="125" height="145" rx="6" fill="#19355E" stroke="#38BDF8" stroke-width="2"/>
+    <text x="62" y="25" fill="#38BDF8" font-size="11" font-weight="bold" text-anchor="middle">5. Train AI</text>
+    <text x="62" y="55" fill="#FFFFFF" font-size="10" text-anchor="middle">glm()</text>
+    <text x="62" y="80" fill="#FFFFFF" font-size="10" text-anchor="middle">randomForest</text>
+    <text x="62" y="115" fill="#A7F3D0" font-size="9" text-anchor="middle">High accuracy</text>
+  </g>
+</svg>
+    </div>
+
+    <div class="card-grid">
+      <div class="sub-card">
+        <h4>1. Supervised ML Training Matrix</h4>
+        <p>In tabular classification and regression (e.g. <code>glm()</code> or <code>randomForest</code>), data frames organize multi-attribute predictors ($X$) alongside ground-truth labels ($y$).</p>
+      </div>
+      <div class="sub-card">
+        <h4>2. Customer Churn Prediction Table</h4>
+        <p>Telemetry metrics (monthly spend, contract term, support calls) formatted into a tibble allow algorithms to classify churn risks.</p>
+      </div>
+      <div class="sub-card">
+        <h4>3. Pre-ML Data Cleaning Pipeline</h4>
+        <p>Eliminating <code>NA</code> records and clipping extreme outliers via <code>filter()</code> prevents gradient explosion in neural network training.</p>
+      </div>
+      <div class="sub-card">
+        <h4>4. Feature Selection via select()</h4>
+        <p>Selecting strictly relevant columns discards noise, alleviates multicollinearity, and accelerates tree training.</p>
+      </div>
+      <div class="sub-card">
+        <h4>5. Feature Engineering with mutate()</h4>
+        <p>Deriving new predictive metrics (e.g., debt-to-income ratio or engagement frequency) using <code>mutate()</code> boosts model AUC.</p>
+      </div>
+      <div class="sub-card">
+        <h4>6. Customer Segmentation (RFM)</h4>
+        <p>Group-level aggregations via <code>group_by() |&gt; summarise()</code> feed directly into K-Means clustering algorithms.</p>
+      </div>
+      <div class="sub-card">
+        <h4>7. Recommendation Interaction Matrices</h4>
+        <p>Storing user-item pairs (User ID, Product ID, Rating, Timestamp) in tabular form enables collaborative filtering.</p>
+      </div>
+      <div class="sub-card">
+        <h4>8. Healthcare Prognosis Datasets</h4>
+        <p>Structuring patient clinical biomarkers (Age, Blood Glucose, BMI, Cardiac Risk) for diagnostic classifier models.</p>
+      </div>
+      <div class="sub-card">
+        <h4>9. IoT Fleet Anomaly Detection</h4>
+        <p>Time-series tabular records of sensor voltage, vibration, and temperature filtered for equipment failure prediction.</p>
+      </div>
+      <div class="sub-card">
+        <h4>10. NLP Sentiment Classification</h4>
+        <p>Tabular datasets storing raw tweet text, language codes, and verified sentiment labels for transformer tokenization.</p>
+      </div>
+      <div class="sub-card">
+        <h4>11. Computer Vision Image Metadata</h4>
+        <p>Storing image file paths, bounding box coordinates, and class tags in a data frame for batch ingestion by PyTorch/TensorFlow.</p>
+      </div>
+      <div class="sub-card">
+        <h4>12. Reproducible Train / Test Split</h4>
+        <p>Executing an 80/20 train/test partition using <code>sample()</code> with a fixed <code>set.seed()</code> prevents data leakage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 21 -->
+  <section class="section-card">
+    <h2>21. Data Frame and Tibble Best Practices</h2>
+    <ul>
+      <li><strong>1. Meaningful Snake_Case Headers:</strong> Use descriptive column names like <code>customer_id</code> or <code>monthly_revenue</code>. Avoid spaces or cryptic abbreviations.</li>
+      <li><strong>2. Single Variable per Column:</strong> Ensure each column represents exactly one measurable concept with a uniform unit of measurement.</li>
+      <li><strong>3. Enforce Strict Data Types:</strong> Convert discrete categories to factors (<code>as.factor()</code>) and whole numbers to integers (<code>as.integer()</code>) to save memory.</li>
+      <li><strong>4. Use glimpse() for Rapid Audits:</strong> In the tidyverse, <code>glimpse(df)</code> provides a transposed overview of all column types and values.</li>
+      <li><strong>5. Check Dimensions Before Transformation:</strong> Always run <code>dim(df)</code> before and after filtering or joining to verify row counts.</li>
+      <li><strong>6. Audit Missingness First:</strong> Run <code>colSums(is.na(df))</code> before running statistical models to avoid silent row omissions.</li>
+      <li><strong>7. Prevent Data Leakage:</strong> When preparing ML datasets, calculate imputation statistics (e.g. mean) exclusively from the training split.</li>
+      <li><strong>8. Prefer Dedicated ID Columns:</strong> Avoid relying on row names; store entity identifiers in explicit columns (e.g., <code>patient_id</code>).</li>
+      <li><strong>9. Immutable Raw Backups:</strong> Never overwrite your original imported dataset; assign cleaned results to new variables.</li>
+      <li><strong>10. Pipe for Readability:</strong> Use the native pipe operator <code>|&gt;</code> to create clean, debuggable data processing pipelines.</li>
+    </ul>
+  </section>
+
+  <!-- Section 22 -->
+  <section class="section-card">
+    <h2>22. 24 Common Beginner Mistakes &amp; Fixes</h2>
+    <div class="card-grid">
+      <div class="sub-card">
+        <h4>1. Unequal Column Lengths in data.frame()</h4>
+        <p><strong>Mistake:</strong> <code>data.frame(x=1:3, y=1:4)</code></p>
+        <p><strong>Fix:</strong> Ensure all input vectors have identical lengths or length 1.</p>
+      </div>
+      <div class="sub-card">
+        <h4>2. Forgetting the Comma in [row, col]</h4>
+        <p><strong>Mistake:</strong> <code>df[df$marks &gt; 80]</code> (treated as column index!)</p>
+        <p><strong>Fix:</strong> <code>df[df$marks &gt; 80, ]</code> (always include row comma).</p>
+      </div>
+      <div class="sub-card">
+        <h4>3. Unexpected Vector Simplification</h4>
+        <p><strong>Mistake:</strong> Assuming <code>df[, 1]</code> stays a data frame in Base R.</p>
+        <p><strong>Fix:</strong> Use <code>df[, 1, drop = FALSE]</code> or use tibbles.</p>
+      </div>
+      <div class="sub-card">
+        <h4>4. Confusing select() and filter()</h4>
+        <p><strong>Mistake:</strong> <code>filter(df, name, marks)</code> &rarr; Error!</p>
+        <p><strong>Fix:</strong> <code>select()</code> for columns; <code>filter()</code> for rows.</p>
+      </div>
+      <div class="sub-card">
+        <h4>5. Partial Matching Trap with $</h4>
+        <p><strong>Mistake:</strong> <code>df$m</code> accidentally matches <code>marks</code> in Base R.</p>
+        <p><strong>Fix:</strong> Use tibble which blocks partial matching, or use <code>df[["marks"]]</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>6. Confusing NA with NULL</h4>
+        <p><strong>Mistake:</strong> <code>df$col &lt;- NA</code> when intending to delete column.</p>
+        <p><strong>Fix:</strong> <code>df$col &lt;- NULL</code> deletes; <code>NA</code> merely fills with missing.</p>
+      </div>
+      <div class="sub-card">
+        <h4>7. Using na.omit() Blindly</h4>
+        <p><strong>Mistake:</strong> Dropping 80% of rows because 1 unimportant column had NAs.</p>
+        <p><strong>Fix:</strong> Filter NAs on specific target columns or impute carefully.</p>
+      </div>
+      <div class="sub-card">
+        <h4>8. Calculating Mean without na.rm = TRUE</h4>
+        <p><strong>Mistake:</strong> <code>mean(df$age)</code> returning <code>NA</code>.</p>
+        <p><strong>Fix:</strong> <code>mean(df$age, na.rm = TRUE)</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>9. Mismatched Columns in rbind()</h4>
+        <p><strong>Mistake:</strong> Appending row with different column names.</p>
+        <p><strong>Fix:</strong> Harmonize column names and types before calling <code>rbind()</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>10. Confusing Base Pipe with Logical OR</h4>
+        <p><strong>Mistake:</strong> Thinking <code>|&gt;</code> is a conditional boolean OR.</p>
+        <p><strong>Fix:</strong> <code>|</code> is logical OR; <code>|&gt;</code> is the forward pipe operator.</p>
+      </div>
+      <div class="sub-card">
+        <h4>11. Assuming Tibble is NOT a Data Frame</h4>
+        <p><strong>Mistake:</strong> <code>is.data.frame(tbl)</code> assumed FALSE.</p>
+        <p><strong>Fix:</strong> A tibble inherits from <code>data.frame</code>; it returns TRUE!</p>
+      </div>
+      <div class="sub-card">
+        <h4>12. Forgetting to Load Packages</h4>
+        <p><strong>Mistake:</strong> Calling <code>filter()</code> without <code>library(dplyr)</code>.</p>
+        <p><strong>Fix:</strong> Always call <code>library(dplyr)</code> or <code>library(tibble)</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>13. Overwriting Existing Column Accidentally</h4>
+        <p><strong>Mistake:</strong> Assigning to <code>df$name</code> instead of <code>df$new_name</code>.</p>
+        <p><strong>Fix:</strong> Audit existing column names with <code>names(df)</code> first.</p>
+      </div>
+      <div class="sub-card">
+        <h4>14. Filtering with Assignment Instead of ==</h4>
+        <p><strong>Mistake:</strong> <code>df[df$dept = "IT", ]</code> &rarr; Syntax Error!</p>
+        <p><strong>Fix:</strong> Use double equals: <code>df[df$dept == "IT", ]</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>15. Global Imputation Data Leakage</h4>
+        <p><strong>Mistake:</strong> Calculating median on combined train+test data.</p>
+        <p><strong>Fix:</strong> Compute median on train set only and apply to test set.</p>
+      </div>
+      <div class="sub-card">
+        <h4>16. Confusing Single and Double Brackets</h4>
+        <p><strong>Mistake:</strong> Passing <code>df["marks"]</code> into a function expecting a vector.</p>
+        <p><strong>Fix:</strong> Use <code>df$marks</code> or <code>df[["marks"]]</code> to extract pure vector.</p>
+      </div>
+      <div class="sub-card">
+        <h4>17. Modifying Filtered Subset in Place</h4>
+        <p><strong>Mistake:</strong> <code>sub_df &lt;- df[1, ]; sub_df$x &lt;- 9</code> expecting original <code>df</code> to change.</p>
+        <p><strong>Fix:</strong> R uses copy-on-modify semantics; explicitly update <code>df[1, "x"]</code>.</p>
+      </div>
+      <div class="sub-card">
+        <h4>18. Incompatible Types in Vector Assignment</h4>
+        <p><strong>Mistake:</strong> Assigning character into an integer column.</p>
+        <p><strong>Fix:</strong> R coerces the entire column vector to character type.</p>
+      </div>
+      <div class="sub-card">
+        <h4>19. Ghost Factor Levels After Filtering</h4>
+        <p><strong>Mistake:</strong> Filtered data frame keeps unused factor levels in plots.</p>
+        <p><strong>Fix:</strong> Call <code>droplevels(filtered_df)</code> to prune phantom categories.</p>
+      </div>
+      <div class="sub-card">
+        <h4>20. Forgetting to Ungroup after group_by()</h4>
+        <p><strong>Mistake:</strong> Subsequent operations remain unintentionally grouped.</p>
+        <p><strong>Fix:</strong> Add <code>.groups = "drop"</code> or call <code>ungroup(df)</code>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 23 -->
+  <section class="section-card">
+    <h2>23. Quick Revision &amp; Reference Cheatsheet</h2>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Base R Syntax</th>
+            <th>Tidyverse / dplyr Syntax</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Create Table</td>
+            <td><code>data.frame(a = 1:3, b = 4:6)</code></td>
+            <td><code>tibble(a = 1:3, b = a + 3)</code></td>
+          </tr>
+          <tr>
+            <td>Pick Columns</td>
+            <td><code>df[, c("a", "b")]</code></td>
+            <td><code>select(df, a, b)</code></td>
+          </tr>
+          <tr>
+            <td>Pick Rows</td>
+            <td><code>df[df$a &gt; 1, ]</code></td>
+            <td><code>filter(df, a &gt; 1)</code></td>
+          </tr>
+          <tr>
+            <td>Sort Table</td>
+            <td><code>df[order(-df$a), ]</code></td>
+            <td><code>arrange(df, desc(a))</code></td>
+          </tr>
+          <tr>
+            <td>New / Modify Column</td>
+            <td><code>df$c &lt;- df$a * 10</code></td>
+            <td><code>mutate(df, c = a * 10)</code></td>
+          </tr>
+          <tr>
+            <td>Group &amp; Aggregate</td>
+            <td><code>aggregate(b ~ a, data = df, sum)</code></td>
+            <td><code>df |&gt; group_by(a) |&gt; summarise(s = sum(b))</code></td>
+          </tr>
+          <tr>
+            <td>Check Dimensions</td>
+            <td><code>dim(df)</code> / <code>nrow(df)</code></td>
+            <td><code>glimpse(df)</code></td>
+          </tr>
+          <tr>
+            <td>Count NAs</td>
+            <td><code>colSums(is.na(df))</code></td>
+            <td><code>df |&gt; summarise(across(everything(), ~sum(is.na(.))))</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 24 -->
+  <section class="section-card">
+    <h2>24. Practice Questions &amp; Challenges</h2>
+
+    <h3>15 Predict the Output Challenges</h3>
+    <div class="card-grid">
+      <div class="sub-card">
+        <p><strong>Challenge 1:</strong> Given <code>df &lt;- data.frame(x = 1:3, y = 4:6)</code>, what does <code>dim(df)[2]</code> output?</p>
+        <p><em>Answer:</em> <code>3</code> (wait, ncol is 2! <code>dim(df)</code> is <code>c(3, 2)</code>, so <code>dim(df)[2]</code> is <code>2</code>).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 2:</strong> What is <code>class(data.frame(x = 1:2)[, 1])</code>?</p>
+        <p><em>Answer:</em> <code>"integer"</code> (Base R simplifies single column to vector).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 3:</strong> What is <code>class(tibble(x = 1:2)[, 1])</code>?</p>
+        <p><em>Answer:</em> <code>c("tbl_df", "tbl", "data.frame")</code> (Tibble never simplifies).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 4:</strong> What does <code>nrow(data.frame(x = 1:3)[-1, ])</code> return?</p>
+        <p><em>Answer:</em> <code>2</code> (negative indexing removes row 1).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 5:</strong> What does <code>df$z &lt;- NULL</code> do to column <code>z</code>?</p>
+        <p><em>Answer:</em> Deletes column <code>z</code> from the data frame.</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 6:</strong> What does <code>sum(is.na(data.frame(a=c(1,NA), b=c(NA,2))))</code> output?</p>
+        <p><em>Answer:</em> <code>2</code> (two total NA cells).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 7:</strong> What does <code>c(1, 2) %in% c(2, 3)</code> return?</p>
+        <p><em>Answer:</em> <code>c(FALSE, TRUE)</code>.</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 8:</strong> What does <code>ncol(select(tibble(a=1, b=2, c=3), a, c))</code> return?</p>
+        <p><em>Answer:</em> <code>2</code> (selected 2 columns).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 9:</strong> What does <code>is.data.frame(tibble(x = 1))</code> return?</p>
+        <p><em>Answer:</em> <code>TRUE</code> (tibble inherits from data.frame).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 10:</strong> What does <code>df[, 1, drop = FALSE]</code> preserve?</p>
+        <p><em>Answer:</em> The 2D data frame structure (does not simplify to vector).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 11:</strong> What is <code>nrow(unique(data.frame(x = c(1, 1, 2))))</code>?</p>
+        <p><em>Answer:</em> <code>2</code> (deduplicates rows).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 12:</strong> What does <code>order(c(30, 10, 20))</code> return?</p>
+        <p><em>Answer:</em> <code>c(2, 3, 1)</code> (integer index order).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 13:</strong> What does <code>mean(c(10, 20, NA), na.rm = TRUE)</code> return?</p>
+        <p><em>Answer:</em> <code>15</code>.</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 14:</strong> In <code>tibble(x = 1:2, y = x * 2)</code>, does this execute cleanly or throw an error?</p>
+        <p><em>Answer:</em> Executes cleanly (tibbles allow sequential column creation).</p>
+      </div>
+      <div class="sub-card">
+        <p><strong>Challenge 15:</strong> In <code>data.frame(x = 1:2, y = x * 2)</code>, does this execute cleanly or throw an error?</p>
+        <p><em>Answer:</em> Throws an error: <code>object 'x' not found</code>.</p>
+      </div>
+    </div>
+
+    <h3>15 Beginner Coding Exercises</h3>
+    <ol>
+      <li><strong>Student Registry:</strong> Create a data frame with columns <code>name</code>, <code>roll_no</code>, and <code>gpa</code> for 4 students. Compute the class average GPA.</li>
+      <li><strong>Employee Salary Filter:</strong> Filter an employee data frame to keep only staff in the "Engineering" department earning &gt; $80,000.</li>
+      <li><strong>Dynamic Column Addition:</strong> Add a calculated <code>tax</code> column equal to 15% of the <code>salary</code> column using <code>$</code>.</li>
+      <li><strong>Safe Single-Column Slice:</strong> Slice column 3 from a 10-column data frame while ensuring the output remains a <code>data.frame</code> using <code>drop = FALSE</code>.</li>
+      <li><strong>Customer Deduplication:</strong> Given a customer purchase table with duplicated records, remove duplicate rows using <code>unique()</code>.</li>
+      <li><strong>Missing Value Audit:</strong> Write a function that accepts any data frame and returns a sorted table of columns containing <code>NA</code> values.</li>
+      <li><strong>Mean Imputation:</strong> Replace all <code>NA</code> values in a numeric <code>temperature</code> column with the mean of the observed readings.</li>
+      <li><strong>Data Frame to Tibble:</strong> Convert an existing Base R dataset into a tibble using <code>as_tibble()</code> and print its structure.</li>
+      <li><strong>dplyr Column Selection:</strong> Use <code>select()</code> to extract only <code>product_id</code> and <code>unit_price</code> from an inventory tibble.</li>
+      <li><strong>dplyr Conditional Filter:</strong> Use <code>filter()</code> to find all transactions where <code>quantity &gt;= 5</code> and <code>status == "Completed"</code>.</li>
+      <li><strong>dplyr Sorting Pipeline:</strong> Sort a dataset of movies first by <code>genre</code> ascending, then by <code>rating</code> descending using <code>arrange()</code>.</li>
+      <li><strong>Feature Engineering:</strong> Using <code>mutate()</code>, create a new boolean column <code>is_senior</code> where <code>age &gt;= 60</code>.</li>
+      <li><strong>Grouped Revenue:</strong> Using <code>group_by()</code> and <code>summarise()</code>, compute total sales volume per retail store branch.</li>
+      <li><strong>Native Pipe Chain:</strong> Write a 4-step pipeline using <code>|&gt;</code> that filters, mutates, sorts, and selects from a student dataset.</li>
+      <li><strong>AI Train/Test Split:</strong> Using <code>set.seed(123)</code> and <code>sample()</code>, split a customer churn dataset into an 80% training set and a 20% test set.</li>
+    </ol>
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

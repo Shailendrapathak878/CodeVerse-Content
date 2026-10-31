@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 17: Mixins &amp; Extensions — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 17</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- TOPIC HEADER -->
+  <header>
+    <div class="header-badge">Stage 4 &bull; Object-Oriented Dart &bull; Topic 17</div>
+    <h1>Dart &bull; Topic 17: Mixins &amp; Extensions</h1>
+    <div class="subtitle">Master flexible code composition without rigid inheritance hierarchies, and enrich existing types with zero subclassing overhead.</div>
+  </header>
+
+  <!-- SECTION 1 -->
+  <section id="section-1">
+    <h2>1. Introduction to Mixins</h2>
+    <p>In Topics 14, 15, and 16, we explored Object-Oriented Programming through classes, inheritance (<code>extends</code>), and interfaces (<code>implements</code>). While single inheritance creates clear "is-a" parent-child relationships, it has a major limitation: <strong>Dart only allows a class to extend one single superclass</strong>.</p>
+    <p>What happens when multiple completely unrelated classes need to share the exact same functionality without copying and pasting code? This is where <strong>Mixins</strong> shine!</p>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Simple Definition</div>
+      A <strong>Mixin</strong> in Dart is a reusable chunk of code (methods and properties) that can be "mixed into" multiple classes without using parent-child inheritance.
+    </div>
+
+    <!-- SVG 1.1: Shared Capability Real-Life Analogy -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="250" y="8" width="260" height="30" rx="5" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.8"/>
+        <text x="380" y="24" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#6D28D9" text-anchor="middle">mixin CameraCapability</text>
+        <text x="380" y="34" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">void takePhoto() { ... }</text>
+
+        <path d="M310 40 L150 56" stroke="#8B5CF6" stroke-width="1.6" marker-end="url(#arr1)"/>
+        <path d="M380 40 L380 56" stroke="#8B5CF6" stroke-width="1.6" marker-end="url(#arr1)"/>
+        <path d="M450 40 L610 56" stroke="#8B5CF6" stroke-width="1.6" marker-end="url(#arr1)"/>
+
+        <rect x="50" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.2"/>
+        <text x="150" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#0175C2" text-anchor="middle">Phone (with CameraCapability)</text>
+
+        <rect x="280" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.2"/>
+        <text x="380" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#0175C2" text-anchor="middle">Tablet (with CameraCapability)</text>
+
+        <rect x="510" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.2"/>
+        <text x="610" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#0175C2" text-anchor="middle">SmartCam (with CameraCapability)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 1.1: A single reusable CameraCapability mixin mixed into three distinct device classes.</div>
+
+    <!-- SVG 1.2: Unrelated Classes Sharing Capability -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="270" y="8" width="220" height="30" rx="5" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.8"/>
+        <text x="380" y="24" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">mixin CanFly</text>
+        <text x="380" y="34" font-family="monospace" font-size="7.5" fill="#02569B" text-anchor="middle">void fly() => print('Flying in sky');</text>
+
+        <path d="M320 40 L150 56" stroke="#00B4AB" stroke-width="1.6" marker-end="url(#arr1)"/>
+        <path d="M380 40 L380 56" stroke="#00B4AB" stroke-width="1.6" marker-end="url(#arr1)"/>
+        <path d="M440 40 L610 56" stroke="#00B4AB" stroke-width="1.6" marker-end="url(#arr1)"/>
+
+        <rect x="50" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="150" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#15803D" text-anchor="middle">Bird (Animal Hierarchy)</text>
+
+        <rect x="280" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="380" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#15803D" text-anchor="middle">Airplane (Vehicle Hierarchy)</text>
+
+        <rect x="510" y="58" width="200" height="24" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="610" y="74" font-family="sans-serif" font-weight="600" font-size="9" fill="#15803D" text-anchor="middle">Drone (Electronic Toy Hierarchy)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 1.2: Completely unrelated classes sharing flight behavior without forcing a common parent class.</div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section id="section-2">
+    <h2>2. Creating a Mixin in Dart</h2>
+    <p>To declare a mixin, use the <code>mixin</code> keyword followed by the mixin name. To apply a mixin to a class, use the <code>with</code> keyword.</p>
+
+    <!-- SVG 2.1: Declaring and Applying CanFly -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="36" font-family="monospace" font-size="10.5" font-weight="700" fill="#0175C2" text-anchor="middle">mixin CanFly { ... }</text>
+        <text x="135" y="54" font-family="sans-serif" font-size="8.5" fill="#02569B" text-anchor="middle">Reusable Capability Definition</text>
+
+        <path d="M250 45 L320 25" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <path d="M250 45 L320 65" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="330" y="10" width="230" height="32" rx="5" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="445" y="30" font-family="monospace" font-size="9" fill="#15803D" text-anchor="middle">class Bird with CanFly {}</text>
+
+        <rect x="330" y="48" width="230" height="32" rx="5" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="445" y="68" font-family="monospace" font-size="9" fill="#15803D" text-anchor="middle">class Drone with CanFly {}</text>
+
+        <rect x="580" y="15" width="155" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="657" y="36" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">Both Objects Fly</text>
+        <text x="657" y="54" font-family="monospace" font-size="8" fill="#334155" text-anchor="middle">bird.fly(); drone.fly();</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 2.1: The CanFly mixin applied directly to Bird and Drone via the with keyword.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; CREATING AND APPLYING A MIXIN</span><span>can_fly_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> CanFly {
+  <span class="hljs-keyword">void</span> fly() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Flying in the sky&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Bird</span> <span class="hljs-title">with</span> <span class="hljs-title">CanFly</span> </span>{}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Drone</span> <span class="hljs-title">with</span> <span class="hljs-title">CanFly</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Bird bird = Bird();
+  Drone drone = Drone();
+
+  bird.fly();
+  drone.fly();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Flying in the sky<br>
+Flying in the sky
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section id="section-3">
+    <h2>3. The <code>with</code> Keyword</h2>
+    <p>The <code>with</code> keyword is Dart's dedicated syntax for mixing one or more mixins into a class. Unlike <code>extends</code> (which only accepts one class), <code>with</code> accepts a comma-separated list of mixins.</p>
+
+    <!-- SVG 3.1: Athlete with CanWalk, CanRun -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="180" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="115" y="36" font-family="monospace" font-size="10" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanWalk</text>
+        <text x="115" y="54" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">void walk() { ... }</text>
+
+        <rect x="220" y="15" width="180" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="310" y="36" font-family="monospace" font-size="10" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanRun</text>
+        <text x="310" y="54" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">void run() { ... }</text>
+
+        <path d="M405 45 L475 45" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="485" y="15" width="250" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="610" y="36" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#02569B" text-anchor="middle">class Athlete with CanWalk, CanRun</text>
+        <text x="610" y="52" font-family="sans-serif" font-size="8.5" fill="#15803D" text-anchor="middle">&check; athlete.walk(); &check; athlete.run();</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 3.1: Combining two mixins into a single Athlete class using a comma-separated list.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MULTIPLE MIXINS WITH WITH</span><span>athlete_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> CanWalk {
+  <span class="hljs-keyword">void</span> walk() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Walking&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">mixin</span> CanRun {
+  <span class="hljs-keyword">void</span> run() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Running&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Athlete</span> <span class="hljs-title">with</span> <span class="hljs-title">CanWalk</span>, <span class="hljs-title">CanRun</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Athlete athlete = Athlete();
+
+  athlete.walk();
+  athlete.run();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Walking<br>
+Running
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section id="section-4">
+    <h2>4. Mixins with Properties and Methods</h2>
+    <p>Mixins are not restricted to just void methods. A mixin can contain <strong>stateful properties (instance variables)</strong>, <strong>final fields</strong>, <strong>getters</strong>, <strong>setters</strong>, and <strong>methods</strong> that manipulate that state.</p>
+
+    <!-- SVG 4.1: Battery Mixin State + Methods -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="12" width="310" height="66" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="185" y="32" font-family="monospace" font-size="10.5" font-weight="700" fill="#0175C2" text-anchor="middle">mixin Battery</text>
+        <text x="50" y="49" font-family="sans-serif" font-size="8.5" fill="#334155">&bull; Property: <tspan font-family="monospace">int batteryLevel = 100;</tspan></text>
+        <text x="50" y="65" font-family="sans-serif" font-size="8.5" fill="#334155">&bull; Methods: <tspan font-family="monospace">showBattery(), useBattery(amount)</tspan></text>
+
+        <path d="M350 45 L420 45" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="430" y="12" width="300" height="66" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="580" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#15803D" text-anchor="middle">Smartphone with Battery</text>
+        <text x="450" y="49" font-family="sans-serif" font-size="8.5" fill="#334155">&check; Inherits both storage and logic</text>
+        <text x="450" y="65" font-family="sans-serif" font-size="8.5" fill="#15803D">&check; phone.useBattery(20) &rarr; level drops to 80%</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 4.1: Mixins contribute both mutable state and state-altering methods to recipient classes.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; STATEFUL MIXIN PROPERTIES</span><span>battery_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> Battery {
+  <span class="hljs-built_in">int</span> batteryLevel = <span class="hljs-number">100</span>;
+
+  <span class="hljs-keyword">void</span> showBattery() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Battery: <span class="hljs-subst">$batteryLevel</span>%&#x27;</span>);
+  }
+
+  <span class="hljs-keyword">void</span> useBattery(<span class="hljs-built_in">int</span> amount) {
+    batteryLevel -= amount;
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Smartphone</span> <span class="hljs-title">with</span> <span class="hljs-title">Battery</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Smartphone phone = Smartphone();
+
+  phone.showBattery();
+  phone.useBattery(<span class="hljs-number">20</span>);
+  phone.showBattery();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Battery: 100%<br>
+Battery: 80%
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section id="section-5">
+    <h2>5. Using Multiple Mixins</h2>
+    <p>A single class can assemble capabilities from multiple independent mixins. This is called <strong>composition over inheritance</strong>.</p>
+
+    <!-- SVG 5.1: Multiple Mixin Assembly -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 95" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="95" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="150" height="65" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="100" y="36" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin Camera</text>
+        <text x="100" y="54" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">takePhoto()</text>
+
+        <rect x="190" y="15" width="150" height="65" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="265" y="36" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin MusicPlayer</text>
+        <text x="265" y="54" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">playMusic()</text>
+
+        <rect x="355" y="15" width="150" height="65" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="430" y="36" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin Internet</text>
+        <text x="430" y="54" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">browseInternet()</text>
+
+        <path d="M515 47 L535 47" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="545" y="15" width="190" height="65" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="640" y="36" font-family="sans-serif" font-weight="700" font-size="10" fill="#02569B" text-anchor="middle">SmartPhone</text>
+        <text x="640" y="52" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">&check; Composes all 3</text>
+        <text x="640" y="66" font-family="sans-serif" font-size="8" fill="#475569" text-anchor="middle">0% code duplication</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 5.1: Composing a feature-rich SmartPhone class from three focused capability mixins.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MULTIPLE MIXIN COMPOSITION</span><span>smartphone_mixins.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> Camera {
+  <span class="hljs-keyword">void</span> takePhoto() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Photo captured&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">mixin</span> MusicPlayer {
+  <span class="hljs-keyword">void</span> playMusic() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Music playing&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">mixin</span> Internet {
+  <span class="hljs-keyword">void</span> browseInternet() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Browsing internet&#x27;</span>);
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SmartPhone</span> <span class="hljs-title">with</span> <span class="hljs-title">Camera</span>, <span class="hljs-title">MusicPlayer</span>, <span class="hljs-title">Internet</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  SmartPhone phone = SmartPhone();
+
+  phone.takePhoto();
+  phone.playMusic();
+  phone.browseInternet();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Photo captured<br>
+Music playing<br>
+Browsing internet
+    </div>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section id="section-6">
+    <h2>6. Mixin Constraints with the <code>on</code> Keyword</h2>
+    <p>Sometimes a mixin is not universal; it relies on methods or fields provided by a specific superclass. To enforce this, Dart provides the <strong><code>on</code></strong> keyword.</p>
+
+    <!-- SVG 6.1: Mixin Constraint on Animal -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="200" height="60" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="125" y="36" font-family="monospace" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">class Animal</text>
+        <text x="125" y="54" font-family="monospace" font-size="8" fill="#475569" text-anchor="middle">void eat() { ... }</text>
+
+        <path d="M230 45 L290 45" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="260" y="38" font-family="monospace" font-size="8" fill="#0175C2" text-anchor="middle">on</text>
+
+        <rect x="300" y="15" width="220" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="410" y="36" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanPlay on Animal</text>
+        <text x="410" y="54" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">Can safely call eat() inside play()</text>
+
+        <path d="M525 45 L555 45" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="565" y="15" width="170" height="60" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="650" y="36" font-family="monospace" font-size="9" font-weight="700" fill="#15803D" text-anchor="middle">class Dog extends Animal</text>
+        <text x="650" y="52" font-family="monospace" font-size="8.5" fill="#16A34A" text-anchor="middle">with CanPlay</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 6.1: The 'on Animal' clause guarantees that CanPlay can only be applied to subclasses of Animal.</div>
+
+    <!-- SVG 6.2: Invalid Mixin Constraint Attempt -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 80" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="80" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="12" width="310" height="56" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="185" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#DC2626" text-anchor="middle">class Robot with CanPlay {}</text>
+        <text x="185" y="50" font-family="sans-serif" font-size="8.5" fill="#B91C1C" text-anchor="middle">&cross; COMPILE ERROR: Robot is not an Animal!</text>
+
+        <path d="M350 40 L410 40" stroke="#EF4444" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="420" y="12" width="310" height="56" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="575" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle">class Dog extends Animal with CanPlay {}</text>
+        <text x="575" y="50" font-family="sans-serif" font-size="8.5" fill="#16A34A" text-anchor="middle">&check; VALID: Dog satisfies the Animal constraint</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 6.2: Dart's type system rejects classes that fail to satisfy the mixin superclass constraint.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MIXIN ON CONSTRAINT</span><span>mixin_on_constraint.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Animal</span> </span>{
+  <span class="hljs-keyword">void</span> eat() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Animal is eating&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">mixin</span> CanPlay <span class="hljs-keyword">on</span> Animal {
+  <span class="hljs-keyword">void</span> play() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Animal is playing&#x27;</span>);
+  }
+
+  <span class="hljs-keyword">void</span> eatAndPlay() {
+    eat();  <span class="hljs-comment">// Safe to call because &#x27;on Animal&#x27; guarantees eat() exists!</span>
+    play();
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Dog</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Animal</span> <span class="hljs-title">with</span> <span class="hljs-title">CanPlay</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Dog dog = Dog();
+  dog.eatAndPlay();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Animal is eating<br>
+Animal is playing
+    </div>
+  </section>
+
+  <!-- SECTION 7 -->
+  <section id="section-7">
+    <h2>7. Mixin Application Order and Method Resolution</h2>
+    <p>What happens if two mixins define a method with the <strong>exact same signature</strong>? Dart resolves this deterministically through <strong>linearization</strong> (order of application).</p>
+    <p><strong>The Golden Rule:</strong> Mixins are applied from left to right. <strong>The mixin listed later (furthest to the right) overrides any matching method from earlier mixins or superclasses.</strong></p>
+
+    <!-- SVG 7.1: Mixin Order 1 -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="200" height="55" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="125" y="35" font-family="monospace" font-size="9" fill="#64748B" text-anchor="middle">FirstMessage</text>
+        <text x="125" y="52" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">showMessage() [Shadowed]</text>
+
+        <path d="M235 42 L295 42" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="305" y="15" width="210" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="410" y="35" font-family="monospace" font-size="10" font-weight="700" fill="#0175C2" text-anchor="middle">SecondMessage (Latest)</text>
+        <text x="410" y="52" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">&check; showMessage() WINS</text>
+
+        <path d="M525 42 L575 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="585" y="15" width="150" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="660" y="35" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">Output Result</text>
+        <text x="660" y="52" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">'Message from Second'</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 7.1: Mixin linear order: SecondMessage appears after FirstMessage and takes precedence.</div>
+
+    <!-- SVG 7.2: Reversed Mixin Precedence Order -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="200" height="55" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="125" y="35" font-family="monospace" font-size="9" fill="#64748B" text-anchor="middle">SecondMessage</text>
+        <text x="125" y="52" font-family="monospace" font-size="8" fill="#94A3B8" text-anchor="middle">showMessage() [Shadowed]</text>
+
+        <path d="M235 42 L295 42" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="305" y="15" width="210" height="55" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="410" y="35" font-family="monospace" font-size="10" font-weight="700" fill="#0175C2" text-anchor="middle">FirstMessage (Latest)</text>
+        <text x="410" y="52" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">&check; showMessage() WINS</text>
+
+        <path d="M525 42 L575 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="585" y="15" width="150" height="55" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="660" y="35" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">Output Result</text>
+        <text x="660" y="52" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">'Message from First'</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 7.2: Reversed mixin application order: FirstMessage appears last, flipping the winner.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; METHOD RESOLUTION ORDER</span><span>mixin_precedence.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> FirstMessage {
+  <span class="hljs-keyword">void</span> showMessage() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Message from FirstMessage&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">mixin</span> SecondMessage {
+  <span class="hljs-keyword">void</span> showMessage() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Message from SecondMessage&#x27;</span>);
+  }
+}
+
+<span class="hljs-comment">// Order 1: SecondMessage is last &amp;rarr; It overrides FirstMessage</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Demo1</span> <span class="hljs-title">with</span> <span class="hljs-title">FirstMessage</span>, <span class="hljs-title">SecondMessage</span> </span>{}
+
+<span class="hljs-comment">// Order 2: FirstMessage is last &amp;rarr; It overrides SecondMessage</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Demo2</span> <span class="hljs-title">with</span> <span class="hljs-title">SecondMessage</span>, <span class="hljs-title">FirstMessage</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Demo1 d1 = Demo1();
+  Demo2 d2 = Demo2();
+
+  d1.showMessage();
+  d2.showMessage();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Message from SecondMessage<br>
+Message from FirstMessage
+    </div>
+  </section>
+
+  <!-- SECTION 8 -->
+  <section id="section-8">
+    <h2>8. The <code>mixin class</code> Declaration</h2>
+    <p>In Dart 3, Google introduced class modifiers including <code>mixin class</code>. A regular <code>mixin</code> cannot be instantiated directly or extended with <code>extends</code>. A <code>mixin class</code>, however, serves a dual purpose:</p>
+    <ul>
+      <li>It can be used as a standard class (instantiated with <code>()</code> or extended with <code>extends</code>).</li>
+      <li>It can also be mixed into another class using <code>with</code>.</li>
+    </ul>
+
+    <!-- SVG 8.1: mixin class Dual Usage -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="250" y="10" width="260" height="32" rx="5" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.8"/>
+        <text x="380" y="27" font-family="monospace" font-size="10.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin class Logger</text>
+        <text x="380" y="38" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">void log(String msg) { ... }</text>
+
+        <path d="M310 44 L180 58" stroke="#0175C2" stroke-width="1.8" marker-end="url(#arr1)"/>
+        <path d="M450 44 L580 58" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr1)"/>
+
+        <rect x="40" y="60" width="280" height="24" rx="4" fill="#FFFFFF" stroke="#0175C2" stroke-width="1.2"/>
+        <text x="180" y="75" font-family="monospace" font-size="8.5" fill="#0175C2" text-anchor="middle">class AppService with Logger {}</text>
+
+        <rect x="440" y="60" width="280" height="24" rx="4" fill="#FFFFFF" stroke="#10B981" stroke-width="1.2"/>
+        <text x="580" y="75" font-family="monospace" font-size="8.5" fill="#15803D" text-anchor="middle">class UserService extends Logger {}</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 8.1: A mixin class can be both applied with 'with' and extended with 'extends'.</div>
+
+    <!-- SVG 8.2: mixin vs mixin class Comparison Matrix -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="345" height="60" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="197" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">Regular mixin (mixin M)</text>
+        <text x="197" y="48" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">&check; Usable with 'with'</text>
+        <text x="197" y="62" font-family="sans-serif" font-size="8" fill="#DC2626" text-anchor="middle">&cross; Cannot use with 'extends' &bull; No direct instantiation</text>
+
+        <rect x="390" y="12" width="345" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="562" y="32" font-family="monospace" font-size="10" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin class (mixin class M)</text>
+        <text x="562" y="48" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">&check; Usable with 'with' (as mixin)</text>
+        <text x="562" y="62" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">&check; Usable with 'extends' and direct instantiation ()</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 8.2: Feature matrix distinguishing regular mixins from modern Dart 3 mixin classes.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MIXIN CLASS SYNTAX</span><span>mixin_class_demo.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Logger</span> </span>{
+  <span class="hljs-keyword">void</span> log(<span class="hljs-built_in">String</span> message) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;LOG: <span class="hljs-subst">$message</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-comment">// Used as a mixin via &#x27;with&#x27;</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">AppService</span> <span class="hljs-title">with</span> <span class="hljs-title">Logger</span> </span>{}
+
+<span class="hljs-comment">// Used as a parent class via &#x27;extends&#x27;</span>
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserService</span> <span class="hljs-keyword">extends</span> <span class="hljs-title">Logger</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  AppService app = AppService();
+  UserService user = UserService();
+
+  app.log(<span class="hljs-string">&#x27;Application started&#x27;</span>);
+  user.log(<span class="hljs-string">&#x27;User loaded&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+LOG: Application started<br>
+LOG: User loaded
+    </div>
+  </section>
+
+  <!-- SECTION 9 -->
+  <section id="section-9">
+    <h2>9. Mixins vs Inheritance</h2>
+    <p>Beginning Dart developers often ask: <em>"When should I use inheritance (<code>extends</code>), and when should I use mixins (<code>with</code>)?"</em></p>
+
+    <!-- SVG 9.1: Inheritance vs Mixins -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="345" height="66" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="197" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">Inheritance (extends) &bull; "is-a"</text>
+        <text x="45" y="50" font-family="sans-serif" font-size="8.5" fill="#334155">&bull; Strict single parent: <tspan font-family="monospace">class Dog extends Animal</tspan></text>
+        <text x="45" y="65" font-family="sans-serif" font-size="8.5" fill="#334155">&bull; Represents core identity and shared base structure</text>
+
+        <rect x="390" y="12" width="345" height="66" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="562" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#6D28D9" text-anchor="middle">Mixins (with) &bull; "can-do / has-a"</text>
+        <text x="410" y="50" font-family="sans-serif" font-size="8.5" fill="#4C1D95">&bull; Plural capabilities: <tspan font-family="monospace">with CanFly, CanSwim, Log</tspan></text>
+        <text x="410" y="65" font-family="sans-serif" font-size="8.5" fill="#4C1D95">&bull; Reusable features across unrelated hierarchies</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 9.1: Core architectural distinction between single inheritance and mixin capability composition.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Inheritance (<code>extends</code>)</th>
+          <th>Mixins (<code>with</code>)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Relationship</strong></td>
+          <td>"is-a" (e.g., Dog is an Animal)</td>
+          <td>"can-do" (e.g., Bird can fly, Drone can fly)</td>
+        </tr>
+        <tr>
+          <td><strong>Multiplicity</strong></td>
+          <td>Only 1 superclass allowed</td>
+          <td>Multiple mixins allowed (<code>with A, B, C</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Coupling</strong></td>
+          <td>Tight parent-child hierarchy</td>
+          <td>Loose, modular, swappable capabilities</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECTION 10 -->
+  <section id="section-10">
+    <h2>10. What Are Extensions?</h2>
+    <p>Now let's explore the second superpower of modern Dart: <strong>Extension Methods</strong> (introduced in Dart 2.7).</p>
+    <p>Have you ever used Dart's built-in <code>String</code> class and wished it had a helper method like <code>.toTitleCase()</code> or <code>.isPalindrome()</code>? In older programming languages, you would have to write awkward utility classes like <code>StringUtils.isPalindrome(myString)</code>. Extensions allow you to <strong>add new methods, getters, and setters directly to existing classes without editing their source code or subclassing them</strong>.</p>
+
+    <!-- SVG 10.1: Extension Concept on String -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="15" width="200" height="60" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="125" y="36" font-family="monospace" font-size="10" font-weight="700" fill="#334155" text-anchor="middle">class String (Dart SDK)</text>
+        <text x="125" y="52" font-family="sans-serif" font-size="8" fill="#64748B" text-anchor="middle">Original closed SDK source</text>
+
+        <path d="M230 45 L300 45" stroke="#00B4AB" stroke-width="2" marker-end="url(#arr1)"/>
+        <text x="265" y="38" font-family="sans-serif" font-size="8" fill="#00B4AB" text-anchor="middle">+ EXT</text>
+
+        <rect x="310" y="15" width="230" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.8"/>
+        <text x="425" y="36" font-family="monospace" font-size="9.5" font-weight="700" fill="#0175C2" text-anchor="middle">extension on String</text>
+        <text x="425" y="52" font-family="monospace" font-size="8" fill="#02569B" text-anchor="middle">String greet() => 'Hello, $this!';</text>
+
+        <path d="M545 45 L585 45" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="595" y="15" width="140" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="665" y="36" font-family="sans-serif" font-weight="700" font-size="9" fill="#15803D" text-anchor="middle">Natural Syntax</text>
+        <text x="665" y="52" font-family="monospace" font-size="8" fill="#334155" text-anchor="middle">name.greet()</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 10.1: Extensions add convenient member methods directly onto existing classes.</div>
+  </section>
+
+  <!-- SECTION 11 -->
+  <section id="section-11">
+    <h2>11. Creating an Extension</h2>
+    <p>An extension is declared using the <code>extension</code> keyword, an optional name, and the <code>on</code> keyword specifying the target type.</p>
+    <p>Inside the extension body, the special keyword <strong><code>this</code></strong> refers to the current value of the object on which the extension is called.</p>
+
+    <!-- SVG 11.1: Extension Anatomy -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#0175C2" text-anchor="middle">extension StringGreeting</text>
+        <text x="135" y="48" font-family="monospace" font-size="9" fill="#02569B" text-anchor="middle">on String</text>
+        <text x="135" y="62" font-family="sans-serif" font-size="7.5" fill="#64748B" text-anchor="middle">Applies exclusively to Strings</text>
+
+        <path d="M250 42 L310 42" stroke="#0175C2" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="320" y="12" width="250" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="445" y="32" font-family="monospace" font-size="9" font-weight="700" fill="#6D28D9" text-anchor="middle">String greet() {</text>
+        <text x="445" y="48" font-family="monospace" font-size="8.5" fill="#4C1D95" text-anchor="middle">  return 'Hello, $this!';</text>
+        <text x="445" y="62" font-family="monospace" font-size="9" font-weight="700" fill="#6D28D9" text-anchor="middle">}</text>
+
+        <path d="M575 42 L615 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="625" y="12" width="115" height="60" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="682" y="32" font-family="monospace" font-size="8.5" fill="#15803D" text-anchor="middle">'Shailendra'</text>
+        <text x="682" y="46" font-family="monospace" font-size="8.5" fill="#15803D" text-anchor="middle">.greet()</text>
+        <text x="682" y="60" font-family="sans-serif" font-size="7.5" fill="#334155" text-anchor="middle">&check; Returns greeting</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 11.1: Extension declaration anatomy: name, target type (on String), and '$this' binding.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXTENSION DECLARATION &amp; INVOCATION</span><span>string_greeting.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> StringGreeting <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">String</span> greet() {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Hello, <span class="hljs-subst">$this</span>!&#x27;</span>;
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String</span> name = <span class="hljs-string">&#x27;Shailendra&#x27;</span>;
+
+  <span class="hljs-built_in">print</span>(name.greet());
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Hello, Shailendra!
+    </div>
+  </section>
+
+  <!-- SECTION 12 -->
+  <section id="section-12">
+    <h2>12. Extension Methods on Built-in Types</h2>
+    <p>You can write extensions for any Dart type, including numbers, collections, and dates.</p>
+
+    <!-- SVG 12.1: Toolkits on Numbers & Strings -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#0175C2" text-anchor="middle">String Extensions</text>
+        <text x="135" y="48" font-family="monospace" font-size="8" fill="#02569B" text-anchor="middle">.wordCount(), .reverse()</text>
+        <text x="135" y="62" font-family="monospace" font-size="8" fill="#02569B" text-anchor="middle">.isPalindrome()</text>
+
+        <rect x="270" y="12" width="220" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#6D28D9" text-anchor="middle">int Extensions</text>
+        <text x="380" y="48" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">.isEvenNumber &bull; Getter</text>
+        <text x="380" y="62" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">.square() &bull; Method</text>
+
+        <rect x="515" y="12" width="220" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="625" y="32" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">double Extensions</text>
+        <text x="625" y="48" font-family="monospace" font-size="8" fill="#16A34A" text-anchor="middle">.toPercent() &bull; Formatter</text>
+        <text x="625" y="62" font-family="sans-serif" font-size="7.5" fill="#334155" text-anchor="middle">0.856 &rarr; '85.6%'</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 12.1: Domain-specific extensions augmenting core primitives cleanly.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXTENSION ON BUILT-IN INT</span><span>int_helpers.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> NumberHelpers <span class="hljs-keyword">on</span> <span class="hljs-built_in">int</span> {
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> isEvenNumber =&gt; <span class="hljs-keyword">this</span> % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>;
+
+  <span class="hljs-built_in">int</span> square() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span> * <span class="hljs-keyword">this</span>;
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">int</span> number = <span class="hljs-number">6</span>;
+
+  <span class="hljs-built_in">print</span>(number.isEvenNumber);
+  <span class="hljs-built_in">print</span>(number.square());
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+true<br>
+36
+    </div>
+  </section>
+
+  <!-- SECTION 13 -->
+  <section id="section-13">
+    <h2>13. Extension Getters and Setters</h2>
+    <p>Extensions can provide <strong>getters</strong> and <strong>setters</strong> just like regular classes.</p>
+    <ul>
+      <li>Use an <strong>extension getter</strong> when computing a property that doesn't need arguments (e.g. <code>text.characterCount</code> instead of <code>text.characterCount()</code>).</li>
+      <li><strong>Crucial Limitation:</strong> Extensions <strong>cannot add new stored memory fields</strong> to an existing class. A setter can only modify properties that the original object already has!</li>
+    </ul>
+
+    <!-- SVG 13.1: Method vs Getter -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="12" width="330" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="195" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">Extension Method: value.action()</text>
+        <text x="195" y="50" font-family="monospace" font-size="8.5" fill="#02569B" text-anchor="middle">int square() => this * this;</text>
+        <text x="195" y="64" font-family="sans-serif" font-size="8" fill="#475569">Invoked with parentheses: 6.square()</text>
+
+        <rect x="400" y="12" width="330" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="565" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#6D28D9" text-anchor="middle">Extension Getter: value.property</text>
+        <text x="565" y="50" font-family="monospace" font-size="8.5" fill="#4C1D95" text-anchor="middle">bool get isLong => length > 10;</text>
+        <text x="565" y="64" font-family="sans-serif" font-size="8" fill="#475569">Accessed cleanly without parentheses: text.isLong</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 13.1: Extension methods perform actions; extension getters expose computed properties.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXTENSION GETTERS</span><span>string_details.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> StringDetails <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">int</span> <span class="hljs-keyword">get</span> characterCount =&gt; length;
+
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> isLong =&gt; length &gt; <span class="hljs-number">10</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String</span> text = <span class="hljs-string">&#x27;CodeVerse&#x27;</span>;
+
+  <span class="hljs-built_in">print</span>(text.characterCount);
+  <span class="hljs-built_in">print</span>(text.isLong);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+9<br>
+false
+    </div>
+  </section>
+
+  <!-- SECTION 14 -->
+  <section id="section-14">
+    <h2>14. Named Extensions</h2>
+    <p>Giving extensions explicit names allows you to <strong>disambiguate conflicts</strong> when two different extensions define members with identical names. You can invoke an extension explicitly like a wrapper: <code>ExtensionName(object).method()</code>.</p>
+
+    <!-- SVG 14.1: Explicit Invocation -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#0175C2" text-anchor="middle">extension StringTools on String</text>
+        <text x="135" y="50" font-family="monospace" font-size="8" fill="#02569B" text-anchor="middle">String makeUpper() => ...</text>
+
+        <rect x="270" y="12" width="220" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">extension StringInfo on String</text>
+        <text x="380" y="50" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">int get size => length;</text>
+
+        <path d="M500 42 L530 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="540" y="12" width="195" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="637" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">Explicit Invocation</text>
+        <text x="637" y="50" font-family="monospace" font-size="7.5" fill="#334155" text-anchor="middle">StringTools(text).makeUpper()</text>
+        <text x="637" y="64" font-family="monospace" font-size="7.5" fill="#334155" text-anchor="middle">StringInfo(text).size</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 14.1: Named extensions enable explicit wrapper invocation to resolve ambiguous names.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; EXPLICIT NAMED EXTENSION CALLS</span><span>named_extensions.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> StringTools <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">String</span> makeUpper() {
+    <span class="hljs-keyword">return</span> toUpperCase();
+  }
+}
+
+<span class="hljs-keyword">extension</span> StringInfo <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">int</span> <span class="hljs-keyword">get</span> size {
+    <span class="hljs-keyword">return</span> length;
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">String</span> text = <span class="hljs-string">&#x27;dart&#x27;</span>;
+
+  <span class="hljs-comment">// Explicit wrapper syntax cleanly eliminates ambiguity</span>
+  <span class="hljs-built_in">print</span>(StringTools(text).makeUpper());
+  <span class="hljs-built_in">print</span>(StringInfo(text).size);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+DART<br>
+4
+    </div>
+  </section>
+
+  <!-- SECTION 15 -->
+  <section id="section-15">
+    <h2>15. Extension Scope and Static Resolution</h2>
+    <p>Two essential technical rules govern Dart extensions:</p>
+    <ol>
+      <li><strong>Scope:</strong> An extension is only accessible if it is in the current file or explicitly <code>import</code>ed into your file.</li>
+      <li><strong>Static Resolution:</strong> Extensions are resolved at <strong>compile time based on the static type of the variable</strong>, NOT dynamically at runtime like polymorphism!</li>
+      <li><strong>Instance Precedence:</strong> If a class defines a method named <code>save()</code> and an extension also defines <code>save()</code>, the class's own method <strong>always wins</strong>.</li>
+    </ol>
+
+    <!-- SVG 15.1: Static vs Dynamic Resolution -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="30" y="12" width="330" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="195" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">Static Compile-Time Resolution</text>
+        <text x="195" y="50" font-family="sans-serif" font-size="8.5" fill="#02569B" text-anchor="middle">Resolved by Dart analyzer before the program runs</text>
+        <text x="195" y="64" font-family="sans-serif" font-size="8" fill="#475569">Variable static type determines which extension applies</text>
+
+        <rect x="400" y="12" width="330" height="60" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="565" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#334155" text-anchor="middle">Instance Member Precedence</text>
+        <text x="565" y="50" font-family="sans-serif" font-size="8.5" fill="#475569" text-anchor="middle">Direct class members always shadow extensions</text>
+        <text x="565" y="64" font-family="sans-serif" font-size="8" fill="#15803D">&check; Extensions never hijack existing class methods</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 15.1: Extensions rely on static type checking and never override existing class methods.</div>
+  </section>
+
+  <!-- SECTION 16 -->
+  <section id="section-16">
+    <h2>16. What Extensions Cannot Do</h2>
+    <p>To write reliable code, you must understand the strict boundaries of extensions:</p>
+    <ul>
+      <li>&cross; <strong>Cannot add new stored instance fields</strong> (memory layout of the class cannot be altered).</li>
+      <li>&cross; <strong>Cannot add new constructors</strong> to existing classes.</li>
+      <li>&cross; <strong>Cannot modify the original class source code</strong>.</li>
+      <li>&cross; <strong>Cannot participate in runtime virtual method overriding</strong> (polymorphism).</li>
+      <li>&cross; <strong>Cannot be called on variables of type <code>dynamic</code></strong>.</li>
+    </ul>
+
+    <!-- SVG 16.1: Capabilities vs Limitations -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="345" height="66" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="197" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#15803D" text-anchor="middle">WHAT EXTENSIONS CAN DO</text>
+        <text x="45" y="50" font-family="sans-serif" font-size="8.5" fill="#166534">&check; Add helper methods and getters to any type</text>
+        <text x="45" y="65" font-family="sans-serif" font-size="8.5" fill="#166534">&check; Work on built-in SDK types (String, int, List)</text>
+
+        <rect x="390" y="12" width="345" height="66" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="562" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#DC2626" text-anchor="middle">WHAT EXTENSIONS CANNOT DO</text>
+        <text x="410" y="50" font-family="sans-serif" font-size="8.5" fill="#991B1B">&cross; Cannot add stored variables or constructors</text>
+        <text x="410" y="65" font-family="sans-serif" font-size="8.5" fill="#991B1B">&cross; Cannot override actual instance methods</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 16.1: Architectural boundaries: extensions enhance API ergonomics without modifying state.</div>
+  </section>
+
+  <!-- SECTION 17 -->
+  <section id="section-17">
+    <h2>17. Mixins vs Extensions</h2>
+    <p>Both mixins and extensions facilitate code reusability, but they solve fundamentally different problems.</p>
+
+    <!-- SVG 17.1: Mixin vs Extension Comparison -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="345" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="197" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#6D28D9" text-anchor="middle">MIXIN: Enhances Class Definition</text>
+        <text x="197" y="48" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">You control the class being written</text>
+        <text x="197" y="62" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">Can store mutable state &bull; class C with M</text>
+
+        <rect x="390" y="12" width="345" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="562" y="32" font-family="sans-serif" font-weight="700" font-size="10.5" fill="#0175C2" text-anchor="middle">EXTENSION: Enhances Existing Type</text>
+        <text x="562" y="48" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">You do NOT need access to original class source</text>
+        <text x="562" y="62" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">Zero stored state &bull; extension on Type</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 17.1: Mixins build new classes; extensions augment existing closed types.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Attribute</th>
+          <th>Mixin (<code>mixin</code> / <code>with</code>)</th>
+          <th>Extension (<code>extension</code> / <code>on</code>)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Primary Purpose</strong></td>
+          <td>Share reusable capabilities across your new classes</td>
+          <td>Add helper methods/getters to existing types</td>
+        </tr>
+        <tr>
+          <td><strong>Can Store State?</strong></td>
+          <td>&check; Yes (instance variables)</td>
+          <td>&cross; No (computed only)</td>
+        </tr>
+        <tr>
+          <td><strong>Applied To</strong></td>
+          <td>Class declaration (<code>class A with M</code>)</td>
+          <td>Any existing type (<code>on String</code>, <code>on int</code>)</td>
+        </tr>
+        <tr>
+          <td><strong>Resolution</strong></td>
+          <td>Object prototype linearization</td>
+          <td>Static compile-time dispatch</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- SECTION 18 -->
+  <section id="section-18">
+    <h2>18. Combining Mixins and Extensions</h2>
+    <p>In production Dart and Flutter applications, mixins and extensions are frequently paired together.</p>
+
+    <!-- SVG 18.1: Combining Mixins and Extensions -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="200" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="125" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin Logger</text>
+        <text x="125" y="50" font-family="monospace" font-size="8" fill="#4C1D95" text-anchor="middle">void log(String msg)</text>
+
+        <rect x="250" y="12" width="230" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="365" y="32" font-family="monospace" font-size="9" font-weight="700" fill="#0175C2" text-anchor="middle">extension StringTools on String</text>
+        <text x="365" y="50" font-family="monospace" font-size="8" fill="#02569B" text-anchor="middle">addGreeting() => 'Hello, $this'</text>
+
+        <path d="M490 42 L525 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="535" y="12" width="200" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="635" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">UserService with Logger</text>
+        <text x="635" y="50" font-family="monospace" font-size="7.5" fill="#334155" text-anchor="middle">log(name.addGreeting())</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 18.1: Service class combining a Logger mixin with a String extension method.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; COMBINED MIXIN &amp; EXTENSION</span><span>service_pipeline.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> Logger {
+  <span class="hljs-keyword">void</span> log(<span class="hljs-built_in">String</span> message) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;LOG: <span class="hljs-subst">$message</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">extension</span> StringTools <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">String</span> addGreeting() {
+    <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Hello, <span class="hljs-subst">$this</span>&#x27;</span>;
+  }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserService</span> <span class="hljs-title">with</span> <span class="hljs-title">Logger</span> </span>{
+  <span class="hljs-keyword">void</span> showUser(<span class="hljs-built_in">String</span> name) {
+    log(name.addGreeting());
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  UserService service = UserService();
+  service.showUser(<span class="hljs-string">&#x27;Amit&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+LOG: Hello, Amit
+    </div>
+  </section>
+
+  <!-- SECTION 19 -->
+  <section id="section-19">
+    <h2>19. Practical Real-Life Mini Programs</h2>
+    <p>Below are 6 complete, runnable programs demonstrating real-world applications of mixins and extensions.</p>
+
+    <!-- Program 1 -->
+    <h3>Program 1: Smart Device System</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 1</span><span>smart_device_system.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> Camera {
+  <span class="hljs-keyword">void</span> takePhoto() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Photo captured&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> MusicPlayer {
+  <span class="hljs-keyword">void</span> playMusic() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Music playing&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> Internet {
+  <span class="hljs-keyword">void</span> browseInternet() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Browsing internet&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">SmartDevicePhone</span> <span class="hljs-title">with</span> <span class="hljs-title">Camera</span>, <span class="hljs-title">MusicPlayer</span>, <span class="hljs-title">Internet</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> model;
+  SmartDevicePhone(<span class="hljs-keyword">this</span>.model);
+
+  <span class="hljs-keyword">void</span> testAll() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Device: <span class="hljs-subst">$model</span>&#x27;</span>);
+    takePhoto();
+    playMusic();
+    browseInternet();
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  SmartDevicePhone(<span class="hljs-string">&#x27;Galaxy Pro&#x27;</span>).testAll();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Device: Galaxy Pro<br>
+Photo captured<br>
+Music playing<br>
+Browsing internet
+    </div>
+
+    <!-- Program 2 -->
+    <h3>Program 2: Animal Movement System</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 2</span><span>animal_movement.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> Swimmer {
+  <span class="hljs-keyword">void</span> swim() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Swimming smoothly through water&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> Flyer {
+  <span class="hljs-keyword">void</span> flyHigh() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Soaring through the clouds&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> Walker {
+  <span class="hljs-keyword">void</span> walkGround() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Walking steadily on ground&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Duck</span> <span class="hljs-title">with</span> <span class="hljs-title">Swimmer</span>, <span class="hljs-title">Flyer</span>, <span class="hljs-title">Walker</span> </span>{
+  <span class="hljs-keyword">final</span> <span class="hljs-built_in">String</span> name;
+  Duck(<span class="hljs-keyword">this</span>.name);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  Duck d = Duck(<span class="hljs-string">&#x27;Donald&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Duck: $&#x27;</span>);
+  d.swim();
+  d.flyHigh();
+  d.walkGround();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Duck: Donald<br>
+Swimming smoothly through water<br>
+Soaring through the clouds<br>
+Walking steadily on ground
+    </div>
+
+    <!-- SVG 19.1: Game Character System -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="160" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="105" y="34" font-family="monospace" font-size="9" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanJump</text>
+        <text x="105" y="52" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">+20 Jump Height</text>
+
+        <rect x="200" y="12" width="160" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="280" y="34" font-family="monospace" font-size="9" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanAttack</text>
+        <text x="280" y="52" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">-35 HP Damage</text>
+
+        <rect x="375" y="12" width="160" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="455" y="34" font-family="monospace" font-size="9" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin CanDefend</text>
+        <text x="455" y="52" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">80% Damage Block</text>
+
+        <path d="M545 42 L570 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="580" y="12" width="155" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="657" y="34" font-family="sans-serif" font-weight="700" font-size="10" fill="#15803D" text-anchor="middle">Paladin Hero</text>
+        <text x="657" y="52" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">Fully equipped</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.1: Game Character system composing abilities via clean, isolated mixins.</div>
+
+    <!-- Program 3 -->
+    <h3>Program 3: Game Character System</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 3</span><span>game_character.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> CanJump {
+  <span class="hljs-keyword">void</span> jump() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Jumping over obstacle (+20 height)&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> CanAttack {
+  <span class="hljs-keyword">void</span> attack() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Striking enemy with sword (-35 HP)&#x27;</span>);
+}
+
+<span class="hljs-keyword">mixin</span> CanDefend {
+  <span class="hljs-keyword">void</span> defend() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Shield raised! Blocked 80% damage&#x27;</span>);
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Paladin</span> <span class="hljs-title">with</span> <span class="hljs-title">CanJump</span>, <span class="hljs-title">CanAttack</span>, <span class="hljs-title">CanDefend</span> </span>{}
+
+<span class="hljs-keyword">void</span> main() {
+  Paladin paladin = Paladin();
+  paladin.jump();
+  paladin.attack();
+  paladin.defend();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+Jumping over obstacle (+20 height)<br>
+Striking enemy with sword (-35 HP)<br>
+Shield raised! Blocked 80% damage
+    </div>
+
+    <!-- Program 4 -->
+    <h3>Program 4: String Utility Toolkit</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 4</span><span>string_toolkit.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> StringUtilities <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">String</span> reverse() =&gt; split(<span class="hljs-string">&#x27;&#x27;</span>).reversed.join(<span class="hljs-string">&#x27;&#x27;</span>);
+  <span class="hljs-built_in">int</span> wordCount() =&gt; trim().isEmpty ? <span class="hljs-number">0</span> : trim().split(<span class="hljs-built_in">RegExp</span>(<span class="hljs-string">r&#x27;\s+&#x27;</span>)).length;
+  <span class="hljs-built_in">bool</span> isPalindrome() {
+    <span class="hljs-keyword">final</span> clean = toLowerCase().replaceAll(<span class="hljs-built_in">RegExp</span>(<span class="hljs-string">r&#x27;[^a-z0-9]&#x27;</span>), <span class="hljs-string">&#x27;&#x27;</span>);
+    <span class="hljs-keyword">return</span> clean == clean.split(<span class="hljs-string">&#x27;&#x27;</span>).reversed.join(<span class="hljs-string">&#x27;&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;hello&#x27;</span>.reverse());
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Dart is super awesome&#x27;</span>.wordCount());
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;racecar&#x27;</span>.isPalindrome());
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;hello&#x27;</span>.isPalindrome());
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+olleh<br>
+4<br>
+true<br>
+false
+    </div>
+
+    <!-- Program 5 -->
+    <h3>Program 5: Number Utility Toolkit</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 5</span><span>number_toolkit.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> IntToolkit <span class="hljs-keyword">on</span> <span class="hljs-built_in">int</span> {
+  <span class="hljs-built_in">bool</span> <span class="hljs-keyword">get</span> isEvenVal =&gt; <span class="hljs-keyword">this</span> % <span class="hljs-number">2</span> == <span class="hljs-number">0</span>;
+  <span class="hljs-built_in">int</span> cube() =&gt; <span class="hljs-keyword">this</span> * <span class="hljs-keyword">this</span> * <span class="hljs-keyword">this</span>;
+}
+
+<span class="hljs-keyword">extension</span> DoubleToolkit <span class="hljs-keyword">on</span> <span class="hljs-built_in">double</span> {
+  <span class="hljs-built_in">String</span> toPercent() =&gt; <span class="hljs-string">&#x27;<span class="hljs-subst">${(<span class="hljs-keyword">this</span> * <span class="hljs-number">100</span>).toStringAsFixed(<span class="hljs-number">1</span>)}</span>%&#x27;</span>;
+}
+
+<span class="hljs-keyword">void</span> main() {
+  <span class="hljs-built_in">print</span>(<span class="hljs-number">7.</span>isEvenVal);
+  <span class="hljs-built_in">print</span>(<span class="hljs-number">4.</span>cube());
+  <span class="hljs-built_in">print</span>(<span class="hljs-number">0.856</span>.toPercent());
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+false<br>
+64<br>
+85.6%
+    </div>
+
+    <!-- SVG 19.2: Swappable Clean Audit Logger -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#6D28D9" text-anchor="middle">mixin TimestampLogger</text>
+        <text x="135" y="50" font-family="monospace" font-size="7.5" fill="#4C1D95" text-anchor="middle">logWithLevel(level, msg)</text>
+
+        <rect x="270" y="12" width="220" height="60" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="monospace" font-size="9.5" font-weight="700" fill="#0175C2" text-anchor="middle">extension MessageFormatter</text>
+        <text x="380" y="50" font-family="monospace" font-size="7.5" fill="#02569B" text-anchor="middle">formatForAudit() &rarr; >>> $this &lt;&lt;&lt;</text>
+
+        <path d="M500 42 L525 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="535" y="12" width="200" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="635" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">PaymentService</text>
+        <text x="635" y="50" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">[INFO] &gt;&gt;&gt; Amount: $149.99 &lt;&lt;&lt;</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 19.2: Production pipeline combining stateful timestamp logger and formatters.</div>
+
+    <!-- Program 6 -->
+    <h3>Program 6: Application Logger</h3>
+    <div class="code-card">
+      <div class="code-header"><span>DART &bull; MINI-PROJECT 6</span><span>application_logger.dart</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> TimestampLogger {
+  <span class="hljs-keyword">void</span> logWithLevel(<span class="hljs-built_in">String</span> level, <span class="hljs-built_in">String</span> msg) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;[<span class="hljs-subst">$level</span>] <span class="hljs-subst">$msg</span>&#x27;</span>);
+  }
+}
+
+<span class="hljs-keyword">extension</span> MessageFormatter <span class="hljs-keyword">on</span> <span class="hljs-built_in">String</span> {
+  <span class="hljs-built_in">String</span> formatForAudit() =&gt; <span class="hljs-string">&#x27;&gt;&gt;&gt; <span class="hljs-subst">$this</span> ;
+}
+
+class PaymentService with TimestampLogger {
+  void process(double amount) {
+    logWithLevel(&#x27;</span>INFO<span class="hljs-string">&#x27;, &#x27;</span>Processing amount: \$$amount<span class="hljs-string">&#x27;.formatForAudit());
+  }
+}
+
+void main() {
+  PaymentService().process(149.99);
+}</span></code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Console Output</span>
+[INFO] >>> Processing amount: $149.99 <<<
+    </div>
+  </section>
+
+  <!-- SECTION 20 -->
+  <section id="section-20">
+    <h2>20. Common Mixins and Extensions Mistakes</h2>
+    <p>Avoid these common traps when writing Dart mixins and extensions:</p>
+
+    <!-- SVG 20.1: Visual Warning Traps -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="25" y="12" width="220" height="60" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="135" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#DC2626" text-anchor="middle">Mistake 1: extends for Mixin</text>
+        <text x="135" y="48" font-family="monospace" font-size="8" fill="#991B1B" text-anchor="middle">class A extends MixinName</text>
+        <text x="135" y="62" font-family="sans-serif" font-size="7.5" fill="#DC2626" text-anchor="middle">&cross; Must use 'with' keyword!</text>
+
+        <rect x="270" y="12" width="220" height="60" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="380" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#DC2626" text-anchor="middle">Mistake 2: Field in Extension</text>
+        <text x="380" y="48" font-family="monospace" font-size="8" fill="#991B1B" text-anchor="middle">extension on String { int x; }</text>
+        <text x="380" y="62" font-family="sans-serif" font-size="7.5" fill="#DC2626" text-anchor="middle">&cross; Extensions cannot store fields!</text>
+
+        <rect x="515" y="12" width="220" height="60" rx="6" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="625" y="32" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#15803D" text-anchor="middle">The Golden Rules</text>
+        <text x="625" y="48" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">Use 'with' for mixin capability</text>
+        <text x="625" y="62" font-family="sans-serif" font-size="8" fill="#15803D" text-anchor="middle">Use getters/methods in extensions</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 20.1: Compilation warnings and syntax traps in mixins and extensions.</div>
+
+    <div class="callout callout-warning">
+      <div class="callout-title">Top 4 Gotchas to Memorize</div>
+      1. <strong>Direct Mixin Instantiation:</strong> <code>var m = MyMixin();</code> is a compile error. Mixins cannot be instantiated directly with constructors.<br>
+      2. <strong>Extension Fields:</strong> <code>extension on int { int count = 0; }</code> fails because extensions cannot add memory storage.<br>
+      3. <strong>Dynamic Variables:</strong> Extensions do not execute on variables typed as <code>dynamic</code> because extensions are resolved statically at compile time.<br>
+      4. <strong>Mixin Linearization:</strong> Remember that later mixins in a <code>with A, B</code> clause will override methods in earlier ones!
+    </div>
+  </section>
+
+  <!-- SECTION 21 -->
+  <section id="section-21">
+    <h2>21. Quick Revision</h2>
+
+    <!-- SVG 21.1: Master Synthesis Mindmap -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 90" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="90" rx="8" fill="#F8FAFC"/>
+        <circle cx="380" cy="45" r="35" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="380" y="42" font-family="sans-serif" font-weight="700" font-size="9" fill="#0175C2" text-anchor="middle">Topic 17</text>
+        <text x="380" y="53" font-family="sans-serif" font-weight="700" font-size="7.5" fill="#02569B" text-anchor="middle">Core Tools</text>
+
+        <line x1="345" y1="45" x2="230" y2="45" stroke="#8B5CF6" stroke-width="1.8"/>
+        <rect x="25" y="22" width="200" height="46" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+        <text x="125" y="38" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#6D28D9" text-anchor="middle">MIXINS (with)</text>
+        <text x="125" y="53" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">Capabilities &bull; on constraint &bull; State</text>
+
+        <line x1="415" y1="45" x2="530" y2="45" stroke="#00B4AB" stroke-width="1.8"/>
+        <rect x="535" y="22" width="200" height="46" rx="6" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="635" y="38" font-family="sans-serif" font-weight="700" font-size="9.5" fill="#02569B" text-anchor="middle">EXTENSIONS (extension on)</text>
+        <text x="635" y="53" font-family="sans-serif" font-size="8" fill="#0369A1" text-anchor="middle">Helpers on existing types &bull; Static</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.1: Master concept map synthesizing mixins and extensions in Dart.</div>
+
+    <ul>
+      <li><strong><code>mixin</code>:</strong> Defines a reusable bundle of methods and variables.</li>
+      <li><strong><code>with</code>:</strong> Injects one or more mixins into a class (e.g., <code>class C with M1, M2</code>).</li>
+      <li><strong><code>on</code>:</strong> Enforces a superclass constraint on a mixin (e.g., <code>mixin M on SuperClass</code>).</li>
+      <li><strong><code>mixin class</code>:</strong> A Dart 3 dual-use declaration usable with both <code>extends</code> and <code>with</code>.</li>
+      <li><strong><code>extension</code>:</strong> Adds helper methods, getters, and setters to existing classes without editing them.</li>
+      <li><strong>Static Resolution:</strong> Extensions are checked at compile time, not virtual runtime dispatch.</li>
+    </ul>
+  </section>
+
+  <!-- SECTION 22 -->
+  <section id="section-22">
+    <h2>22. Knowledge Check</h2>
+
+    <!-- SVG 22.1: Stage 4 Progression Roadmap -->
+    <div class="svg-container">
+      <svg viewBox="0 0 760 85" xmlns="http://www.w3.org/2000/svg">
+        <rect width="760" height="85" rx="8" fill="#F8FAFC"/>
+        <rect x="20" y="18" width="160" height="48" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+        <text x="100" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#64748B" text-anchor="middle">Topic 15 &amp; 16</text>
+        <text x="100" y="51" font-family="sans-serif" font-size="8" fill="#334155" text-anchor="middle">Inheritance &amp; Interfaces &check;</text>
+
+        <path d="M185 42 L205 42" stroke="#94A3B8" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="210" y="18" width="160" height="48" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="2"/>
+        <text x="290" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#0175C2" text-anchor="middle">Topic 17 (Current)</text>
+        <text x="290" y="51" font-family="sans-serif" font-size="8" fill="#02569B" text-anchor="middle">Mixins &amp; Extensions &check;</text>
+
+        <path d="M375 42 L395 42" stroke="#10B981" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="400" y="18" width="160" height="48" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="2"/>
+        <text x="480" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#15803D" text-anchor="middle">Stage 4 Complete!</text>
+        <text x="480" y="51" font-family="sans-serif" font-size="8" fill="#16A34A" text-anchor="middle">OOP Mastery Achieved &check;</text>
+
+        <path d="M565 42 L585 42" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arr1)"/>
+
+        <rect x="590" y="18" width="150" height="48" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="665" y="37" font-family="sans-serif" font-weight="700" font-size="9" fill="#6D28D9" text-anchor="middle">Topic 18 (Next)</text>
+        <text x="665" y="51" font-family="sans-serif" font-size="8" fill="#4C1D95" text-anchor="middle">Generics &rarr;</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 22.1: Stage 4 Object-Oriented Dart complete! Bridging to Stage 5 Advanced Dart with Generics.</div>
+
+    <h3>Interactive Multiple-Choice Questions</h3>
+
+    <div class="quiz-card">
+      <div class="quiz-question">1. Which keyword is used to apply a mixin to a Dart class?</div>
+      <div class="quiz-options">
+        <div class="quiz-option">A) extends</div>
+        <div class="quiz-option">B) with</div>
+        <div class="quiz-option">C) implements</div>
+        <div class="quiz-option">D) uses</div>
+      </div>
+      <details>
+        <summary>View Answer &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Correct Answer: B) with</strong><br>
+          Dart uses the <code>with</code> keyword to apply one or more mixins to a class.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">2. What does 'on Animal' mean in 'mixin CanWalk on Animal'?</div>
+      <div class="quiz-options">
+        <div class="quiz-option">A) Runs CanWalk in a background thread</div>
+        <div class="quiz-option">B) Restricts CanWalk so it can only be applied to subclasses of Animal</div>
+        <div class="quiz-option">C) Destroys the Animal class</div>
+        <div class="quiz-option">D) Renames Animal to CanWalk</div>
+      </div>
+      <details>
+        <summary>View Answer &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Correct Answer: B) Restricts CanWalk to subclasses of Animal</strong><br>
+          The <code>on</code> keyword specifies a superclass constraint.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">3. If 'class A with M1, M2' is declared and both M1 and M2 define run(), which runs?</div>
+      <div class="quiz-options">
+        <div class="quiz-option">A) M1.run()</div>
+        <div class="quiz-option">B) M2.run()</div>
+        <div class="quiz-option">C) Compile error</div>
+        <div class="quiz-option">D) Neither</div>
+      </div>
+      <details>
+        <summary>View Answer &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Correct Answer: B) M2.run()</strong><br>
+          In mixin linearization, later-applied mixins override same-named methods from earlier mixins.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">4. Which of the following can an extension in Dart NOT do?</div>
+      <div class="quiz-options">
+        <div class="quiz-option">A) Add methods to String</div>
+        <div class="quiz-option">B) Add getters to int</div>
+        <div class="quiz-option">C) Add stored instance fields to existing classes</div>
+        <div class="quiz-option">D) Be invoked explicitly by name</div>
+      </div>
+      <details>
+        <summary>View Answer &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Correct Answer: C) Add stored instance fields</strong><br>
+          Extensions cannot add new stored memory fields to an existing class.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">5. How are extension methods resolved in Dart?</div>
+      <div class="quiz-options">
+        <div class="quiz-option">A) Statically at compile time based on static type</div>
+        <div class="quiz-option">B) Dynamically at runtime using polymorphism</div>
+        <div class="quiz-option">C) Randomly at startup</div>
+        <div class="quiz-option">D) Through reflection only</div>
+      </div>
+      <details>
+        <summary>View Answer &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Correct Answer: A) Statically at compile time</strong><br>
+          Extensions are statically dispatched at compile time.
+        </div>
+      </details>
+    </div>
+
+    <h3>Output Prediction Challenges</h3>
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 1: What will this print?</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> A { <span class="hljs-keyword">void</span> hello() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;A&#x27;</span>); }
+<span class="hljs-keyword">mixin</span> B { <span class="hljs-keyword">void</span> hello() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;B&#x27;</span>); }
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Test</span> <span class="hljs-title">with</span> <span class="hljs-title">A</span>, <span class="hljs-title">B</span> </span>{}
+<span class="hljs-keyword">void</span> main() =&gt; Test().hello();</code></pre>
+</div>
+      <details>
+        <summary>View Answer</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>B</code><br>
+          Mixin B is listed after A, overriding A.hello().
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 2: What will this print?</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">extension</span> DoubleIt <span class="hljs-keyword">on</span> <span class="hljs-built_in">int</span> { <span class="hljs-built_in">int</span> doubleVal() =&gt; <span class="hljs-keyword">this</span> * <span class="hljs-number">2</span>; }
+<span class="hljs-keyword">void</span> main() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-number">5.</span>doubleVal());</code></pre>
+</div>
+      <details>
+        <summary>View Answer</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>10</code><br>
+          5 * 2 = 10.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 3: What will this print?</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">mixin</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Greeter</span> </span>{ <span class="hljs-keyword">void</span> greet() =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Hi!&#x27;</span>); }
+<span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">User</span> <span class="hljs-title">with</span> <span class="hljs-title">Greeter</span> </span>{}
+<span class="hljs-keyword">void</span> main() =&gt; User().greet();</code></pre>
+</div>
+      <details>
+        <summary>View Answer</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>Hi!</code><br>
+          A mixin class can be used cleanly via the 'with' keyword.
+        </div>
+      </details>
+    </div>
+
+    <h3>Beginner Coding Exercises</h3>
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 1: Vehicle Capabilities</div>
+      <p>Create two mixins: <code>Refuelable</code> (with method <code>refuel()</code>) and <code>Electric</code> (with method <code>charge()</code>). Create a class <code>HybridCar</code> that uses both mixins and test both methods in <code>main()</code>.</p>
+      <details>
+        <summary>View Hint</summary>
+        <div class="explanation-box">
+          Declare <code>mixin Refuelable { void refuel() => print('Gas filled'); }</code> and use <code>class HybridCar with Refuelable, Electric {}</code>.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 2: Constrained Mixin</div>
+      <p>Create a class <code>Employee</code> with property <code>name</code>. Create a mixin <code>Attendance on Employee</code> with method <code>markPresent()</code> that prints <code>'$name is present'</code>. Create <code>Manager extends Employee with Attendance</code>.</p>
+      <details>
+        <summary>View Hint</summary>
+        <div class="explanation-box">
+          Use the <code>on Employee</code> syntax so the mixin has access to the <code>name</code> field.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 3: String Extension</div>
+      <p>Create an extension <code>EmojiHelper on String</code> with a getter <code>withSparkle</code> that returns <code>'✨ $this ✨'</code>. Test it with <code>'Dart'.withSparkle</code>.</p>
+      <details>
+        <summary>View Hint</summary>
+        <div class="explanation-box">
+          Declare <code>extension EmojiHelper on String { String get withSparkle => '✨ $this ✨'; }</code>.
+        </div>
+      </details>
+    </div>
+
+  </section>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>

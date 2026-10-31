@@ -1,0 +1,2288 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic 21: Futures, async/await &amp; Streams — CodeVerse</title>
+  <style>
+    :root {
+      /* Shared Brand Accents */
+      --brand: #0175C2;
+      --brand-dark: #02569B;
+      --brand-light: #F0F9FF;
+      --brand-border: #BAE6FD;
+      
+      --blue: #0284C7;
+      --blue-light: #F0F9FF;
+      --green: #10B981;
+      --green-light: #ECFDF5;
+      --amber: #F59E0B;
+      --amber-light: #FFFBEB;
+      --red: #EF4444;
+      --red-light: #FEF2F2;
+      --purple: #8B5CF6;
+      --purple-light: #F5F3FF;
+      --primary: var(--brand);
+      --secondary: var(--blue);
+      --accent: var(--green);
+      --warning: var(--amber);
+      --danger: var(--red);
+
+      /* Light Theme (Default) */
+      --bg: #F8FAFC;
+      --bg-page: #F8FAFC;
+      --bg-dark: #0B0F19;
+      --bg-card: #FFFFFF;
+      --card-bg: #FFFFFF;
+      --card-soft: #F1F5F9;
+      --card-border: #E2E8F0;
+      --border: #E2E8F0;
+      --border-color: #E2E8F0;
+      --border-subtle: #EDF2F7;
+      --text: #0F172A;
+      --text-main: #0F172A;
+      --text-primary: #0F172A;
+      --text-secondary: #334155;
+      --text-muted: #64748B;
+      
+      /* IDE Code Block Styling */
+      --code-bg: #0F172A;
+      --code-header: #1E293B;
+      --code-border: #334155;
+      --code-text: #E2E8F0;
+
+      /* UI Radii & Shadows */
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
+      --max-w: 1100px;
+    }
+
+    /* Dark Theme Overrides */
+    [data-theme="dark"] {
+      --bg: #0B0F19;
+      --bg-page: #0B0F19;
+      --bg-card: #151D2E;
+      --card-bg: #151D2E;
+      --card-soft: #1B253B;
+      --card-border: #232F48;
+      --border: #232F48;
+      --border-color: #232F48;
+      --border-subtle: #1C263A;
+      --text: #F8FAFC;
+      --text-main: #F8FAFC;
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-muted: #94A3B8;
+
+      --code-bg: #070A11;
+      --code-header: #0F172A;
+      --code-border: #1E293B;
+      --code-text: #F1F5F9;
+
+      --blue-light: rgba(2, 132, 199, 0.15);
+      --green-light: rgba(16, 185, 129, 0.15);
+      --amber-light: rgba(245, 158, 11, 0.15);
+      --red-light: rgba(239, 68, 68, 0.15);
+      --purple-light: rgba(139, 92, 246, 0.15);
+      --brand-light: rgba(39, 109, 195, 0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.45;
+      color: var(--text-primary);
+      background-color: var(--bg-page);
+      padding: 8px;
+      display: flex;
+      justify-content: center;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-size: 13px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-w);
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-sm);
+      padding: clamp(10px, 1.8vw, 20px);
+      min-width: 0;
+      overflow-x: hidden;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    /* Header Bar & Theme Switcher */
+    .topic-nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .topic-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-brand { background: var(--brand-light); color: var(--brand); border: 1px solid var(--brand-border); }
+    .badge-teal, .badge-primary { background: var(--blue-light); color: var(--blue); }
+    .badge-green, .badge-success { background: var(--green-light); color: var(--green); }
+    .badge-warning { background: var(--amber-light); color: var(--amber); }
+    .badge-danger { background: var(--red-light); color: var(--red); }
+
+    .theme-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    /* Headings */
+    h1 {
+      font-size: clamp(18px, 2.8vw, 24px);
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.02em;
+    }
+
+    .lead-p, .subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 18px 0 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 12px 0 5px;
+    }
+
+    p {
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    /* Cards, Grids & Callouts */
+    .card {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+      min-width: 0;
+    }
+    .card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--brand);
+      margin-bottom: 4px;
+    }
+
+    .grid-2, .grid-3 {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+    .grid-2 > *, .grid-3 > * { min-width: 0; }
+
+    .callout {
+      border-left: 4px solid var(--brand);
+      background: var(--brand-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--brand);
+      text-transform: uppercase;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .warning-box {
+      border-left: 4px solid var(--amber);
+      background: var(--amber-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .warning-box .callout-title {
+      color: var(--amber);
+    }
+
+    .danger-box {
+      border-left: 4px solid var(--red);
+      background: var(--red-light);
+      padding: 8px 12px;
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      margin-bottom: 10px;
+    }
+    .danger-box .callout-title {
+      color: var(--red);
+    }
+
+    /* Table styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 8px 0 12px;
+      font-size: 12px;
+      display: table;
+      overflow-x: auto;
+    }
+    @media (max-width: 600px) {
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+    th, td {
+      padding: 6px 9px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    th {
+      background: var(--card-soft);
+      color: var(--text-primary);
+      font-weight: 700;
+    }
+    td {
+      color: var(--text-secondary);
+    }
+
+    /* Visual Containers & SVGs */
+    .svg-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+      max-width: 100%;
+    }
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* IDE Code Container & Highlight.js Tokens */
+    .code-container {
+      background: var(--code-bg);
+      border: 1px solid var(--code-border);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      margin: 8px 0 12px;
+      box-shadow: var(--shadow-sm);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    .code-header {
+      background: var(--code-header);
+      padding: 5px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--code-border);
+      gap: 6px;
+    }
+
+    .code-dots {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .code-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-red { background: #EF4444; }
+    .dot-yellow { background: #F59E0B; }
+    .dot-green { background: #10B981; }
+
+    .code-title {
+      color: #94A3B8;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+      margin-left: 4px;
+    }
+
+    .code-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #38BDF8;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 5px;
+      border-radius: 3px;
+      letter-spacing: 0.5px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #E2E8F0;
+      padding: 2px 7px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: #FFFFFF;
+    }
+    .copy-btn.copied {
+      background: #10B981;
+      border-color: #059669;
+      color: #FFFFFF;
+    }
+
+    pre {
+      padding: 10px 12px;
+      overflow-x: auto;
+      font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--code-text);
+      background: transparent;
+      margin: 0;
+      white-space: pre;
+      word-break: normal;
+    }
+
+    code {
+      font-family: inherit;
+    }
+
+    p code, li code, td code {
+      background: var(--card-soft);
+      color: var(--brand);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Output Container */
+    .output-box, .output-card {
+      background: #060911;
+      border-left: 3px solid var(--green);
+      padding: 7px 10px;
+      border-radius: 0 0 var(--radius-md) var(--radius-md);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      color: #A7F3D0;
+      margin-top: -12px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .output-label, .output-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #6EE7B7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    /* Highlight.js Colors (VS Code Dark Modern Theme) */
+    .hljs-keyword { color: #F472B6; font-weight: 700; }
+    .hljs-built_in { color: #38BDF8; font-weight: 600; }
+    .hljs-type { color: #A78BFA; font-weight: 600; }
+    .hljs-function { color: #60A5FA; }
+    .hljs-title { color: #60A5FA; font-weight: 600; }
+    .hljs-params { color: #E2E8F0; }
+    .hljs-string { color: #34D399; }
+    .hljs-number { color: #FBBF24; }
+    .hljs-comment { color: #64748B; font-style: italic; }
+    .hljs-operator { color: #F472B6; }
+    .hljs-meta { color: #94A3B8; }
+    .hljs-variable { color: #F8FAFC; }
+
+    /* Interactive Details / Solution Box */
+    details {
+      background: var(--card-soft);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      margin: 6px 0;
+      padding: 6px 10px;
+    }
+    summary {
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--brand);
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="topic-nav-bar">
+    <div class="topic-badges">
+      <span class="badge badge-brand">DART Track</span>
+      <span class="badge badge-teal">Topic 21</span>
+    </div>
+    <button id="theme-toggle-btn" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+      🌙 Dark Mode
+    </button>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="header-badge">Stage 6 — Asynchronous Dart</div>
+    <h1>Topic 21: Futures, async/await &amp; Streams</h1>
+    <p class="subtitle">Master non-blocking I/O, delayed computations, concurrent operations, and continuous real-time event streams in Dart.</p>
+  </header>
+
+  <!-- Section 1 -->
+  <section id="section-1">
+    <h2>1. Introduction to Asynchronous Programming</h2>
+    <p>By default, computer programs execute <strong>synchronously</strong>: line 1 runs, then line 2, then line 3. If a task takes several seconds (such as downloading a large image or waiting for a server response), a synchronous program freezes completely, locking the user interface.</p>
+    <p><strong>Asynchronous programming</strong> solves this by allowing long-running operations to happen in the background without blocking the surrounding code.</p>
+    
+    <p><strong>Restaurant Analogy:</strong></p>
+    <ul>
+      <li><strong>Synchronous (Blocking):</strong> You order food at the counter and stand there frozen. Nobody behind you can order, and you cannot check your phone until the food is handed to you.</li>
+      <li><strong>Asynchronous (Non-Blocking):</strong> You order food, receive a buzzer token, and sit at your table reading a book or chatting. When the food is ready, the token buzzes and you collect it.</li>
+    </ul>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="8" width="160" height="38" rx="6" fill="#0175C2"/>
+        <text x="95" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Place Order</text>
+        <text x="95" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="sans-serif">Receive Token (Future)</text>
+        <path d="M180 27 L225 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="230" y="8" width="220" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="340" y="24" font-size="11" font-weight="700" fill="#15803D" text-anchor="middle" font-family="sans-serif">Do Other Tasks (Non-Blocking)</text>
+        <text x="340" y="38" font-size="9" fill="#166534" text-anchor="middle" font-family="sans-serif">Read book, check email, render UI</text>
+        <path d="M455 27 L500 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="505" y="8" width="155" height="38" rx="6" fill="#02569B"/>
+        <text x="582" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Buzzer Rings!</text>
+        <text x="582" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">Future Completes</text>
+        <path d="M665 27 L705 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="710" y="8" width="75" height="38" rx="6" fill="#10B981"/>
+        <text x="747" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Eat Meal</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.1: Restaurant buzzer token analogy for non-blocking asynchronous programming.</div>
+
+    <div class="callout callout-success">
+      <div class="callout-title">Core Insight: Event Loop Architecture</div>
+      Dart is single-threaded by default. Asynchronous code does not create multiple operating system threads; instead, Dart uses an <strong>Event Loop</strong> that schedules and processes tasks as results arrive.
+    </div>
+  </section>
+
+  <!-- Section 2 -->
+  <section id="section-2">
+    <h2>2. Synchronous vs Asynchronous Execution</h2>
+    <p>Let's contrast step-by-step sequential execution against non-blocking delayed execution:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="sans-serif">Synchronous Timeline: Strict Step-by-Step</text>
+        <text x="200" y="38" font-size="9" fill="#475569" text-anchor="middle" font-family="sans-serif">Task 1 (blocks) -&gt; Task 2 (blocks) -&gt; Task 3</text>
+        <rect x="410" y="8" width="370" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="595" y="24" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Asynchronous Timeline: Non-Blocking Yielding</text>
+        <text x="595" y="38" font-size="9" fill="#0369A1" text-anchor="middle" font-family="sans-serif">Starts task -&gt; Yields to Event Loop -&gt; Resumes on finish</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.2: Synchronous blocking timeline vs Asynchronous non-blocking event loop execution.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>sync_vs_async.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;1. Start&#x27;</span>);
+
+  <span class="hljs-comment">// Yields execution for 50 milliseconds while Event Loop keeps running</span>
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">50</span>));
+
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;2. After waiting&#x27;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;3. End&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+1. Start
+2. After waiting
+3. End
+    </div>
+  </section>
+
+  <!-- Section 3 -->
+  <section id="section-3">
+    <h2>3. What Is a Future?</h2>
+    <p>A <strong><code>Future&lt;T&gt;</code></strong> represents the eventual result of an asynchronous operation. When you initiate an asynchronous task, Dart immediately returns an uncompleted <code>Future</code> object — like a parcel tracking number. It promises that at some point, it will produce a value of type <code>T</code> or an error.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">getMessage() returns</text>
+        <text x="130" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="monospace">Future&lt;String&gt; [Uncompleted]</text>
+        <path d="M250 27 L320 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="330" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="440" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Waiting in Background</text>
+        <text x="440" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">Timer / Network IO pending</text>
+        <path d="M560 27 L630 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="640" y="8" width="140" height="38" rx="6" fill="#10B981"/>
+        <text x="710" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">then((message))</text>
+        <text x="710" y="38" font-size="8.5" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">String Available!</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.3: The life cycle of a Future: Creation, background waiting, and then() fulfillment.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>future_basic.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getMessage() {
+  <span class="hljs-keyword">return</span> Future.delayed(
+    <span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">50</span>),
+    () =&gt; <span class="hljs-string">&#x27;Hello from Future&#x27;</span>,
+  );
+}
+
+<span class="hljs-keyword">void</span> main() {
+  getMessage().then((message) {
+    <span class="hljs-built_in">print</span>(message);
+  });
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Hello from Future
+    </div>
+  </section>
+
+  <!-- Section 4 -->
+  <section id="section-4">
+    <h2>4. Future States</h2>
+    <p>A Future exists in one of three conceptual states during its lifecycle:</p>
+    <ol>
+      <li><strong>Uncompleted (Pending):</strong> The operation is underway in the background.</li>
+      <li><strong>Completed with Data:</strong> The operation succeeded, producing a concrete value.</li>
+      <li><strong>Completed with Error:</strong> The operation failed, producing an exception.</li>
+    </ol>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#F59E0B"/>
+        <text x="130" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">1. Pending (Uncompleted)</text>
+        <text x="130" y="38" font-size="9" fill="#FEF3C7" text-anchor="middle" font-family="sans-serif">Operation in progress</text>
+        <path d="M250 20 L320 15" stroke="#10B981" stroke-width="2"/>
+        <path d="M250 35 L320 40" stroke="#EF4444" stroke-width="2"/>
+        <rect x="330" y="5" width="450" height="20" rx="4" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="555" y="19" font-size="10" font-weight="700" fill="#15803D" text-anchor="middle" font-family="sans-serif">2. Completed with Value (Success) -&gt; then() callback triggers</text>
+        <rect x="330" y="30" width="450" height="20" rx="4" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="555" y="44" font-size="10" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="sans-serif">3. Completed with Error (Failure) -&gt; catchError() callback triggers</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.4: State transition graph: Pending transitions strictly once to either Value or Error.</div>
+  </section>
+
+  <!-- Section 5 -->
+  <section id="section-5">
+    <h2>5. Creating Futures</h2>
+    <p>Dart provides multiple constructors to create Futures according to your needs:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="10" width="180" height="34" rx="5" fill="#0175C2"/>
+        <text x="105" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Future.value(100)</text>
+        <rect x="210" y="10" width="200" height="34" rx="5" fill="#02569B"/>
+        <text x="310" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Future.delayed(dur, fn)</text>
+        <rect x="425" y="10" width="180" height="34" rx="5" fill="#EF4444"/>
+        <text x="515" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Future.error(err)</text>
+        <rect x="620" y="10" width="165" height="34" rx="5" fill="#10B981"/>
+        <text x="702" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">async function</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.5: The primary ways to instantiate a Future in Dart.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>future_creation.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  <span class="hljs-comment">// 1. Immediate value completion</span>
+  Future numFuture = Future.value(<span class="hljs-number">100</span>);
+  numFuture.then((n) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Value: <span class="hljs-subst">$n</span>&quot;</span>));
+
+  <span class="hljs-comment">// 2. Delayed completion</span>
+  Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>), () =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Delayed done&quot;</span>));
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Value: 100
+Delayed done
+    </div>
+  </section>
+
+  <!-- Section 6 -->
+  <section id="section-6">
+    <h2>6. Working with `then()`</h2>
+    <p>The <code>then()</code> method registers a callback to be called when the Future completes successfully with a value. You can chain multiple <code>then()</code> calls sequentially:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Future.value(10)</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="430" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">.then((v) =&gt; v * 2)</text>
+        <path d="M550 27 L610 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="620" y="8" width="160" height="38" rx="6" fill="#10B981"/>
+        <text x="700" y="32" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">.then((r) =&gt; 20)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.6: Pipelining transformations by chaining then() callbacks.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>then_chain.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getNumber() =&gt; Future.value(<span class="hljs-number">10</span>);
+
+<span class="hljs-keyword">void</span> main() {
+  getNumber()
+      .then((value) {
+        <span class="hljs-built_in">print</span>(value);
+        <span class="hljs-keyword">return</span> value * <span class="hljs-number">2</span>;
+      })
+      .then((result) {
+        <span class="hljs-built_in">print</span>(result);
+      });
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+10
+20
+    </div>
+  </section>
+
+  <!-- Section 7 -->
+  <section id="section-7">
+    <h2>7. Error Handling with `catchError()`</h2>
+    <p>When working with Future callbacks, <code>catchError()</code> catches any error or unhandled exception emitted anywhere in the preceding Future chain.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="monospace">Future.error(Exception(...))</text>
+        <text x="200" y="38" font-size="9" fill="#991B1B" text-anchor="middle" font-family="sans-serif">Bypasses then() callbacks</text>
+        <path d="M390 27 L440 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="450" y="8" width="330" height="38" rx="6" fill="#F0F9FF" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="615" y="24" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="monospace">.catchError((error) { ... })</text>
+        <text x="615" y="38" font-size="9" fill="#0369A1" text-anchor="middle" font-family="sans-serif">Gracefully intercepts failure</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.7: Error propagation in Future chains intercepted by catchError().</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>catch_error.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getNumber() {
+  <span class="hljs-keyword">return</span> Future.error(Exception(<span class="hljs-string">&#x27;Something went wrong&#x27;</span>));
+}
+
+<span class="hljs-keyword">void</span> main() {
+  getNumber()
+      .then((value) =&gt; <span class="hljs-built_in">print</span>(value))
+      .catchError((error) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Error: <span class="hljs-subst">$error</span>&#x27;</span>));
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Error: Exception: Something went wrong
+    </div>
+  </section>
+
+  <!-- Section 8 -->
+  <section id="section-8">
+    <h2>8. Using `whenComplete()`</h2>
+    <p>Similar to the synchronous <code>finally</code> block, <code>whenComplete()</code> registers a callback that always executes when a Future finishes — regardless of whether it completed with a successful value or failed with an error.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">loadData() async</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="460" height="38" rx="6" fill="#10B981"/>
+        <text x="550" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">.whenComplete(() =&gt; print("Operation finished"))</text>
+        <text x="550" y="38" font-size="8.5" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">Guaranteed completion callback (Success &amp; Failure)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.8: whenComplete() executes upon both fulfillment and rejection.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>when_complete.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future loadData() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>));
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Data loaded&#x27;</span>);
+}
+
+<span class="hljs-keyword">void</span> main() {
+  loadData().whenComplete(() {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Operation finished&#x27;</span>);
+  });
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Data loaded
+Operation finished
+    </div>
+  </section>
+
+  <!-- Section 9 -->
+  <section id="section-9">
+    <h2>9. Introduction to `async`</h2>
+    <p>Marking a function with the <strong><code>async</code></strong> keyword accomplishes two things automatically:</p>
+    <ul>
+      <li>Enables the use of the <code>await</code> keyword inside its body.</li>
+      <li>Automatically wraps the returned value in a <code>Future</code>. For example, returning a plain <code>String</code> from an <code>async</code> function yields a <code>Future&lt;String&gt;</code>.</li>
+    </ul>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#0175C2"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Future&lt;String&gt; getName() async</text>
+        <text x="200" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="monospace">return 'Shailendra';</text>
+        <path d="M390 27 L440 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="450" y="8" width="330" height="38" rx="6" fill="#02569B"/>
+        <text x="615" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Automatic Future Wrapping</text>
+        <text x="615" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">Caller receives Future&lt;String&gt;</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.9: Dart automatically encapsulates async return values inside a Future.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>async_intro.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getName() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Shailendra&#x27;</span>; <span class="hljs-comment">// Plain string wrapped in Future</span>
+}
+
+<span class="hljs-keyword">void</span> main() {
+  getName().then((name) =&gt; <span class="hljs-built_in">print</span>(name));
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Shailendra
+    </div>
+  </section>
+
+  <!-- Section 10 -->
+  <section id="section-10">
+    <h2>10. Introduction to `await`</h2>
+    <p>The <strong><code>await</code></strong> keyword temporarily suspends execution of the current <code>async</code> function until the awaited <code>Future</code> completes. It extracts the raw underlying value cleanly without cumbersome callback nesting.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">await fetchData()</text>
+        <text x="130" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="sans-serif">Function paused at this line</text>
+        <path d="M250 27 L320 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="330" y="8" width="220" height="38" rx="6" fill="#00B4AB"/>
+        <text x="440" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Event Loop Continues</text>
+        <text x="440" y="38" font-size="9" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">UI and other tasks remain fluid</text>
+        <path d="M560 27 L630 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="640" y="8" width="140" height="38" rx="6" fill="#10B981"/>
+        <text x="710" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Resumes!</text>
+        <text x="710" y="38" font-size="8.5" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">Returns unwrapped value</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.10: The pause-and-resume behavior of await: non-blocking function suspension.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>await_demo.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future fetchData() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">30</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Data received&#x27;</span>;
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Request started&#x27;</span>);
+  <span class="hljs-built_in">String</span> result = <span class="hljs-keyword">await</span> fetchData();
+  <span class="hljs-built_in">print</span>(result);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Request completed&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Request started
+Data received
+Request completed
+    </div>
+  </section>
+
+  <!-- Section 11 -->
+  <section id="section-11">
+    <h2>11. Difference Between `then()` and `async/await`</h2>
+    <p>Both styles perform identical work under the hood. However, <code>async/await</code> is widely favored because it reads sequentially like synchronous code, eliminating "callback hell".</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="sans-serif">Style A: then() Chaining</text>
+        <text x="200" y="38" font-size="9" fill="#475569" text-anchor="middle" font-family="monospace">fetch().then((a) =&gt; parse(a).then((b) =&gt; ...))</text>
+        <rect x="410" y="8" width="370" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="595" y="24" font-size="10.5" font-weight="700" fill="#15803D" text-anchor="middle" font-family="sans-serif">Style B: Modern async/await (Preferred)</text>
+        <text x="595" y="38" font-size="9" fill="#166534" text-anchor="middle" font-family="monospace">var a = await fetch(); var b = await parse(a);</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.11: Comparison of callback chaining vs linear async/await syntax.</div>
+  </section>
+
+  <!-- Section 12 -->
+  <section id="section-12">
+    <h2>12. Error Handling with `async/await`</h2>
+    <p>With <code>async/await</code>, you don't need <code>catchError()</code> callbacks. You can use standard <code>try-catch-finally</code> blocks directly around your awaited calls:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">try { await fetch(); }</text>
+        <text x="130" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="sans-serif">Throws Exception</text>
+        <path d="M250 27 L320 27" stroke="#EF4444" stroke-width="2"/>
+        <rect x="330" y="8" width="220" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="440" y="24" font-size="10.5" font-weight="700" fill="#B91C1C" text-anchor="middle" font-family="monospace">catch (e) { ... }</text>
+        <text x="440" y="38" font-size="9" fill="#991B1B" text-anchor="middle" font-family="sans-serif">Caught like synchronous error</text>
+        <path d="M560 27 L630 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="640" y="8" width="140" height="38" rx="6" fill="#10B981"/>
+        <text x="710" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">finally { ... }</text>
+        <text x="710" y="38" font-size="8.5" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">Always runs</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.12: Asynchronous exception handling using standard try-catch-finally syntax.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>async_try_catch.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future fetchData() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">throw</span> Exception(<span class="hljs-string">&#x27;Unable to fetch data&#x27;</span>);
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-built_in">String</span> data = <span class="hljs-keyword">await</span> fetchData();
+    <span class="hljs-built_in">print</span>(data);
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Error: <span class="hljs-subst">$e</span>&#x27;</span>);
+  } <span class="hljs-keyword">finally</span> {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Request finished&#x27;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Error: Exception: Unable to fetch data
+Request finished
+    </div>
+  </section>
+
+  <!-- Section 13 -->
+  <section id="section-13">
+    <h2>13. Future.delayed() and Duration</h2>
+    <p><code>Future.delayed(Duration, computation)</code> creates a Future that completes after the specified time interval. It is used for debouncing, timers, polling, and animations.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="11" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#F43F5E">await </tspan>
+          <tspan fill="#38BDF8">Future</tspan>
+          <tspan fill="#F8FAFC">.delayed(</tspan>
+          <tspan fill="#38BDF8">Duration</tspan>
+          <tspan fill="#F8FAFC">(milliseconds: </tspan>
+          <tspan fill="#FBBF24">50</tspan>
+          <tspan fill="#F8FAFC">)); </tspan>
+          <tspan fill="#64748B">// Non-blocking pause</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.13: Non-blocking time delay scheduling via Duration.</div>
+  </section>
+
+  <!-- Section 14 -->
+  <section id="section-14">
+    <h2>14. Running Multiple Futures with Future.wait()</h2>
+    <p>When you have independent asynchronous tasks (e.g. loading user profile AND loading product catalog), running them sequentially doubles total waiting time. <strong><code>Future.wait()</code></strong> runs multiple Futures concurrently and yields an aggregate List of results when all have completed.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="160" height="17" rx="4" fill="#0175C2"/>
+        <text x="100" y="21" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">getUser() [Concurrent]</text>
+        <rect x="20" y="28" width="160" height="17" rx="4" fill="#00B4AB"/>
+        <text x="100" y="41" font-size="9" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">getPosts() [Concurrent]</text>
+        <path d="M190 27 L260 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="270" y="8" width="510" height="38" rx="6" fill="#10B981"/>
+        <text x="525" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">List&lt;String&gt; results = await Future.wait([getUser(), getPosts()]);</text>
+        <text x="525" y="38" font-size="9" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">Order preserved: results[0] = User, results[1] = Posts</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.14: Concurrent execution and input-order preservation with Future.wait().</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>future_wait.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getUser() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">30</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;User loaded&#x27;</span>;
+}
+
+Future getPosts() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&#x27;Posts loaded&#x27;</span>;
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">List</span> results = <span class="hljs-keyword">await</span> Future.wait([getUser(), getPosts()]);
+  <span class="hljs-built_in">print</span>(results);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+[User loaded, Posts loaded]
+    </div>
+  </section>
+
+  <!-- Section 15 -->
+  <section id="section-15">
+    <h2>15. Sequential vs Concurrent Futures</h2>
+    <p>Choose between sequential awaiting and concurrent execution based on dependencies:</p>
+    <ul>
+      <li><strong>Sequential:</strong> Task B requires the output of Task A (e.g. login first, then fetch user profile using the auth token).</li>
+      <li><strong>Concurrent:</strong> Tasks are completely independent (e.g. fetching weather data and stock prices).</li>
+    </ul>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#B45309" text-anchor="middle" font-family="sans-serif">Sequential: Total Time = A + B (50ms)</text>
+        <text x="200" y="38" font-size="9" fill="#92400E" text-anchor="middle" font-family="monospace">var a = await taskA(); var b = await taskB();</text>
+        <rect x="410" y="8" width="370" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="595" y="24" font-size="10.5" font-weight="700" fill="#15803D" text-anchor="middle" font-family="sans-serif">Concurrent: Total Time = max(A, B) (30ms)</text>
+        <text x="595" y="38" font-size="9" fill="#166534" text-anchor="middle" font-family="monospace">var results = await Future.wait([taskA(), taskB()]);</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.15: Wall-clock efficiency comparison between sequential and concurrent execution.</div>
+  </section>
+
+  <!-- Section 16 -->
+  <section id="section-16">
+    <h2>16. Introduction to Streams</h2>
+    <p>While a <code>Future</code> delivers one single result and terminates, a <strong><code>Stream</code></strong> delivers a continuous sequence of asynchronous events over time. A Stream can emit multiple data events, report errors, and notify subscribers when completed.</p>
+    <p><strong>Cricket Live Score Analogy:</strong></p>
+    <ul>
+      <li><strong>Future:</strong> Like querying the final match result after the game finishes (one single answer: "India won by 4 wickets").</li>
+      <li><strong>Stream:</strong> Like listening to ball-by-ball live updates (Over 1, Four!, Wicket, Fifty runs, Match Finished).</li>
+    </ul>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="10" width="130" height="34" rx="5" fill="#0175C2"/>
+        <text x="80" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Event 1: 10 runs</text>
+        <path d="M150 27 L180 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="185" y="10" width="130" height="34" rx="5" fill="#0175C2"/>
+        <text x="250" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Event 2: Wicket!</text>
+        <path d="M320 27 L350 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="355" y="10" width="130" height="34" rx="5" fill="#0175C2"/>
+        <text x="420" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Event 3: 50 runs</text>
+        <path d="M490 27 L520 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="525" y="10" width="130" height="34" rx="5" fill="#0175C2"/>
+        <text x="590" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Event 4: Match Won</text>
+        <path d="M660 27 L690 27" stroke="#10B981" stroke-width="2"/>
+        <rect x="695" y="10" width="90" height="34" rx="5" fill="#10B981"/>
+        <text x="740" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">onDone</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.16: A Stream emitting multiple sequential data events before final completion.</div>
+  </section>
+
+  <!-- Section 17 -->
+  <section id="section-17">
+    <h2>17. Future vs Stream Comparison</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#0175C2"/>
+        <text x="200" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Future&lt;T&gt;</text>
+        <text x="200" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="sans-serif">1 Value | Completes Once | await / then()</text>
+        <rect x="400" y="8" width="380" height="38" rx="6" fill="#02569B"/>
+        <text x="590" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Stream&lt;T&gt;</text>
+        <text x="590" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">0..N Values | Continuous Events | await for / listen()</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.17: Architectural comparison between Future and Stream paradigms.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Future&lt;T&gt;</th>
+          <th>Stream&lt;T&gt;</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Values Delivered</strong></td>
+          <td>Exactly 1 value or 1 error</td>
+          <td>0, 1, or many values over time</td>
+        </tr>
+        <tr>
+          <td><strong>Completion</strong></td>
+          <td>Completes once and shuts down</td>
+          <td>Remains open until closed or completed</td>
+        </tr>
+        <tr>
+          <td><strong>Primary Consumption</strong></td>
+          <td><code>await</code> or <code>then()</code></td>
+          <td><code>await for</code> or <code>listen()</code></td>
+        </tr>
+        <tr>
+          <td><strong>Typical Use Case</strong></td>
+          <td>HTTP GET request, reading 1 file</td>
+          <td>Chat messages, GPS location updates, WebSockets</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 18 -->
+  <section id="section-18">
+    <h2>18. Creating a Simple Stream</h2>
+    <p>You can create a basic stream from an existing collection using <code>Stream.fromIterable()</code>:</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#0175C2" font-family="sans-serif">Stream.fromIterable([10, 20, 30, 40])</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">numbers.listen((n) =&gt; print(n)); // Emits 10, then 20, then 30, then 40</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.18: Emitting collection items as a sequence of asynchronous stream events.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>stream_iterable.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  Stream numbers = Stream.fromIterable([<span class="hljs-number">10</span>, <span class="hljs-number">20</span>, <span class="hljs-number">30</span>, <span class="hljs-number">40</span>]);
+  numbers.listen((number) {
+    <span class="hljs-built_in">print</span>(number);
+  });
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+10
+20
+30
+40
+    </div>
+  </section>
+
+  <!-- Section 19 -->
+  <section id="section-19">
+    <h2>19. Listening to Streams with `listen()`</h2>
+    <p>The <code>listen()</code> method subscribes to a stream and accepts handlers for data, errors, and completion. It returns a <code>StreamSubscription</code> object, which can be paused, resumed, or cancelled.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#0F172A"/>
+        <text x="40" y="32" font-size="10.5" fill="#38BDF8" font-family="monospace">
+          <tspan fill="#38BDF8">StreamSubscription </tspan>
+          <tspan fill="#F8FAFC">sub = stream.listen(</tspan>
+          <tspan fill="#FBBF24">onData</tspan>
+          <tspan fill="#F8FAFC">, onError: </tspan>
+          <tspan fill="#F43F5E">onError</tspan>
+          <tspan fill="#F8FAFC">, onDone: </tspan>
+          <tspan fill="#10B981">onDone</tspan>
+          <tspan fill="#F8FAFC">);</tspan>
+        </text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.19: Anatomy of stream subscription callbacks and subscription handle.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>stream_listen.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">void</span> main() {
+  Stream numbers = Stream.fromIterable([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>]);
+  numbers.listen(
+    (value) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Value: <span class="hljs-subst">$value</span>&#x27;</span>),
+    onDone: () =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Stream completed&#x27;</span>),
+  );
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Value: 1
+Value: 2
+Value: 3
+Stream completed
+    </div>
+  </section>
+
+  <!-- Section 20 -->
+  <section id="section-20">
+    <h2>20. Using `await for` with Streams</h2>
+    <p>Within an <code>async</code> function, you can consume a stream with an <strong><code>await for</code></strong> loop. The loop waits for each incoming stream event, processes it, and cleanly terminates when the stream closes.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F0F9FF" stroke="#00B4AB" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#02569B" font-family="sans-serif">await for (var item in stream) Loop Flow:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">Wait for Event 1 -&gt; Execute body -&gt; Wait for Event 2 -&gt; Finish at onDone</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 20.20: Sequential consumption of asynchronous stream items using await for.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>await_for.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Stream getNumbers() <span class="hljs-keyword">async</span>* {
+  <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = <span class="hljs-number">1</span>; i  main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> number <span class="hljs-keyword">in</span> getNumbers()) {
+    <span class="hljs-built_in">print</span>(number);
+  }
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;All numbers received&#x27;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+1
+2
+3
+All numbers received
+    </div>
+  </section>
+
+  <!-- Section 21 -->
+  <section id="section-21">
+    <h2>21. Creating Streams with `async*` and `yield`</h2>
+    <p>To produce a Stream dynamically, declare a function with <strong><code>async*</code></strong> (asynchronous generator) and emit values one by one using the <strong><code>yield</code></strong> keyword.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#0175C2"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">Stream&lt;String&gt; messages() async*</text>
+        <text x="200" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="sans-serif">Asynchronous generator function</text>
+        <path d="M390 27 L440 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="450" y="8" width="330" height="38" rx="6" fill="#10B981"/>
+        <text x="615" y="24" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="monospace">yield "Hello"; yield "World";</text>
+        <text x="615" y="38" font-size="9" fill="#DCFCE7" text-anchor="middle" font-family="sans-serif">Emits data into stream one at a time</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.21: Authoring stream generators using async* and yield.</div>
+  </section>
+
+  <!-- Section 22 -->
+  <section id="section-22">
+    <h2>22. StreamController (Producer &amp; Consumer Pipeline)</h2>
+    <p>A <strong><code>StreamController</code></strong> gives you full manual control over a stream. It provides a <code>sink</code> (where producers add values or errors) and a <code>stream</code> (where listeners receive updates).</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="210" height="38" rx="6" fill="#0175C2"/>
+        <text x="125" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Producer (Sink)</text>
+        <text x="125" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="monospace">controller.add(value)</text>
+        <path d="M240 27 L310 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="320" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="430" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">StreamController</text>
+        <text x="430" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="sans-serif">Buffering &amp; Dispatching</text>
+        <path d="M550 27 L620 27" stroke="#00B4AB" stroke-width="2.5"/>
+        <rect x="630" y="8" width="150" height="38" rx="6" fill="#10B981"/>
+        <text x="705" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Listener (Stream)</text>
+        <text x="705" y="38" font-size="9" fill="#DCFCE7" text-anchor="middle" font-family="monospace">controller.stream</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.22: Producer to Consumer pipeline via StreamController sink and stream.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>stream_controller.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:async&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> controller = StreamController();
+
+  <span class="hljs-keyword">final</span> subscription = controller.stream.listen((value) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Received: <span class="hljs-subst">$value</span>&#x27;</span>);
+  });
+
+  controller.add(<span class="hljs-number">10</span>);
+  controller.add(<span class="hljs-number">20</span>);
+  controller.add(<span class="hljs-number">30</span>);
+
+  <span class="hljs-keyword">await</span> controller.close();
+  <span class="hljs-keyword">await</span> subscription.cancel();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Received: 10
+Received: 20
+Received: 30
+    </div>
+  </section>
+
+  <!-- Section 23 -->
+  <section id="section-23">
+    <h2>23. Single-Subscription vs Broadcast Streams</h2>
+    <p>By default, a Stream allows only <strong>one</strong> listener. Attempting to attach a second listener throws a <code>StateError</code>. If multiple components in your app need to listen to the same stream (e.g. chat messages or notifications), create a <strong>Broadcast Stream</strong> using <code>StreamController.broadcast()</code>.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#F1F5F9" stroke="#64748B" stroke-width="1.5"/>
+        <text x="200" y="24" font-size="10.5" font-weight="700" fill="#0F172A" text-anchor="middle" font-family="sans-serif">Single-Subscription Stream</text>
+        <text x="200" y="38" font-size="9" fill="#475569" text-anchor="middle" font-family="sans-serif">1 Listener only (2nd listener throws StateError)</text>
+        <rect x="410" y="8" width="370" height="38" rx="6" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="595" y="24" font-size="10.5" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Broadcast Stream</text>
+        <text x="595" y="38" font-size="9" fill="#0369A1" text-anchor="middle" font-family="sans-serif">Many simultaneous listeners (Chat, notifications, sensors)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.23: Single listener constraint vs multi-subscriber broadcast distribution.</div>
+  </section>
+
+  <!-- Section 24 -->
+  <section id="section-24">
+    <h2>24. Stream Transformations</h2>
+    <p>Streams provide powerful functional transformations similar to Iterable collections:</p>
+    <ul>
+      <li><code>map()</code>: Transforms every incoming event.</li>
+      <li><code>where()</code>: Discards events that fail a boolean condition.</li>
+      <li><code>take(n)</code>: Receives only the first <code>n</code> events and completes.</li>
+      <li><code>skip(n)</code>: Ignores the first <code>n</code> events.</li>
+      <li><code>distinct()</code>: Suppresses consecutive duplicate events.</li>
+    </ul>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="220" height="38" rx="6" fill="#0175C2"/>
+        <text x="130" y="24" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Source Stream</text>
+        <text x="130" y="38" font-size="9" fill="#E0F2FE" text-anchor="middle" font-family="monospace">[1, 2, 3, 4, 5]</text>
+        <path d="M250 27 L310 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="320" y="8" width="220" height="38" rx="6" fill="#02569B"/>
+        <text x="430" y="24" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">.where((n) =&gt; n.isEven)</text>
+        <text x="430" y="38" font-size="9" fill="#99F6E4" text-anchor="middle" font-family="monospace">[2, 4]</text>
+        <path d="M550 27 L610 27" stroke="#00B4AB" stroke-width="2"/>
+        <rect x="620" y="8" width="160" height="38" rx="6" fill="#10B981"/>
+        <text x="700" y="24" font-size="10" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">.map((n) =&gt; n * 10)</text>
+        <text x="700" y="38" font-size="9" fill="#DCFCE7" text-anchor="middle" font-family="monospace">[20, 40]</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.24: Chaining stream operations to filter and transform real-time events.</div>
+
+    <div class="code-card">
+      <div class="code-header"><span>stream_transforms.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  Stream numbers = Stream.fromIterable([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>, <span class="hljs-number">5</span>]);
+
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> number <span class="hljs-keyword">in</span> numbers
+      .where((n) =&gt; n.isEven)
+      .map((n) =&gt; n * <span class="hljs-number">10</span>)) {
+    <span class="hljs-built_in">print</span>(number);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+20
+40
+    </div>
+  </section>
+
+  <!-- Section 25 -->
+  <section id="section-25">
+    <h2>25. Stream Error Handling</h2>
+    <p>A Stream can emit errors without prematurely ending the stream. In <code>listen()</code>, pass an <code>onError</code> callback. In <code>await for</code> loops, wrap statements in a standard <code>try-catch</code>.</p>
+
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#F8FAFC" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="40" y="24" font-size="11" font-weight="700" fill="#B91C1C" font-family="sans-serif">Stream Error Interception:</text>
+        <text x="40" y="38" font-size="10" fill="#0F172A" font-family="monospace">controller.addError(Exception("Failed")); -&gt; Triggers onError: (e) { ... }</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.25: Handling error events without terminating active stream subscriptions.</div>
+  </section>
+
+  <!-- Section 26 -->
+  <section id="section-26">
+    <h2>26. Future and Stream in Real Applications</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="10" width="240" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="140" y="32" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">REST APIs &amp; Auth (Futures)</text>
+        <rect x="280" y="10" width="230" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="395" y="32" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">WebSockets &amp; Chat (Streams)</text>
+        <rect x="530" y="10" width="250" height="34" rx="5" fill="#E0F2FE" stroke="#0175C2" stroke-width="1.5"/>
+        <text x="655" y="32" font-size="10" font-weight="700" fill="#02569B" text-anchor="middle" font-family="sans-serif">Device Sensors &amp; GPS (Streams)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.26: Real-world architectural mapping for Futures vs Streams.</div>
+  </section>
+
+  <!-- Section 27 -->
+  <section id="section-27">
+    <h2>27. Common Mistakes &amp; Anti-Patterns</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="360" height="38" rx="6" fill="#FEF2F2" stroke="#EF4444" stroke-width="1.5"/>
+        <text x="35" y="24" font-size="10" font-weight="700" fill="#B91C1C" font-family="sans-serif">Mistake: Forgetting to await a Future</text>
+        <text x="35" y="38" font-size="9" fill="#991B1B" font-family="sans-serif">Returns Future&lt;T&gt; instance instead of actual T value</text>
+        <rect x="400" y="8" width="380" height="38" rx="6" fill="#F0FDF4" stroke="#10B981" stroke-width="1.5"/>
+        <text x="415" y="24" font-size="10" font-weight="700" fill="#15803D" font-family="sans-serif">Best Practice: Always Await or Return</text>
+        <text x="415" y="38" font-size="9" fill="#166534" font-family="sans-serif">Use await to unwrap, or return Future to caller</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.27: Avoiding common traps in asynchronous Dart programming.</div>
+
+    <ul>
+      <li><strong>Forgetting to await:</strong> Accessing <code>profile.name</code> directly on an unawaited <code>Future&lt;Profile&gt;</code> results in a compile error.</li>
+      <li><strong>Thinking await blocks the app:</strong> <code>await</code> only suspends the current async function; the main event loop remains responsive.</li>
+      <li><strong>Uncancelled Subscriptions:</strong> Forgetting to cancel stream subscriptions leads to memory leaks. Always call <code>subscription.cancel()</code> when done.</li>
+      <li><strong>Adding to a Closed StreamController:</strong> Calling <code>controller.add()</code> after <code>controller.close()</code> throws a <code>StateError</code>.</li>
+    </ul>
+  </section>
+
+  <!-- Section 28 -->
+  <section id="section-28">
+    <h2>28. Real-Life Mini Programs</h2>
+    <p>Six complete, beginner-friendly programs demonstrating production patterns:</p>
+
+    <h3>Program 1: Online User Profile Loader</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program1_profile.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future&gt; fetchProfile(<span class="hljs-built_in">String</span> id) <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Connecting to user service...&quot;</span>);
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>));
+  <span class="hljs-keyword">return</span> {<span class="hljs-string">&quot;id&quot;</span>: id, <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;Shailendra&quot;</span>, <span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;Lead Developer&quot;</span>};
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">var</span> user = <span class="hljs-keyword">await</span> fetchProfile(<span class="hljs-string">&quot;U101&quot;</span>);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Loaded: <span class="hljs-subst">${user[<span class="hljs-string">&#x27;name&#x27;</span>]}</span> (<span class="hljs-subst">${user[<span class="hljs-string">&#x27;role&#x27;</span>]}</span>)&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Connecting to user service...
+Loaded: Shailendra (Lead Developer)
+    </div>
+
+    <h3>Program 2: Product Details Loader with Error Handling</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program2_product.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future loadProduct(<span class="hljs-built_in">int</span> id) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">15</span>));
+  <span class="hljs-keyword">if</span> (id  main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-built_in">String</span> item = <span class="hljs-keyword">await</span> loadProduct(<span class="hljs-number">42</span>);
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Product: <span class="hljs-subst">$item</span>&quot;</span>);
+    <span class="hljs-keyword">await</span> loadProduct(<span class="hljs-number">-1</span>);
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Caught Error: <span class="hljs-subst">$e</span>&quot;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Product: Mechanical Keyboard (SKU #42)
+Caught Error: Invalid argument(s): Invalid product id: -1
+    </div>
+
+    <h3>Program 3: Parallel Dashboard Loader (Future.wait)</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program3_dashboard.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future getStats() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Users: 1,420&quot;</span>;
+}
+Future getRevenue() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">15</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Sales: \$45,000&quot;</span>;
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Loading dashboard metrics in parallel...&quot;</span>);
+  <span class="hljs-keyword">var</span> data = <span class="hljs-keyword">await</span> Future.wait([getStats(), getRevenue()]);
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Dashboard Ready -&gt; <span class="hljs-subst">${data[<span class="hljs-number">0</span>]}</span> | <span class="hljs-subst">${data[<span class="hljs-number">1</span>]}</span>&quot;</span>);
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Loading dashboard metrics in parallel...
+Dashboard Ready -> Users: 1,420 | Sales: $45,000
+    </div>
+
+    <h3>Program 4: Live Notification System (StreamController)</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program4_notifications.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:async&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> notifier = StreamController();
+
+  <span class="hljs-keyword">final</span> sub = notifier.stream.listen(
+    (alert) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Notification: <span class="hljs-subst">$alert</span>&quot;</span>),
+    onDone: () =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;All alerts processed.&quot;</span>),
+  );
+
+  notifier.add(<span class="hljs-string">&quot;New login from Chrome&quot;</span>);
+  notifier.add(<span class="hljs-string">&quot;Cloud backup finished&quot;</span>);
+
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">10</span>));
+  <span class="hljs-keyword">await</span> notifier.close();
+  <span class="hljs-keyword">await</span> sub.cancel();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Notification: New login from Chrome
+Notification: Cloud backup finished
+All alerts processed.
+    </div>
+
+    <h3>Program 5: Live Temperature Sensor Simulation</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program5_sensor.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Stream readSensor() <span class="hljs-keyword">async</span>* {
+  <span class="hljs-built_in">List</span> readings = [<span class="hljs-number">21.5</span>, <span class="hljs-number">22.0</span>, <span class="hljs-number">24.5</span>];
+  <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> r <span class="hljs-keyword">in</span> readings) {
+    <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">10</span>));
+    <span class="hljs-keyword">yield</span> r;
+  }
+}
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> <span class="hljs-keyword">for</span> (<span class="hljs-keyword">var</span> temp <span class="hljs-keyword">in</span> readSensor()) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;Sensor Reading: <span class="hljs-subst">$temp</span> °C&quot;</span>);
+  }
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+Sensor Reading: 21.5 °C
+Sensor Reading: 22.0 °C
+Sensor Reading: 24.5 °C
+    </div>
+
+    <h3>Program 6: Live Chat Room Simulation (Broadcast Stream)</h3>
+    <div class="code-card">
+      <div class="code-header"><span>program6_chat.dart</span><span>Dart 3.x</span></div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code><span class="hljs-keyword">import</span> <span class="hljs-string">&#x27;dart:async&#x27;</span>;
+
+Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">final</span> chatRoom = StreamController.broadcast();
+
+  <span class="hljs-keyword">final</span> subUser1 = chatRoom.stream.listen((msg) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;User 1 received: <span class="hljs-subst">$msg</span>&quot;</span>));
+  <span class="hljs-keyword">final</span> subUser2 = chatRoom.stream.listen((msg) =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&quot;User 2 received: <span class="hljs-subst">$msg</span>&quot;</span>));
+
+  chatRoom.add(<span class="hljs-string">&quot;Alice: Hello everyone!&quot;</span>);
+
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">10</span>));
+  <span class="hljs-keyword">await</span> chatRoom.close();
+  <span class="hljs-keyword">await</span> subUser1.cancel();
+  <span class="hljs-keyword">await</span> subUser2.cancel();
+}</code></pre>
+</div>
+    </div>
+    <div class="output-card">
+      <span class="output-title">Terminal Output</span>
+User 1 received: Alice: Hello everyone!
+User 2 received: Alice: Hello everyone!
+    </div>
+  </section>
+
+  <!-- Section 29 -->
+  <section id="section-29">
+    <h2>29. Quick Revision</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#02569B"/>
+        <text x="400" y="24" font-size="11" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Topic 21 Synthesis Matrix:</text>
+        <text x="400" y="38" font-size="9.5" fill="#99F6E4" text-anchor="middle" font-family="monospace">Future&lt;T&gt; (1 value) | async/await (syntactic sugar) | Stream&lt;T&gt; (Continuous events)</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.29: Synthesis cheat sheet for asynchronous Dart.</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Keyword / Concept</th>
+          <th>Summary Role</th>
+          <th>Usage Pattern</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>Future&lt;T&gt;</code></td>
+          <td>Single eventual result or error</td>
+          <td><code>Future&lt;String&gt; fetch();</code></td>
+        </tr>
+        <tr>
+          <td><code>async</code></td>
+          <td>Enables <code>await</code>, returns Future</td>
+          <td><code>Future&lt;void&gt; fn() async { ... }</code></td>
+        </tr>
+        <tr>
+          <td><code>await</code></td>
+          <td>Pauses function until Future resolves</td>
+          <td><code>String res = await fetch();</code></td>
+        </tr>
+        <tr>
+          <td><code>Future.wait()</code></td>
+          <td>Runs multiple Futures concurrently</td>
+          <td><code>await Future.wait([a(), b()]);</code></td>
+        </tr>
+        <tr>
+          <td><code>Stream&lt;T&gt;</code></td>
+          <td>Asynchronous sequence of multiple events</td>
+          <td><code>await for (var item in stream)</code></td>
+        </tr>
+        <tr>
+          <td><code>async* / yield</code></td>
+          <td>Asynchronous stream generator</td>
+          <td><code>yield event;</code></td>
+        </tr>
+        <tr>
+          <td><code>StreamController</code></td>
+          <td>Sink &amp; stream event coordination</td>
+          <td><code>StreamController.broadcast()</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 30 -->
+  <section id="section-30">
+    <h2>30. Knowledge Check</h2>
+    <div class="svg-container">
+      <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="38" rx="6" fill="#10B981"/>
+        <text x="400" y="32" font-size="12" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">Topic 21 Knowledge Check: Output Predictions &amp; Hands-On Exercises</text>
+      </svg>
+    </div>
+    <div class="diagram-caption">Figure 21.30: Test your understanding before moving to Stage 6: Streams &amp; Reactive Programming.</div>
+
+    <h3>Output Prediction Challenges</h3>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 1: Future Delay and Non-Blocking Flow</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;A&#x27;</span>);
+  Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">10</span>), () =&gt; <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;B&#x27;</span>));
+  <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;C&#x27;</span>);
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>A</code> then <code>C</code> then <code>B</code><br>
+          <strong>Explanation:</strong> 'A' prints synchronously. <code>Future.delayed</code> is scheduled on the event loop without an <code>await</code>. 'C' executes synchronously before the delayed timer fires 'B'.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 2: Async Try-Catch with Finally</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">try</span> {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;1&#x27;</span>);
+    <span class="hljs-keyword">await</span> Future.error(Exception(<span class="hljs-string">&#x27;Failed&#x27;</span>));
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;2&#x27;</span>);
+  } <span class="hljs-keyword">catch</span> (e) {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Caught&#x27;</span>);
+  } <span class="hljs-keyword">finally</span> {
+    <span class="hljs-built_in">print</span>(<span class="hljs-string">&#x27;Finished&#x27;</span>);
+  }
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>1</code> then <code>Caught</code> then <code>Finished</code><br>
+          <strong>Explanation:</strong> '1' prints. The awaited error immediately jumps to <code>catch</code>, skipping '2'. The <code>finally</code> block executes reliably last.
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Challenge 3: Stream Transformations</div><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future main() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">var</span> stream = Stream.fromIterable([<span class="hljs-number">1</span>, <span class="hljs-number">2</span>, <span class="hljs-number">3</span>, <span class="hljs-number">4</span>]);
+  <span class="hljs-keyword">var</span> doubledOdds = <span class="hljs-keyword">await</span> stream
+      .where((n) =&gt; n.isOdd)
+      .map((n) =&gt; n * <span class="hljs-number">2</span>)
+      .toList();
+  <span class="hljs-built_in">print</span>(doubledOdds);
+}</code></pre>
+</div>
+      <details>
+        <summary>View Output &amp; Explanation</summary>
+        <div class="explanation-box">
+          <strong>Output:</strong> <code>[2, 6]</code><br>
+          <strong>Explanation:</strong> Odds are 1 and 3. Doubling them yields 2 and 6.
+        </div>
+      </details>
+    </div>
+
+    <h3>Beginner Coding Exercises</h3>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 1: Async User Greeting</div>
+      <p>Write an async function <code>Future&lt;String&gt; greet(String name)</code> that simulates a 20ms network delay and returns <code>"Welcome, $name!"</code>.</p>
+      <details>
+        <summary>View Hint &amp; Solution</summary>
+        <div class="explanation-box">
+          <strong>Hint:</strong> Use <code>await Future.delayed()</code> inside an <code>async</code> function.<br><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future greet(<span class="hljs-built_in">String</span> name) <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">await</span> Future.delayed(<span class="hljs-built_in">Duration</span>(milliseconds: <span class="hljs-number">20</span>));
+  <span class="hljs-keyword">return</span> <span class="hljs-string">&quot;Welcome, <span class="hljs-subst">$name</span>!&quot;</span>;
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 2: Concurrent Multi-Source Loader</div>
+      <p>Write a function that uses <code>Future.wait()</code> to fetch two numbers concurrently and returns their sum.</p>
+      <details>
+        <summary>View Hint &amp; Solution</summary>
+        <div class="explanation-box">
+          <strong>Hint:</strong> Use <code>await Future.wait([fetchA(), fetchB()])</code> and add <code>results[0] + results[1]</code>.<br><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Future fetchSum() <span class="hljs-keyword">async</span> {
+  <span class="hljs-keyword">var</span> results = <span class="hljs-keyword">await</span> Future.wait([
+    Future.value(<span class="hljs-number">15</span>),
+    Future.value(<span class="hljs-number">25</span>),
+  ]);
+  <span class="hljs-keyword">return</span> results[<span class="hljs-number">0</span>] + results[<span class="hljs-number">1</span>]; <span class="hljs-comment">// 40</span>
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-question">Exercise 3: Countdown Stream</div>
+      <p>Write an asynchronous generator <code>Stream&lt;int&gt; countdown(int start) async*</code> that emits numbers down to 1.</p>
+      <details>
+        <summary>View Hint &amp; Solution</summary>
+        <div class="explanation-box">
+          <strong>Hint:</strong> Use a for-loop with <code>yield i</code> inside an <code>async*</code> function.<br><div class="code-container">
+  <div class="code-header">
+    <div class="code-dots">
+      <span class="code-dot dot-red"></span>
+      <span class="code-dot dot-yellow"></span>
+      <span class="code-dot dot-green"></span>
+    </div>
+    <span class="code-title">DART Script</span>
+    <div class="code-actions">
+      <span class="code-badge">DART</span>
+      <button class="copy-btn" onclick="copyCode(this)" title="Copy Code">
+        <svg class="copy-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span>Copy</span>
+      </button>
+    </div>
+  </div>
+  <pre><code>Stream countdown(<span class="hljs-built_in">int</span> start) <span class="hljs-keyword">async</span>* {
+  <span class="hljs-keyword">for</span> (<span class="hljs-built_in">int</span> i = start; i &gt;= <span class="hljs-number">1</span>; i--) {
+    <span class="hljs-keyword">yield</span> i;
+  }
+}</code></pre>
+</div>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <!-- Complete Topic 21 Concept Map -->
+  <div class="svg-container" style="margin-top: 0.2rem;">
+    <svg viewBox="0 0 800 55" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <rect x="15" y="8" width="140" height="38" rx="6" fill="#0175C2"/>
+      <text x="85" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">1. Event Loop</text>
+      <path d="M160 27 L195 27" stroke="#00B4AB" stroke-width="2"/>
+      <rect x="200" y="8" width="140" height="38" rx="6" fill="#02569B"/>
+      <text x="270" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">2. Future&lt;T&gt;</text>
+      <path d="M345 27 L380 27" stroke="#00B4AB" stroke-width="2"/>
+      <rect x="385" y="8" width="140" height="38" rx="6" fill="#00B4AB"/>
+      <text x="455" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">3. async / await</text>
+      <path d="M530 27 L565 27" stroke="#00B4AB" stroke-width="2"/>
+      <rect x="570" y="8" width="110" height="38" rx="6" fill="#6366F1"/>
+      <text x="625" y="32" font-size="10.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">4. Future.wait</text>
+      <path d="M685 27 L715 27" stroke="#00B4AB" stroke-width="2"/>
+      <rect x="720" y="8" width="70" height="38" rx="6" fill="#10B981"/>
+      <text x="755" y="32" font-size="9.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="sans-serif">5. Stream</text>
+    </svg>
+  </div>
+  <div class="diagram-caption">Figure 21.31: Complete Topic 21 Concept Map: The Asynchronous Dart Architecture.</div>
+
+  <footer style="margin-top: 0.35rem; padding-top: 0.2rem; border-top: 1px solid var(--border-color); text-align: center; font-size: 0.72rem; color: var(--text-secondary);">
+    CodeVerse Educational Platform &bull; Stage 6: Asynchronous Dart &bull; Topic 21: Futures, async/await &amp; Streams
+  </footer>
+
+</div>
+
+    <script>
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        updateToggleBtn(next);
+      }
+
+      function updateToggleBtn(theme) {
+        var btn = document.getElementById('theme-toggle-btn');
+        if (!btn) return;
+        if (theme === 'dark') {
+          btn.innerHTML = '☀️ Light Mode';
+        } else {
+          btn.innerHTML = '🌙 Dark Mode';
+        }
+      }
+
+      function copyCode(btn) {
+        var container = btn.closest('.code-container') || btn.closest('.code-card') || btn.parentElement.parentElement;
+        var pre = container.querySelector('pre');
+        if (!pre) return;
+        var code = (pre.innerText || pre.textContent).trim();
+
+        function showSuccess() {
+          var origHTML = btn.innerHTML;
+          btn.innerHTML = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(function() {
+            btn.innerHTML = origHTML;
+            btn.classList.remove('copied');
+          }, 2000);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(code).then(showSuccess).catch(function() {
+            fallbackCopy(code, showSuccess);
+          });
+        } else {
+          fallbackCopy(code, showSuccess);
+        }
+      }
+
+      function fallbackCopy(text, cb) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          if (cb) cb();
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(ta);
+      }
+
+      // Initial theme check
+      (function() {
+        var initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        updateToggleBtn(initialTheme);
+      })();
+    </script>
+  
+</body>
+</html>
+
